@@ -75,7 +75,8 @@ def _inspect_wheel(wheel: Path) -> None:
 def main() -> int:
     python = sys.executable
     environment = os.environ.copy()
-    environment["PRE_COMMIT_HOME"] = str(REPOSITORY_ROOT / ".tmp" / "pre-commit")
+    cache_name = "pre-commit-win" if os.name == "nt" else "pre-commit-linux"
+    environment["PRE_COMMIT_HOME"] = str(REPOSITORY_ROOT / ".tmp" / cache_name)
 
     commands = {
         "preflight": [python, "scripts/preflight_check.py"],

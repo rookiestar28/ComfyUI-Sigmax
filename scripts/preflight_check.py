@@ -16,6 +16,7 @@ class PreflightReport(TypedDict):
     status: str
     python: str
     executable: str
+    environment_prefix: str
     expected_environment: str
     project_local_venv: bool
     node: str
@@ -42,8 +43,11 @@ def _is_within(path: Path, parent: Path) -> bool:
 
 def build_report(expected_environment_override: Path | None = None) -> PreflightReport:
     expected_environment = _expected_environment(expected_environment_override)
-    executable = Path(sys.executable).resolve()
-    local_environment = _is_within(executable, expected_environment)
+    executable = Path(sys.executable).absolute()
+    environment_prefix = Path(sys.prefix).resolve()
+    local_environment = environment_prefix == expected_environment or _is_within(
+        environment_prefix, expected_environment
+    )
 
     with (REPOSITORY_ROOT / "pyproject.toml").open("rb") as stream:
         metadata = tomli.load(stream)
@@ -68,6 +72,7 @@ def build_report(expected_environment_override: Path | None = None) -> Preflight
         "status": "FAIL" if errors else "PASS",
         "python": ".".join(str(part) for part in sys.version_info[:3]),
         "executable": str(executable),
+        "environment_prefix": str(environment_prefix),
         "expected_environment": str(expected_environment),
         "project_local_venv": local_environment,
         "node": node_status,
@@ -92,6 +97,7 @@ def main() -> int:
         print(f"Preflight: {report['status']}")
         print(f"Python: {report['python']}")
         print(f"Interpreter: {report['executable']}")
+        print(f"Environment: {report['environment_prefix']}")
         print(f"Node lane: {report['node']}")
         for error in report["errors"]:
             print(f"ERROR: {error}", file=sys.stderr)

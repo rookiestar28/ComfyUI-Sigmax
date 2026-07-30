@@ -57,6 +57,9 @@ tracked independently once the profile schema is implemented.
   endpoints, upstream-unclamped extrapolation, ceil-to-16 dimensions, deterministic Euler
   capabilities, and separate `krea2.raw.official-full-52` and
   `krea2.raw.diffusers-reference-28` guidance recipes.
+- Immutable Krea 2 image-geometry and RAW shift-derivation results that retain requested and
+  ceil-to-16 effective dimensions, calculate packed image sequence length, and reproduce the
+  official unclamped resolution-linear `mu`.
 
 ### Security
 

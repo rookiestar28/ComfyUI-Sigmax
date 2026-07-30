@@ -179,18 +179,34 @@ The immutable `KREA2_RAW_PROFILE` separately declares the RAW variant without pr
 RAW is Turbo with more steps:
 
 ```python
-from comfyui_sigmax.profiles import KREA2_RAW_PROFILE
+from comfyui_sigmax.profiles import (
+    KREA2_RAW_PROFILE,
+    derive_krea2_raw_shift,
+)
 
 assert KREA2_RAW_PROFILE.profile_id == "krea2.raw.official"
 assert KREA2_RAW_PROFILE.shift_policy.base_image_seq_len == 256
 assert KREA2_RAW_PROFILE.shift_policy.max_image_seq_len == 6400
+
+derivation = derive_krea2_raw_shift(1025, 767)
+assert (
+    derivation.geometry.requested_width,
+    derivation.geometry.requested_height,
+) == (1025, 767)
+assert (
+    derivation.geometry.effective_width,
+    derivation.geometry.effective_height,
+) == (1040, 768)
+assert derivation.geometry.image_seq_len == 3120
 ```
 
 Its resolution-linear exponential-`mu` policy records endpoints `0.5` and `1.15`, upstream
 unclamped extrapolation, ceil-to-16 dimensions, terminal zero, and deterministic ComfyUI
 Euler capabilities. It keeps `krea2.raw.official-full-52` (Krea guidance 3.5 / ComfyUI CFG
-4.5) distinct from `krea2.raw.diffusers-reference-28` (4.5 / 5.5). This milestone exposes
-declarations only; no RAW schedule builder or automatic variant resolver is exported.
+4.5) distinct from `krea2.raw.diffusers-reference-28` (4.5 / 5.5).
+`derive_krea2_raw_shift()` retains requested and effective pixel dimensions, rounds each
+dimension upward to 16, calculates the packed image sequence length, and derives official
+unclamped RAW `mu`. No RAW sigma builder or automatic variant resolver is exported yet.
 
 The committed `tests/golden/krea2_turbo_v1.json` fixture freezes complete terminal-inclusive
 4-, 8-, 12-, and 16-step float64 and IEEE-754 float32 vectors. A standard-library-only

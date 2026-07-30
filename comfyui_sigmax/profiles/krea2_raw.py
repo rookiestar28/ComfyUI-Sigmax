@@ -27,10 +27,12 @@ from comfyui_sigmax.profiles.krea2_common import (
     DimensionPolicy,
     EvidenceReference,
     GuidanceConvention,
+    Krea2ImageGeometry,
     ShiftParameterization,
     _require_finite_number,
     _require_identifier,
     _require_positive_integer,
+    resolve_krea2_image_geometry,
 )
 
 
@@ -286,3 +288,87 @@ class Krea2RawProfile:
 
 
 KREA2_RAW_PROFILE: Final = Krea2RawProfile()
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Krea2RawShiftDerivation:
+    """Traceable result of official RAW geometry and dynamic-mu derivation."""
+
+    profile_id: str
+    profile_version: str
+    geometry: Krea2ImageGeometry
+    mu: float
+    extrapolated: bool
+
+    def __post_init__(self) -> None:
+        profile_id = _require_identifier("profile_id", self.profile_id)
+        profile_version = _require_identifier("profile_version", self.profile_version)
+        if (profile_id, profile_version) != (
+            KREA2_RAW_PROFILE.profile_id,
+            KREA2_RAW_PROFILE.profile_version,
+        ):
+            raise ScheduleContractError("RAW shift derivation must identify the official profile")
+        if not isinstance(self.geometry, Krea2ImageGeometry):
+            raise ScheduleContractError("RAW shift derivation requires Krea2ImageGeometry")
+        mu = _require_finite_number("mu", self.mu)
+        if type(self.extrapolated) is not bool:
+            raise ScheduleContractError("extrapolated must be a Boolean")
+
+        expected_mu = calculate_krea2_raw_mu(self.geometry.image_seq_len)
+        policy = KREA2_RAW_PROFILE.shift_policy
+        expected_extrapolated = not (
+            policy.base_image_seq_len <= self.geometry.image_seq_len <= policy.max_image_seq_len
+        )
+        if mu != expected_mu:
+            raise ScheduleContractError("RAW shift derivation mu is inconsistent with geometry")
+        if self.extrapolated is not expected_extrapolated:
+            raise ScheduleContractError("RAW shift derivation extrapolation status is inconsistent")
+
+
+def calculate_krea2_raw_mu(
+    image_seq_len: int,
+    *,
+    policy: ResolutionShiftPolicy = KREA2_RAW_PROFILE.shift_policy,
+) -> float:
+    """Calculate official Krea 2 RAW mu without clamping or hidden fallback."""
+
+    if not isinstance(policy, ResolutionShiftPolicy):
+        raise ScheduleContractError("RAW mu derivation requires a ResolutionShiftPolicy")
+    sequence_length = _require_positive_integer("image_seq_len", image_seq_len)
+    slope = (policy.max_mu - policy.base_mu) / (
+        policy.max_image_seq_len - policy.base_image_seq_len
+    )
+    return slope * sequence_length + (policy.base_mu - slope * policy.base_image_seq_len)
+
+
+def derive_krea2_raw_shift(
+    width: int,
+    height: int,
+    *,
+    profile: Krea2RawProfile = KREA2_RAW_PROFILE,
+) -> Krea2RawShiftDerivation:
+    """Resolve effective image geometry and official unclamped RAW mu."""
+
+    if not isinstance(profile, Krea2RawProfile):
+        raise ScheduleContractError("RAW shift derivation requires a Krea2RawProfile")
+    geometry = resolve_krea2_image_geometry(
+        width,
+        height,
+        policy=profile.dimensions,
+    )
+    mu = calculate_krea2_raw_mu(
+        geometry.image_seq_len,
+        policy=profile.shift_policy,
+    )
+    extrapolated = not (
+        profile.shift_policy.base_image_seq_len
+        <= geometry.image_seq_len
+        <= profile.shift_policy.max_image_seq_len
+    )
+    return Krea2RawShiftDerivation(
+        profile_id=profile.profile_id,
+        profile_version=profile.profile_version,
+        geometry=geometry,
+        mu=mu,
+        extrapolated=extrapolated,
+    )

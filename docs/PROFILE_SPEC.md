@@ -138,10 +138,11 @@ Implemented pure-core forms include:
 - direct-ratio shifting;
 - an explicit no-shift policy;
 
-Resolution-derived numerical selection remains planned. The RAW structural profile already
-declares its authoritative endpoints and extrapolation policy, but does not yet calculate a
-runtime `mu`. The exponential and direct controls are distinct: at exponent `1`, their
-schedules are equivalent only when `direct_ratio = exp(mu)`.
+Krea 2 RAW resolution-derived numerical selection is implemented in its evidence-pinned
+profile layer. It preserves requested and ceil-to-16 effective dimensions, calculates the
+packed image sequence length, and evaluates the declared affine `mu` without clamping. The
+exponential and direct controls are distinct: at exponent `1`, their schedules are equivalent
+only when `direct_ratio = exp(mu)`.
 
 Missing shift configuration must be an error in strict mode, not a hidden zero.
 
@@ -168,10 +169,9 @@ and emits a warning. The profile is a structural official-recipe implementation;
 golden vectors and authoritative Krea/Diffusers numerical parity are now enforced. Real
 ComfyUI host and sampler execution remain required before a native-host product claim.
 
-## Krea 2 RAW Structural Profile
+## Krea 2 RAW Profile and Geometry Derivation
 
-The immutable `krea2.raw.official` profile version `1` is implemented as a declaration-only
-boundary. It declares:
+The immutable `krea2.raw.official` profile version `1` declares:
 
 - Krea 2 `raw` flow-velocity semantics and externally owned unit-flow sigmas;
 - `krea.reciprocal_step`, exponential `mu`, terminal zero, and deterministic `comfy.euler`;
@@ -183,8 +183,17 @@ boundary. It declares:
 - `krea2.raw.diffusers-reference-28` with Krea guidance 4.5 / ComfyUI CFG 5.5;
 - pinned official Krea and framework references.
 
-No `build_krea2_raw_schedule()` API exists at this stage. Effective dimensions,
-sequence-length derivation, dynamic `mu`, goldens, parity, and variant resolution require
+`resolve_krea2_image_geometry()` accepts positive integer pixel dimensions and retains:
+
+- requested width and height;
+- each effective dimension rounded upward to 16;
+- packed grid width and height;
+- image-only packed sequence length.
+
+`derive_krea2_raw_shift()` binds that geometry to the official profile and records the
+calculated `mu` plus whether the value extrapolates beyond the 256-to-6400 sequence interval.
+The upstream affine formula is deliberately unclamped. No `build_krea2_raw_schedule()` API
+exists at this stage; complete sigma vectors, goldens, parity, and variant resolution require
 their own numerical and integration evidence.
 
 ## Matching and Variant Resolution

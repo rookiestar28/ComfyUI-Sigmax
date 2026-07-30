@@ -49,6 +49,10 @@ comfyui_sigmax/
     capabilities.py
                 model/profile/sampler declarations and execution preflight decisions
   profiles/
+    krea2_common.py
+                shared evidence, guidance, dimension policy, and packed-image geometry
+    krea2_raw.py
+                immutable RAW profile plus resolution-derived dynamic-mu provenance
     krea2_turbo.py
                 immutable official-recipe declaration and structural schedule builder
 
@@ -116,7 +120,9 @@ The first pointwise shifts are also implemented:
 
 They accept only finite unit-flow tuples and reject model-native or other domains. Exact zero
 and one endpoints are preserved, and algebraically equivalent stable evaluation prevents
-extreme finite controls from overflowing. Resolution-to-`mu` derivation remains profile work.
+extreme finite controls from overflowing. Krea 2 RAW resolution-to-`mu` derivation is
+implemented in its evidence-pinned profile layer; generic dynamic-shift policy remains
+future profile/registry work.
 
 Terminal and slicing operations are now implemented separately:
 
@@ -183,9 +189,11 @@ Euler latent steps, or load model weights.
 The second concrete profile, `krea2.raw.official`, is implemented in
 `profiles/krea2_raw.py` on shared declarations extracted to `profiles/krea2_common.py`. It
 records dynamic exponential-shift endpoints, upstream-unclamped extrapolation, dimensions,
-terminal behavior, capabilities, and two separately evidenced guidance/step recipes. It is
-deliberately declaration-only: effective geometry, `mu`, sigma construction, goldens, and RAW
-parity remain later numerical layers.
+terminal behavior, capabilities, and two separately evidenced guidance/step recipes.
+`resolve_krea2_image_geometry()` retains requested and ceil-to-16 effective dimensions plus
+the packed image grid, while `derive_krea2_raw_shift()` calculates the image sequence length
+and official unclamped affine `mu`. Sigma construction, goldens, and RAW parity remain later
+numerical layers.
 
 ## Planned Layered Design
 

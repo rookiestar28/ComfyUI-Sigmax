@@ -88,6 +88,90 @@ class DimensionPolicy:
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
+class Krea2ImageGeometry:
+    """Requested and effective Krea 2 packed-image geometry."""
+
+    requested_width: int
+    requested_height: int
+    effective_width: int
+    effective_height: int
+    alignment_multiple: int
+    grid_width: int
+    grid_height: int
+    image_seq_len: int
+
+    def __post_init__(self) -> None:
+        requested_width = _require_positive_integer(
+            "requested_width",
+            self.requested_width,
+        )
+        requested_height = _require_positive_integer(
+            "requested_height",
+            self.requested_height,
+        )
+        effective_width = _require_positive_integer(
+            "effective_width",
+            self.effective_width,
+        )
+        effective_height = _require_positive_integer(
+            "effective_height",
+            self.effective_height,
+        )
+        alignment = _require_positive_integer(
+            "alignment_multiple",
+            self.alignment_multiple,
+        )
+        grid_width = _require_positive_integer("grid_width", self.grid_width)
+        grid_height = _require_positive_integer("grid_height", self.grid_height)
+        image_seq_len = _require_positive_integer("image_seq_len", self.image_seq_len)
+
+        expected_width = ((requested_width + alignment - 1) // alignment) * alignment
+        expected_height = ((requested_height + alignment - 1) // alignment) * alignment
+        if alignment != 16:
+            raise ScheduleContractError("Krea 2 image geometry requires 16-pixel alignment")
+        if (effective_width, effective_height) != (expected_width, expected_height):
+            raise ScheduleContractError(
+                "effective dimensions must be requested dimensions rounded up to alignment"
+            )
+        if (grid_width, grid_height) != (
+            effective_width // alignment,
+            effective_height // alignment,
+        ):
+            raise ScheduleContractError("Krea 2 packed-image grid dimensions are inconsistent")
+        if image_seq_len != grid_width * grid_height:
+            raise ScheduleContractError("image_seq_len must equal grid_width * grid_height")
+
+
+def resolve_krea2_image_geometry(
+    width: int,
+    height: int,
+    *,
+    policy: DimensionPolicy,
+) -> Krea2ImageGeometry:
+    """Resolve positive requested pixels to the authoritative Krea 2 packed grid."""
+
+    if not isinstance(policy, DimensionPolicy):
+        raise ScheduleContractError("Krea 2 geometry requires a DimensionPolicy")
+    requested_width = _require_positive_integer("width", width)
+    requested_height = _require_positive_integer("height", height)
+    multiple = policy.multiple
+    effective_width = ((requested_width + multiple - 1) // multiple) * multiple
+    effective_height = ((requested_height + multiple - 1) // multiple) * multiple
+    grid_width = effective_width // multiple
+    grid_height = effective_height // multiple
+    return Krea2ImageGeometry(
+        requested_width=requested_width,
+        requested_height=requested_height,
+        effective_width=effective_width,
+        effective_height=effective_height,
+        alignment_multiple=multiple,
+        grid_width=grid_width,
+        grid_height=grid_height,
+        image_seq_len=grid_width * grid_height,
+    )
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
 class EvidenceReference:
     """Pinned source revision and deterministic locators for one profile claim set."""
 

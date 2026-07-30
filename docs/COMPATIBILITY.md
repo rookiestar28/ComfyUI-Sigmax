@@ -3,9 +3,9 @@
 ## Current Status
 
 ComfyUI-Sigmax is a pre-alpha development foundation. The Krea 2 Turbo structural profile
-and formula-composed schedule builder are implemented, along with a declaration-only
-`krea2.raw.official` profile. ComfyUI host integration, user-facing nodes, RAW numerical
-construction, model weights, GPU execution, and sampler-step behavior are
+and formula-composed schedule builder are implemented, along with `krea2.raw.official`
+geometry, sequence-length, and dynamic-`mu` derivation. ComfyUI host integration, user-facing
+nodes, RAW sigma construction, model weights, GPU execution, and sampler-step behavior are
 **not yet validated**. Complete Turbo golden vectors, authoritative framework parity, and native
 ComfyUI schedule parity are validated at 4, 8, 12, and 16 steps.
 
@@ -80,8 +80,10 @@ evidence, not a real-host, node, sampler-step, checkpoint, or image-level claim.
 The RAW structural profile records the resolution-linear exponential shift from sequence
 length 256 / `mu=0.5` through 6400 / `mu=1.15`, with explicit upstream-unclamped
 extrapolation. It also keeps the 52-step official-full and 28-step Diffusers-reference
-guidance recipes separate. These declarations are validated, but dynamic `mu` calculation,
-RAW sigma vectors, goldens, and parity remain pending.
+guidance recipes separate. Requested dimensions are retained, effective dimensions are
+rounded upward to 16, and the packed image sequence length and unclamped dynamic `mu` are
+calculated by dependency-free pure functions. RAW sigma vectors, goldens, and parity remain
+pending.
 
 ## Current Known Limitations
 

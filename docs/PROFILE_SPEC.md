@@ -42,6 +42,17 @@ The primary shift and optional spacing stages each occur at most once. Native an
 ownership cannot also carry an external transform chain, because that would risk double
 shifting.
 
+The implemented immutable request/result layer also separates:
+
+- `requested_inputs` from `effective_inputs`;
+- source/profile `provenance` from user `overrides`;
+- the requested base grid and transform chain from the structural sigma result;
+- user-facing `warnings` from explicit value changes.
+
+Any effective change to steps, width, or height requires a matching override record. Numerical
+validity and canonical serialization remain pending and must not be inferred from successful
+structural construction.
+
 ## Required Conceptual Fields
 
 | Area | Required information |

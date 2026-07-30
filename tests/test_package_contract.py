@@ -57,6 +57,7 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "__init__.py").is_file())
         self.assertTrue((package_path / "py.typed").is_file())
         self.assertTrue((package_path / "core" / "__init__.py").is_file())
+        self.assertTrue((package_path / "core" / "request_result.py").is_file())
 
         sys.path.insert(0, str(REPOSITORY_ROOT))
         self.addCleanup(sys.path.remove, str(REPOSITORY_ROOT))

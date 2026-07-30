@@ -32,6 +32,8 @@ comfyui_sigmax/
   core/
     schedule_contracts.py
                 ownership, sigma-domain, and transform-chain preflight
+    request_result.py
+                immutable requested/effective inputs and structural results
 
 scripts/
   preflight.py          local environment validation
@@ -55,6 +57,19 @@ Native and patched ownership accept no external transform chain. External owners
 explicit domains and the ordered stages `PRIMARY_TIME_SHIFT`, `OPTIONAL_SPACING`, `TERMINAL`,
 and `SLICE`. Domain discontinuity, stage regression, and duplicate shift/spacing transforms
 fail before numerical execution.
+
+Immutable request/result contracts now bind that preflight to:
+
+- requested and effective steps/dimensions;
+- base-grid identity and output domain;
+- terminal and slicing policy;
+- source/profile provenance and evidence level;
+- warnings and explicit requested-to-effective overrides;
+- the structural sigma tuple and validated final domain.
+
+The contracts deliberately do not yet claim that sigma values are finite, monotonic, correctly
+terminated, or numerically authoritative. Those checks follow the builders and canonical
+artifact specification.
 
 ## Planned Layered Design
 

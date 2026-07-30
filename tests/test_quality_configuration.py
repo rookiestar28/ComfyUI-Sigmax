@@ -86,6 +86,12 @@ class QualityConfigurationTests(unittest.TestCase):
             with self.subTest(hook_id=hook_id):
                 self.assertRegex(config, rf"id:\s*{re.escape(hook_id)}(?:\s|$)")
 
+        self.assertRegex(
+            config,
+            r"id:\s*mypy[\s\S]*?additional_dependencies:"
+            r"[\s\S]*?pytest==9\.1\.1",
+        )
+
     def test_secret_baseline_is_valid_and_reviewable(self) -> None:
         baseline_path = REPOSITORY_ROOT / ".secrets.baseline"
         self.assertTrue(baseline_path.is_file())

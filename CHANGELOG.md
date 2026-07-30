@@ -17,6 +17,8 @@ tracked independently once the profile schema is implemented.
 - Public architecture, provisional profile, compatibility, and contribution documentation.
 - Framework-independent schedule ownership, sigma-domain, transform-stage, and double-shift
   preflight contracts.
+- Immutable request/result contracts for requested/effective inputs, base grids, terminal and
+  slicing policy, provenance, warnings, overrides, and structural sigma values.
 - Wheel inventory enforcement for the pure-core package.
 
 ### Security

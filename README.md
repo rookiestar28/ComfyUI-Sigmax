@@ -52,17 +52,20 @@ Empty mappings prevent unfinished nodes from being registered. Runtime dependenc
 empty; Diffusers is an optional reference dependency used for later parity research.
 
 The pure core currently exposes explicit schedule ownership, sigma domains, transform stages,
-and pre-execution compatibility validation:
+pre-execution compatibility validation, and immutable request/result structures:
 
 ```python
-from comfyui_sigmax.core import ScheduleOwnership, SigmaDomain
+from comfyui_sigmax.core import ScheduleInputs, ScheduleOwnership, SigmaDomain
 
 ownership = ScheduleOwnership.EXTERNAL_SIGMAS
 domain = SigmaDomain.UNIT_FLOW
+requested_inputs = ScheduleInputs(steps=8, width=1024, height=1024)
 ```
 
 Model-native, externally constructed, and model-patched schedules are mutually exclusive.
-External transforms cannot be silently applied to native or patched ownership.
+External transforms cannot be silently applied to native or patched ownership. Requested and
+effective inputs are stored separately, and effective step or dimension changes require an
+explicit override record.
 
 ## Development Setup
 

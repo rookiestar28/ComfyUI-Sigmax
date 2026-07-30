@@ -1,5 +1,16 @@
 """Public contracts for the framework-independent schedule core."""
 
+from comfyui_sigmax.core.request_result import (
+    BaseGridSpec,
+    EvidenceLevel,
+    OverrideRecord,
+    Provenance,
+    ScheduleInputs,
+    ScheduleRequest,
+    ScheduleResult,
+    SliceSpec,
+    TerminalPolicy,
+)
 from comfyui_sigmax.core.schedule_contracts import (
     ScheduleContractError,
     ScheduleOwnership,
@@ -11,9 +22,18 @@ from comfyui_sigmax.core.schedule_contracts import (
 )
 
 __all__ = [
+    "BaseGridSpec",
+    "EvidenceLevel",
+    "OverrideRecord",
+    "Provenance",
     "ScheduleContractError",
+    "ScheduleInputs",
     "ScheduleOwnership",
+    "ScheduleRequest",
+    "ScheduleResult",
     "SigmaDomain",
+    "SliceSpec",
+    "TerminalPolicy",
     "TransformContract",
     "TransformStage",
     "require_single_ownership",

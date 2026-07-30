@@ -15,6 +15,9 @@ tracked independently once the profile schema is implemented.
 - Cross-platform Windows and Linux/WSL full-gate wrappers.
 - Minimal-permission continuous-integration workflow contract.
 - Public architecture, provisional profile, compatibility, and contribution documentation.
+- Framework-independent schedule ownership, sigma-domain, transform-stage, and double-shift
+  preflight contracts.
+- Wheel inventory enforcement for the pure-core package.
 
 ### Security
 

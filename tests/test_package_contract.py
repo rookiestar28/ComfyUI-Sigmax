@@ -43,7 +43,7 @@ class PackageContractTests(unittest.TestCase):
             metadata["build-system"]["build-backend"],
         )
         self.assertEqual(
-            ["comfyui_sigmax"],
+            ["comfyui_sigmax", "comfyui_sigmax.core"],
             metadata["tool"]["setuptools"]["packages"],
         )
 
@@ -56,6 +56,7 @@ class PackageContractTests(unittest.TestCase):
         package_path = REPOSITORY_ROOT / "comfyui_sigmax"
         self.assertTrue((package_path / "__init__.py").is_file())
         self.assertTrue((package_path / "py.typed").is_file())
+        self.assertTrue((package_path / "core" / "__init__.py").is_file())
 
         sys.path.insert(0, str(REPOSITORY_ROOT))
         self.addCleanup(sys.path.remove, str(REPOSITORY_ROOT))

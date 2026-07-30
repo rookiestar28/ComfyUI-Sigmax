@@ -53,7 +53,8 @@ Passing a lower tier does not imply a higher tier.
 
 - Node mappings are intentionally empty.
 - No Krea 2 RAW or Turbo variant resolution exists.
-- No sigma scheduler or full sampler is exposed.
+- Ownership/domain preflight exists, but no numerical sigma scheduler or full sampler is
+  exposed.
 - No ComfyUI version has completed real-host E2E validation.
 - macOS and native hosted Ubuntu evidence are not yet available.
 - Image-quality comparisons are not correctness evidence and have not begun.

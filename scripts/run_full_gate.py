@@ -53,7 +53,12 @@ def _inspect_wheel(wheel: Path) -> None:
         metadata_name = next(name for name in names if name.endswith(".dist-info/METADATA"))
         metadata = email.message_from_bytes(archive.read(metadata_name))
 
-    required = {"comfyui_sigmax/__init__.py", "comfyui_sigmax/py.typed"}
+    required = {
+        "comfyui_sigmax/__init__.py",
+        "comfyui_sigmax/py.typed",
+        "comfyui_sigmax/core/__init__.py",
+        "comfyui_sigmax/core/schedule_contracts.py",
+    }
     if not required.issubset(names):
         raise RuntimeError(f"Wheel is missing required files: {sorted(required - set(names))}")
 

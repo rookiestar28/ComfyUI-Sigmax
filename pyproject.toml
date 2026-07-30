@@ -38,7 +38,7 @@ Documentation = "https://github.com/rookiestar28/ComfyUI-Sigmax/tree/main/docs"
 Issues = "https://github.com/rookiestar28/ComfyUI-Sigmax/issues"
 
 [tool.setuptools]
-packages = ["comfyui_sigmax"]
+packages = ["comfyui_sigmax", "comfyui_sigmax.core"]
 include-package-data = true
 
 [tool.setuptools.package-data]

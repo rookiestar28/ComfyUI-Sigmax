@@ -6,7 +6,8 @@ versioned profiles for other flow-matching and diffusion model families.
 
 > **Status: pre-alpha foundation.** No user-facing ComfyUI nodes are implemented yet. The
 > current repository provides a side-effect-free package shell, packaging metadata, quality
-> gates, and the public contracts needed before numerical scheduling work begins.
+> gates, and the first framework-independent ownership/domain contracts. It does not yet
+> construct numerical schedules.
 
 ## Why Sigmax
 
@@ -49,6 +50,19 @@ assert comfyui_sigmax.NODE_DISPLAY_NAME_MAPPINGS == {}
 
 Empty mappings prevent unfinished nodes from being registered. Runtime dependencies are also
 empty; Diffusers is an optional reference dependency used for later parity research.
+
+The pure core currently exposes explicit schedule ownership, sigma domains, transform stages,
+and pre-execution compatibility validation:
+
+```python
+from comfyui_sigmax.core import ScheduleOwnership, SigmaDomain
+
+ownership = ScheduleOwnership.EXTERNAL_SIGMAS
+domain = SigmaDomain.UNIT_FLOW
+```
+
+Model-native, externally constructed, and model-patched schedules are mutually exclusive.
+External transforms cannot be silently applied to native or patched ownership.
 
 ## Development Setup
 

@@ -88,6 +88,8 @@ class CiContractTests(unittest.TestCase):
         self.assertEqual(sorted(positions), positions)
         self.assertIn('"browser_e2e": "NOT_APPLICABLE"', runner)
         self.assertIn('"comfyui_host_e2e": "NOT_IMPLEMENTED"', runner)
+        self.assertIn('"comfyui_sigmax/core/__init__.py"', runner)
+        self.assertIn('"comfyui_sigmax/core/schedule_contracts.py"', runner)
 
     def test_workflow_contract(self) -> None:
         workflow = (REPOSITORY_ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")

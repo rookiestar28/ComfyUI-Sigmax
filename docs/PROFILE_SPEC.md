@@ -2,9 +2,10 @@
 
 ## Status
 
-This specification is **provisional** and **not frozen**. It describes the intended profile
-contract before implementation. Field names, serialization format, and schema versioning may
-change while the pure schedule engine and Krea 2 reference profiles are validated.
+This specification is **provisional** and **not frozen**. The foundational ownership, domain,
+and transform-stage vocabulary is implemented, while profile fields, serialization format,
+and schema versioning may change as the pure schedule engine and Krea 2 reference profiles are
+validated.
 
 ## Purpose
 
@@ -13,6 +14,33 @@ and validate a schedule for one model family or variant. Profiles prevent model-
 values from becoming undocumented global defaults.
 
 Profiles do not contain model weights and do not authorize model downloads.
+
+## Implemented Core Vocabulary
+
+Exactly one ownership mode is required:
+
+| Ownership | Meaning |
+| --- | --- |
+| `MODEL_NATIVE` | The model/host sampling object owns schedule construction |
+| `EXTERNAL_SIGMAS` | Sigmax supplies the complete external sigma sequence |
+| `MODEL_PATCH` | An explicit adapter replaces the model sampling object |
+
+The accepted initial sigma domains are:
+
+- `UNIT_FLOW`;
+- `MODEL_NATIVE`, an opaque host-owned domain;
+- `CONTINUOUS_EDM`;
+- `DISCRETE_TRAINING_INDEX`.
+
+External transformations declare input and output domains and follow this order:
+
+```text
+PRIMARY_TIME_SHIFT -> OPTIONAL_SPACING -> TERMINAL -> SLICE
+```
+
+The primary shift and optional spacing stages each occur at most once. Native and patched
+ownership cannot also carry an external transform chain, because that would risk double
+shifting.
 
 ## Required Conceptual Fields
 

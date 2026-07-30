@@ -29,6 +29,9 @@ The repository currently implements:
 comfyui_sigmax/
   __init__.py   side-effect-free package contract
   py.typed      typing marker
+  core/
+    schedule_contracts.py
+                ownership, sigma-domain, and transform-chain preflight
 
 scripts/
   preflight.py          local environment validation
@@ -41,6 +44,17 @@ tests/
 
 The package exports empty ComfyUI node mappings. Importing it does not register schedulers,
 patch PyTorch, import Diffusers, or alter host process state.
+
+The implemented pure-core preflight requires exactly one ownership mode:
+
+- `MODEL_NATIVE`: the host/model sampling object owns the schedule;
+- `EXTERNAL_SIGMAS`: Sigmax owns a complete external sigma chain;
+- `MODEL_PATCH`: an explicit host adapter replaces the model sampling object.
+
+Native and patched ownership accept no external transform chain. External ownership uses
+explicit domains and the ordered stages `PRIMARY_TIME_SHIFT`, `OPTIONAL_SPACING`, `TERMINAL`,
+and `SLICE`. Domain discontinuity, stage regression, and duplicate shift/spacing transforms
+fail before numerical execution.
 
 ## Planned Layered Design
 

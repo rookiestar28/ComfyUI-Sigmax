@@ -47,6 +47,17 @@ BOOTSTRAP_PROBE = textwrap.dedent(
     payload = {
         "class_mappings": module.NODE_CLASS_MAPPINGS,
         "display_mappings": module.NODE_DISPLAY_NAME_MAPPINGS,
+        "version": module.__version__,
+        "uses_package_mappings": (
+            module.NODE_CLASS_MAPPINGS
+            is sys.modules[
+                "comfyui_sigmax_bootstrap_probe.comfyui_sigmax"
+            ].NODE_CLASS_MAPPINGS
+            and module.NODE_DISPLAY_NAME_MAPPINGS
+            is sys.modules[
+                "comfyui_sigmax_bootstrap_probe.comfyui_sigmax"
+            ].NODE_DISPLAY_NAME_MAPPINGS
+        ),
         "torch_call_unchanged": fake_torch_nn.Module.__call__ is original_module_call,
         "diffusers_loaded": any(
             name == "diffusers" or name.startswith("diffusers.")
@@ -90,6 +101,8 @@ class ImportSafetyTests(unittest.TestCase):
                 "diffusers_loaded": False,
                 "display_mappings": {},
                 "torch_call_unchanged": True,
+                "uses_package_mappings": True,
+                "version": "0.1.0.dev0",
             },
             json.loads(result.stdout),
         )

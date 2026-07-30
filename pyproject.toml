@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=80,<84"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "comfyui-sigmax"
+version = "0.1.0.dev0"
+description = "Model-aware sigma schedule and sampler tooling for ComfyUI."
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE.TXT", "NOTICE"]
+authors = [
+    { name = "rookiestar28" },
+]
+dependencies = []
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+]
+
+[project.optional-dependencies]
+reference = ["diffusers>=0.39,<0.40"]
+
+[project.urls]
+Repository = "https://github.com/rookiestar28/ComfyUI-Sigmax"
+Documentation = "https://github.com/rookiestar28/ComfyUI-Sigmax/tree/main/docs"
+Issues = "https://github.com/rookiestar28/ComfyUI-Sigmax/issues"
+
+[tool.setuptools]
+packages = ["comfyui_sigmax"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+comfyui_sigmax = ["py.typed"]
+
+[tool.comfy]
+PublisherId = "rookiestar28"
+DisplayName = "ComfyUI-Sigmax"
+requires-comfyui = ">=0.29.0"

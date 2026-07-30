@@ -1,0 +1,110 @@
+from __future__ import annotations
+
+import json
+import subprocess
+import sys
+import textwrap
+import unittest
+from pathlib import Path
+
+
+REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+
+BOOTSTRAP_PROBE = textwrap.dedent(
+    """
+    import importlib.util
+    import json
+    import pathlib
+    import sys
+    import types
+
+    repository_root = pathlib.Path(sys.argv[1])
+
+    fake_torch = types.ModuleType("torch")
+    fake_torch_nn = types.ModuleType("torch.nn")
+
+    class FakeModule:
+        def __call__(self, *args, **kwargs):
+            return (args, kwargs)
+
+    original_module_call = FakeModule.__call__
+    fake_torch_nn.Module = FakeModule
+    fake_torch.nn = fake_torch_nn
+
+    sys.modules["torch"] = fake_torch
+    sys.modules["torch.nn"] = fake_torch_nn
+    sys.modules["numpy"] = types.ModuleType("numpy")
+
+    spec = importlib.util.spec_from_file_location(
+        "comfyui_sigmax_bootstrap_probe",
+        repository_root / "__init__.py",
+        submodule_search_locations=[str(repository_root)],
+    )
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+
+    payload = {
+        "class_mappings": module.NODE_CLASS_MAPPINGS,
+        "display_mappings": module.NODE_DISPLAY_NAME_MAPPINGS,
+        "torch_call_unchanged": fake_torch_nn.Module.__call__ is original_module_call,
+        "diffusers_loaded": any(
+            name == "diffusers" or name.startswith("diffusers.")
+            for name in sys.modules
+        ),
+        "comfy_loaded": any(
+            name == "comfy" or name.startswith("comfy.")
+            for name in sys.modules
+        ),
+    }
+    print(json.dumps(payload, sort_keys=True))
+    """
+)
+
+
+class ImportSafetyTests(unittest.TestCase):
+    def test_bootstrap_contract_is_dependency_free(self) -> None:
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-I",
+                "-c",
+                BOOTSTRAP_PROBE,
+                str(REPOSITORY_ROOT),
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(
+            0,
+            result.returncode,
+            msg=f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}",
+        )
+        self.assertEqual("", result.stderr)
+        self.assertEqual(
+            {
+                "class_mappings": {},
+                "comfy_loaded": False,
+                "diffusers_loaded": False,
+                "display_mappings": {},
+                "torch_call_unchanged": True,
+            },
+            json.loads(result.stdout),
+        )
+
+    def test_unrelated_legacy_modules_are_removed(self) -> None:
+        for relative_path in (
+            "nunchaku_compat.py",
+            "extract_metadata_node.py",
+        ):
+            with self.subTest(path=relative_path):
+                self.assertFalse(
+                    (REPOSITORY_ROOT / relative_path).exists(),
+                    msg=f"unrelated legacy module remains: {relative_path}",
+                )
+
+
+if __name__ == "__main__":
+    unittest.main()

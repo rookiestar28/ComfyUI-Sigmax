@@ -245,7 +245,7 @@ def test_explicit_variant_uses_exact_profile_capability_gate_and_m4_01_schedule(
         "kind": "static_contract",
         "host_id": "comfyui",
         "host_version": "0.29.0",
-        "host_revision": "e651b7bef55a5376343dcb1c0edb79f0142c985e",
+        "host_revision": "e651b7bef55a5376343dcb1c0edb79f0142c985e",  # pragma: allowlist secret
     }
     assert info["schedule"] == json.loads(baseline.schedule_info_json)
 

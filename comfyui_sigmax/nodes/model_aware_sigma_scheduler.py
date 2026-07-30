@@ -36,7 +36,9 @@ MODEL_AWARE_SIGMA_NODE_ID: Final = "Sigmax.ModelAwareSigmaScheduler"
 MODEL_AWARE_SIGMA_NODE_SCHEMA_ID: Final = "sigmax.model-aware-sigma-node/1"
 MODEL_FAMILY_PROBE_SCHEMA_ID: Final = "sigmax.model-family-probe/1"
 _COMFYUI_HOST_VERSION: Final = "0.29.0"
-_COMFYUI_HOST_REVISION: Final = "e651b7bef55a5376343dcb1c0edb79f0142c985e"
+_COMFYUI_HOST_REVISION: Final = (
+    "e651b7bef55a5376343dcb1c0edb79f0142c985e"  # pragma: allowlist secret
+)
 _MAX_STEPS: Final = 10_000
 _MAX_DIMENSION: Final = 65_536
 _REASON_PATTERN: Final = re.compile(r"[a-z][a-z0-9_]*(?:\.[a-z0-9_]+)+")

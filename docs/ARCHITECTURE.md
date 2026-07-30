@@ -180,6 +180,13 @@ table indexing. This lane executes GPL framework code as a reference but copies 
 implementation into the MIT package. It still does not start a host, register a node, execute
 Euler latent steps, or load model weights.
 
+The second concrete profile, `krea2.raw.official`, is implemented in
+`profiles/krea2_raw.py` on shared declarations extracted to `profiles/krea2_common.py`. It
+records dynamic exponential-shift endpoints, upstream-unclamped extrapolation, dimensions,
+terminal behavior, capabilities, and two separately evidenced guidance/step recipes. It is
+deliberately declaration-only: effective geometry, `mu`, sigma construction, goldens, and RAW
+parity remain later numerical layers.
+
 ## Planned Layered Design
 
 ```text

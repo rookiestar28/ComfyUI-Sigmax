@@ -103,6 +103,8 @@ class CiContractTests(unittest.TestCase):
         self.assertIn('"comfyui_sigmax/core/fingerprints.py"', runner)
         self.assertIn('"comfyui_sigmax/core/validation.py"', runner)
         self.assertIn('"comfyui_sigmax/profiles/__init__.py"', runner)
+        self.assertIn('"comfyui_sigmax/profiles/krea2_common.py"', runner)
+        self.assertIn('"comfyui_sigmax/profiles/krea2_raw.py"', runner)
         self.assertIn('"comfyui_sigmax/profiles/krea2_turbo.py"', runner)
         self.assertIn('"core_independence": "IMPLEMENTED"', runner)
         self.assertIn('"framework_parity": "IMPLEMENTED"', runner)

@@ -138,9 +138,10 @@ Implemented pure-core forms include:
 - direct-ratio shifting;
 - an explicit no-shift policy;
 
-Resolution-derived parameter selection remains planned and must be supplied by an
-authoritative profile. The exponential and direct controls are distinct: at exponent `1`,
-their schedules are equivalent only when `direct_ratio = exp(mu)`.
+Resolution-derived numerical selection remains planned. The RAW structural profile already
+declares its authoritative endpoints and extrapolation policy, but does not yet calculate a
+runtime `mu`. The exponential and direct controls are distinct: at exponent `1`, their
+schedules are equivalent only when `direct_ratio = exp(mu)`.
 
 Missing shift configuration must be an error in strict mode, not a hidden zero.
 
@@ -166,6 +167,25 @@ overrides. A non-eight-step request preserves the formula but changes evidence t
 and emits a warning. The profile is a structural official-recipe implementation; fixed
 golden vectors and authoritative Krea/Diffusers numerical parity are now enforced. Real
 ComfyUI host and sampler execution remain required before a native-host product claim.
+
+## Krea 2 RAW Structural Profile
+
+The immutable `krea2.raw.official` profile version `1` is implemented as a declaration-only
+boundary. It declares:
+
+- Krea 2 `raw` flow-velocity semantics and externally owned unit-flow sigmas;
+- `krea.reciprocal_step`, exponential `mu`, terminal zero, and deterministic `comfy.euler`;
+- resolution-linear shift endpoints from sequence length 256 / `mu=0.5` to 6400 /
+  `mu=1.15`;
+- upstream-unclamped extrapolation behavior;
+- ceil-to-multiple-of-16 image dimensions;
+- `krea2.raw.official-full-52` with Krea guidance 3.5 / ComfyUI CFG 4.5;
+- `krea2.raw.diffusers-reference-28` with Krea guidance 4.5 / ComfyUI CFG 5.5;
+- pinned official Krea and framework references.
+
+No `build_krea2_raw_schedule()` API exists at this stage. Effective dimensions,
+sequence-length derivation, dynamic `mu`, goldens, parity, and variant resolution require
+their own numerical and integration evidence.
 
 ## Matching and Variant Resolution
 

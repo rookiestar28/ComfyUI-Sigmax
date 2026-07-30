@@ -53,6 +53,10 @@ tracked independently once the profile schema is implemented.
   with exact source/dependency checks, complete 4/8/12/16-step vectors, explicit integer-table
   quantization policy, fail-closed canonical evidence, and a separate hosted regeneration
   lane.
+- Immutable `krea2.raw.official` structural profile with resolution-linear exponential-shift
+  endpoints, upstream-unclamped extrapolation, ceil-to-16 dimensions, deterministic Euler
+  capabilities, and separate `krea2.raw.official-full-52` and
+  `krea2.raw.diffusers-reference-28` guidance recipes.
 
 ### Security
 

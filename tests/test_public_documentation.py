@@ -108,6 +108,23 @@ def test_public_documentation_exposes_turbo_golden_boundary() -> None:
     assert "framework" in changelog.lower() and "native-comfyui parity" in changelog.lower()
 
 
+def test_public_documentation_exposes_raw_structural_profile_boundary() -> None:
+    readme = _read(ROOT / "README.md")
+    architecture = _read(ROOT / "docs" / "ARCHITECTURE.md")
+    profile_spec = _read(ROOT / "docs" / "PROFILE_SPEC.md")
+    compatibility = _read(ROOT / "docs" / "COMPATIBILITY.md")
+    changelog = _read(ROOT / "CHANGELOG.md")
+
+    for content in (readme, architecture, profile_spec, compatibility, changelog):
+        assert "krea2.raw.official" in content
+    assert "krea2.raw.official-full-52" in readme
+    assert "krea2.raw.diffusers-reference-28" in readme
+    assert "256" in compatibility and "6400" in compatibility
+    assert "0.5" in compatibility and "1.15" in compatibility
+    assert "unclamped" in compatibility.lower()
+    assert "M3-02" not in readme
+
+
 def test_public_contribution_and_changelog_contract() -> None:
     contributing = _read(ROOT / "CONTRIBUTING.md")
     changelog = _read(ROOT / "CHANGELOG.md")

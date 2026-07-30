@@ -7,11 +7,12 @@ versioned profiles for other flow-matching and diffusion model families.
 > **Status: pre-alpha foundation.** No user-facing ComfyUI nodes are implemented yet. The
 > current repository provides a side-effect-free package shell, packaging metadata, quality
 > gates, framework-independent schedule primitives, canonical schedule-artifact
-> serialization, and the first evidence-pinned Krea 2 Turbo structural profile. It also
+> serialization, and evidence-pinned Krea 2 Turbo and RAW structural profiles. It also
 > provides typed model/profile/sampler capability preflight and complete independent
 > 4/8/12/16-step Turbo golden vectors plus authoritative parity against pinned Krea code and
-> Diffusers 0.39.0. Native-ComfyUI parity remains pending, and no ComfyUI nodes are exposed.
-> The complete core and profile layer are dependency-free and have enforced
+> Diffusers 0.39.0, plus native-ComfyUI Turbo schedule parity. No ComfyUI nodes are exposed,
+> and the RAW numerical builder remains intentionally pending. The complete core and profile
+> layer are dependency-free and have enforced
 > isolation/property/golden/parity contract lanes.
 
 ## Why Sigmax
@@ -173,6 +174,23 @@ fixed exponential `mu = 1.15`, terminal zero, deterministic ComfyUI Euler capabi
 Krea-guidance `0.0` / ComfyUI-CFG `1.0`, and ceil-to-16 dimensions. Its references are pinned
 to immutable Krea, Diffusers, and ComfyUI revisions. Non-eight-step construction is allowed
 only as an explicitly `modified` result.
+
+The immutable `KREA2_RAW_PROFILE` separately declares the RAW variant without pretending that
+RAW is Turbo with more steps:
+
+```python
+from comfyui_sigmax.profiles import KREA2_RAW_PROFILE
+
+assert KREA2_RAW_PROFILE.profile_id == "krea2.raw.official"
+assert KREA2_RAW_PROFILE.shift_policy.base_image_seq_len == 256
+assert KREA2_RAW_PROFILE.shift_policy.max_image_seq_len == 6400
+```
+
+Its resolution-linear exponential-`mu` policy records endpoints `0.5` and `1.15`, upstream
+unclamped extrapolation, ceil-to-16 dimensions, terminal zero, and deterministic ComfyUI
+Euler capabilities. It keeps `krea2.raw.official-full-52` (Krea guidance 3.5 / ComfyUI CFG
+4.5) distinct from `krea2.raw.diffusers-reference-28` (4.5 / 5.5). This milestone exposes
+declarations only; no RAW schedule builder or automatic variant resolver is exported.
 
 The committed `tests/golden/krea2_turbo_v1.json` fixture freezes complete terminal-inclusive
 4-, 8-, 12-, and 16-step float64 and IEEE-754 float32 vectors. A standard-library-only

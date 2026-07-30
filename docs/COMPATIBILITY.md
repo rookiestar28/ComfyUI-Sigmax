@@ -2,11 +2,12 @@
 
 ## Current Status
 
-ComfyUI-Sigmax is a pre-alpha development foundation. The first Krea 2 Turbo structural
-profile and formula-composed schedule builder are implemented. ComfyUI host integration,
-user-facing nodes, Krea 2 RAW, model weights, GPU execution, and native ComfyUI parity are
-**not yet validated**. Complete Turbo golden vectors and authoritative framework parity are
-validated at 4, 8, 12, and 16 steps.
+ComfyUI-Sigmax is a pre-alpha development foundation. The Krea 2 Turbo structural profile
+and formula-composed schedule builder are implemented, along with a declaration-only
+`krea2.raw.official` profile. ComfyUI host integration, user-facing nodes, RAW numerical
+construction, model weights, GPU execution, and sampler-step behavior are
+**not yet validated**. Complete Turbo golden vectors, authoritative framework parity, and native
+ComfyUI schedule parity are validated at 4, 8, 12, and 16 steps.
 
 The package metadata declares a ComfyUI floor of `0.29.0`, but that is a packaging target
 rather than current host-compatibility evidence. No release should infer working host support
@@ -76,12 +77,19 @@ cases use exact table positions and stay within `1e-6`; the 12-step case records
 10,000-table integer-index quantization under a `2e-4` bound. This is native schedule
 evidence, not a real-host, node, sampler-step, checkpoint, or image-level claim.
 
+The RAW structural profile records the resolution-linear exponential shift from sequence
+length 256 / `mu=0.5` through 6400 / `mu=1.15`, with explicit upstream-unclamped
+extrapolation. It also keeps the 52-step official-full and 28-step Diffusers-reference
+guidance recipes separate. These declarations are validated, but dynamic `mu` calculation,
+RAW sigma vectors, goldens, and parity remain pending.
+
 ## Current Known Limitations
 
 - Node mappings are intentionally empty.
 - No Krea 2 RAW or Turbo automatic variant resolution exists.
-- The pure schedule/artifact/capability core and dedicated Turbo structural profile exist, but
-  no generic profile resolver, public sigma-scheduler node, or full sampler is exposed.
+- The pure schedule/artifact/capability core and dedicated Turbo/RAW structural profiles
+  exist, but no generic profile resolver, public sigma-scheduler node, or full sampler is
+  exposed.
 - No ComfyUI version has completed real-host node/workflow E2E validation.
 - macOS and native hosted Ubuntu evidence are not yet available.
 - Image-quality comparisons are not correctness evidence and have not begun.

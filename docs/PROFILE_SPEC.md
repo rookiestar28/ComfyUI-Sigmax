@@ -60,9 +60,11 @@ the non-terminal vector:
 1, (steps - 1) / steps, ..., 1 / steps
 ```
 
-Appending terminal zero in the later terminal stage reproduces the official unshifted
-`steps + 1` vector. A generic strictly descending linear endpoint builder is also available
-for explicitly declared non-opaque domains; it is not an automatic model default.
+Appending terminal zero in the separate terminal stage reproduces the official unshifted
+`steps + 1` vector. Terminal preservation, terminal-inclusive step ranges, and
+ComfyUI-compatible denoise-tail slicing are now pure-core operations. A generic strictly
+descending linear endpoint builder is also available for explicitly declared non-opaque
+domains; it is not an automatic model default.
 
 ## Required Conceptual Fields
 

@@ -38,6 +38,8 @@ comfyui_sigmax/
                 immutable requested/effective inputs and structural results
     shifts.py
                 exponential-mu, direct-ratio, and explicit identity transforms
+    terminal_slicing.py
+                terminal append/preserve, step ranges, and denoise-tail slicing
 
 scripts/
   preflight.py          local environment validation
@@ -93,6 +95,19 @@ They accept only finite unit-flow tuples and reject model-native or other domain
 and one endpoints are preserved, and algebraically equivalent stable evaluation prevents
 extreme finite controls from overflowing. Resolution-to-`mu` derivation remains profile work.
 
+Terminal and slicing operations are now implemented separately:
+
+- append terminal zero or preserve an already terminal-inclusive vector;
+- interpret `N + 1` sigmas as `N` transitions;
+- retain strict `start_step:end_step + 1` transition ranges;
+- calculate ComfyUI-compatible partial-denoise construction counts and retain the requested
+  terminal-inclusive tail;
+- represent zero denoise as an explicit empty no-execution vector.
+
+Manual empty or out-of-range requests fail. ComfyUI's later `force_full_denoise` endpoint
+replacement remains a host/sampler execution policy and is not hidden in terminal
+construction.
+
 ## Planned Layered Design
 
 ```text
@@ -114,7 +129,7 @@ Planned responsibilities:
 - construct explicit base grids;
 - compose the implemented named and domain-checked time shifts;
 - apply at most one compatible optional spacing transform;
-- append terminal values and slice schedules;
+- compose the implemented terminal and slicing policies;
 - validate monotonicity, finiteness, length, and domain;
 - emit deterministic metadata and fingerprints.
 

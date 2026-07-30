@@ -6,8 +6,8 @@ versioned profiles for other flow-matching and diffusion model families.
 
 > **Status: pre-alpha foundation.** No user-facing ComfyUI nodes are implemented yet. The
 > current repository provides a side-effect-free package shell, packaging metadata, quality
-> gates, and the first framework-independent grid and shift primitives. It does not yet
-> construct complete terminal/sliced schedules.
+> gates, and framework-independent grid, shift, terminal, and slicing primitives. It does not
+> yet validate or fingerprint complete schedules.
 
 ## Why Sigmax
 
@@ -59,6 +59,8 @@ from comfyui_sigmax.core import (
     ScheduleInputs,
     ScheduleOwnership,
     SigmaDomain,
+    TerminalPolicy,
+    apply_terminal_policy,
     exponential_mu_shift,
     krea_reciprocal_step_grid,
 )
@@ -68,6 +70,11 @@ domain = SigmaDomain.UNIT_FLOW
 requested_inputs = ScheduleInputs(steps=8, width=1024, height=1024)
 base_grid = krea_reciprocal_step_grid(8)
 shifted = exponential_mu_shift(base_grid, mu=1.15)
+sigmas = apply_terminal_policy(
+    shifted,
+    policy=TerminalPolicy.APPEND_ZERO,
+    domain=domain,
+)
 ```
 
 Model-native, externally constructed, and model-patched schedules are mutually exclusive.
@@ -78,6 +85,8 @@ explicit override record.
 The Krea builder returns only the unshifted, non-terminal base grid. Exponential `mu`,
 direct-ratio, and explicit no-shift transforms are separate, unit-flow-only operations. The
 terminal stage remains separate so terminal zero cannot be appended or transformed twice.
+Terminal-inclusive start/end ranges and ComfyUI-compatible partial-denoise tail slicing are
+also explicit; invalid or empty manual ranges fail instead of silently changing execution.
 
 ## Development Setup
 

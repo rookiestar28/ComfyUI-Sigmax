@@ -60,6 +60,7 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "core" / "base_grids.py").is_file())
         self.assertTrue((package_path / "core" / "request_result.py").is_file())
         self.assertTrue((package_path / "core" / "shifts.py").is_file())
+        self.assertTrue((package_path / "core" / "terminal_slicing.py").is_file())
 
         sys.path.insert(0, str(REPOSITORY_ROOT))
         self.addCleanup(sys.path.remove, str(REPOSITORY_ROOT))

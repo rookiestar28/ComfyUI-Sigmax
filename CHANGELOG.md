@@ -22,6 +22,8 @@ tracked independently once the profile schema is implemented.
 - Exact dependency-free Krea reciprocal-step and generic descending linear base-grid builders.
 - Dependency-free exponential-`mu`, direct-ratio, and explicit no-shift unit-flow transforms
   with stable endpoint and extreme finite-control behavior.
+- Explicit terminal append/preserve, terminal-inclusive step-range slicing, and
+  ComfyUI-compatible partial-denoise tail policies with strict boundary checks.
 - Wheel inventory enforcement for the pure-core package.
 
 ### Security

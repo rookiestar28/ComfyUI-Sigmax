@@ -54,11 +54,11 @@ def test_node_declares_stable_legacy_current_schema() -> None:
     assert inputs is not Krea2SigmaScheduler.INPUT_TYPES()
 
 
-def test_builtin_mapping_registers_only_the_product_node() -> None:
-    assert {KREA2_SIGMA_NODE_ID: Krea2SigmaScheduler} == comfyui_sigmax.NODE_CLASS_MAPPINGS
-    assert comfyui_sigmax.NODE_DISPLAY_NAME_MAPPINGS == {
-        KREA2_SIGMA_NODE_ID: "Krea 2 Sigma Scheduler"
-    }
+def test_builtin_mapping_registers_the_explicit_product_node() -> None:
+    assert comfyui_sigmax.NODE_CLASS_MAPPINGS[KREA2_SIGMA_NODE_ID] is Krea2SigmaScheduler
+    assert (
+        comfyui_sigmax.NODE_DISPLAY_NAME_MAPPINGS[KREA2_SIGMA_NODE_ID] == "Krea 2 Sigma Scheduler"
+    )
 
 
 def test_strict_turbo_builds_exact_official_eight_step_schedule() -> None:

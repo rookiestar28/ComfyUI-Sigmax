@@ -84,6 +84,7 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "adapters" / "registration.py").is_file())
         self.assertTrue((package_path / "nodes" / "__init__.py").is_file())
         self.assertTrue((package_path / "nodes" / "krea2_sigma_scheduler.py").is_file())
+        self.assertTrue((package_path / "nodes" / "model_aware_sigma_scheduler.py").is_file())
 
         sys.path.insert(0, str(REPOSITORY_ROOT))
         self.addCleanup(sys.path.remove, str(REPOSITORY_ROOT))
@@ -93,11 +94,17 @@ class PackageContractTests(unittest.TestCase):
 
         self.assertEqual("0.1.0.dev0", package.__version__)
         self.assertEqual(
-            ["Sigmax.Krea2SigmaScheduler"],
+            [
+                "Sigmax.Krea2SigmaScheduler",
+                "Sigmax.ModelAwareSigmaScheduler",
+            ],
             sorted(package.NODE_CLASS_MAPPINGS),
         )
         self.assertEqual(
-            {"Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler"},
+            {
+                "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler",
+                "Sigmax.ModelAwareSigmaScheduler": "Model-Aware Sigma Scheduler",
+            },
             package.NODE_DISPLAY_NAME_MAPPINGS,
         )
 

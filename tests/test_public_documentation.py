@@ -130,6 +130,22 @@ def test_public_documentation_exposes_krea2_sigma_scheduler_node() -> None:
     assert "real-host" in compatibility
 
 
+def test_public_documentation_exposes_model_aware_sigma_scheduler_node() -> None:
+    readme = _read(ROOT / "README.md")
+    architecture = _read(ROOT / "docs" / "ARCHITECTURE.md")
+    profile_spec = _read(ROOT / "docs" / "PROFILE_SPEC.md")
+    compatibility = _read(ROOT / "docs" / "COMPATIBILITY.md")
+    changelog = _read(ROOT / "CHANGELOG.md")
+
+    for content in (readme, architecture, profile_spec, compatibility, changelog):
+        assert "Sigmax.ModelAwareSigmaScheduler" in content
+        assert "sigmax.model-aware-sigma-node/1" in content
+    assert "family-only" in readme and "ambiguous" in readme
+    assert "static_contract" in architecture
+    assert "generic fallback" in profile_spec
+    assert "real-host" in compatibility
+
+
 def test_public_documentation_exposes_frozen_profile_schema_v1() -> None:
     readme = _read(ROOT / "README.md")
     architecture = _read(ROOT / "docs" / "ARCHITECTURE.md")

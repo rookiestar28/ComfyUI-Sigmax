@@ -20,8 +20,9 @@ versioned profiles for other flow-matching and diffusion model families.
 > public `/system_stats`, `/features`, `/object_info`, and Node Definition v2 evidence into
 > immutable model/host/sampler contracts. A pure `sigmax.node-registration/1` catalog also
 > discovers legacy/current and V3 node definitions, validates Node Definition v2 wire schemas,
-> and produces collision-safe namespaced mappings. Its built-in catalog now contains only
-> `Sigmax.Krea2SigmaScheduler`; RAW native-ComfyUI and real-host node/workflow parity remain
+> and produces collision-safe namespaced mappings. Its built-in catalog now contains
+> `Sigmax.Krea2SigmaScheduler` and `Sigmax.ModelAwareSigmaScheduler`; RAW native-ComfyUI and
+> real-host node/workflow parity remain
 > pending. The
 > complete core and profile
 > layer are dependency-free and have enforced
@@ -62,9 +63,13 @@ The import contract is intentionally minimal:
 ```python
 import comfyui_sigmax
 
-assert sorted(comfyui_sigmax.NODE_CLASS_MAPPINGS) == ["Sigmax.Krea2SigmaScheduler"]
+assert sorted(comfyui_sigmax.NODE_CLASS_MAPPINGS) == [
+    "Sigmax.Krea2SigmaScheduler",
+    "Sigmax.ModelAwareSigmaScheduler",
+]
 assert comfyui_sigmax.NODE_DISPLAY_NAME_MAPPINGS == {
-    "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler"
+    "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler",
+    "Sigmax.ModelAwareSigmaScheduler": "Model-Aware Sigma Scheduler",
 }
 ```
 
@@ -283,8 +288,8 @@ Definition JSON v2 projections. V3 classes are discovered through `GET_SCHEMA()`
 `GET_NODE_INFO_V1()` and may share the mapping projection with legacy classes. Activation through
 the current experimental numbered API is rejected when stability is required. This design avoids
 the pinned loader's mutually exclusive `NODE_CLASS_MAPPINGS`/`comfy_entrypoint` branches and is
-independent of the normalized installation-directory name. The built-in catalog now exposes only
-`Sigmax.Krea2SigmaScheduler`.
+independent of the normalized installation-directory name. The built-in catalog now exposes
+`Sigmax.Krea2SigmaScheduler` and `Sigmax.ModelAwareSigmaScheduler`.
 
 The `Krea 2 Sigma Scheduler` requires an explicit `Turbo` or `RAW` choice, width and height,
 steps, strict-official mode, and terminal-inclusive start/end slicing. Strict mode accepts only
@@ -294,6 +299,17 @@ Turbo step counts and the named RAW 28-step framework-reference recipe. It retur
 recipe/evidence, requested/effective geometry, applied shift, selected range, warnings, and
 complete/output fingerprints. This is a sigma scheduler, not a sampler: it does not execute
 Euler, apply guidance, patch model sampling, or claim live-host workflow validation.
+
+The `Model-Aware Sigma Scheduler` requires a ComfyUI `MODEL` and exposes `Auto`, `Turbo`, and
+`RAW`. Its bounded public probe can confirm the Krea 2 family but does not inspect filenames,
+weights, private host state, or infer a variant from the shared Krea 2 class. Consequently,
+family-only `Auto` selection fails visibly as ambiguous instead of guessing or using a generic
+fallback. Explicit RAW/Turbo selection follows the existing `explicit_selection` precedence,
+resolves the exact built-in `ProfileRegistry` entry, and gates M4-01 construction through the
+complete capability resolver. Its deterministic `sigmax.model-aware-sigma-node/1` information
+contains stable reason codes, the profile key/fingerprint/evidence, the full capability decision,
+and a clearly labeled pinned `static_contract` host record. This is also not a sampler and does
+not claim real-host validation.
 
 The first concrete profile is an immutable, evidence-pinned declaration of the official
 Krea 2 Turbo recipe:

@@ -100,11 +100,13 @@ class ImportSafetyTests(unittest.TestCase):
             {
                 "class_mappings": {
                     "Sigmax.Krea2SigmaScheduler": "Krea2SigmaScheduler",
+                    "Sigmax.ModelAwareSigmaScheduler": "ModelAwareSigmaScheduler",
                 },
                 "comfy_loaded": False,
                 "diffusers_loaded": False,
                 "display_mappings": {
                     "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler",
+                    "Sigmax.ModelAwareSigmaScheduler": "Model-Aware Sigma Scheduler",
                 },
                 "torch_call_unchanged": True,
                 "uses_package_mappings": True,
@@ -134,10 +136,12 @@ class ImportSafetyTests(unittest.TestCase):
 
             assert bootstrap.__version__ == "0.1.0.dev0"
             assert sorted(bootstrap.NODE_CLASS_MAPPINGS) == [
-                "Sigmax.Krea2SigmaScheduler"
+                "Sigmax.Krea2SigmaScheduler",
+                "Sigmax.ModelAwareSigmaScheduler",
             ]
             assert bootstrap.NODE_DISPLAY_NAME_MAPPINGS == {
-                "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler"
+                "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler",
+                "Sigmax.ModelAwareSigmaScheduler": "Model-Aware Sigma Scheduler",
             }
             """
         )

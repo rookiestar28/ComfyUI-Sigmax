@@ -10,7 +10,10 @@ A pure `sigmax.node-registration/1` catalog validates legacy/current, V3, `/obje
 Node Definition JSON v2 registration shapes with explicit namespaced IDs and fail-closed
 collisions. Its built-in catalog contains the statically validated legacy/current
 `Sigmax.Krea2SigmaScheduler`, which explicitly constructs Turbo or RAW sigmas and returns
-structured `sigmax.krea2-sigma-node/1` schedule information. Live ComfyUI host integration, RAW
+structured `sigmax.krea2-sigma-node/1` schedule information, plus
+`Sigmax.ModelAwareSigmaScheduler`, which requires a Krea 2 MODEL, exposes family-only Auto
+ambiguity, and returns exact-profile capability decisions under
+`sigmax.model-aware-sigma-node/1`. Live ComfyUI host integration, RAW
 native-ComfyUI parity, model weights, GPU
 execution, and sampler-step behavior are
 **not yet validated**. Complete Turbo golden vectors, authoritative framework parity, and
@@ -106,12 +109,14 @@ platform `libm` noise does not alter report bytes.
 
 ## Current Known Limitations
 
-- The sole node mapping is `Sigmax.Krea2SigmaScheduler`; its pure behavior and static schema are
-  covered without claiming real-host loading or workflow execution.
+- The two node mappings are `Sigmax.Krea2SigmaScheduler` and
+  `Sigmax.ModelAwareSigmaScheduler`; their pure behavior and static schemas are covered without
+  claiming real-host loading or workflow execution.
 - Krea-specific variant resolution and a bounded static ComfyUI evidence adapter exist, but no
-  live transport or automatic model-file inspection exists.
+  live transport or automatic model-file inspection exists; family-only Auto mode therefore
+  rejects as ambiguous.
 - The pure schedule/artifact/capability core, dedicated Turbo/RAW profiles, and explicit Krea 2
-  sigma-scheduler node exist, but no automatic generic resolver or full sampler is exposed.
+  sigma-scheduler nodes exist, but no cross-family generic fallback or full sampler is exposed.
 - Filename and local-header matches are suggestions only; the shared ComfyUI model class and
   common tensor keys are family-only and cannot resolve RAW versus Turbo.
 - No ComfyUI version has completed real-host node/workflow E2E validation.

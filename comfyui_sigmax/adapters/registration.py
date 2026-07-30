@@ -576,12 +576,19 @@ def builtin_node_registry() -> NodeRegistry:
 
     # IMPORTANT: the reviewed loader ignores comfy_entrypoint when mappings are non-None.
     # Mixed V1/V3 nodes must therefore share this one validated mapping projection.
-    from comfyui_sigmax.nodes import Krea2SigmaScheduler
+    from comfyui_sigmax.nodes import Krea2SigmaScheduler, ModelAwareSigmaScheduler
 
-    return NodeRegistry.empty().register(
-        discover_legacy_registration(
-            node_id="Sigmax.Krea2SigmaScheduler",
-            display_name="Krea 2 Sigma Scheduler",
-            node_class=Krea2SigmaScheduler,
+    return NodeRegistry.empty().register_many(
+        (
+            discover_legacy_registration(
+                node_id="Sigmax.Krea2SigmaScheduler",
+                display_name="Krea 2 Sigma Scheduler",
+                node_class=Krea2SigmaScheduler,
+            ),
+            discover_legacy_registration(
+                node_id="Sigmax.ModelAwareSigmaScheduler",
+                display_name="Model-Aware Sigma Scheduler",
+                node_class=ModelAwareSigmaScheduler,
+            ),
         )
     )

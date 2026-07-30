@@ -96,6 +96,10 @@ tracked independently from the frozen profile-schema version.
   selection, required geometry, strict-official enforcement, named RAW recipes,
   terminal-inclusive manual slicing, execution-time-only host Torch conversion, and deterministic
   `sigmax.krea2-sigma-node/1` schedule information with complete/output fingerprints.
+- `Sigmax.ModelAwareSigmaScheduler` with a required MODEL, bounded public Krea 2 family probing,
+  visible Auto ambiguity, exact built-in profile lookup, existing evidence precedence, complete
+  capability gating, stable reason codes, a pinned `static_contract` host label, M4-01 numerical
+  delegation, and deterministic `sigmax.model-aware-sigma-node/1` information.
 
 ### Security
 
@@ -108,7 +112,7 @@ tracked independently from the frozen profile-schema version.
 
 ### Known limitations
 
-- No generic profile resolver, real-host-validated workflow, or sampler is implemented.
+- No cross-family generic profile fallback, real-host-validated workflow, or sampler is implemented.
 - Real ComfyUI host, model-weight, GPU, and sampler-step validation remain pending.
 
 [Unreleased]: https://github.com/rookiestar28/ComfyUI-Sigmax/commits/main

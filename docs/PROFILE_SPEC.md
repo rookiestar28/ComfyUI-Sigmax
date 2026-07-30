@@ -193,6 +193,16 @@ fixed or resolution-derived shift, manual output range, warnings, and complete/o
 fingerprints. Strict mode rejects modified Turbo steps and the RAW framework-reference recipe.
 The node requires explicit variant selection and never promotes filename/model-class suggestions.
 
+`Sigmax.ModelAwareSigmaScheduler` is the exact-profile consumer under
+`sigmax.model-aware-sigma-node/1`. A required MODEL is inspected only for bounded public Krea 2
+family signals. Family-only evidence leaves `Auto` ambiguous; it never selects a generic fallback
+profile
+or promotes a shared class/config to RAW or Turbo. Explicit RAW/Turbo selection retains
+`explicit_selection` as the decisive source, resolves the exact built-in `ProfileKey`, and
+evaluates the complete `sigmax.capability-resolution/1` decision before delegating schedule math
+to the first node. Output records the unchanged registered-profile evidence separately from any
+modified recipe evidence and labels pinned ComfyUI compatibility evidence as `static_contract`.
+
 ## Required Conceptual Fields
 
 | Area | Required information |

@@ -79,11 +79,12 @@ tests/
 
 comfyui_sigmax/nodes/
   krea2_sigma_scheduler.py  thin explicit RAW/Turbo SIGMAS product node
+  model_aware_sigma_scheduler.py  bounded MODEL probe and exact capability-gated profile node
 ```
 
 The dependency-free `adapters/registration.py` module owns the immutable node catalog and
-wire-schema projections. The package exports only the validated
-`Sigmax.Krea2SigmaScheduler` mapping. Importing it does not load Torch or ComfyUI, patch PyTorch,
+wire-schema projections. The package exports the validated `Sigmax.Krea2SigmaScheduler` and
+`Sigmax.ModelAwareSigmaScheduler` mappings. Importing them does not load Torch or ComfyUI, patch PyTorch,
 import Diffusers, or alter host process state.
 
 The full gate proves this boundary before the test suite: a clean project-local environment
@@ -330,8 +331,18 @@ selects only the validated Turbo builder or one of the two named RAW recipes, en
 strict-official mode, and applies the existing terminal-inclusive manual slice. The node boundary
 then converts the tuple through host-provided Torch at execution time. Its second output is
 deterministic `sigmax.krea2-sigma-node/1` JSON that separates complete-construction and selected
-output fingerprints. It constructs sigmas only; it does not sample or patch the model. Planned
-later nodes add model-aware selection, advanced schedules, and inspection/comparison outputs.
+output fingerprints. It constructs sigmas only; it does not sample or patch the model.
+
+The second catalog entry is `Sigmax.ModelAwareSigmaScheduler`. Its
+`model_aware_sigma_scheduler.py` trust boundary uses static bounded reads of the public MODEL
+wrapper, underlying class, model-config class, and primitive `unet_config.image_model` field. It
+never invokes model methods or serializes foreign objects. Those signals can establish the Krea 2
+family but cannot distinguish RAW from Turbo, so `Auto` exposes an ambiguous resolution and stops.
+Explicit selection follows the existing evidence precedence, resolves an exact built-in
+`ProfileKey`, and runs `resolve_profile_capabilities()` against the profile's reference sampler
+and a pinned, visibly labeled ComfyUI `static_contract`. Only ALLOW/WARN reaches the M4-01 builder.
+Deterministic `sigmax.model-aware-sigma-node/1` JSON carries the full decision and stable reason
+codes. Planned later nodes add advanced schedules and inspection/comparison outputs.
 
 ### Sampler strategy
 

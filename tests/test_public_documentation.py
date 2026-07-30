@@ -85,7 +85,10 @@ def test_public_documentation_exposes_structural_krea2_turbo_profile() -> None:
     assert "profiles/krea2_turbo.py" in architecture
     assert "structural profile" in compatibility.lower()
     assert "4, 8," in compatibility and "12, and 16" in compatibility
-    assert "framework parity" in compatibility.lower() and "pending" in compatibility.lower()
+    assert "authoritative framework parity" in compatibility.lower()
+    assert "diffusers 0.39.0" in compatibility.lower()
+    assert "native comfyui parity" in compatibility.lower()
+    assert "pending" in compatibility.lower()
 
 
 def test_public_documentation_exposes_turbo_golden_boundary() -> None:
@@ -95,8 +98,10 @@ def test_public_documentation_exposes_turbo_golden_boundary() -> None:
     changelog = _read(ROOT / "CHANGELOG.md")
 
     assert "krea2_turbo_v1.json" in readme
+    assert "krea2_turbo_parity_v1.json" in readme
     assert "Decimal" in architecture
     assert "float64" in compatibility and "float32" in compatibility
+    assert "5.960464477539063e-08" in compatibility
     assert "framework" in changelog.lower() and "native-comfyui parity" in changelog.lower()
 
 

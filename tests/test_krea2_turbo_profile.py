@@ -34,7 +34,7 @@ from comfyui_sigmax.profiles import (
 )
 
 KREA_REVISION = "db3984fbc6e13b34c0064990fc2d95ac64d00058"  # pragma: allowlist secret
-DIFFUSERS_REVISION = "3c468926ffd12b69baa4316e27b09306b8da19a6"  # pragma: allowlist secret
+DIFFUSERS_REVISION = "a3608b512ed7248499a44c61d954965ed9bdae4d"  # pragma: allowlist secret
 COMFYUI_REVISION = "e651b7bef55a5376343dcb1c0edb79f0142c985e"  # pragma: allowlist secret
 
 
@@ -84,7 +84,10 @@ def test_profile_references_are_pinned_and_primary_source_is_official() -> None:
             evidence=EvidenceLevel.FRAMEWORK_REFERENCE,
             url="https://github.com/huggingface/diffusers",
             revision=DIFFUSERS_REVISION,
-            locators=("src/diffusers/pipelines/krea2/pipeline_krea2.py",),
+            locators=(
+                "src/diffusers/pipelines/krea2/pipeline_krea2.py",
+                "src/diffusers/schedulers/scheduling_flow_match_euler_discrete.py",
+            ),
         ),
         EvidenceReference(
             source_id="comfyui.krea2.framework",

@@ -17,7 +17,8 @@ Command definitions remain in `tests/TEST_SOP.md`. Real-host lifecycle requireme
 | Pure-core tests | Implemented | M1-07 |
 | Deterministic property tests | Implemented | M1-07 |
 | Krea 2 Turbo golden vectors | Implemented | M2-02 |
-| Framework/host parity tests | `NOT_IMPLEMENTED` | M2-03/M2-04/M3 |
+| Framework parity tests | Implemented | M2-03 |
+| Native ComfyUI parity tests | `NOT_IMPLEMENTED` | M2-04/M3 |
 | Adapter/integration tests | `NOT_IMPLEMENTED` | M4 |
 | Real ComfyUI H1/H2 | `NOT_IMPLEMENTED` | M0/M4 harness |
 | Browser E2E | `NOT_APPLICABLE` | Deliberate web-extension roadmap item |
@@ -139,9 +140,10 @@ Planned hotspot families:
 - sampler state/stepping/randomness;
 - import/package/optional-dependency boundaries.
 
-Coverage is a gap detector, not proof of numerical correctness. Deterministic property tests
-and complete Krea 2 Turbo 4/8/12/16-step goldens are implemented; RAW goldens, differential
-parity, and scheduled mutation evidence remain mandatory when their roadmap stages activate.
+Coverage is a gap detector, not proof of numerical correctness. Deterministic property tests,
+complete Krea 2 Turbo 4/8/12/16-step goldens, and authoritative Turbo differential parity are
+implemented. RAW goldens/parity, native ComfyUI parity, and scheduled mutation evidence
+remain mandatory when their roadmap stages activate.
 
 ## 8. Skip, XFail, Retry, and Quarantine Policy
 

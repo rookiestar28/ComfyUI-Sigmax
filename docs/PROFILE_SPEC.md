@@ -164,8 +164,8 @@ profile schema is frozen. It declares:
 request/result contracts. Dimension alignment is recorded as requested-to-effective
 overrides. A non-eight-step request preserves the formula but changes evidence to `modified`
 and emits a warning. The profile is a structural official-recipe implementation; fixed
-golden vectors, authoritative numerical parity, and real-host execution remain required
-before an official-parity product claim.
+golden vectors and authoritative Krea/Diffusers numerical parity are now enforced. Real
+ComfyUI host and sampler execution remain required before a native-host product claim.
 
 ## Matching and Variant Resolution
 

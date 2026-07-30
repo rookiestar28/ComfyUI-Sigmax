@@ -14,8 +14,10 @@ class CiContractTests(unittest.TestCase):
         for relative_path in (
             "scripts/preflight_check.py",
             "scripts/run_full_gate.py",
+            "scripts/run_krea2_turbo_parity.py",
             "scripts/run_full_tests_windows.ps1",
             "scripts/run_full_tests_linux.sh",
+            "requirements/parity-krea2-turbo.txt",
             ".github/workflows/ci.yml",
         ):
             with self.subTest(path=relative_path):
@@ -81,6 +83,7 @@ class CiContractTests(unittest.TestCase):
                 "ruff-lint",
                 "mypy",
                 "core-independence",
+                "parity-contract",
                 "pytest",
                 "coverage",
                 "package",
@@ -102,7 +105,7 @@ class CiContractTests(unittest.TestCase):
         self.assertIn('"comfyui_sigmax/profiles/__init__.py"', runner)
         self.assertIn('"comfyui_sigmax/profiles/krea2_turbo.py"', runner)
         self.assertIn('"core_independence": "IMPLEMENTED"', runner)
-        self.assertIn('"framework_parity": "NOT_IMPLEMENTED"', runner)
+        self.assertIn('"framework_parity": "IMPLEMENTED"', runner)
         self.assertIn('"golden": "IMPLEMENTED"', runner)
         self.assertIn('"native_comfyui_parity": "NOT_IMPLEMENTED"', runner)
         self.assertIn('"property": "IMPLEMENTED"', runner)
@@ -124,10 +127,30 @@ class CiContractTests(unittest.TestCase):
         self.assertIn('"3.13"', workflow)
         self.assertIn("scripts/run_full_tests_windows.ps1", workflow)
         self.assertIn("scripts/run_full_tests_linux.sh", workflow)
+        self.assertIn("parity-pinned:", workflow)
+        self.assertIn("requirements/parity-krea2-turbo.txt", workflow)
+        self.assertIn("scripts.run_krea2_turbo_parity", workflow)
+        self.assertIn("tests/parity/fixtures/krea2_turbo_parity_v1.json", workflow)
+        self.assertIn(
+            "043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",  # pragma: allowlist secret
+            workflow,
+        )
+        self.assertIn("if: always()", workflow)
+        self.assertIn("retention-days: 14", workflow)
         lowered = workflow.lower()
         for forbidden in ("npm ", "node ", "playwright", "permissions: write-all"):
             with self.subTest(forbidden=forbidden):
                 self.assertNotIn(forbidden, lowered)
+
+    def test_matrix_records_framework_and_host_parity_separately(self) -> None:
+        matrix = (REPOSITORY_ROOT / "tests/CI_TEST_MATRIX.md").read_text(encoding="utf-8")
+        normalized_matrix = " ".join(matrix.split())
+        self.assertIn("| Framework parity tests | Implemented | M2-03 |", matrix)
+        self.assertIn("| Native ComfyUI parity tests | `NOT_IMPLEMENTED` | M2-04/M3 |", matrix)
+        self.assertIn(
+            "authoritative Turbo differential parity are implemented",
+            normalized_matrix,
+        )
 
 
 if __name__ == "__main__":

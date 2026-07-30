@@ -9,9 +9,10 @@ versioned profiles for other flow-matching and diffusion model families.
 > gates, framework-independent schedule primitives, canonical schedule-artifact
 > serialization, and the first evidence-pinned Krea 2 Turbo structural profile. It also
 > provides typed model/profile/sampler capability preflight and complete independent
-> 4/8/12/16-step Turbo golden vectors, but does not yet claim framework or native-ComfyUI
-> parity and exposes no ComfyUI nodes. The complete core and profile layer are dependency-free
-> and have enforced isolation/property/golden test lanes.
+> 4/8/12/16-step Turbo golden vectors plus authoritative parity against pinned Krea code and
+> Diffusers 0.39.0. Native-ComfyUI parity remains pending, and no ComfyUI nodes are exposed.
+> The complete core and profile layer are dependency-free and have enforced
+> isolation/property/golden/parity contract lanes.
 
 ## Why Sigmax
 
@@ -53,7 +54,7 @@ assert comfyui_sigmax.NODE_DISPLAY_NAME_MAPPINGS == {}
 ```
 
 Empty mappings prevent unfinished nodes from being registered. Runtime dependencies are also
-empty; Diffusers is an optional reference dependency used for later parity research.
+empty; Diffusers is used only in a separate, exactly pinned parity environment.
 
 The pure core currently exposes explicit schedule ownership, sigma domains, transform stages,
 pre-execution compatibility validation, and immutable request/result structures:
@@ -177,16 +178,25 @@ The committed `tests/golden/krea2_turbo_v1.json` fixture freezes complete termin
 4-, 8-, 12-, and 16-step float64 and IEEE-754 float32 vectors. A standard-library-only
 high-precision Decimal generator imports no Sigmax, ComfyUI, Diffusers, NumPy, or PyTorch
 code; regeneration must match the canonical fixture byte for byte. The eight-step vector also
-passes a separate implementation of Krea's official direct expression. This is independent
-golden/formula evidence, while Krea/Diffusers execution and native ComfyUI parity remain later
-validation stages.
+passes a separate implementation of Krea's official direct expression.
+
+The committed `tests/parity/fixtures/krea2_turbo_parity_v1.json` report adds independent
+execution evidence. It compares the production builder with pinned Krea official code at
+float64 and the actual Diffusers 0.39.0 FlowMatch scheduler at float32 for 4, 8, 12, and 16
+steps. The report records complete vectors, immutable source revisions, exact dependency
+versions, CPU/dtype, tolerances, maximum and mean absolute errors, and schedule fingerprints.
+Its largest observed Diffusers error is `5.960464477539063e-08`, below the enforced `1e-6`
+float32 tolerance. Only the 8-step result retains official Turbo evidence; the other step
+counts are explicitly modified differential cases.
 
 The canonical gate runs `scripts/check_core_independence.py` before pytest. It requires a
 clean dev environment, launches Python isolated mode, blocks `comfy` and `diffusers`, and
 imports every core and profile module. Static import-boundary and deterministic
 property/metamorphic/golden tests provide complementary evidence. These checks prove
-framework independence and detect Turbo formula drift; they do not claim Krea/Diffusers or
-native ComfyUI execution parity.
+framework independence and detect Turbo formula drift. The default gate validates the
+committed parity report without importing optional frameworks; a dedicated hosted CI job
+recreates that report in an isolated exactly pinned Diffusers environment. Native ComfyUI
+execution parity remains a separate pending validation stage.
 
 ## Development Setup
 

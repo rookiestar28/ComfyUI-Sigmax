@@ -158,8 +158,11 @@ _DIFFUSERS_REFERENCE: Final = EvidenceReference(
     source_id="diffusers.krea2.framework",
     evidence=EvidenceLevel.FRAMEWORK_REFERENCE,
     url="https://github.com/huggingface/diffusers",
-    revision="3c468926ffd12b69baa4316e27b09306b8da19a6",  # pragma: allowlist secret
-    locators=("src/diffusers/pipelines/krea2/pipeline_krea2.py",),
+    revision="a3608b512ed7248499a44c61d954965ed9bdae4d",  # pragma: allowlist secret
+    locators=(
+        "src/diffusers/pipelines/krea2/pipeline_krea2.py",
+        "src/diffusers/schedulers/scheduling_flow_match_euler_discrete.py",
+    ),
 )
 _COMFYUI_REFERENCE: Final = EvidenceReference(
     source_id="comfyui.krea2.framework",

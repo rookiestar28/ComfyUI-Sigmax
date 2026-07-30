@@ -55,6 +55,8 @@ comfyui_sigmax/
 scripts/
   preflight_check.py          local environment validation
   check_core_independence.py  isolated pure-layer optional-framework blocker
+  parity/                     independent official adapter and report contract
+  run_krea2_turbo_parity.py   isolated pinned Diffusers execution
   run_full_gate.py            canonical ordered acceptance gate
   OS wrappers                 repo-local environment selection
 
@@ -150,16 +152,25 @@ The first concrete profile, `krea2.turbo.official`, is implemented in
 declares fixed exponential `mu = 1.15`, eight default steps, terminal zero, deterministic
 ComfyUI Euler capabilities, guidance conventions, and ceil-to-16 dimensions. Its builder
 composes existing pure-core primitives and records dimension changes and non-reference step
-counts explicitly. It does not inspect ComfyUI, choose a checkpoint variant, execute a
-sampler, or claim numerical parity; those remain later layers and validation items.
+counts explicitly. It does not inspect ComfyUI, choose a checkpoint variant, or execute a
+sampler. Its schedule output now has authoritative formula and pinned-framework parity;
+native host/sampler execution remains a later layer.
 
 The first model golden lane stores complete 4/8/12/16-step vectors separately from product
 code. Its generator uses precision-80 `Decimal` evaluation of an algebraically simplified
 official formula, rounds once to binary64, and explicitly quantizes binary32 with `struct`.
 The generator cannot import Sigmax or optional frameworks. An additional eight-step
 official-direct binary64 calculation cross-checks the fixture, while production uses the
-stable log-odds implementation. Golden formula evidence remains distinct from framework and
-host execution parity.
+stable log-odds implementation.
+
+The authoritative parity lane remains separate from the golden oracle. A standard-library
+Krea adapter reproduces the pinned official formula, while an isolated optional environment
+executes Diffusers 0.39.0 with exact NumPy and Torch pins. A strict canonical report records
+complete terminal-inclusive vectors, source revisions, dependency versions, dtype/device,
+errors, tolerances, and fingerprints. The default wheel imports neither framework; the
+canonical gate validates the report contract, and hosted CI regenerates it byte for byte.
+This establishes formula and framework schedule parity without claiming native ComfyUI host
+or sampler parity.
 
 ## Planned Layered Design
 

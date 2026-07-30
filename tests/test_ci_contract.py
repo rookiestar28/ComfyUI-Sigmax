@@ -80,6 +80,7 @@ class CiContractTests(unittest.TestCase):
                 "ruff-format",
                 "ruff-lint",
                 "mypy",
+                "core-independence",
                 "pytest",
                 "coverage",
                 "package",
@@ -94,6 +95,12 @@ class CiContractTests(unittest.TestCase):
         self.assertIn('"comfyui_sigmax/core/request_result.py"', runner)
         self.assertIn('"comfyui_sigmax/core/shifts.py"', runner)
         self.assertIn('"comfyui_sigmax/core/terminal_slicing.py"', runner)
+        self.assertIn('"comfyui_sigmax/core/artifacts.py"', runner)
+        self.assertIn('"comfyui_sigmax/core/capabilities.py"', runner)
+        self.assertIn('"comfyui_sigmax/core/fingerprints.py"', runner)
+        self.assertIn('"comfyui_sigmax/core/validation.py"', runner)
+        self.assertIn('"core_independence": "IMPLEMENTED"', runner)
+        self.assertIn('"property": "IMPLEMENTED"', runner)
 
     def test_workflow_contract(self) -> None:
         workflow = (REPOSITORY_ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")

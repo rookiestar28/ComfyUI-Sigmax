@@ -21,18 +21,20 @@ STAGES: Final = (
     "ruff-format",
     "ruff-lint",
     "mypy",
+    "core-independence",
     "pytest",
     "coverage",
     "package",
 )
 
-UNAVAILABLE_LANES: Final = {
+LANE_STATUS: Final = {
     "browser_e2e": "NOT_APPLICABLE",
     "comfyui_host_e2e": "NOT_IMPLEMENTED",
+    "core_independence": "IMPLEMENTED",
     "golden_parity": "NOT_IMPLEMENTED",
     "gpu_model_weights": "NOT_IMPLEMENTED",
     "mutation": "NOT_IMPLEMENTED",
-    "property": "NOT_IMPLEMENTED",
+    "property": "IMPLEMENTED",
 }
 
 
@@ -57,11 +59,15 @@ def _inspect_wheel(wheel: Path) -> None:
         "comfyui_sigmax/__init__.py",
         "comfyui_sigmax/py.typed",
         "comfyui_sigmax/core/__init__.py",
+        "comfyui_sigmax/core/artifacts.py",
         "comfyui_sigmax/core/base_grids.py",
+        "comfyui_sigmax/core/capabilities.py",
+        "comfyui_sigmax/core/fingerprints.py",
         "comfyui_sigmax/core/request_result.py",
         "comfyui_sigmax/core/schedule_contracts.py",
         "comfyui_sigmax/core/shifts.py",
         "comfyui_sigmax/core/terminal_slicing.py",
+        "comfyui_sigmax/core/validation.py",
     }
     if not required.issubset(names):
         raise RuntimeError(f"Wheel is missing required files: {sorted(required - set(names))}")
@@ -108,6 +114,7 @@ def main() -> int:
         "ruff-format": [python, "-m", "ruff", "format", "--check", "."],
         "ruff-lint": [python, "-m", "ruff", "check", "."],
         "mypy": [python, "-m", "mypy", "comfyui_sigmax", "tests", "scripts"],
+        "core-independence": [python, "scripts/check_core_independence.py"],
         "pytest": [python, "-m", "pytest"],
         "coverage": [
             python,
@@ -137,7 +144,7 @@ def main() -> int:
         return 1
 
     print("\nFULL_GATE=PASS")
-    print(json.dumps(UNAVAILABLE_LANES, sort_keys=True))
+    print(json.dumps(LANE_STATUS, sort_keys=True))
     return 0
 
 

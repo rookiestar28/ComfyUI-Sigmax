@@ -17,7 +17,8 @@ contract now exist. The canonical package namespace, pytest, Ruff, mypy, pre-com
 detect-secrets, branch coverage, wheel inventory, Windows/WSL wrappers, and Windows/Ubuntu
 Python matrix were established in M0-04 through M0-06.
 
-The ComfyUI host fixture, numerical core, golden/parity suites, and product nodes do not yet
+The pure numerical, artifact, capability, core-independence, and deterministic property
+lanes now exist. The ComfyUI host fixture, model golden/parity suites, and product nodes do not yet
 exist. Until their roadmap owners create them:
 
 - the OS-specific full-gate wrapper is mandatory acceptance evidence;
@@ -190,6 +191,8 @@ bash scripts/run_full_tests_linux.sh
 Both wrappers call `scripts/run_full_gate.py`, which is the canonical stage ordering. Direct
 commands remain useful for targeted diagnosis, but acceptance uses the OS wrapper.
 
+The common runner executes `core-independence` after static/type checks and before pytest.
+
 Gate classes, triggers, job roles, and artifact requirements are defined in
 `tests/CI_TEST_MATRIX.md`. A targeted `fast` run is never acceptance evidence by itself.
 
@@ -245,10 +248,11 @@ python -m pytest
 python -m pytest --cov=comfyui_sigmax --cov-branch
 ```
 
-The pure-core/property-specific command becomes active when M1 creates those directories:
+The pure-core/property-specific command is:
 
 ```powershell
-python -m pytest tests/unit tests/property
+python scripts/check_core_independence.py
+python -m pytest tests/test_*.py tests/property
 ```
 
 Required risk coverage:

@@ -33,6 +33,11 @@ tracked independently once the profile schema is implemented.
 - Immutable model, profile, sampler, and execution-feature capability declarations with
   canonical allow/warn/reject decisions, stable reason codes, and a fail-before-execution
   compatibility gate.
+- An ordered core-independence gate that requires absent optional frameworks, blocks
+  ComfyUI/Diffusers imports under Python isolated mode, imports every core module, and checks
+  static import roots.
+- Dependency-free deterministic property/metamorphic coverage for grids, shifts, terminal
+  structure, and capability-decision stability.
 - Wheel inventory enforcement for the pure-core package.
 
 ### Security

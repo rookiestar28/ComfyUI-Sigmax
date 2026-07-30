@@ -14,7 +14,8 @@ Command definitions remain in `tests/TEST_SOP.md`. Real-host lifecycle requireme
 | --- | --- | --- |
 | Documentation checks | Implemented in pytest | M0-07 public contract |
 | CI configuration self-tests | Implemented | M0-06 |
-| Pure-core tests | `NOT_IMPLEMENTED` | M1 |
+| Pure-core tests | Implemented | M1-07 |
+| Deterministic property tests | Implemented | M1-07 |
 | Golden/parity tests | `NOT_IMPLEMENTED` | M2/M3 |
 | Adapter/integration tests | `NOT_IMPLEMENTED` | M4 |
 | Real ComfyUI H1/H2 | `NOT_IMPLEMENTED` | M0/M4 harness |
@@ -89,6 +90,8 @@ review and cannot silently redefine supported behavior.
 - No ComfyUI or Diffusers import.
 - No network, GPU, model weight, or host process.
 - Deterministic by default.
+- Static import-root checks plus isolated all-module import blockers.
+- Deterministic property/metamorphic relations run in the default gate.
 
 ### Framework Parity
 
@@ -135,8 +138,9 @@ Planned hotspot families:
 - sampler state/stepping/randomness;
 - import/package/optional-dependency boundaries.
 
-Coverage is a gap detector, not proof of numerical correctness. Golden, differential,
-property, and mutation tests remain mandatory for critical math.
+Coverage is a gap detector, not proof of numerical correctness. Deterministic property tests
+are implemented; model goldens, differential parity, and scheduled mutation evidence remain
+mandatory when their roadmap stages activate.
 
 ## 8. Skip, XFail, Retry, and Quarantine Policy
 

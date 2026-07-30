@@ -61,6 +61,18 @@ def test_public_documentation_exposes_capability_preflight_contract() -> None:
     assert all(level in profile_spec.lower() for level in ("allow", "warn", "reject"))
 
 
+def test_public_documentation_exposes_core_independence_boundary() -> None:
+    readme = _read(ROOT / "README.md")
+    compatibility = _read(ROOT / "docs" / "COMPATIBILITY.md")
+    architecture = _read(ROOT / "docs" / "ARCHITECTURE.md")
+
+    assert "check_core_independence.py" in readme
+    assert "ComfyUI" in architecture and "Diffusers" in architecture
+    assert "python -I" in architecture
+    assert "deterministic property" in compatibility
+    assert "official model parity" in compatibility
+
+
 def test_public_contribution_and_changelog_contract() -> None:
     contributing = _read(ROOT / "CONTRIBUTING.md")
     changelog = _read(ROOT / "CHANGELOG.md")

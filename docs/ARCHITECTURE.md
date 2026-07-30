@@ -50,16 +50,24 @@ comfyui_sigmax/
                 model/profile/sampler declarations and execution preflight decisions
 
 scripts/
-  preflight.py          local environment validation
-  run_full_gate.py      canonical ordered acceptance gate
-  OS wrappers           repo-local environment selection
+  preflight_check.py          local environment validation
+  check_core_independence.py  isolated all-core optional-framework blocker
+  run_full_gate.py            canonical ordered acceptance gate
+  OS wrappers                 repo-local environment selection
 
 tests/
-  import, package, quality, CI, and documentation contracts
+  numerical, artifact, capability, property, import, package, quality, CI,
+  and documentation contracts
 ```
 
 The package exports empty ComfyUI node mappings. Importing it does not register schedulers,
 patch PyTorch, import Diffusers, or alter host process state.
+
+The full gate proves this boundary before the test suite: a clean project-local environment
+must resolve neither ComfyUI nor Diffusers, and a `python -I` subprocess installs explicit
+import blockers before enumerating and importing every core module. Static AST checks allow
+only Python standard-library and `comfyui_sigmax` import roots. Deterministic property and
+metamorphic tests exercise mathematical invariants without either optional framework.
 
 The implemented pure-core preflight requires exactly one ownership mode:
 

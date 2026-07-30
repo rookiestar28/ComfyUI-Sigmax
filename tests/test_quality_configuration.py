@@ -121,10 +121,14 @@ class QualityConfigurationTests(unittest.TestCase):
             test_sop,
         )
         self.assertIn(
-            "The ComfyUI host fixture, numerical core, golden/parity suites, and product nodes "
-            "do not yet",
+            "The ComfyUI host fixture, model golden/parity suites, and product nodes do not yet",
             test_sop,
         )
+        self.assertIn("core-independence", test_sop)
+
+        ci_matrix = (REPOSITORY_ROOT / "tests" / "CI_TEST_MATRIX.md").read_text(encoding="utf-8")
+        self.assertIn("| Pure-core tests | Implemented", ci_matrix)
+        self.assertIn("| Deterministic property tests | Implemented", ci_matrix)
 
 
 if __name__ == "__main__":

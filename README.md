@@ -9,6 +9,7 @@ versioned profiles for other flow-matching and diffusion model families.
 > gates, framework-independent schedule primitives, and canonical schedule-artifact
 > serialization. It also provides typed model/profile/sampler capability preflight, but does
 > not yet expose resolved model profiles, parity-validated Krea 2 schedules, or ComfyUI nodes.
+> The complete core is dependency-free and has an enforced isolation/property test lane.
 
 ## Why Sigmax
 
@@ -148,6 +149,12 @@ The preflight checks model family and variant, prediction and sigma domains, sch
 ownership, terminal requirements, deterministic or stochastic behavior, noise ownership,
 sampler state, partial denoise, and per-token timesteps. Its stable reason codes distinguish
 `ALLOW`, `WARN`, and `REJECT`; rejected combinations fail before host or sampler execution.
+
+The canonical gate runs `scripts/check_core_independence.py` before pytest. It requires a
+clean dev environment, launches Python isolated mode, blocks `comfy` and `diffusers`, and
+imports every core module. Static import-boundary and deterministic property/metamorphic tests
+provide complementary evidence. These checks prove framework independence; they do not claim
+Krea 2 official numerical parity.
 
 ## Development Setup
 

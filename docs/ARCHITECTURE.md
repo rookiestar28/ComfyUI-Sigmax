@@ -52,7 +52,7 @@ comfyui_sigmax/
     krea2_common.py
                 shared evidence, guidance, dimension policy, and packed-image geometry
     krea2_raw.py
-                immutable RAW profile plus resolution-derived dynamic-mu provenance
+                immutable RAW profile, dynamic-mu provenance, and exact-recipe builder
     krea2_turbo.py
                 immutable official-recipe declaration and structural schedule builder
 
@@ -192,8 +192,13 @@ records dynamic exponential-shift endpoints, upstream-unclamped extrapolation, d
 terminal behavior, capabilities, and two separately evidenced guidance/step recipes.
 `resolve_krea2_image_geometry()` retains requested and ceil-to-16 effective dimensions plus
 the packed image grid, while `derive_krea2_raw_shift()` calculates the image sequence length
-and official unclamped affine `mu`. Sigma construction, goldens, and RAW parity remain later
-numerical layers.
+and official unclamped affine `mu`. `build_krea2_raw_schedule()` composes one of the two exact
+named recipes through existing pure grid, shift, terminal, and validation stages.
+
+The independent RAW golden lane stores complete 28/52-step float64 and float32 vectors for
+five square and two orientation cases. Its precision-80 Decimal oracle independently repeats
+geometry and affine-`mu` math and imports neither product nor optional framework code. RAW
+framework parity remains a later numerical layer.
 
 ## Planned Layered Design
 

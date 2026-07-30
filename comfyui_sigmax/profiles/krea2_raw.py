@@ -7,19 +7,32 @@ from enum import Enum
 from typing import Final
 
 from comfyui_sigmax.core import (
+    BaseGridSpec,
     EvidenceLevel,
     ExecutionBehavior,
     ModelCapabilities,
     NoiseOwnership,
+    OverrideRecord,
     PredictionType,
     ProfileCapabilities,
+    Provenance,
     SamplerCapabilities,
     ScheduleContractError,
+    ScheduleInputs,
     ScheduleOwnership,
+    ScheduleRequest,
+    ScheduleResult,
     SigmaDomain,
+    SliceSpec,
     TerminalPolicy,
     TerminalRequirement,
     TerminalSigma,
+    TransformContract,
+    TransformStage,
+    apply_terminal_policy,
+    exponential_mu_shift,
+    krea_reciprocal_step_grid,
+    validate_sigma_schedule,
 )
 from comfyui_sigmax.profiles.krea2_common import (
     KREA2_REFERENCES,
@@ -34,6 +47,9 @@ from comfyui_sigmax.profiles.krea2_common import (
     _require_positive_integer,
     resolve_krea2_image_geometry,
 )
+
+_ENGINE_VERSION: Final = "0.1.0.dev0"
+_ALIGNMENT_REASON: Final = "Krea 2 pads image dimensions up to a multiple of 16"
 
 
 class ResolutionShiftMode(str, Enum):
@@ -371,4 +387,103 @@ def derive_krea2_raw_shift(
         geometry=geometry,
         mu=mu,
         extrapolated=extrapolated,
+    )
+
+
+def build_krea2_raw_schedule(
+    *,
+    width: int = 1024,
+    height: int = 1024,
+    recipe: Krea2RawRecipe = KREA2_RAW_OFFICIAL_FULL_52,
+    profile: Krea2RawProfile = KREA2_RAW_PROFILE,
+) -> ScheduleResult:
+    """Build one exact named Krea 2 RAW schedule with resolution-derived mu."""
+
+    if not isinstance(profile, Krea2RawProfile):
+        raise ScheduleContractError("profile must be a Krea2RawProfile")
+    if not isinstance(recipe, Krea2RawRecipe) or recipe not in profile.recipes:
+        raise ScheduleContractError("recipe must be a named recipe from the RAW profile")
+
+    derivation = derive_krea2_raw_shift(width, height, profile=profile)
+    requested_inputs = ScheduleInputs(steps=recipe.steps, width=width, height=height)
+    effective_inputs = ScheduleInputs(
+        steps=recipe.steps,
+        width=derivation.geometry.effective_width,
+        height=derivation.geometry.effective_height,
+    )
+    overrides: list[OverrideRecord] = []
+    for field_name in ("width", "height"):
+        requested_value = getattr(requested_inputs, field_name)
+        effective_value = getattr(effective_inputs, field_name)
+        if requested_value != effective_value:
+            overrides.append(
+                OverrideRecord(
+                    field=field_name,
+                    requested_value=str(requested_value),
+                    effective_value=str(effective_value),
+                    reason=_ALIGNMENT_REASON,
+                )
+            )
+
+    source = next(
+        reference
+        for reference in profile.references
+        if reference.source_id == recipe.evidence_source_id
+    )
+    provenance = Provenance(
+        engine_version=_ENGINE_VERSION,
+        evidence=recipe.evidence,
+        source=source.url,
+        source_revision=source.revision,
+        profile_id=profile.profile_id,
+        profile_version=profile.profile_version,
+    )
+    transforms = (
+        TransformContract(
+            name="krea.exponential_mu",
+            stage=TransformStage.PRIMARY_TIME_SHIFT,
+            input_domain=profile.sigma_domain,
+            output_domain=profile.sigma_domain,
+        ),
+        TransformContract(
+            name="terminal.append_zero",
+            stage=TransformStage.TERMINAL,
+            input_domain=profile.sigma_domain,
+            output_domain=profile.sigma_domain,
+        ),
+    )
+    request = ScheduleRequest(
+        ownership=profile.ownership,
+        requested_inputs=requested_inputs,
+        sigma_domain=profile.sigma_domain,
+        provenance=provenance,
+        base_grid=BaseGridSpec(
+            identifier=profile.base_grid_identifier,
+            output_domain=profile.sigma_domain,
+        ),
+        transforms=transforms,
+        terminal_policy=profile.terminal_policy,
+        slicing=SliceSpec(),
+        overrides=tuple(overrides),
+    )
+    sigmas = apply_terminal_policy(
+        exponential_mu_shift(
+            krea_reciprocal_step_grid(recipe.steps, domain=profile.sigma_domain),
+            mu=derivation.mu,
+            domain=profile.sigma_domain,
+        ),
+        policy=profile.terminal_policy,
+        domain=profile.sigma_domain,
+    )
+    validated_sigmas = validate_sigma_schedule(
+        sigmas,
+        domain=profile.sigma_domain,
+        expected_steps=recipe.steps,
+        require_terminal_zero=True,
+    )
+    return ScheduleResult(
+        request=request,
+        effective_inputs=effective_inputs,
+        sigmas=validated_sigmas,
+        final_domain=profile.sigma_domain,
     )

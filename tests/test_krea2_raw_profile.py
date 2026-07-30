@@ -249,9 +249,9 @@ def test_invalid_raw_declarations_fail_closed(factory: Any) -> None:
         factory()
 
 
-def test_raw_profile_exports_geometry_derivation_but_no_premature_schedule_builder() -> None:
+def test_raw_profile_exports_geometry_derivation_and_exact_recipe_builder() -> None:
     profiles = importlib.import_module("comfyui_sigmax.profiles")
 
-    assert not hasattr(profiles, "build_krea2_raw_schedule")
+    assert hasattr(profiles, "build_krea2_raw_schedule")
     assert hasattr(profiles, "calculate_krea2_raw_mu")
     assert hasattr(profiles, "derive_krea2_raw_shift")

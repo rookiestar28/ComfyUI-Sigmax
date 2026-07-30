@@ -10,8 +10,9 @@ versioned profiles for other flow-matching and diffusion model families.
 > serialization, and evidence-pinned Krea 2 Turbo and RAW structural profiles. It also
 > provides typed model/profile/sampler capability preflight and complete independent
 > 4/8/12/16-step Turbo golden vectors plus authoritative parity against pinned Krea code and
-> Diffusers 0.39.0, plus native-ComfyUI Turbo schedule parity. No ComfyUI nodes are exposed,
-> and the RAW numerical builder remains intentionally pending. The complete core and profile
+> Diffusers 0.39.0, plus native-ComfyUI Turbo schedule parity. Complete independent RAW
+> 28/52-step golden vectors now cover square, landscape, and portrait geometry. No ComfyUI
+> nodes are exposed, and RAW framework parity remains pending. The complete core and profile
 > layer are dependency-free and have enforced
 > isolation/property/golden/parity contract lanes.
 
@@ -181,6 +182,7 @@ RAW is Turbo with more steps:
 ```python
 from comfyui_sigmax.profiles import (
     KREA2_RAW_PROFILE,
+    build_krea2_raw_schedule,
     derive_krea2_raw_shift,
 )
 
@@ -198,6 +200,9 @@ assert (
     derivation.geometry.effective_height,
 ) == (1040, 768)
 assert derivation.geometry.image_seq_len == 3120
+
+schedule = build_krea2_raw_schedule(width=1025, height=767)
+assert len(schedule.sigmas) == 53
 ```
 
 Its resolution-linear exponential-`mu` policy records endpoints `0.5` and `1.15`, upstream
@@ -206,7 +211,15 @@ Euler capabilities. It keeps `krea2.raw.official-full-52` (Krea guidance 3.5 / C
 4.5) distinct from `krea2.raw.diffusers-reference-28` (4.5 / 5.5).
 `derive_krea2_raw_shift()` retains requested and effective pixel dimensions, rounds each
 dimension upward to 16, calculates the packed image sequence length, and derives official
-unclamped RAW `mu`. No RAW sigma builder or automatic variant resolver is exported yet.
+unclamped RAW `mu`. `build_krea2_raw_schedule()` composes an exact named 28- or 52-step
+recipe; it does not accept an arbitrary silently modified step count. Automatic variant
+resolution is not exported yet.
+
+The committed `tests/golden/krea2_raw_v1.json` fixture contains 14 complete terminal-inclusive
+RAW cases: both named recipes across 256, 512, 768, 1024, and 1280 square resolutions plus
+1360x768 landscape and 768x1360 portrait. Its independent precision-80 Decimal generator
+recalculates geometry, sequence length, affine `mu`, and both float64/float32 vectors without
+importing Sigmax or optional frameworks.
 
 The committed `tests/golden/krea2_turbo_v1.json` fixture freezes complete terminal-inclusive
 4-, 8-, 12-, and 16-step float64 and IEEE-754 float32 vectors. A standard-library-only

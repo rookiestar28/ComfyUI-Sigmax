@@ -192,9 +192,11 @@ The immutable `krea2.raw.official` profile version `1` declares:
 
 `derive_krea2_raw_shift()` binds that geometry to the official profile and records the
 calculated `mu` plus whether the value extrapolates beyond the 256-to-6400 sequence interval.
-The upstream affine formula is deliberately unclamped. No `build_krea2_raw_schedule()` API
-exists at this stage; complete sigma vectors, goldens, parity, and variant resolution require
-their own numerical and integration evidence.
+The upstream affine formula is deliberately unclamped. `build_krea2_raw_schedule()` does not
+accept arbitrary steps: it requires either the named 28-step framework recipe or named
+52-step official-full recipe. Complete independent float64/float32 goldens cover five square
+plus landscape/portrait geometry cases. Framework parity and variant resolution still
+require their own numerical and integration evidence.
 
 ## Matching and Variant Resolution
 

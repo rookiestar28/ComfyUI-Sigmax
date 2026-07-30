@@ -19,6 +19,7 @@ from comfyui_sigmax.profiles.krea2_raw import (
     Krea2RawShiftDerivation,
     ResolutionShiftMode,
     ResolutionShiftPolicy,
+    build_krea2_raw_schedule,
     calculate_krea2_raw_mu,
     derive_krea2_raw_shift,
 )
@@ -46,6 +47,7 @@ __all__ = [
     "ResolutionShiftMode",
     "ResolutionShiftPolicy",
     "ShiftParameterization",
+    "build_krea2_raw_schedule",
     "build_krea2_turbo_schedule",
     "calculate_krea2_raw_mu",
     "derive_krea2_raw_shift",

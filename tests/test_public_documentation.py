@@ -123,6 +123,8 @@ def test_public_documentation_exposes_raw_structural_profile_boundary() -> None:
     assert "0.5" in compatibility and "1.15" in compatibility
     assert "unclamped" in compatibility.lower()
     assert "derive_krea2_raw_shift" in readme
+    assert "build_krea2_raw_schedule" in readme
+    assert "krea2_raw_v1.json" in readme
     assert "requested" in profile_spec.lower() and "effective" in profile_spec.lower()
     assert "packed image sequence length" in compatibility.lower()
     assert "resolve_krea2_image_geometry" in architecture

@@ -74,20 +74,51 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
     fixtures = load_canonical_workflow_fixtures()
 
     assert tuple(item.identifier for item in fixtures) == (
-        "krea2-raw-1024",
+        "krea2-raw-diffusers-portrait-761x1353",
+        "krea2-raw-official-landscape-1353x761",
+        "krea2-raw-official-square-1024",
         "krea2-turbo-1024",
     )
-    assert tuple(item.variant for item in fixtures) == ("RAW", "Turbo")
+    assert tuple(item.variant for item in fixtures) == ("RAW", "RAW", "RAW", "Turbo")
     assert fixtures[0].workflow is not fixtures[1].workflow
 
+    expected_scheduler_widgets = {
+        "krea2-raw-diffusers-portrait-761x1353": [
+            "RAW",
+            28,
+            761,
+            1353,
+            False,
+            0,
+            -1,
+        ],
+        "krea2-raw-official-landscape-1353x761": [
+            "RAW",
+            52,
+            1353,
+            761,
+            True,
+            0,
+            -1,
+        ],
+        "krea2-raw-official-square-1024": [
+            "RAW",
+            52,
+            1024,
+            1024,
+            True,
+            0,
+            -1,
+        ],
+        "krea2-turbo-1024": ["Turbo", 8, 1024, 1024, True, 0, -1],
+    }
     for fixture in fixtures:
         workflow = fixture.workflow
         assert workflow["version"] == 0.4
-        expected_output = fixture.variant == "Turbo"
-        assert workflow["last_node_id"] == (3 if expected_output else 2)
-        assert workflow["last_link_id"] == (5 if expected_output else 2)
-        assert len(cast(list[object], workflow["nodes"])) == (3 if expected_output else 2)
-        assert len(cast(list[object], workflow["links"])) == (5 if expected_output else 2)
+        assert workflow["last_node_id"] == 3
+        assert workflow["last_link_id"] == 5
+        assert len(cast(list[object], workflow["nodes"])) == 3
+        assert len(cast(list[object], workflow["links"])) == 5
         metadata = extract_workflow_metadata(workflow)
         assert metadata is not None
         assert metadata.package.identifier == "comfyui-sigmax"
@@ -97,27 +128,20 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
             "Sigmax.Krea2SigmaScheduler",
             "Sigmax.ScheduleInspector",
         ]
-        if expected_output:
-            expected_nodes.append("Sigmax.TurboWorkflowOutput")
-        assert tuple(item.identifier for item in metadata.nodes) == tuple(expected_nodes)
+        expected_nodes.append(
+            "Sigmax.RawWorkflowOutput" if fixture.variant == "RAW" else "Sigmax.TurboWorkflowOutput"
+        )
+        assert tuple(item.identifier for item in metadata.nodes) == tuple(sorted(expected_nodes))
         assert metadata.profile.identifier == (
             "krea2.raw.official" if fixture.variant == "RAW" else "krea2.turbo.official"
         )
         scheduler = _node(cast(dict[str, object], workflow), 1)
-        assert scheduler["widgets_values"] == [
-            fixture.variant,
-            52 if fixture.variant == "RAW" else 8,
-            1024,
-            1024,
-            True,
-            0,
-            -1,
-        ]
+        assert scheduler["widgets_values"] == expected_scheduler_widgets[fixture.identifier]
         assert cast(dict[str, object], scheduler["properties"])["cnr_id"] == "comfyui-sigmax"
 
     first = _workflow_copy(fixtures[0])
     cast(list[object], first["nodes"]).clear()
-    assert len(cast(list[object], load_canonical_workflow_fixtures()[0].workflow["nodes"])) == 2
+    assert len(cast(list[object], load_canonical_workflow_fixtures()[0].workflow["nodes"])) == 3
 
 
 def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
@@ -128,6 +152,7 @@ def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
     assert baseline.host_revision == CANONICAL_HOST_REVISION
     assert tuple(baseline.object_info) == (
         "Sigmax.Krea2SigmaScheduler",
+        "Sigmax.RawWorkflowOutput",
         "Sigmax.ScheduleInspector",
         "Sigmax.TurboWorkflowOutput",
     )
@@ -135,7 +160,7 @@ def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
     assert report.lane is WorkflowValidationLane.KNOWN_GOOD
     assert report.host_version == CANONICAL_HOST_VERSION
     assert report.host_revision == CANONICAL_HOST_REVISION
-    assert report.workflow_count == 2
+    assert report.workflow_count == 4
     assert report.compatible is True
     assert report.gate_passed is True
     assert report.observational is False
@@ -144,6 +169,7 @@ def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
     assert projection["package"] == {"id": "comfyui-sigmax", "version": "0.1.0.dev0"}
     assert projection["nodes"] == [
         {"id": "Sigmax.Krea2SigmaScheduler", "version": "1"},
+        {"id": "Sigmax.RawWorkflowOutput", "version": "1"},
         {"id": "Sigmax.ScheduleInspector", "version": "1"},
         {"id": "Sigmax.TurboWorkflowOutput", "version": "1"},
     ]
@@ -855,7 +881,8 @@ def test_validator_rejects_invalid_entry_contracts(kwargs: dict[str, object]) ->
 
 
 def test_validator_allows_per_fixture_nodes_but_rejects_requirement_disagreement() -> None:
-    raw, turbo = load_canonical_workflow_fixtures()
+    raw = _fixture("krea2-raw-official-square-1024")
+    turbo = _fixture("krea2-turbo-1024")
     changed_package = replace(turbo.package, version="9.9.9")
     with pytest.raises(ScheduleContractError):
         validate_workflow_fixtures(

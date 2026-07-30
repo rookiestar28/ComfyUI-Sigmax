@@ -23,9 +23,11 @@ versioned profiles for other flow-matching and diffusion model families.
 > and produces collision-safe namespaced mappings. Its built-in catalog now contains
 > `Sigmax.AdvancedFlowMatchScheduler`, `Sigmax.Krea2SigmaScheduler`, and
 > `Sigmax.ModelAwareSigmaScheduler`, `Sigmax.ProfileInspector`, and
-> `Sigmax.ScheduleComparison`, and `Sigmax.ScheduleInspector`; RAW native-ComfyUI and
-> real-host node/workflow parity remain
-> pending. The
+> `Sigmax.ScheduleComparison`, `Sigmax.ScheduleInspector`, `Sigmax.RawWorkflowOutput`, and
+> `Sigmax.TurboWorkflowOutput`. The repository-owned H1/H2 harness loads this catalog and
+> executes the canonical model-free Turbo and RAW graphs on ComfyUI `0.29.0` revision
+> `e651b7bef55a5376343dcb1c0edb79f0142c985e`. RAW native model-sampling parity, model
+> weights, GPU execution, and image generation remain pending. The
 > complete core and profile
 > layer are dependency-free and have enforced
 > isolation/property/golden/parity contract lanes.
@@ -70,6 +72,7 @@ assert sorted(comfyui_sigmax.NODE_CLASS_MAPPINGS) == [
     "Sigmax.Krea2SigmaScheduler",
     "Sigmax.ModelAwareSigmaScheduler",
     "Sigmax.ProfileInspector",
+    "Sigmax.RawWorkflowOutput",
     "Sigmax.ScheduleComparison",
     "Sigmax.ScheduleInspector",
     "Sigmax.TurboWorkflowOutput",
@@ -79,6 +82,7 @@ assert comfyui_sigmax.NODE_DISPLAY_NAME_MAPPINGS == {
     "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler",
     "Sigmax.ModelAwareSigmaScheduler": "Model-Aware Sigma Scheduler",
     "Sigmax.ProfileInspector": "Profile Inspector",
+    "Sigmax.RawWorkflowOutput": "RAW Workflow Output",
     "Sigmax.ScheduleComparison": "Schedule Comparison",
     "Sigmax.ScheduleInspector": "Schedule Inspector",
     "Sigmax.TurboWorkflowOutput": "Turbo Workflow Output",
@@ -86,8 +90,8 @@ assert comfyui_sigmax.NODE_DISPLAY_NAME_MAPPINGS == {
 ```
 
 Only validated product nodes enter these mappings. Runtime dependencies remain empty; schedule
-nodes load host-provided Torch only when they execute, the Turbo workflow output publishes a
-canonical model-free artifact/receipt bundle, and Diffusers remains isolated to an exactly
+nodes load host-provided Torch only when they execute, the RAW and Turbo workflow outputs publish
+canonical model-free artifact/receipt bundles, and Diffusers remains isolated to an exactly
 pinned parity environment.
 
 The pure core currently exposes explicit schedule ownership, sigma domains, transform stages,
@@ -225,7 +229,23 @@ It checks node/input presence, linked and positional input types, widget slots, 
 values, lifecycle flags, stable package identity, and M4-07 metadata. Reports use
 `sigmax.workflow-validation-report/1`; known-good findings block, while latest-host findings stay
 explicitly observational. The live loader accepts only a bounded literal-loopback
-`/object_info` endpoint. This is not real-host workflow load or execution evidence.
+`/object_info` endpoint. A validation report alone is not real-host workflow execution evidence.
+
+The separate repository-owned `scripts/run_comfyui_e2e.py` harness supplies that higher boundary
+for the pinned supported host. It imports the staged extension without changing Torch or the
+ComfyUI scheduler registry, validates live schemas, and executes four canonical model-free
+graphs:
+
+- `krea2-turbo-1024`;
+- `krea2-raw-official-square-1024`;
+- `krea2-raw-official-landscape-1353x761`;
+- `krea2-raw-diffusers-portrait-761x1353`.
+
+Each RAW graph ends at `Sigmax.RawWorkflowOutput`. Completed prompt history must preserve the
+submitted workflow metadata and return the expected requested/effective geometry, sequence
+length, dynamic `mu`, artifact and receipt cross-links, numerical fingerprint, external-sigma
+ownership, and exactly one time shift. The receipt remains truthfully `not_executed`: the host
+ran schedule construction and inspection, not a model or sampler step.
 
 Model, profile, sampler, and requested execution features also have immutable capability
 contracts:

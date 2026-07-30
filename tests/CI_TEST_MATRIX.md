@@ -23,7 +23,7 @@ Command definitions remain in `tests/TEST_SOP.md`. Real-host lifecycle requireme
 | Native ComfyUI parity tests | Implemented | M2-04 |
 | Adapter/integration tests | Implemented | M4-01 through M4-10 |
 | Real ComfyUI H1 | Implemented | M2-05 harness |
-| Real ComfyUI H2 | Turbo implemented; RAW/auto pending | M2-05; M3-06 |
+| Real ComfyUI H2 | Turbo and RAW/auto implemented | M2-05; M3-06 |
 | Browser E2E | `NOT_APPLICABLE` | Deliberate web-extension roadmap item |
 | GPU/real-model tests | Optional and unapproved | Explicit requirement and authorization |
 | CI workflows | Configured; hosted runtime evidence pending | M0-06 |

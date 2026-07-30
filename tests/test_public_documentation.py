@@ -104,8 +104,32 @@ def test_public_documentation_exposes_workflow_validation_boundary() -> None:
     )
     assert all(lane in validation_spec for lane in ("known_good", "latest_host"))
     assert "literal-loopback" in validation_spec
-    assert "NOT_IMPLEMENTED" in compatibility
+    assert "H2_RAW_M3_06" in compatibility
     assert "workflows/validation.py" in architecture
+
+
+def test_public_documentation_exposes_raw_host_workflow_boundary() -> None:
+    readme = _read(ROOT / "README.md")
+    validation_spec = _read(ROOT / "docs" / "WORKFLOW_VALIDATION_SPEC.md")
+    compatibility = _read(ROOT / "docs" / "COMPATIBILITY.md")
+    architecture = _read(ROOT / "docs" / "ARCHITECTURE.md")
+
+    for fixture_id in (
+        "krea2-raw-official-square-1024",
+        "krea2-raw-official-landscape-1353x761",
+        "krea2-raw-diffusers-portrait-761x1353",
+    ):
+        assert fixture_id in validation_spec
+    for content in (readme, validation_spec, compatibility, architecture):
+        assert "Sigmax.RawWorkflowOutput" in content
+        assert "e651b7bef55a5376343dcb1c0edb79f0142c985e" in content  # pragma: allowlist secret
+        assert "not_executed" in content
+    assert "run_comfyui_e2e.py" in architecture
+    assert "metadata reload" in validation_spec.lower()
+    assert "model-free" in compatibility.lower()
+    for content in (validation_spec, compatibility):
+        assert "runtime rejection" in content.lower()
+        assert "prequeue http 400" in content.lower()
 
 
 def test_public_documentation_exposes_capability_preflight_contract() -> None:

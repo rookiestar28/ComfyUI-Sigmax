@@ -10,8 +10,8 @@ Fixture bundle: `sigmax.workflow-fixture-bundle/1`
 
 Pinned host baseline: `sigmax.workflow-host-baseline/1`
 
-This specification covers deterministic schema compatibility. It does not claim that a real
-ComfyUI process loaded or executed a workflow.
+This specification covers deterministic schema compatibility. Real-host execution is a separate
+repository H1/H2 boundary described below; a validation report alone does not prove execution.
 
 ## Purpose
 
@@ -19,15 +19,21 @@ The workflow metadata layer preserves portable requirements but deliberately tre
 surrounding ComfyUI graph as host-owned data. The adjacent `comfyui_sigmax.workflows` package
 validates canonical graph fixtures without importing or executing host node implementations.
 
-The package ships two minimal model-free fixtures:
+The package ships four executable model-free fixtures:
 
 - `krea2-turbo-1024`: official Turbo, 8 steps, 1024x1024;
-- `krea2-raw-1024`: official RAW, 52 steps, 1024x1024.
+- `krea2-raw-official-square-1024`: official RAW, 52 steps, 1024x1024;
+- `krea2-raw-official-landscape-1353x761`: official RAW, 52 steps, requested
+  1353x761 and effective 1360x768;
+- `krea2-raw-diffusers-portrait-761x1353`: framework-reference RAW, 28 steps,
+  requested 761x1353 and effective 768x1360.
 
-Each graph connects `Sigmax.Krea2SigmaScheduler` to `Sigmax.ScheduleInspector`. These fixtures
-exercise node identity, linked inputs, ordered widgets, fixed variant values, M4-07 metadata, and
-portable package identity. They are validator contracts, not the full user-facing workflows
-owned by later roadmap items.
+Each graph connects `Sigmax.Krea2SigmaScheduler` to `Sigmax.ScheduleInspector` and then to the
+variant-specific `Sigmax.RawWorkflowOutput` or `Sigmax.TurboWorkflowOutput`. The output verifies
+the complete connected schedule and publishes a canonical artifact plus truthful
+`not_executed` receipt. These fixtures exercise node identity, linked inputs, ordered widgets,
+fixed variant values, versioned metadata, portable package identity, and an executable history
+boundary without claiming model or sampler execution.
 
 ## Host Schema Inputs
 
@@ -118,6 +124,34 @@ narrow boundary:
 It returns an untrusted JSON object for normal validation. It does not load ComfyUI modules,
 execute node code, start a host, or establish H1/H2 real-host evidence.
 
+## Real-Host H1/H2 Boundary
+
+`scripts/run_comfyui_e2e.py` owns the separate real-host lane for ComfyUI `0.29.0` revision
+`e651b7bef55a5376343dcb1c0edb79f0142c985e`.
+
+H1 stages the extension into an owned isolated directory and proves:
+
+- all eight node IDs import and appear in live `/object_info`;
+- the live four-workflow schema report passes;
+- importing Sigmax does not replace `torch.nn.Module.__call__`, mutate ComfyUI's scheduler
+  registry, or import Diffusers.
+
+H2 retains the accepted Turbo regression and executes all three RAW fixtures. Every RAW case
+must reach completed successful history and verify:
+
+- requested and effective geometry, sequence length, recipe/evidence, and dynamic `mu`;
+- canonical construction/numerical/receipt fingerprints;
+- external-sigma ownership and exactly one `krea.exponential_mu` transform;
+- zero effective model/sampler counts and `not_executed` status;
+- workflow metadata reload from the retained prompt `extra_data`.
+
+The lane also submits an ambiguous variant and an invalid step count. The ambiguous variant
+must produce a terminal runtime rejection with a retained prompt ID, exact scheduler exception,
+and no partial output. The invalid step count must produce a structured prequeue HTTP 400
+rejection without a prompt ID or partial output. Host traffic is bounded credential-free
+literal `127.0.0.1`, process state is isolated, and successful runs remove their owned temporary
+state after shutdown and port-release verification.
+
 ## Package Identity and Normalized Directories
 
 Physical custom-node directory names are not workflow identities. A canonical Sigmax node must
@@ -132,6 +166,7 @@ Renamed or version-normalized install directories must not leak into these publi
 
 ## Current Limitation
 
-The real ComfyUI H1/H2 harness remains `NOT_IMPLEMENTED`. Static scans and controlled loopback
-HTTP tests are acceptance evidence for this pure validator only; they are not substitutes for a
-running supported host.
+H1/H2 executes model-free schedule construction, inspection, publication, and metadata reload.
+It does not load model weights, execute Euler/model evaluations, produce a successful sampler
+receipt, use a GPU, or generate/compare images. Evidence applies only to the exact pinned host
+revision; static and live schema reports remain insufficient substitutes for H1/H2.

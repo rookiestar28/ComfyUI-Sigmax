@@ -452,7 +452,9 @@ def load_canonical_workflow_fixtures() -> tuple[WorkflowFixture, ...]:
         )
     result = tuple(sorted(fixtures, key=lambda item: item.identifier))
     if tuple(item.identifier for item in result) != (
-        "krea2-raw-1024",
+        "krea2-raw-diffusers-portrait-761x1353",
+        "krea2-raw-official-landscape-1353x761",
+        "krea2-raw-official-square-1024",
         "krea2-turbo-1024",
     ):
         raise ScheduleContractError("workflow fixture inventory is not canonical")

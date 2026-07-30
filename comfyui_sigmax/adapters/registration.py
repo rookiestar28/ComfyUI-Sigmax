@@ -581,6 +581,7 @@ def builtin_node_registry() -> NodeRegistry:
         Krea2SigmaScheduler,
         ModelAwareSigmaScheduler,
         ProfileInspector,
+        RawWorkflowOutput,
         ScheduleComparison,
         ScheduleInspector,
         TurboWorkflowOutput,
@@ -607,6 +608,11 @@ def builtin_node_registry() -> NodeRegistry:
                 node_id="Sigmax.ProfileInspector",
                 display_name="Profile Inspector",
                 node_class=ProfileInspector,
+            ),
+            discover_legacy_registration(
+                node_id="Sigmax.RawWorkflowOutput",
+                display_name="RAW Workflow Output",
+                node_class=RawWorkflowOutput,
             ),
             discover_legacy_registration(
                 node_id="Sigmax.ScheduleComparison",

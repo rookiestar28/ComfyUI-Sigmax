@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from decimal import ROUND_HALF_EVEN, Decimal, localcontext
 from enum import Enum
 from typing import Final
 
@@ -30,8 +31,6 @@ from comfyui_sigmax.core import (
     TransformContract,
     TransformStage,
     apply_terminal_policy,
-    exponential_mu_shift,
-    krea_reciprocal_step_grid,
     validate_sigma_schedule,
 )
 from comfyui_sigmax.profiles.krea2_common import (
@@ -530,6 +529,21 @@ def derive_krea2_raw_shift(
     )
 
 
+def _canonical_raw_shifted_grid(*, steps: int, mu: float) -> tuple[float, ...]:
+    """Build the M3-03 deterministic binary64 RAW grid before terminal zero."""
+
+    # CRITICAL: system libm differs by one ULP across Windows/Linux; keep this Decimal oracle.
+    with localcontext() as context:
+        context.prec = 80
+        context.rounding = ROUND_HALF_EVEN
+        ratio = Decimal(str(mu)).exp()
+        shifted = [1.0]
+        for index in range(1, steps):
+            numerator = ratio * (steps - index)
+            shifted.append(float(numerator / (numerator + index)))
+    return tuple(shifted)
+
+
 def build_krea2_raw_schedule(
     *,
     width: int = 1024,
@@ -607,10 +621,9 @@ def build_krea2_raw_schedule(
         overrides=tuple(overrides),
     )
     sigmas = apply_terminal_policy(
-        exponential_mu_shift(
-            krea_reciprocal_step_grid(recipe.steps, domain=profile.sigma_domain),
+        _canonical_raw_shifted_grid(
+            steps=recipe.steps,
             mu=derivation.mu,
-            domain=profile.sigma_domain,
         ),
         policy=profile.terminal_policy,
         domain=profile.sigma_domain,

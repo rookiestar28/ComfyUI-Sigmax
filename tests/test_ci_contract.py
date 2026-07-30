@@ -92,7 +92,10 @@ class CiContractTests(unittest.TestCase):
         ]
         self.assertEqual(sorted(positions), positions)
         self.assertIn('"browser_e2e": "NOT_APPLICABLE"', runner)
-        self.assertIn('"comfyui_host_e2e": "NOT_IMPLEMENTED"', runner)
+        self.assertIn(
+            '"comfyui_host_e2e": "IMPLEMENTED_SEPARATE_GATE"',
+            runner,
+        )
         self.assertIn('"comfyui_sigmax/adapters/__init__.py"', runner)
         self.assertIn('"comfyui_sigmax/adapters/comfyui.py"', runner)
         self.assertIn('"comfyui_sigmax/adapters/registration.py"', runner)
@@ -108,7 +111,11 @@ class CiContractTests(unittest.TestCase):
         self.assertIn('"comfyui_sigmax/core/validation.py"', runner)
         self.assertIn('"comfyui_sigmax/nodes/__init__.py"', runner)
         self.assertIn('"comfyui_sigmax/nodes/krea2_sigma_scheduler.py"', runner)
+        self.assertIn('"comfyui_sigmax/nodes/raw_workflow_output.py"', runner)
         self.assertIn('"comfyui_sigmax/profiles/__init__.py"', runner)
+        self.assertIn('"comfyui_sigmax/workflows/fixtures.json"', runner)
+        self.assertIn('"comfyui_sigmax/workflows/host_baseline.json"', runner)
+        self.assertIn('"comfyui_sigmax/workflows/validation.py"', runner)
         self.assertIn('"comfyui_sigmax/profiles/krea2_common.py"', runner)
         self.assertIn('"comfyui_sigmax/profiles/krea2_raw.py"', runner)
         self.assertIn('"comfyui_sigmax/profiles/krea2_turbo.py"', runner)

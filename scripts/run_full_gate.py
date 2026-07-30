@@ -30,7 +30,7 @@ STAGES: Final = (
 
 LANE_STATUS: Final = {
     "browser_e2e": "NOT_APPLICABLE",
-    "comfyui_host_e2e": "NOT_IMPLEMENTED",
+    "comfyui_host_e2e": "IMPLEMENTED_SEPARATE_GATE",
     "core_independence": "IMPLEMENTED",
     "framework_parity": "IMPLEMENTED",
     "golden": "IMPLEMENTED",
@@ -76,11 +76,16 @@ def _inspect_wheel(wheel: Path) -> None:
         "comfyui_sigmax/core/validation.py",
         "comfyui_sigmax/nodes/__init__.py",
         "comfyui_sigmax/nodes/krea2_sigma_scheduler.py",
+        "comfyui_sigmax/nodes/raw_workflow_output.py",
         "comfyui_sigmax/profiles/__init__.py",
         "comfyui_sigmax/profiles/krea2_common.py",
         "comfyui_sigmax/profiles/krea2_raw.py",
         "comfyui_sigmax/profiles/krea2_turbo.py",
         "comfyui_sigmax/profiles/resolution.py",
+        "comfyui_sigmax/workflows/__init__.py",
+        "comfyui_sigmax/workflows/fixtures.json",
+        "comfyui_sigmax/workflows/host_baseline.json",
+        "comfyui_sigmax/workflows/validation.py",
     }
     if not required.issubset(names):
         raise RuntimeError(f"Wheel is missing required files: {sorted(required - set(names))}")

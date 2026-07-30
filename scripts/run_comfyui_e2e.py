@@ -1,4 +1,4 @@
-"""Run isolated real-host ComfyUI H1 and Turbo-only M2-05 H2 verification."""
+"""Run isolated real-host ComfyUI H1 plus Turbo and RAW H2 verification."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ import re
 import shutil
 import signal
 import socket
+import struct
 import subprocess
 import sys
 import time
@@ -34,6 +35,7 @@ from comfyui_sigmax.core import (  # noqa: E402
 )
 from comfyui_sigmax.workflows import (  # noqa: E402
     WorkflowValidationLane,
+    load_canonical_workflow_fixtures,
     validate_live_workflow_fixtures,
 )
 from comfyui_sigmax.workflows.validation import (  # noqa: E402
@@ -47,6 +49,53 @@ _BUNDLE_KEY: Final = "sigmax_execution_bundle"
 _EXPECTED_NUMERICAL_FINGERPRINT: Final = (
     "sha256:24984ad4412a3c47103a52cfe3af16bb9df8789f98401d9fc281b3f6ca0892ac"
 )
+_RAW_CASES: Final = {
+    "krea2-raw-official-square-1024": {
+        "steps": 52,
+        "width": 1024,
+        "height": 1024,
+        "strict_official": True,
+        "effective_width": 1024,
+        "effective_height": 1024,
+        "image_seq_len": 4096,
+        "mu": 0.90625,
+        "recipe": "krea2.raw.official-full-52",
+        "evidence": "official",
+        "numerical_fingerprint": (
+            "sha256:5ff69c30df41c7f37eae14502155b31f23724d32427180f69118cabcd6a3ac61"
+        ),
+    },
+    "krea2-raw-official-landscape-1353x761": {
+        "steps": 52,
+        "width": 1353,
+        "height": 761,
+        "strict_official": True,
+        "effective_width": 1360,
+        "effective_height": 768,
+        "image_seq_len": 4080,
+        "mu": 0.9045572916666667,
+        "recipe": "krea2.raw.official-full-52",
+        "evidence": "official",
+        "numerical_fingerprint": (
+            "sha256:01352f42660bd3b31bbaf7548a9891273899afd375adeb68c7f7c93fd2a4f0d4"
+        ),
+    },
+    "krea2-raw-diffusers-portrait-761x1353": {
+        "steps": 28,
+        "width": 761,
+        "height": 1353,
+        "strict_official": False,
+        "effective_width": 768,
+        "effective_height": 1360,
+        "image_seq_len": 4080,
+        "mu": 0.9045572916666667,
+        "recipe": "krea2.raw.diffusers-reference-28",
+        "evidence": "framework_reference",
+        "numerical_fingerprint": (
+            "sha256:52208c5fa3780c95cce399b1f842f3fea56503e76fdf5ef4abc3069cf3108f01"
+        ),
+    },
+}
 _MAX_HTTP_BYTES: Final = 4_000_000
 _MAX_LOG_BYTES: Final = 1_000_000
 _SECRET_PATTERN: Final = re.compile(
@@ -80,6 +129,48 @@ def build_turbo_api_prompt() -> dict[str, object]:
         },
         "3": {
             "class_type": "Sigmax.TurboWorkflowOutput",
+            "inputs": {
+                "sigmas": ["1", 0],
+                "schedule_info": ["1", 1],
+                "schedule_report": ["2", 0],
+            },
+        },
+    }
+
+
+def _raw_case(case_id: str) -> dict[str, object]:
+    case = _RAW_CASES.get(case_id)
+    if case is None:
+        raise ScheduleContractError("RAW host case ID is unsupported")
+    return dict(case)
+
+
+def build_raw_api_prompt(case_id: str) -> dict[str, object]:
+    """Return one exact model-free RAW scheduler -> inspector -> output API graph."""
+
+    case = _raw_case(case_id)
+    return {
+        "1": {
+            "class_type": "Sigmax.Krea2SigmaScheduler",
+            "inputs": {
+                "variant": "RAW",
+                "steps": case["steps"],
+                "width": case["width"],
+                "height": case["height"],
+                "strict_official": case["strict_official"],
+                "start_step": 0,
+                "end_step": -1,
+            },
+        },
+        "2": {
+            "class_type": "Sigmax.ScheduleInspector",
+            "inputs": {
+                "sigmas": ["1", 0],
+                "schedule_info": ["1", 1],
+            },
+        },
+        "3": {
+            "class_type": "Sigmax.RawWorkflowOutput",
             "inputs": {
                 "sigmas": ["1", 0],
                 "schedule_info": ["1", 1],
@@ -163,6 +254,274 @@ def verify_turbo_history(
         "schedule_ownership": ownership["schedule"],
         "shift_count": shift_count,
         "status": execution["status"],
+    }
+
+
+def verify_raw_history(
+    history: object,
+    *,
+    prompt_id: str,
+    case_id: str,
+    submitted_workflow: object,
+) -> dict[str, object]:
+    """Verify one completed RAW bundle and the exact submitted workflow metadata reload."""
+
+    case = _raw_case(case_id)
+    root = _object(history, label="history")
+    entry = _object(root.get(prompt_id), label="RAW prompt history entry")
+    status = _object(entry.get("status"), label="RAW prompt status")
+    if status.get("completed") is not True or status.get("status_str") != "success":
+        raise ScheduleContractError("RAW prompt history does not prove completed success")
+
+    prompt_tuple = _array(entry.get("prompt"), label="RAW retained prompt tuple")
+    if len(prompt_tuple) < 4 or prompt_tuple[2] != build_raw_api_prompt(case_id):
+        raise ScheduleContractError("RAW retained API graph is missing or stale")
+    extra_data = _object(prompt_tuple[3], label="RAW retained extra_data")
+    extra_pnginfo = _object(extra_data.get("extra_pnginfo"), label="RAW retained extra_pnginfo")
+    if extra_pnginfo.get("workflow") != submitted_workflow:
+        raise ScheduleContractError("RAW workflow metadata did not survive history reload")
+
+    outputs = _object(entry.get("outputs"), label="RAW prompt outputs")
+    output = _object(outputs.get(_OUTPUT_NODE_ID), label="RAW output-node history")
+    bundle_values = _array(output.get(_BUNDLE_KEY), label="RAW execution bundle")
+    if len(bundle_values) != 1 or not isinstance(bundle_values[0], str):
+        raise ScheduleContractError("RAW execution bundle history is malformed")
+
+    bundle = deserialize_portable_execution_bundle(bundle_values[0])
+    construction = bundle.artifact.construction_projection()
+    receipt = bundle.receipt.projection()
+    execution = _object(receipt.get("execution"), label="RAW receipt execution")
+    counts = _object(receipt.get("counts"), label="RAW receipt counts")
+    requested = _object(construction.get("requested"), label="RAW requested geometry")
+    effective = _object(construction.get("effective"), label="RAW effective geometry")
+    base_grid = _object(construction.get("base_grid"), label="RAW base grid")
+    parameters = _object(base_grid.get("parameters"), label="RAW base-grid parameters")
+    evidence = _object(construction.get("evidence"), label="RAW evidence")
+    ownership = _object(construction.get("ownership"), label="RAW artifact ownership")
+    transforms = _array(construction.get("transforms"), label="RAW artifact transforms")
+    shift_count = sum(
+        _object(item, label="RAW artifact transform").get("id") == "krea.exponential_mu"
+        for item in transforms
+    )
+    shift = next(
+        (
+            _object(item, label="RAW shift transform")
+            for item in transforms
+            if _object(item, label="RAW artifact transform").get("id") == "krea.exponential_mu"
+        ),
+        None,
+    )
+    if shift is None:
+        raise ScheduleContractError("RAW artifact has no dynamic shift")
+    shift_parameters = _object(shift.get("parameters"), label="RAW shift parameters")
+    expected_mu = cast(float, case["mu"])
+    expected_mu_value = {
+        "bits": struct.pack(">d", expected_mu).hex(),
+        "precision": "float64",
+    }
+
+    steps = cast(int, case["steps"])
+    expected_counts = {
+        "effective_model_evaluations": 0,
+        "effective_transitions": 0,
+        "requested_model_evaluations": steps,
+        "requested_transitions": steps,
+    }
+    if execution != {
+        "reason_code": None,
+        "status": ExecutionStatus.NOT_EXECUTED.value,
+    }:
+        raise ScheduleContractError("RAW model-free receipt status is not truthful")
+    if counts != expected_counts:
+        raise ScheduleContractError("RAW model-free receipt counts are not canonical")
+    if {
+        "width": requested.get("width"),
+        "height": requested.get("height"),
+    } != {"width": case["width"], "height": case["height"]}:
+        raise ScheduleContractError("RAW requested geometry drifted")
+    if {
+        "width": effective.get("width"),
+        "height": effective.get("height"),
+    } != {
+        "width": case["effective_width"],
+        "height": case["effective_height"],
+    }:
+        raise ScheduleContractError("RAW effective geometry drifted")
+    if parameters != {
+        "image_seq_len": case["image_seq_len"],
+        "recipe": case["recipe"],
+        "steps": steps,
+    }:
+        raise ScheduleContractError("RAW recipe or image sequence evidence drifted")
+    if evidence.get("level") != case["evidence"]:
+        raise ScheduleContractError("RAW evidence level drifted")
+    if shift_parameters.get("mu") != expected_mu_value:
+        raise ScheduleContractError("RAW dynamic mu drifted")
+    if ownership != {
+        "schedule": "external_sigmas",
+        "shift": "construction_pipeline",
+    }:
+        raise ScheduleContractError("RAW artifact ownership permits an implicit second shift")
+    if shift_count != 1:
+        raise ScheduleContractError("RAW artifact does not contain exactly one time shift")
+    if bundle.artifact.numerical_fingerprint != case["numerical_fingerprint"]:
+        raise ScheduleContractError("executed RAW schedule fingerprint drifted")
+
+    return {
+        "artifact_construction_fingerprint": bundle.artifact.construction_fingerprint,
+        "case_id": case_id,
+        "effective": {
+            "height": effective["height"],
+            "width": effective["width"],
+        },
+        "image_seq_len": parameters["image_seq_len"],
+        "metadata_reloaded": True,
+        "mu": expected_mu,
+        "numerical_fingerprint": bundle.artifact.numerical_fingerprint,
+        "receipt_fingerprint": bundle.receipt.receipt_fingerprint,
+        "requested": {
+            "height": requested["height"],
+            "width": requested["width"],
+        },
+        "requested_transitions": counts["requested_transitions"],
+        "schedule_ownership": ownership["schedule"],
+        "shift_count": shift_count,
+        "status": execution["status"],
+    }
+
+
+def verify_rejected_history(
+    history: object,
+    *,
+    prompt_id: str,
+    case_id: str,
+    expected_message: str,
+) -> dict[str, object]:
+    """Require a terminal scheduler error with no partial output bundle."""
+
+    root = _object(history, label="rejected prompt history")
+    entry = _object(root.get(prompt_id), label="rejected prompt history entry")
+    status = _object(entry.get("status"), label="rejected prompt status")
+    if status.get("completed") is not False or status.get("status_str") != "error":
+        raise ScheduleContractError("rejected prompt history is not a terminal error")
+    prompt_tuple = _array(entry.get("prompt"), label="rejected retained prompt tuple")
+    if len(prompt_tuple) < 3 or prompt_tuple[2] != _rejected_raw_api_prompt(case_id):
+        raise ScheduleContractError("rejected prompt history retained a stale API graph")
+    outputs = _object(entry.get("outputs"), label="rejected prompt outputs")
+    if outputs:
+        raise ScheduleContractError("rejected prompt produced partial output")
+    messages = _array(status.get("messages"), label="rejected prompt messages")
+    events = [_array(item, label="rejected prompt event") for item in messages]
+    if [item[0] if item else None for item in events] != [
+        "execution_start",
+        "execution_cached",
+        "execution_error",
+    ]:
+        raise ScheduleContractError("rejected prompt has an unexpected event sequence")
+    cached_event = events[1]
+    if len(cached_event) != 2:
+        raise ScheduleContractError("rejected prompt cached evidence drifted")
+    cached_detail = _object(cached_event[1], label="rejected prompt cached detail")
+    if cached_detail.get("prompt_id") != prompt_id or not isinstance(
+        cached_detail.get("nodes"), list
+    ):
+        raise ScheduleContractError("rejected prompt cached evidence drifted")
+    event = events[2]
+    if len(event) != 2 or event[0] != "execution_error":
+        raise ScheduleContractError("rejected prompt has no execution_error event")
+    detail = _object(event[1], label="rejected prompt error detail")
+    if detail.get("prompt_id") != prompt_id:
+        raise ScheduleContractError("rejected prompt error references a different prompt")
+    if (
+        detail.get("node_id") != "1"
+        or detail.get("node_type") != "Sigmax.Krea2SigmaScheduler"
+        or detail.get("exception_type")
+        != "comfyui_sigmax.core.schedule_contracts.ScheduleContractError"
+        or detail.get("exception_message") != f"{expected_message}\n"
+        or detail.get("executed") != []
+        or not isinstance(detail.get("current_outputs"), list)
+    ):
+        raise ScheduleContractError("rejected prompt error evidence drifted")
+    return {
+        "boundary": "runtime_execution",
+        "case_id": case_id,
+        "exception_type": detail["exception_type"],
+        "partial_output": False,
+        "prompt_created": True,
+        "status": status["status_str"],
+    }
+
+
+def verify_prequeue_rejection(
+    response: object,
+    *,
+    case_id: str,
+) -> dict[str, object]:
+    """Require the pinned structured HTTP 400 contract for invalid RAW steps."""
+
+    if case_id != "raw-invalid-steps":
+        raise ScheduleContractError("RAW prequeue rejection case ID is unsupported")
+    root = _object(response, label="RAW prequeue rejection response")
+    if "prompt_id" in root:
+        raise ScheduleContractError("prequeue rejection unexpectedly created a prompt ID")
+    error = _object(root.get("error"), label="RAW prequeue top-level error")
+    if (
+        error.get("type") != "prompt_outputs_failed_validation"
+        or error.get("message") != "Prompt outputs failed validation"
+        or error.get("details") != ""
+        or error.get("extra_info") != {}
+    ):
+        raise ScheduleContractError("RAW prequeue top-level error drifted")
+    node_errors = _object(root.get("node_errors"), label="RAW prequeue node errors")
+    if set(node_errors) != {"1"}:
+        raise ScheduleContractError("RAW prequeue scheduler error is missing or ambiguous")
+    node_error = _object(node_errors["1"], label="RAW prequeue scheduler error")
+    if node_error.get("class_type") != "Sigmax.Krea2SigmaScheduler" or node_error.get(
+        "dependent_outputs"
+    ) != ["3"]:
+        raise ScheduleContractError("RAW prequeue scheduler identity drifted")
+    reasons = _array(node_error.get("errors"), label="RAW prequeue validation reasons")
+    if len(reasons) != 1:
+        raise ScheduleContractError("RAW prequeue validation reasons are ambiguous")
+    reason = _object(reasons[0], label="RAW prequeue validation reason")
+    if (
+        reason.get("type") != "value_smaller_than_min"
+        or reason.get("message") != "Value 0 smaller than min of 1"
+        or reason.get("details") != "steps"
+    ):
+        raise ScheduleContractError("RAW prequeue validation reason drifted")
+    extra_info = _object(
+        reason.get("extra_info"),
+        label="RAW prequeue validation reason details",
+    )
+    input_config = _array(
+        extra_info.get("input_config"),
+        label="RAW prequeue input configuration",
+    )
+    if len(input_config) != 2 or input_config[0] != "INT":
+        raise ScheduleContractError("RAW prequeue steps configuration drifted")
+    constraints = _object(
+        input_config[1],
+        label="RAW prequeue steps constraints",
+    )
+    if (
+        extra_info.get("input_name") != "steps"
+        or type(extra_info.get("received_value")) is not int
+        or extra_info.get("received_value") != 0
+        or type(constraints.get("min")) is not int
+        or constraints.get("min") != 1
+    ):
+        raise ScheduleContractError("RAW prequeue steps evidence drifted")
+    return {
+        "boundary": "prequeue_validation",
+        "case_id": case_id,
+        "http_status": 400,
+        "node_id": "1",
+        "node_type": node_error["class_type"],
+        "partial_output": False,
+        "prompt_created": False,
+        "reason_type": reason["type"],
+        "status": "rejected",
     }
 
 
@@ -264,6 +623,40 @@ def _http_json(
     except (HTTPError, URLError, TimeoutError, OSError) as exc:
         raise ScheduleContractError("loopback host request failed") from exc
     return _decode_json(raw, label="loopback host response")
+
+
+def _http_json_error(
+    url: str,
+    *,
+    method: str,
+    body: Mapping[str, object],
+    expected_status: int,
+    timeout: float = 5.0,
+) -> object:
+    payload = json.dumps(
+        dict(body),
+        allow_nan=False,
+        ensure_ascii=False,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    request = Request(  # noqa: S310
+        _require_loopback_http_url(url),
+        data=payload,
+        headers={"Accept": "application/json", "Content-Type": "application/json"},
+        method=method,
+    )
+    try:
+        with urlopen(request, timeout=timeout):  # noqa: S310
+            raise ScheduleContractError("loopback host unexpectedly accepted an invalid prompt")
+    except HTTPError as exc:
+        if exc.code != expected_status:
+            raise ScheduleContractError(
+                "loopback host returned an unexpected error status"
+            ) from exc
+        raw = exc.read(_MAX_HTTP_BYTES + 1)
+    except (URLError, TimeoutError, OSError) as exc:
+        raise ScheduleContractError("loopback host rejection request failed") from exc
+    return _decode_json(raw, label="loopback host rejection response")
 
 
 def _http_no_content(url: str, *, method: str, timeout: float) -> None:
@@ -407,6 +800,121 @@ def _wait_for_history(*, base_url: str, prompt_id: str, deadline: float) -> dict
     raise ScheduleContractError(f"prompt history deadline expired: {last_error}")
 
 
+def _wait_for_error_history(
+    *,
+    base_url: str,
+    prompt_id: str,
+    deadline: float,
+) -> dict[str, object]:
+    last_error = "error history not available"
+    while time.monotonic() < deadline:
+        try:
+            value = _http_json(f"{base_url}/history/{prompt_id}")
+            history = _object(value, label="rejected prompt history")
+            entry = history.get(prompt_id)
+            if isinstance(entry, Mapping):
+                status = cast(Mapping[str, object], entry).get("status")
+                if isinstance(status, Mapping) and status.get("status_str") == "error":
+                    return history
+        except ScheduleContractError as exc:
+            last_error = str(exc)
+        time.sleep(0.1)
+    raise ScheduleContractError(f"prompt error-history deadline expired: {last_error}")
+
+
+def _submit_successful_prompt(
+    *,
+    base_url: str,
+    client_id: str,
+    prompt: Mapping[str, object],
+    execution_timeout: float,
+    extra_data: Mapping[str, object] | None = None,
+) -> tuple[str, dict[str, object]]:
+    body: dict[str, object] = {
+        "client_id": client_id,
+        "prompt": dict(prompt),
+    }
+    if extra_data is not None:
+        body["extra_data"] = dict(extra_data)
+    response = _object(
+        _http_json(
+            f"{base_url}/prompt",
+            method="POST",
+            body=body,
+            timeout=10,
+        ),
+        label="prompt response",
+    )
+    prompt_id = response.get("prompt_id")
+    if not isinstance(prompt_id, str) or not prompt_id:
+        raise ScheduleContractError("prompt response does not contain a prompt ID")
+    if response.get("node_errors", {}) not in ({}, None):
+        raise ScheduleContractError("prompt validation returned node errors")
+    history = _wait_for_history(
+        base_url=base_url,
+        prompt_id=prompt_id,
+        deadline=time.monotonic() + execution_timeout,
+    )
+    return prompt_id, history
+
+
+def _submit_rejected_runtime_prompt(
+    *,
+    base_url: str,
+    client_id: str,
+    prompt: Mapping[str, object],
+    execution_timeout: float,
+) -> tuple[str, dict[str, object]]:
+    response = _object(
+        _http_json(
+            f"{base_url}/prompt",
+            method="POST",
+            body={"client_id": client_id, "prompt": dict(prompt)},
+            timeout=10,
+        ),
+        label="rejected prompt submission",
+    )
+    prompt_id = response.get("prompt_id")
+    if not isinstance(prompt_id, str) or not prompt_id:
+        raise ScheduleContractError("runtime rejection did not create a prompt ID")
+    if response.get("node_errors", {}) not in ({}, None):
+        raise ScheduleContractError("runtime rejection returned unexpected preflight errors")
+    history = _wait_for_error_history(
+        base_url=base_url,
+        prompt_id=prompt_id,
+        deadline=time.monotonic() + execution_timeout,
+    )
+    return prompt_id, history
+
+
+def _submit_rejected_prequeue_prompt(
+    *,
+    base_url: str,
+    client_id: str,
+    prompt: Mapping[str, object],
+) -> object:
+    return _http_json_error(
+        f"{base_url}/prompt",
+        method="POST",
+        body={"client_id": client_id, "prompt": dict(prompt)},
+        expected_status=400,
+        timeout=10,
+    )
+
+
+def _rejected_raw_api_prompt(case_id: str) -> dict[str, object]:
+    prompt = build_raw_api_prompt("krea2-raw-official-square-1024")
+    scheduler = cast(dict[str, object], prompt["1"])
+    inputs = cast(dict[str, object], scheduler["inputs"])
+    if case_id == "raw-auto-variant":
+        inputs["variant"] = "auto"
+    elif case_id == "raw-invalid-steps":
+        inputs["steps"] = 0
+    else:
+        raise ScheduleContractError("RAW rejection case ID is unsupported")
+    return prompt
+
+
 def _signal_posix_process_group(pid: int, signal_name: str) -> None:
     """Send a named signal without importing POSIX-only attributes on Windows."""
 
@@ -519,7 +1027,7 @@ def _write_evidence(path: Path | None, evidence: Mapping[str, object]) -> None:
 
 
 def run(args: argparse.Namespace) -> dict[str, object]:
-    """Execute one isolated H1 plus M2-05 Turbo H2 run."""
+    """Execute one isolated H1 plus Turbo and M3-06 RAW H2 run."""
 
     started = time.time()
     comfyui_root = Path(args.comfyui_root).resolve()
@@ -557,8 +1065,8 @@ def run(args: argparse.Namespace) -> dict[str, object]:
     shutdown: dict[str, object] = {}
     succeeded = False
     evidence: dict[str, object] = {
-        "schema": "sigmax.comfyui-host-e2e-evidence/1",
-        "lanes": ["H1", "H2_TURBO_M2_05"],
+        "schema": "sigmax.comfyui-host-e2e-evidence/2",
+        "lanes": ["H1", "H2_TURBO_M2_05", "H2_RAW_M3_06"],
         "host": {
             "id": "comfyui",
             "version": CANONICAL_HOST_VERSION,
@@ -621,35 +1129,72 @@ def run(args: argparse.Namespace) -> dict[str, object]:
                     + json.dumps(issue_payload, sort_keys=True)
                 )
 
-            prompt_response = _object(
-                _http_json(
-                    f"{base_url}/prompt",
-                    method="POST",
-                    body={
-                        "client_id": "sigmax-m2-05-e2e",
-                        "prompt": build_turbo_api_prompt(),
-                    },
-                    timeout=10,
-                ),
-                label="prompt response",
-            )
-            prompt_id = prompt_response.get("prompt_id")
-            if not isinstance(prompt_id, str) or not prompt_id:
-                raise ScheduleContractError("prompt response does not contain a prompt ID")
-            node_errors = prompt_response.get("node_errors", {})
-            if node_errors not in ({}, None):
-                raise ScheduleContractError("prompt validation returned node errors")
-            history = _wait_for_history(
-                base_url=base_url,
-                prompt_id=prompt_id,
-                deadline=time.monotonic() + args.execution_timeout,
-            )
             evidence["h1"] = {
                 "expected_node_ids": list(expected_ids),
                 "live_schema_fingerprint": live_report.report_fingerprint,
                 "registered": True,
             }
-            evidence["h2_turbo"] = verify_turbo_history(history, prompt_id=prompt_id)
+            turbo_prompt_id, turbo_history = _submit_successful_prompt(
+                base_url=base_url,
+                client_id="sigmax-m2-05-e2e",
+                prompt=build_turbo_api_prompt(),
+                execution_timeout=args.execution_timeout,
+            )
+            evidence["h2_turbo"] = verify_turbo_history(
+                turbo_history,
+                prompt_id=turbo_prompt_id,
+            )
+
+            fixtures = {item.identifier: item for item in load_canonical_workflow_fixtures()}
+            raw_results: list[dict[str, object]] = []
+            for case_id in _RAW_CASES:
+                fixture = fixtures.get(case_id)
+                if fixture is None:
+                    raise ScheduleContractError("RAW host case has no canonical workflow")
+                submitted_workflow = cast(dict[str, object], fixture.workflow)
+                raw_prompt_id, raw_history = _submit_successful_prompt(
+                    base_url=base_url,
+                    client_id=f"sigmax-m3-06-{case_id}",
+                    prompt=build_raw_api_prompt(case_id),
+                    extra_data={"extra_pnginfo": {"workflow": submitted_workflow}},
+                    execution_timeout=args.execution_timeout,
+                )
+                raw_results.append(
+                    verify_raw_history(
+                        raw_history,
+                        prompt_id=raw_prompt_id,
+                        case_id=case_id,
+                        submitted_workflow=submitted_workflow,
+                    )
+                )
+            evidence["h2_raw"] = raw_results
+
+            rejected_prompt_id, rejected_history = _submit_rejected_runtime_prompt(
+                base_url=base_url,
+                client_id="sigmax-m3-06-raw-auto-variant",
+                prompt=_rejected_raw_api_prompt("raw-auto-variant"),
+                execution_timeout=args.execution_timeout,
+            )
+            rejected_results = [
+                verify_rejected_history(
+                    rejected_history,
+                    prompt_id=rejected_prompt_id,
+                    case_id="raw-auto-variant",
+                    expected_message="variant must be Turbo or RAW",
+                )
+            ]
+            prequeue_response = _submit_rejected_prequeue_prompt(
+                base_url=base_url,
+                client_id="sigmax-m3-06-raw-invalid-steps",
+                prompt=_rejected_raw_api_prompt("raw-invalid-steps"),
+            )
+            rejected_results.append(
+                verify_prequeue_rejection(
+                    prequeue_response,
+                    case_id="raw-invalid-steps",
+                )
+            )
+            evidence["h2_raw_rejections"] = rejected_results
             succeeded = True
     finally:
         if process is not None:

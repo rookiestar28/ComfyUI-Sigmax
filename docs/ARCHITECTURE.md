@@ -81,6 +81,7 @@ scripts/
   parity/                     independent official adapter and report contract
   run_krea2_turbo_parity.py   isolated pinned Diffusers execution
   run_krea2_raw_parity.py     isolated RAW dynamic-shift and scheduler execution
+  run_comfyui_e2e.py          isolated pinned-host H1 and model-free Turbo/RAW H2
   run_full_gate.py            canonical ordered acceptance gate
   OS wrappers                 repo-local environment selection
 
@@ -93,14 +94,17 @@ comfyui_sigmax/nodes/
   inspectors.py  bounded read-only profile and schedule reports
   krea2_sigma_scheduler.py  thin explicit RAW/Turbo SIGMAS product node
   model_aware_sigma_scheduler.py  bounded MODEL probe and exact capability-gated profile node
+  raw_workflow_output.py  verified named RAW artifact/receipt history boundary
+  turbo_workflow_output.py  verified strict Turbo artifact/receipt history boundary
 ```
 
 The dependency-free `adapters/registration.py` module owns the immutable node catalog and
 wire-schema projections. The package exports the validated
 `Sigmax.AdvancedFlowMatchScheduler`, `Sigmax.Krea2SigmaScheduler`, and
 `Sigmax.ModelAwareSigmaScheduler`, `Sigmax.ProfileInspector`,
-`Sigmax.ScheduleComparison`, and `Sigmax.ScheduleInspector` mappings. Importing them does not
-load Torch or ComfyUI, patch PyTorch, import Diffusers, or alter host process state.
+`Sigmax.RawWorkflowOutput`, `Sigmax.ScheduleComparison`, `Sigmax.ScheduleInspector`, and
+`Sigmax.TurboWorkflowOutput` mappings. Importing them does not load Torch or ComfyUI, patch
+PyTorch, import Diffusers, or alter host process state.
 
 The full gate proves this boundary before the test suite: a clean project-local environment
 must resolve neither ComfyUI nor Diffusers, and a `python -I` subprocess installs explicit
@@ -155,6 +159,15 @@ widget order, and emits fingerprinted `sigmax.workflow-validation-report/1` resu
 findings block; latest-host findings remain explicitly observational. The optional acquisition
 helper accepts only bounded literal-loopback `/object_info`. It does not import node
 implementations, launch ComfyUI, execute a graph, or replace real-host H1/H2.
+
+The separate `scripts/run_comfyui_e2e.py` boundary stages the extension into owned isolated
+state and launches pinned ComfyUI `0.29.0` revision
+`e651b7bef55a5376343dcb1c0edb79f0142c985e`. H1 verifies import safety, the eight-node
+registry, and live schemas. H2 executes the accepted Turbo graph and three orientation-complete
+RAW graphs to completed history. RAW history verification cross-checks requested/effective
+geometry, sequence length, recipe/evidence, dynamic `mu`, canonical artifact and receipt
+fingerprints, external ownership, one shift, and submitted workflow metadata reload. Its
+receipt status stays `not_executed` because no model or sampler step runs.
 
 The first numerical builders are now implemented:
 
@@ -348,8 +361,8 @@ implemented together with the exact-key `ProfileRegistry` and explicit inheritan
 Generic capability resolution is implemented as a pure composition layer over those contracts.
 Static model/host/sampler evidence collection and ComfyUI public-surface probing are implemented
 in `adapters/comfyui.py`. Pure node registration and schema discovery are implemented in
-`adapters/registration.py`; live transport, host loading, and workflow execution remain later
-work.
+`adapters/registration.py`. The repository H1/H2 harness owns pinned-host loading and model-free
+workflow execution; remote hosts and model/sampler/image execution remain later work.
 
 ### ComfyUI adapters and nodes
 
@@ -403,6 +416,14 @@ nesting, and recomputes the connected SIGMAS output fingerprint before emitting
 emits `sigmax.schedule-comparison/1`, aligning only equal-domain/equal-length schedules by sigma
 index and otherwise returning an explicit non-comparable reason. All three nodes are read-only
 and exclude foreign objects, tensors, paths, prompts, and arbitrary host metadata from reports.
+
+The seventh and eighth catalog entries are `Sigmax.RawWorkflowOutput` and
+`Sigmax.TurboWorkflowOutput`. Each is a V1 empty-output execution root that independently rebuilds
+the connected complete named schedule, accepts only exact float64 values or host float32
+quantization, and publishes one bounded canonical artifact/receipt bundle through prompt
+history. RAW selects only the immutable 28- or 52-step recipe and re-verifies requested/effective
+geometry and dynamic shift evidence. Both nodes declare external-sigma ownership, exactly one
+time shift, no double shift, and a truthful `not_executed` receipt.
 
 ### Sampler strategy
 

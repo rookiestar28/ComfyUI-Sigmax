@@ -26,11 +26,12 @@ Current implemented scope:
 - H0 package/import safety;
 - H1 isolated real-host registration and public schema validation;
 - M2-05 strict official eight-step Turbo H2 schedule execution, artifact, receipt, and
-  no-double-shift evidence.
+  no-double-shift evidence;
+- M3-06 RAW square/non-square/portrait H2 schedule execution, requested/effective geometry,
+  dynamic-mu fingerprints, metadata reload, no-double-shift evidence, strict-auto runtime
+  rejection, and invalid-step prequeue HTTP 400 rejection.
 
-The RAW square/non-square, strict-auto rejection, and full save/reload H2 inventory remains
-`NOT_IMPLEMENTED` until M3-06. H3 and H4 retain their later activation rules below. A missing
-later lane is never a pass.
+H3 and H4 retain their later activation rules below. A missing later lane is never a pass.
 
 ## 3. Test Lanes
 
@@ -176,7 +177,8 @@ The scripts must:
 4. expose ComfyUI-Sigmax without modifying the user's normal custom-node installation;
 5. start ComfyUI on loopback with a unique port;
 6. poll a bounded readiness endpoint while also watching for early process exit;
-7. run H1 and the implemented M2-05 Turbo H2 lane; run later lanes only after activation;
+7. run H1 and the implemented M2-05 Turbo plus M3-06 RAW H2 lanes; run later lanes only after
+   activation;
 8. collect redacted logs and results;
 9. request graceful shutdown when supported, wait a bounded interval, then terminate the
    verified process tree if required;
@@ -218,19 +220,22 @@ H2 must include:
 1. Krea 2 Turbo official schedule at 8 steps.
 2. Krea 2 RAW official schedule at a reference square resolution.
 3. Krea 2 RAW official schedule at a non-square resolution.
-4. Ambiguous Krea 2 `auto` selection in strict mode.
-5. Invalid dimensions or steps.
-6. Metadata save/reload.
-7. Registration reload/idempotency when supported.
-8. Native versus external-sigma ownership without double shifting.
-9. A changed control producing a changed executed result or explicit error.
+4. Krea 2 RAW framework-reference schedule at a portrait resolution.
+5. Ambiguous Krea 2 `auto` selection through a terminal runtime rejection.
+6. Invalid steps through structured prequeue HTTP 400 rejection.
+7. Metadata save/reload.
+8. Registration reload/idempotency when supported.
+9. Native versus external-sigma ownership without double shifting.
+10. A changed control producing a changed executed result or explicit error.
 
 For successful workflows, assert final sigma values and metadata, not only queue acceptance.
 
 For rejected workflows, assert:
 
+- the intended runtime or prequeue boundary;
 - error category;
 - stable machine-readable reason when available;
+- prompt-ID presence for runtime rejection and absence for prequeue rejection;
 - absence of partial output or silent fallback.
 
 ## 9. H3 Required Assertions

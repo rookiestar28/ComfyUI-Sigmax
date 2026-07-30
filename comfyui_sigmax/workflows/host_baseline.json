@@ -89,6 +89,40 @@
       "deprecated": false,
       "experimental": false
     },
+    "Sigmax.RawWorkflowOutput": {
+      "category": "Sigmax/workflows",
+      "deprecated": false,
+      "description": "Verifies a complete named Krea 2 RAW schedule and publishes a model-free artifact bundle with a not-executed sampler receipt.",
+      "display_name": "RAW Workflow Output",
+      "experimental": false,
+      "input": {
+        "required": {
+          "schedule_info": [
+            "STRING",
+            {
+              "default": "",
+              "multiline": true
+            }
+          ],
+          "schedule_report": [
+            "STRING",
+            {
+              "default": "",
+              "multiline": true
+            }
+          ],
+          "sigmas": [
+            "SIGMAS"
+          ]
+        }
+      },
+      "name": "Sigmax.RawWorkflowOutput",
+      "output": [],
+      "output_is_list": [],
+      "output_name": [],
+      "output_node": true,
+      "python_module": "comfyui_sigmax.nodes"
+    },
     "Sigmax.ScheduleInspector": {
       "input": {
         "required": {
@@ -219,6 +253,34 @@
       "description": "Builds an explicit Krea 2 RAW or Turbo sigma schedule without patching model sampling.",
       "category": "Sigmax/scheduling",
       "output_node": false,
+      "python_module": "comfyui_sigmax.nodes",
+      "deprecated": false,
+      "experimental": false
+    },
+    "Sigmax.RawWorkflowOutput": {
+      "inputs": {
+        "schedule_info": {
+          "name": "schedule_info",
+          "type": "STRING",
+          "isOptional": false
+        },
+        "schedule_report": {
+          "name": "schedule_report",
+          "type": "STRING",
+          "isOptional": false
+        },
+        "sigmas": {
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "isOptional": false
+        }
+      },
+      "outputs": [],
+      "name": "Sigmax.RawWorkflowOutput",
+      "display_name": "RAW Workflow Output",
+      "description": "Verifies a complete named Krea 2 RAW schedule and publishes a model-free artifact bundle with a not-executed sampler receipt.",
+      "category": "Sigmax/workflows",
+      "output_node": true,
       "python_module": "comfyui_sigmax.nodes",
       "deprecated": false,
       "experimental": false

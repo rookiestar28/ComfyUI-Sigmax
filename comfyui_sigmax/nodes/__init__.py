@@ -47,6 +47,14 @@ from comfyui_sigmax.nodes.model_aware_sigma_scheduler import (
     build_model_aware_sigma_schedule,
     probe_model_family,
 )
+from comfyui_sigmax.nodes.raw_workflow_output import (
+    RAW_WORKFLOW_BUNDLE_UI_KEY,
+    RAW_WORKFLOW_OUTPUT_NODE_ID,
+    RAW_WORKFLOW_OUTPUT_SCHEMA_ID,
+    RawWorkflowOutput,
+    RawWorkflowOutputResult,
+    build_raw_workflow_output,
+)
 from comfyui_sigmax.nodes.turbo_workflow_output import (
     TURBO_WORKFLOW_BUNDLE_UI_KEY,
     TURBO_WORKFLOW_OUTPUT_NODE_ID,
@@ -66,6 +74,9 @@ __all__ = [
     "MODEL_FAMILY_PROBE_SCHEMA_ID",
     "PROFILE_INSPECTOR_NODE_ID",
     "PROFILE_INSPECTOR_SCHEMA_ID",
+    "RAW_WORKFLOW_BUNDLE_UI_KEY",
+    "RAW_WORKFLOW_OUTPUT_NODE_ID",
+    "RAW_WORKFLOW_OUTPUT_SCHEMA_ID",
     "SCHEDULE_COMPARISON_NODE_ID",
     "SCHEDULE_COMPARISON_SCHEMA_ID",
     "SCHEDULE_INSPECTOR_NODE_ID",
@@ -86,6 +97,8 @@ __all__ = [
     "ModelFamilyProbe",
     "ProfileInspector",
     "ProfileInspectorResult",
+    "RawWorkflowOutput",
+    "RawWorkflowOutputResult",
     "ScheduleComparison",
     "ScheduleComparisonResult",
     "ScheduleInspector",
@@ -97,6 +110,7 @@ __all__ = [
     "build_krea2_sigma_schedule",
     "build_model_aware_sigma_schedule",
     "build_profile_inspection",
+    "build_raw_workflow_output",
     "build_schedule_comparison",
     "build_schedule_inspection",
     "build_turbo_workflow_output",

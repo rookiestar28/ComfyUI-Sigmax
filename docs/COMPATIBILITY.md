@@ -18,9 +18,11 @@ ambiguity, and returns exact-profile capability decisions under
 `sigmax.model-aware-sigma-node/1`; plus the read-only `Sigmax.ProfileInspector` and
 `Sigmax.ScheduleComparison`, and `Sigmax.ScheduleInspector`, which return
 `sigmax.profile-inspector/1`, `sigmax.schedule-comparison/1`, and
-`sigmax.schedule-inspector/1` reports. Live ComfyUI host integration, RAW
-native-ComfyUI parity, model weights, GPU
-execution, and sampler-step behavior are
+`sigmax.schedule-inspector/1` reports. Separate `Sigmax.RawWorkflowOutput` and
+`Sigmax.TurboWorkflowOutput` nodes publish verified model-free artifact bundles through prompt
+history. Real-host import and model-free workflow execution are validated on pinned ComfyUI
+`0.29.0` revision `e651b7bef55a5376343dcb1c0edb79f0142c985e`; RAW native model-sampling
+parity, model weights, GPU execution, sampler-step behavior, and image generation are
 **not yet validated**. Complete Turbo golden vectors, authoritative framework parity, and
 native ComfyUI schedule parity are validated at 4, 8, 12, and 16 steps. RAW authoritative
 and framework schedule parity is validated across 14 complete 28/52-step geometry cases.
@@ -30,29 +32,33 @@ exact-key `ProfileRegistry` and explicit inheritance/conflict policy are impleme
 file or plugin loading. Native or patched schedule-ownership schemas, external document
 parsing and native/patched ownership schemas are not yet implemented.
 
-The package metadata declares a ComfyUI floor of `0.29.0`. Adapter contract fixtures and pinned
-source review currently define an exact static-contract window of `0.29.0`; this is narrower than
-the packaging declaration and is not real-host node/workflow evidence. No release should infer
-working host execution from either declaration alone.
+The package metadata declares a ComfyUI floor of `0.29.0`. Adapter fixtures and pinned source
+review define the exact static-contract window, while the repository H1/H2 harness defines the
+real-host node/workflow E2E window at `0.29.0` revision
+`e651b7bef55a5376343dcb1c0edb79f0142c985e`; this remains narrower than the packaging
+declaration. Other revisions require separate evidence.
 
 Versioned execution receipts and portable artifact/receipt bundles are implemented as
 dependency-free pure contracts. They record explicit status, counts, component identities, RNG
-ownership, compatibility, and fingerprints, but do not execute ComfyUI or a sampler. Current
-receipts are contract/serialization evidence only; real-host receipt production is not yet
-validated.
+ownership, compatibility, and fingerprints. The RAW/Turbo output nodes create canonical
+`not_executed` receipts after host schedule construction and inspection. They do not claim that
+a model or sampler ran; successful sampler receipts remain unvalidated.
 
-Workflow metadata supports static copy-on-write attachment to official ComfyUI workflow forms
-`0.4` and `1`. It preserves unrelated graph and `extra` data and verifies the embedded Sigmax
-metadata envelope, but deliberately does not validate node/link/widget compatibility or claim
-that the workflow loads in a running host.
+Workflow metadata supports copy-on-write attachment to official ComfyUI workflow forms `0.4`
+and `1`. It preserves unrelated graph and `extra` data and verifies the embedded Sigmax metadata
+envelope. Metadata parsing alone does not validate node/link/widget compatibility; the pinned
+H2 lane separately proves metadata reload for every published RAW workflow.
 
 The separate `comfyui_sigmax.workflows` validator now checks canonical model-free Turbo/RAW
 fixtures against the pinned 0.29.0 legacy/v2 schema baseline or caller-observed live
 `/object_info`. It reports stable issue kinds, package/node/host versions, and strict
 known-good versus observational latest-host results. Its optional HTTP loader is
-literal-loopback-only and bounded. This closes the static/live schema comparison contract, but
-the repository's real-host node/workflow H1/H2 harness remains `NOT_IMPLEMENTED`; no working host
-load or execution claim follows from a clean validation report.
+literal-loopback-only and bounded. A clean validation report remains schema evidence only.
+The separate `H2_RAW_M3_06` lane in `scripts/run_comfyui_e2e.py` executes the square, landscape,
+and portrait RAW graphs to completed history on the pinned host, verifies workflow metadata
+reload and canonical bundles, and proves two fail-closed boundaries: an ambiguous variant
+produces a terminal runtime rejection with no partial output, while invalid steps produce a
+structured prequeue HTTP 400 rejection without a prompt ID.
 
 ## Validated Foundation Environments
 
@@ -63,6 +69,7 @@ The current package, quality gates, tests, and wheel inventory have been validat
 | Windows | 3.13 | Core independence, deterministic property, Turbo/RAW golden and parity contracts, package, quality, unit, coverage, and wheel gates |
 | WSL2/Linux path | 3.10 | Core independence, deterministic property, Turbo/RAW golden and parity contracts, package, quality, unit, coverage, and wheel gates |
 | Hosted Linux parity lanes | 3.13 | Exact Diffusers 0.39.0, NumPy 2.3.4, and Torch 2.9.0 Turbo/RAW report regeneration |
+| Pinned ComfyUI host | 3.13 | H1 import/schema safety and H2 model-free Turbo/RAW workflow execution on ComfyUI 0.29.0 revision `e651b7b…` |
 
 The supported Python floor is 3.10. Python versions or operating systems not listed above may
 work, but do not yet have repository acceptance evidence.
@@ -91,7 +98,8 @@ Compatibility claims will progress through separate lanes:
 2. authoritative golden tests — Turbo and RAW implemented;
 3. authoritative framework parity tests — Turbo and RAW implemented with Diffusers 0.39.0;
 4. native ComfyUI schedule parity — Turbo implemented against a pinned host revision;
-5. real ComfyUI host import and node integration;
+5. real ComfyUI host import and model-free node/workflow integration — implemented for the
+   pinned 0.29.0 revision;
 6. fixed-seed sampler and latent-level comparison;
 7. approved model/GPU workflows;
 8. latest-host compatibility signals.
@@ -133,10 +141,11 @@ platform `libm` noise does not alter report bytes.
 
 ## Current Known Limitations
 
-- The six node mappings are `Sigmax.AdvancedFlowMatchScheduler`,
+- The eight node mappings are `Sigmax.AdvancedFlowMatchScheduler`,
   `Sigmax.Krea2SigmaScheduler`, `Sigmax.ModelAwareSigmaScheduler`, `Sigmax.ProfileInspector`,
-  `Sigmax.ScheduleComparison`, and `Sigmax.ScheduleInspector`; their pure behavior and static
-  schemas are covered without claiming real-host loading or workflow execution.
+  `Sigmax.RawWorkflowOutput`, `Sigmax.ScheduleComparison`, `Sigmax.ScheduleInspector`, and
+  `Sigmax.TurboWorkflowOutput`; their schemas load on the pinned host and the four model-free
+  publication workflows complete.
 - Inspectors are read-only: profile inspection requires explicit Krea variant resolution and a
   bounded native sampling class, while schedule inspection accepts only implemented Sigmax
   schemas and requires connected SIGMAS to match the advertised output fingerprint. Schedule
@@ -152,7 +161,9 @@ platform `libm` noise does not alter report bytes.
   sigma-scheduler nodes exist, but no cross-family generic fallback or full sampler is exposed.
 - Filename and local-header matches are suggestions only; the shared ComfyUI model class and
   common tensor keys are family-only and cannot resolve RAW versus Turbo.
-- No ComfyUI version has completed real-host node/workflow E2E validation.
+- Real-host evidence is deliberately limited to exact ComfyUI 0.29.0 revision
+  `e651b7bef55a5376343dcb1c0edb79f0142c985e` and model-free graphs; it does not generalize to
+  later hosts or model/sampler/image execution.
 - No current node can manually assert a successful execution receipt; successful real-host
   receipt production remains pending an executed and validated sampler path.
 - The current `v0_0_2` V3 API is discoverable but experimental; activation is rejected when a

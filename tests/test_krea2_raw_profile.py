@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib
+import struct
 from dataclasses import FrozenInstanceError, replace
 from typing import Any, cast
 
@@ -33,11 +34,25 @@ from comfyui_sigmax.profiles import (
     ResolutionShiftMode,
     ResolutionShiftPolicy,
     ShiftParameterization,
+    build_krea2_raw_schedule,
 )
 
 KREA_REVISION = "db3984fbc6e13b34c0064990fc2d95ac64d00058"  # pragma: allowlist secret
 DIFFUSERS_REVISION = "a3608b512ed7248499a44c61d954965ed9bdae4d"  # pragma: allowlist secret
 COMFYUI_REVISION = "e651b7bef55a5376343dcb1c0edb79f0142c985e"  # pragma: allowlist secret
+
+
+def test_raw_builder_matches_frozen_bits_across_platforms() -> None:
+    result = build_krea2_raw_schedule(
+        width=1024,
+        height=1024,
+        recipe=KREA2_RAW_OFFICIAL_FULL_52,
+    )
+
+    assert tuple(struct.pack(">d", result.sigmas[index]).hex() for index in (12, 34)) == (
+        "3fec8a62ce8eea56",  # pragma: allowlist secret
+        "3fe226268349cb93",  # pragma: allowlist secret
+    )
 
 
 def test_builtin_raw_profile_declares_exact_structural_recipe() -> None:

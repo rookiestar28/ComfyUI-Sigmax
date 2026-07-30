@@ -71,6 +71,10 @@ tracked independently from the frozen profile-schema version.
   independent pinned Krea adapter, executable Diffusers 0.39.0 dynamic-shift and scheduler
   paths, canonical vectors and error evidence, fail-closed regeneration, and an isolated
   hosted-CI lane.
+- Executable square, non-aligned landscape, and non-aligned portrait Krea 2 RAW workflows with
+  `Sigmax.RawWorkflowOutput`, canonical model-free artifact/receipt publication, metadata
+  reload, static/live schema validation, and isolated H1/H2 execution on pinned ComfyUI
+  `0.29.0` revision `e651b7bef55a5376343dcb1c0edb79f0142c985e`.
 - Immutable Krea 2 variant-evidence and resolution contracts with explicit/trusted/verified
   resolution, suggestion-only local headers and filenames, family-only tensor/model-class
   signals, exact official file hashes, conflict detection, and strict fail-closed behavior.

@@ -46,6 +46,14 @@ Workflow metadata supports static copy-on-write attachment to official ComfyUI w
 metadata envelope, but deliberately does not validate node/link/widget compatibility or claim
 that the workflow loads in a running host.
 
+The separate `comfyui_sigmax.workflows` validator now checks canonical model-free Turbo/RAW
+fixtures against the pinned 0.29.0 legacy/v2 schema baseline or caller-observed live
+`/object_info`. It reports stable issue kinds, package/node/host versions, and strict
+known-good versus observational latest-host results. Its optional HTTP loader is
+literal-loopback-only and bounded. This closes the static/live schema comparison contract, but
+the repository's real-host node/workflow H1/H2 harness remains `NOT_IMPLEMENTED`; no working host
+load or execution claim follows from a clean validation report.
+
 ## Validated Foundation Environments
 
 The current package, quality gates, tests, and wheel inventory have been validated locally on:

@@ -67,6 +67,13 @@ comfyui_sigmax/
                 immutable official-recipe declaration and structural schedule builder
     krea2_variant.py
                 pure evidence normalization and fail-closed RAW/Turbo resolution
+  workflows/
+    validation.py
+                static/live workflow schema comparison and canonical machine reports
+    fixtures.json
+                model-free canonical Turbo/RAW graphs and ordered widget contracts
+    host_baseline.json
+                pinned legacy and Node Definition v2 host schemas
 
 scripts/
   preflight_check.py          local environment validation
@@ -139,8 +146,15 @@ Workflow metadata is a third reference layer. Its canonical projection records p
 host/API, profile, compatibility, artifact, and receipt requirements, while the surrounding
 ComfyUI graph remains host-owned passthrough data. Attachment changes only the namespaced
 `extra.comfyui_sigmax` member of supported version `0.4` and version `1` mappings. It does not
-convert or validate nodes, links, widgets, models, or subgraphs; static/live graph validation
-belongs to a later host-validation boundary.
+convert or validate nodes, links, widgets, models, or subgraphs.
+
+The adjacent dependency-free `workflows/validation.py` boundary owns static/live schema
+comparison. It loads packaged canonical Turbo/RAW model-free graphs, normalizes legacy
+`/object_info` and Node Definition JSON v2 through the adapter, preserves a separate explicit
+widget order, and emits fingerprinted `sigmax.workflow-validation-report/1` results. Known-good
+findings block; latest-host findings remain explicitly observational. The optional acquisition
+helper accepts only bounded literal-loopback `/object_info`. It does not import node
+implementations, launch ComfyUI, execute a graph, or replace real-host H1/H2.
 
 The first numerical builders are now implemented:
 

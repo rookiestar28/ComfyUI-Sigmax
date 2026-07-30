@@ -195,6 +195,35 @@ preserves nodes, links, widgets, subgraphs, positions, and unrelated `extra` mem
 conflicting or malformed existing metadata. It does not validate the surrounding graph or claim
 live-host compatibility.
 
+The adjacent workflow validator supplies that static schema boundary for the packaged canonical
+Turbo and RAW fixtures:
+
+```python
+from comfyui_sigmax.workflows import (
+    WorkflowValidationLane,
+    fetch_live_object_info,
+    validate_live_workflow_fixtures,
+    validate_pinned_workflow_fixtures,
+)
+
+static_report = validate_pinned_workflow_fixtures()
+assert static_report.gate_passed
+
+object_info = fetch_live_object_info()
+live_report = validate_live_workflow_fixtures(
+    object_info=object_info,
+    host_version="0.29.0",
+    host_revision="reviewed-host-revision",
+    lane=WorkflowValidationLane.KNOWN_GOOD,
+)
+```
+
+It checks node/input presence, linked and positional input types, widget slots, fixed combo
+values, lifecycle flags, stable package identity, and M4-07 metadata. Reports use
+`sigmax.workflow-validation-report/1`; known-good findings block, while latest-host findings stay
+explicitly observational. The live loader accepts only a bounded literal-loopback
+`/object_info` endpoint. This is not real-host workflow load or execution evidence.
+
 Model, profile, sampler, and requested execution features also have immutable capability
 contracts:
 
@@ -556,6 +585,7 @@ and planned host/model support.
 - [Schedule artifact specification](docs/SCHEDULE_ARTIFACT_SPEC.md)
 - [Execution receipt and portable bundle specification](docs/EXECUTION_RECEIPT_SPEC.md)
 - [Workflow metadata specification](docs/WORKFLOW_METADATA_SPEC.md)
+- [Workflow validation specification](docs/WORKFLOW_VALIDATION_SPEC.md)
 - [Compatibility](docs/COMPATIBILITY.md)
 - [Contributing](CONTRIBUTING.md)
 - [Changelog](CHANGELOG.md)

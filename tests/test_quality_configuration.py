@@ -100,7 +100,40 @@ class QualityConfigurationTests(unittest.TestCase):
         self.assertEqual("1.5.0", baseline["version"])
         self.assertIsInstance(baseline["plugins_used"], list)
         self.assertIsInstance(baseline["filters_used"], list)
-        self.assertEqual({}, baseline["results"])
+        normalized_results = {
+            path.replace("\\", "/"): [
+                {
+                    **finding,
+                    "filename": finding["filename"].replace("\\", "/"),
+                }
+                for finding in findings
+            ]
+            for path, findings in baseline["results"].items()
+        }
+        expected_hash = "024469e0164c7a1285a3177a3ab35c7b110d39b9"  # pragma: allowlist secret
+        self.assertEqual(
+            {
+                "comfyui_sigmax/workflows/host_baseline.json": [
+                    {
+                        "type": "Hex High Entropy String",
+                        "filename": "comfyui_sigmax/workflows/host_baseline.json",
+                        "hashed_secret": expected_hash,
+                        "is_verified": False,
+                        "line_number": 6,
+                    }
+                ],
+                "comfyui_sigmax/workflows/validation.py": [
+                    {
+                        "type": "Hex High Entropy String",
+                        "filename": "comfyui_sigmax/workflows/validation.py",
+                        "hashed_secret": expected_hash,
+                        "is_verified": False,
+                        "line_number": 37,
+                    }
+                ],
+            },
+            normalized_results,
+        )
 
     def test_governance_documents_exist_and_are_current(self) -> None:
         expected_paths = [

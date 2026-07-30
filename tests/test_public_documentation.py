@@ -84,6 +84,30 @@ def test_public_documentation_exposes_workflow_metadata_boundary() -> None:
     assert "workflow_metadata.py" in architecture
 
 
+def test_public_documentation_exposes_workflow_validation_boundary() -> None:
+    readme = _read(ROOT / "README.md")
+    validation_spec = _read(ROOT / "docs" / "WORKFLOW_VALIDATION_SPEC.md")
+    compatibility = _read(ROOT / "docs" / "COMPATIBILITY.md")
+    architecture = _read(ROOT / "docs" / "ARCHITECTURE.md")
+
+    assert "validate_pinned_workflow_fixtures" in readme
+    assert "sigmax.workflow-validation-report/1" in validation_spec
+    assert all(
+        issue in validation_spec
+        for issue in (
+            "missing_node",
+            "widget_slot_drift",
+            "invalid_fixed_combo_value",
+            "normalized_directory_failure",
+            "malformed_metadata",
+        )
+    )
+    assert all(lane in validation_spec for lane in ("known_good", "latest_host"))
+    assert "literal-loopback" in validation_spec
+    assert "NOT_IMPLEMENTED" in compatibility
+    assert "workflows/validation.py" in architecture
+
+
 def test_public_documentation_exposes_capability_preflight_contract() -> None:
     readme = _read(ROOT / "README.md")
     architecture = _read(ROOT / "docs" / "ARCHITECTURE.md")

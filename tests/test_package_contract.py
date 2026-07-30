@@ -49,6 +49,7 @@ class PackageContractTests(unittest.TestCase):
                 "comfyui_sigmax.core",
                 "comfyui_sigmax.nodes",
                 "comfyui_sigmax.profiles",
+                "comfyui_sigmax.workflows",
             ],
             metadata["tool"]["setuptools"]["packages"],
         )
@@ -89,6 +90,10 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "nodes" / "inspectors.py").is_file())
         self.assertTrue((package_path / "nodes" / "krea2_sigma_scheduler.py").is_file())
         self.assertTrue((package_path / "nodes" / "model_aware_sigma_scheduler.py").is_file())
+        self.assertTrue((package_path / "workflows" / "__init__.py").is_file())
+        self.assertTrue((package_path / "workflows" / "validation.py").is_file())
+        self.assertTrue((package_path / "workflows" / "fixtures.json").is_file())
+        self.assertTrue((package_path / "workflows" / "host_baseline.json").is_file())
 
         sys.path.insert(0, str(REPOSITORY_ROOT))
         self.addCleanup(sys.path.remove, str(REPOSITORY_ROOT))

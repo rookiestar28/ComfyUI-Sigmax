@@ -4,6 +4,13 @@ from comfyui_sigmax.core.base_grids import (
     krea_reciprocal_step_grid,
     linear_endpoint_grid,
 )
+from comfyui_sigmax.core.fingerprints import (
+    build_numerical_projection,
+    canonical_projection_bytes,
+    construction_fingerprint,
+    float_to_ieee_hex,
+    numerical_fingerprint,
+)
 from comfyui_sigmax.core.request_result import (
     BaseGridSpec,
     EvidenceLevel,
@@ -35,6 +42,7 @@ from comfyui_sigmax.core.terminal_slicing import (
     slice_denoise_tail,
     slice_step_range,
 )
+from comfyui_sigmax.core.validation import validate_sigma_schedule
 
 __all__ = [
     "BaseGridSpec",
@@ -52,14 +60,20 @@ __all__ = [
     "TransformContract",
     "TransformStage",
     "apply_terminal_policy",
+    "build_numerical_projection",
+    "canonical_projection_bytes",
+    "construction_fingerprint",
     "denoise_construction_steps",
     "direct_ratio_shift",
     "exponential_mu_shift",
+    "float_to_ieee_hex",
     "krea_reciprocal_step_grid",
     "linear_endpoint_grid",
     "no_shift",
+    "numerical_fingerprint",
     "require_single_ownership",
     "slice_denoise_tail",
     "slice_step_range",
+    "validate_sigma_schedule",
     "validate_transform_chain",
 ]

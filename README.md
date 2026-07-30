@@ -7,7 +7,7 @@ versioned profiles for other flow-matching and diffusion model families.
 > **Status: pre-alpha foundation.** No user-facing ComfyUI nodes are implemented yet. The
 > current repository provides a side-effect-free package shell, packaging metadata, quality
 > gates, and framework-independent grid, shift, terminal, and slicing primitives. It does not
-> yet validate or fingerprint complete schedules.
+> yet serialize complete runtime construction artifacts or expose ComfyUI nodes.
 
 ## Why Sigmax
 
@@ -87,6 +87,11 @@ direct-ratio, and explicit no-shift transforms are separate, unit-flow-only oper
 terminal stage remains separate so terminal zero cannot be appended or transformed twice.
 Terminal-inclusive start/end ranges and ComfyUI-compatible partial-denoise tail slicing are
 also explicit; invalid or empty manual ranges fail instead of silently changing execution.
+
+Complete external schedules can be validated for finite values, domain bounds, exact
+transition count, strict decrease, and terminal-zero policy. The core also provides typed
+IEEE-754 float tokens, bounded NFC canonical projections, and separate numerical and
+construction SHA-256 fingerprints that reproduce the published artifact fixtures.
 
 ## Development Setup
 

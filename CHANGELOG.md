@@ -26,6 +26,8 @@ tracked independently once the profile schema is implemented.
   ComfyUI-compatible partial-denoise tail policies with strict boundary checks.
 - Versioned canonical schedule artifact specification with separate numerical and
   construction identities, typed IEEE-754 tokens, and cross-process golden fixtures.
+- Dependency-free complete-schedule validation, typed float encoding, bounded canonical
+  projections, and numerical/construction SHA-256 fingerprint functions.
 - Wheel inventory enforcement for the pure-core package.
 
 ### Security

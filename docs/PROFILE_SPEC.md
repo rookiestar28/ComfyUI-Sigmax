@@ -173,7 +173,14 @@ namespaces the existing core reason codes under `core.*`. Confirmed identity is 
 suggested, ambiguous, conflicting, and unknown identity never becomes confirmed because a
 capability string matches. Missing, experimental, or unsupported required host capabilities
 reject. The resolver does not inspect a live host, construct sigmas, or execute a sampler; host
-evidence collection remains adapter work.
+evidence collection is supplied separately by `sigmax.comfyui-adapter/1`.
+
+The adapter's immutable projection normalizes the public V1-compatible `/object_info` form and
+Node Definition JSON v2, preserves deprecated/experimental lifecycle, and derives capability
+evidence only from observed input types and sampler options. The exact initial static-contract
+window is ComfyUI 0.29.0. Current `comfy_api.v0_0_2` reports `STABLE = False`, so a stable numbered
+API requirement rejects actionably. This evidence boundary performs no network access,
+registration, schedule construction, or sampling and does not constitute real-host E2E.
 
 ## Required Conceptual Fields
 

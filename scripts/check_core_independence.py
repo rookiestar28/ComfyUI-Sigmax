@@ -43,6 +43,7 @@ ISOLATED_PROBE: Final = textwrap.dedent(
     sys.path.insert(0, str(repository_root))
 
     packages = [
+        importlib.import_module("comfyui_sigmax.adapters"),
         importlib.import_module("comfyui_sigmax.core"),
         importlib.import_module("comfyui_sigmax.profiles"),
     ]

@@ -80,6 +80,22 @@ def test_public_documentation_exposes_capability_resolution_contract() -> None:
     assert "does not inspect a live host" in profile_spec
 
 
+def test_public_documentation_exposes_comfyui_adapter_boundary() -> None:
+    readme = _read(ROOT / "README.md")
+    architecture = _read(ROOT / "docs" / "ARCHITECTURE.md")
+    profile_spec = _read(ROOT / "docs" / "PROFILE_SPEC.md")
+    compatibility = _read(ROOT / "docs" / "COMPATIBILITY.md")
+    changelog = _read(ROOT / "CHANGELOG.md")
+
+    for content in (readme, architecture, profile_spec, changelog):
+        assert "sigmax.comfyui-adapter/1" in content
+    assert "adapters/comfyui.py" in architecture
+    assert "/object_info" in readme and "Node Definition JSON v2" in readme
+    assert "v0_0_2" in profile_spec and "STABLE = False" in profile_spec
+    assert "static-contract window" in compatibility
+    assert "real-host" in compatibility
+
+
 def test_public_documentation_exposes_frozen_profile_schema_v1() -> None:
     readme = _read(ROOT / "README.md")
     architecture = _read(ROOT / "docs" / "ARCHITECTURE.md")

@@ -83,6 +83,11 @@ tracked independently from the frozen profile-schema version.
   model identity/capabilities, explicit host lifecycle evidence, sampler capabilities, and
   execution-feature requests; required missing, experimental, or unsupported host capabilities
   and all weak/unresolved model identity states fail closed before sampling.
+- Dependency-free `sigmax.comfyui-adapter/1` normalization of public numbered-API manifests,
+  `/system_stats`, `/features`, V1-compatible `/object_info`, and Node Definition JSON v2;
+  lifecycle-aware external-SIGMAS, Euler, partial-denoise, and model evidence; an exact ComfyUI
+  0.29.0 static-contract window; and actionable rejection of missing, malformed, outside-window,
+  or experimental required APIs.
 
 ### Security
 

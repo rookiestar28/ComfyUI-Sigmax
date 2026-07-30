@@ -187,6 +187,16 @@ Only confirmed identity is executable. Required host capabilities must be `lande
 `experimental`, and `unsupported` lifecycle evidence reject before execution. The module performs
 no host probing, schedule construction, or sampling.
 
+The dependency-free `adapters/comfyui.py` module is the public ComfyUI evidence boundary. It
+accepts an already loaded API module object and reads only `ComfyAPI.VERSION`,
+`ComfyAPI.STABLE`, `ComfyExtension`, `io`, and `ui`; it never imports host-controlled module text.
+It normalizes both the V1-compatible `/object_info` projection used for legacy and V3 nodes and
+the documented Node Definition JSON v2 form into immutable canonical node definitions.
+`/system_stats`, `/features`, a trusted pinned revision, node lifecycle flags, concrete SIGMAS
+inputs, and sampler combo options become `sigmax.comfyui-adapter/1` evidence plus the existing
+`HostCapabilities` contract. Missing, malformed, outside-window, or experimental required API
+surfaces fail with stable reason/action data before registration or sampling.
+
 The first concrete profile, `krea2.turbo.official`, is implemented in
 `profiles/krea2_turbo.py`. It pins the official Krea source and framework corroboration,
 declares fixed exponential `mu = 1.15`, eight default steps, terminal zero, deterministic
@@ -285,13 +295,16 @@ provenance. The implemented Krea-specific evidence resolver exposes status, conf
 decisive source, normalized evidence, and warnings. The generic `ProfileSchemaV1` contract is
 implemented together with the exact-key `ProfileRegistry` and explicit inheritance policy.
 Generic capability resolution is implemented as a pure composition layer over those contracts.
-Host/model/sampler evidence collection and ComfyUI probing remain planned adapter work.
+Static model/host/sampler evidence collection and ComfyUI public-surface probing are implemented
+in `adapters/comfyui.py`. Live transport, registration, and workflow execution remain later work.
 
 ### ComfyUI adapters and nodes
 
-Adapters will inspect available host model metadata without assuming that one internal model
-class uniquely identifies a checkpoint variant. Nodes will expose a simple model-aware path,
-an advanced explicit schedule path, and schedule inspection/comparison outputs.
+The implemented adapter reuses Krea 2's existing trust boundary and never assumes that one
+internal model class uniquely identifies a checkpoint variant. Its exact initial
+static-contract window is ComfyUI 0.29.0; current numbered API `v0_0_2` is retained as
+experimental rather than promoted to stable. Nodes will expose a simple model-aware path, an
+advanced explicit schedule path, and schedule inspection/comparison outputs.
 
 ### Sampler strategy
 

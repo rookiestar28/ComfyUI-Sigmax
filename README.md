@@ -15,8 +15,10 @@ versioned profiles for other flow-matching and diffusion model families.
 > 28/52-step golden vectors and executable authoritative/framework parity now cover square,
 > landscape, and portrait geometry. A pure
 > fail-closed resolver distinguishes authoritative/verified variant evidence from visible
-> header and filename suggestions. No ComfyUI nodes are exposed, and RAW native-ComfyUI or
-> host parity remains pending. The complete core and profile
+> header and filename suggestions. A dependency-free ComfyUI adapter now normalizes reviewed
+> public `/system_stats`, `/features`, `/object_info`, and Node Definition v2 evidence into
+> immutable model/host/sampler contracts. No ComfyUI nodes are exposed, and RAW native-ComfyUI
+> or real-host parity remains pending. The complete core and profile
 > layer are dependency-free and have enforced
 > isolation/property/golden/parity contract lanes.
 
@@ -255,8 +257,16 @@ assert decision.schema_id == "sigmax.capability-resolution/1"
 Only confirmed model identity can pass. Suggested, ambiguous, conflicting, or unknown identity
 stays unresolved even if a declared capability variant happens to match. Every required host
 capability retains a `landed`, `experimental`, `unsupported`, or missing result; required
-experimental capabilities fail closed because they are not stable host APIs. Adapter-side host
-probing and sampling remain separate later layers.
+experimental capabilities fail closed because they are not stable host APIs.
+
+The dependency-free `comfyui_sigmax.adapters` boundary now supplies the static host-evidence
+side under `sigmax.comfyui-adapter/1`. It probes only public attributes of an already loaded
+numbered Comfy API module, normalizes the V1-compatible `/object_info` projection and documented
+Node Definition JSON v2, and derives external-SIGMAS, Euler, and partial-denoise lifecycle
+evidence from actual node inputs and combo options. The current ComfyUI `v0_0_2` API remains
+`experimental`; it cannot satisfy `require_stable_numbered_api()`. The initial static-contract
+window is exactly ComfyUI `0.29.0`; this is not a real-host node/workflow E2E claim. Network
+access, module loading, registration, and sampling remain separate later layers.
 
 The first concrete profile is an immutable, evidence-pinned declaration of the official
 Krea 2 Turbo recipe:

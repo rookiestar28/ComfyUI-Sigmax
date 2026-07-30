@@ -4,8 +4,10 @@
 
 ComfyUI-Sigmax is a pre-alpha development foundation. The Krea 2 Turbo structural profile
 and formula-composed schedule builder are implemented, along with `krea2.raw.official`
-geometry, sequence-length, and dynamic-`mu` derivation. ComfyUI host integration, user-facing
-nodes, RAW native-ComfyUI parity, model weights, GPU execution, and sampler-step behavior are
+geometry, sequence-length, and dynamic-`mu` derivation. A static dependency-free ComfyUI adapter
+normalizes reviewed public host/node schemas and derives model/host/sampler capability evidence.
+Live ComfyUI host integration, user-facing nodes, RAW native-ComfyUI parity, model weights, GPU
+execution, and sampler-step behavior are
 **not yet validated**. Complete Turbo golden vectors, authoritative framework parity, and
 native ComfyUI schedule parity are validated at 4, 8, 12, and 16 steps. RAW authoritative
 and framework schedule parity is validated across 14 complete 28/52-step geometry cases.
@@ -13,11 +15,12 @@ The dependency-free `ProfileSchemaV1` contract is frozen for these validated ext
 profiles, including separate source/framework/weight license provenance. The immutable
 exact-key `ProfileRegistry` and explicit inheritance/conflict policy are implemented without
 file or plugin loading. Native or patched schedule-ownership schemas, external document
-parsing, and host-aware resolution are not yet implemented.
+parsing and native/patched ownership schemas are not yet implemented.
 
-The package metadata declares a ComfyUI floor of `0.29.0`, but that is a packaging target
-rather than current host-compatibility evidence. No release should infer working host support
-from the declaration alone.
+The package metadata declares a ComfyUI floor of `0.29.0`. Adapter contract fixtures and pinned
+source review currently define an exact static-contract window of `0.29.0`; this is narrower than
+the packaging declaration and is not real-host node/workflow evidence. No release should infer
+working host execution from either declaration alone.
 
 ## Validated Foundation Environments
 
@@ -39,7 +42,7 @@ work, but do not yet have repository acceptance evidence.
 | Runtime Python dependencies | None |
 | Development tools | Version-bounded `dev` extra |
 | Diffusers | Optional `reference` extra, currently `>=0.39,<0.40` |
-| ComfyUI | Planned host dependency; not imported by the package shell |
+| ComfyUI | Optional host; not imported by the package shell or pure adapter |
 | Node/browser tooling | Not required by the current Python-only foundation |
 | Model weights and GPU runtime | Not downloaded or exercised |
 
@@ -99,8 +102,8 @@ platform `libm` noise does not alter report bytes.
 ## Current Known Limitations
 
 - Node mappings are intentionally empty.
-- Krea-specific pure variant resolution exists, but no real-host evidence collector or
-  automatic ComfyUI model inspection exists.
+- Krea-specific variant resolution and a bounded static ComfyUI evidence adapter exist, but no
+  live transport or automatic model-file inspection exists.
 - The pure schedule/artifact/capability core and dedicated Turbo/RAW structural profiles
   exist, but no generic cross-model profile resolver, public sigma-scheduler node, or full
   sampler is exposed.

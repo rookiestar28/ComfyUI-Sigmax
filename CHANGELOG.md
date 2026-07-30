@@ -88,6 +88,10 @@ tracked independently from the frozen profile-schema version.
   lifecycle-aware external-SIGMAS, Euler, partial-denoise, and model evidence; an exact ComfyUI
   0.29.0 static-contract window; and actionable rejection of missing, malformed, outside-window,
   or experimental required APIs.
+- Immutable `sigmax.node-registration/1` node catalogs with explicit `Sigmax.<Name>` IDs,
+  copy-on-write idempotent registration, fail-closed collision handling, installation-directory
+  independence, mixed legacy/current and V3 mapping discovery, lifecycle metadata preservation,
+  and fresh `/object_info` plus Node Definition JSON v2 wire projections.
 
 ### Security
 

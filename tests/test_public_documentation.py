@@ -96,6 +96,23 @@ def test_public_documentation_exposes_comfyui_adapter_boundary() -> None:
     assert "real-host" in compatibility
 
 
+def test_public_documentation_exposes_node_registration_boundary() -> None:
+    readme = _read(ROOT / "README.md")
+    architecture = _read(ROOT / "docs" / "ARCHITECTURE.md")
+    profile_spec = _read(ROOT / "docs" / "PROFILE_SPEC.md")
+    compatibility = _read(ROOT / "docs" / "COMPATIBILITY.md")
+    changelog = _read(ROOT / "CHANGELOG.md")
+
+    for content in (readme, architecture, profile_spec, compatibility, changelog):
+        assert "sigmax.node-registration/1" in content
+    assert "adapters/registration.py" in architecture
+    assert "Sigmax.<Name>" in readme
+    assert "GET_SCHEMA()" in architecture
+    assert "Node Definition JSON v2" in profile_spec
+    assert "built-in catalog is empty" in compatibility
+    assert "real-host node/workflow E2E" in compatibility
+
+
 def test_public_documentation_exposes_frozen_profile_schema_v1() -> None:
     readme = _read(ROOT / "README.md")
     architecture = _read(ROOT / "docs" / "ARCHITECTURE.md")

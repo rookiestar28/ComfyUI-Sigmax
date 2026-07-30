@@ -182,6 +182,11 @@ window is ComfyUI 0.29.0. Current `comfy_api.v0_0_2` reports `STABLE = False`, s
 API requirement rejects actionably. This evidence boundary performs no network access,
 registration, schedule construction, or sampling and does not constitute real-host E2E.
 
+Node registration is a separate pure boundary under `sigmax.node-registration/1`. It preserves
+legacy/current, V3, deprecation, and experimental metadata while serializing `/object_info` and
+Node Definition JSON v2 projections. Registration requires explicit `Sigmax.<Name>` IDs and
+rejects collisions; it does not select profiles, inspect model files, or imply host execution.
+
 ## Required Conceptual Fields
 
 | Area | Required information |

@@ -78,8 +78,10 @@ tests/
   documentation contracts, and independent Turbo golden vectors
 ```
 
-The package exports empty ComfyUI node mappings. Importing it does not register schedulers,
-patch PyTorch, import Diffusers, or alter host process state.
+The dependency-free `adapters/registration.py` module owns the immutable node catalog and
+wire-schema projections. The package still exports empty ComfyUI node mappings because the
+built-in catalog contains no product node yet. Importing it does not register schedulers, patch
+PyTorch, import Diffusers, or alter host process state.
 
 The full gate proves this boundary before the test suite: a clean project-local environment
 must resolve neither ComfyUI nor Diffusers, and a `python -I` subprocess installs explicit
@@ -197,6 +199,14 @@ inputs, and sampler combo options become `sigmax.comfyui-adapter/1` evidence plu
 `HostCapabilities` contract. Missing, malformed, outside-window, or experimental required API
 surfaces fail with stable reason/action data before registration or sampling.
 
+The adjacent `adapters/registration.py` boundary uses `sigmax.node-registration/1`. It discovers
+legacy/current classes from public V1 fields and V3 classes through `GET_SCHEMA()` plus
+`GET_NODE_INFO_V1()`, validates documented Node Definition JSON v2 payloads, and creates fresh
+mapping, display-name, `/object_info`, and v2 projections. Explicit `Sigmax.<Name>` IDs make
+identity independent of installation-directory normalization. Copy-on-write registration is
+idempotent for an identical definition and rejects conflicts without mutating the prior registry
+or overwriting unrelated scheduler IDs.
+
 The first concrete profile, `krea2.turbo.official`, is implemented in
 `profiles/krea2_turbo.py`. It pins the official Krea source and framework corroboration,
 declares fixed exponential `mu = 1.15`, eight default steps, terminal zero, deterministic
@@ -296,15 +306,23 @@ decisive source, normalized evidence, and warnings. The generic `ProfileSchemaV1
 implemented together with the exact-key `ProfileRegistry` and explicit inheritance policy.
 Generic capability resolution is implemented as a pure composition layer over those contracts.
 Static model/host/sampler evidence collection and ComfyUI public-surface probing are implemented
-in `adapters/comfyui.py`. Live transport, registration, and workflow execution remain later work.
+in `adapters/comfyui.py`. Pure node registration and schema discovery are implemented in
+`adapters/registration.py`; live transport, host loading, and workflow execution remain later
+work.
 
 ### ComfyUI adapters and nodes
 
 The implemented adapter reuses Krea 2's existing trust boundary and never assumes that one
 internal model class uniquely identifies a checkpoint variant. Its exact initial
 static-contract window is ComfyUI 0.29.0; current numbered API `v0_0_2` is retained as
-experimental rather than promoted to stable. Nodes will expose a simple model-aware path, an
-advanced explicit schedule path, and schedule inspection/comparison outputs.
+experimental rather than promoted to stable.
+
+Pinned ComfyUI loading treats `NODE_CLASS_MAPPINGS` and `comfy_entrypoint` as mutually exclusive
+branches. Sigmax therefore exposes one mixed mapping projection: legacy/current classes keep
+their public V1 definitions, while V3 classes remain recognizable through `GET_SCHEMA()` and
+`GET_NODE_INFO_V1()`. It does not expose an inert V3 entrypoint beside mappings. The registration
+catalog is empty until product nodes land. Planned nodes will expose a simple model-aware path,
+an advanced explicit schedule path, and schedule inspection/comparison outputs.
 
 ### Sampler strategy
 

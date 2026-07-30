@@ -63,6 +63,7 @@ def _inspect_wheel(wheel: Path) -> None:
         "comfyui_sigmax/py.typed",
         "comfyui_sigmax/adapters/__init__.py",
         "comfyui_sigmax/adapters/comfyui.py",
+        "comfyui_sigmax/adapters/registration.py",
         "comfyui_sigmax/core/__init__.py",
         "comfyui_sigmax/core/artifacts.py",
         "comfyui_sigmax/core/base_grids.py",

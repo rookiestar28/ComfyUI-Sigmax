@@ -17,8 +17,11 @@ versioned profiles for other flow-matching and diffusion model families.
 > fail-closed resolver distinguishes authoritative/verified variant evidence from visible
 > header and filename suggestions. A dependency-free ComfyUI adapter now normalizes reviewed
 > public `/system_stats`, `/features`, `/object_info`, and Node Definition v2 evidence into
-> immutable model/host/sampler contracts. No ComfyUI nodes are exposed, and RAW native-ComfyUI
-> or real-host parity remains pending. The complete core and profile
+> immutable model/host/sampler contracts. A pure `sigmax.node-registration/1` catalog also
+> discovers legacy/current and V3 node definitions, validates Node Definition v2 wire schemas,
+> and produces collision-safe namespaced mappings. Its built-in catalog remains empty until the
+> first user-facing node lands; RAW native-ComfyUI and real-host parity remain pending. The
+> complete core and profile
 > layer are dependency-free and have enforced
 > isolation/property/golden/parity contract lanes.
 
@@ -266,7 +269,17 @@ Node Definition JSON v2, and derives external-SIGMAS, Euler, and partial-denoise
 evidence from actual node inputs and combo options. The current ComfyUI `v0_0_2` API remains
 `experimental`; it cannot satisfy `require_stable_numbered_api()`. The initial static-contract
 window is exactly ComfyUI `0.29.0`; this is not a real-host node/workflow E2E claim. Network
-access, module loading, registration, and sampling remain separate later layers.
+access, host module loading, and sampling remain separate later layers.
+
+The adjacent pure registration boundary uses `sigmax.node-registration/1`. It requires explicit
+stable IDs in the `Sigmax.<Name>` form, such as `Sigmax.ExampleNode`, and rejects conflicting duplicate registrations without
+overwriting unrelated nodes, and returns fresh legacy/current mapping, `/object_info`, and Node
+Definition JSON v2 projections. V3 classes are discovered through `GET_SCHEMA()` and
+`GET_NODE_INFO_V1()` and may share the mapping projection with legacy classes. Activation through
+the current experimental numbered API is rejected when stability is required. This design avoids
+the pinned loader's mutually exclusive `NODE_CLASS_MAPPINGS`/`comfy_entrypoint` branches and is
+independent of the normalized installation-directory name. The built-in catalog and exported
+node mappings are intentionally empty until a product node is implemented.
 
 The first concrete profile is an immutable, evidence-pinned declaration of the official
 Krea 2 Turbo recipe:

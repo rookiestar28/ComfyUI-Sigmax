@@ -21,8 +21,12 @@ The pure numerical, artifact, capability, core-independence, deterministic prope
 variant-resolution, Turbo golden-vector, Krea 2 RAW golden-vector, and Turbo/RAW framework
 parity lanes now exist. Validated product nodes, adapter/integration tests, the isolated
 real-ComfyUI H1 harness, and the M2-05 strict Turbo and M3-06 RAW H2 workflow lanes now exist.
-Sampler H3 and GPU H4 remain owned by later roadmap items. Until their roadmap owners create
-them:
+The M5-01 deterministic native-Euler H3 proof lane now exists for controlled, model-free native
+execution, exact transition/evaluation counts, artifact-linked success receipts, and fail-closed
+unsupported features. Partial-denoise execution is rejected; stateful/resumable, stochastic,
+advanced-workflow, real-checkpoint, and image-quality behavior remains unimplemented.
+Remaining sampler H3 capabilities and GPU H4 remain owned by later roadmap items. Until their
+roadmap owners create them:
 
 - the OS-specific full-gate wrapper is mandatory acceptance evidence;
 - direct commands remain available for targeted diagnosis;

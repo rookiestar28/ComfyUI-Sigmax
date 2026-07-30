@@ -162,7 +162,12 @@ class QualityConfigurationTests(unittest.TestCase):
             test_sop,
         )
         self.assertIn("Krea 2 RAW golden-vector", test_sop)
-        self.assertIn("Sampler H3 and GPU H4 remain owned", test_sop)
+        self.assertIn("M5-01 deterministic native-Euler H3 proof lane now exists", test_sop)
+        self.assertIn("Partial-denoise execution is rejected", test_sop)
+        self.assertIn(
+            "Remaining sampler H3 capabilities and GPU H4 remain owned",
+            test_sop,
+        )
         self.assertIn("Validated product nodes, adapter/integration tests", test_sop)
         self.assertIn("core-independence", test_sop)
         self.assertIn("Turbo golden-vector", test_sop)
@@ -176,9 +181,14 @@ class QualityConfigurationTests(unittest.TestCase):
             "| Real ComfyUI H2 | Turbo and RAW/auto implemented",
             ci_matrix,
         )
+        self.assertIn(
+            "| Real ComfyUI H3 | M5-01 deterministic native-Euler H3 implemented", ci_matrix
+        )
 
         e2e_sop = (REPOSITORY_ROOT / "tests/E2E_TESTING_SOP.md").read_text(encoding="utf-8")
         self.assertIn("M3-06 RAW square/non-square", e2e_sop)
+        self.assertIn("M5-01 deterministic native-Euler H3 controlled execution", e2e_sop)
+        self.assertIn("Remaining H3 capabilities and H4 retain", e2e_sop)
         self.assertIn("runtime rejection", e2e_sop)
         self.assertIn("prequeue HTTP 400 rejection", e2e_sop)
 

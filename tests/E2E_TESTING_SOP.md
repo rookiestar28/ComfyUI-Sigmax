@@ -29,9 +29,12 @@ Current implemented scope:
   no-double-shift evidence;
 - M3-06 RAW square/non-square/portrait H2 schedule execution, requested/effective geometry,
   dynamic-mu fingerprints, metadata reload, no-double-shift evidence, strict-auto runtime
-  rejection, and invalid-step prequeue HTTP 400 rejection.
+  rejection, and invalid-step prequeue HTTP 400 rejection;
+- M5-01 deterministic native-Euler H3 controlled execution, step/count parity, deterministic
+  rerun, artifact-linked succeeded receipt, and explicit partial-denoise rejection.
 
-H3 and H4 retain their later activation rules below. A missing later lane is never a pass.
+Remaining H3 capabilities and H4 retain their later activation rules below. A missing later lane
+is never a pass.
 
 ## 3. Test Lanes
 

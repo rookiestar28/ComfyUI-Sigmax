@@ -398,6 +398,18 @@ def test_public_contribution_and_changelog_contract() -> None:
     assert "## [Unreleased]" in changelog
 
 
+def test_public_test_governance_records_activated_native_euler_h3() -> None:
+    test_sop = _read(ROOT / "tests" / "TEST_SOP.md").lower()
+    e2e_sop = _read(ROOT / "tests" / "E2E_TESTING_SOP.md").lower()
+    ci_matrix = _read(ROOT / "tests" / "CI_TEST_MATRIX.md").lower()
+
+    for content in (test_sop, e2e_sop, ci_matrix):
+        assert "m5-01 deterministic native-euler h3" in content
+    assert "partial-denoise execution is rejected" in test_sop
+    assert "remaining h3 capabilities" in e2e_sop
+    assert "| real comfyui h3 |" in ci_matrix
+
+
 def test_public_documents_do_not_expose_internal_workspace_material() -> None:
     forbidden = (
         ".planning/",

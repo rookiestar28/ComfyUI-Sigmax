@@ -28,6 +28,8 @@ tracked independently once the profile schema is implemented.
   construction identities, typed IEEE-754 tokens, and cross-process golden fixtures.
 - Dependency-free complete-schedule validation, typed float encoding, bounded canonical
   projections, and numerical/construction SHA-256 fingerprint functions.
+- Immutable schedule artifacts with versioned canonical UTF-8 transport, complete effective
+  construction metadata, strict untrusted-input parsing, and dual-fingerprint verification.
 - Wheel inventory enforcement for the pure-core package.
 
 ### Security
@@ -35,6 +37,9 @@ tracked independently once the profile schema is implemented.
 - Unfinished external scheduler code and unrelated global patches are excluded from the
   runtime import path.
 - Runtime dependency and built-wheel inventories are enforced by tests.
+- Artifact transport rejects oversized inputs, BOMs, invalid UTF-8, duplicate JSON keys,
+  floating literals, non-standard constants, unknown fields, non-canonical bytes, stale
+  fingerprints, secret-like metadata fields, and private local paths.
 
 ### Known limitations
 

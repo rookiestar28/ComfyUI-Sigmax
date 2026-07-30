@@ -6,8 +6,9 @@ versioned profiles for other flow-matching and diffusion model families.
 
 > **Status: pre-alpha foundation.** No user-facing ComfyUI nodes are implemented yet. The
 > current repository provides a side-effect-free package shell, packaging metadata, quality
-> gates, and framework-independent grid, shift, terminal, and slicing primitives. It does not
-> yet serialize complete runtime construction artifacts or expose ComfyUI nodes.
+> gates, framework-independent schedule primitives, and canonical schedule-artifact
+> serialization. It does not yet expose model profiles, parity-validated Krea 2 schedules, or
+> ComfyUI nodes.
 
 ## Why Sigmax
 
@@ -92,6 +93,28 @@ Complete external schedules can be validated for finite values, domain bounds, e
 transition count, strict decrease, and terminal-zero policy. The core also provides typed
 IEEE-754 float tokens, bounded NFC canonical projections, and separate numerical and
 construction SHA-256 fingerprints that reproduce the published artifact fixtures.
+
+Validated external `ScheduleResult` values can now be built into immutable
+`ScheduleArtifact` objects and transported as strict canonical UTF-8 JSON:
+
+```python
+from comfyui_sigmax.core import (
+    build_schedule_artifact,
+    deserialize_schedule_artifact,
+    serialize_schedule_artifact,
+)
+
+# `result` and `metadata` are validated immutable core contracts.
+artifact = build_schedule_artifact(result, metadata=metadata, precision="float64")
+payload = serialize_schedule_artifact(artifact)
+restored = deserialize_schedule_artifact(payload)
+
+assert restored == artifact
+```
+
+The parser bounds input size, rejects duplicate keys, BOMs, invalid UTF-8, JSON floating
+literals, non-standard constants, unknown schema fields, and non-canonical encodings. It
+recomputes both numerical and construction fingerprints before returning an artifact.
 
 ## Development Setup
 

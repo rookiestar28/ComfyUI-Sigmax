@@ -6,13 +6,14 @@
 - **Version:** 1
 - **Artifact schema:** `sigmax.schedule-artifact/1`
 - **Numerical projection schema:** `sigmax.numerical-schedule/1`
+- **Transport envelope schema:** `sigmax.schedule-artifact-envelope/1`
 - **Canonicalization profile:** Sigmax Canonical Projection v1
-- **Maturity:** normative for the pre-alpha v1 implementation; not yet a stable public API
+- **Maturity:** implemented and normative for pre-alpha v1; not yet a stable public API
 
 This document defines how Sigmax will describe a completed schedule construction and how it
 will assign deterministic identities to the resulting numerical schedule and its construction
-provenance. It is a contract for later runtime implementation; the current milestone publishes
-the contract and golden fixtures only.
+provenance. The pure-core runtime implements construction, canonical transport, strict
+parsing, fingerprint verification, and golden fixtures.
 
 ## 1. Goals
 
@@ -104,6 +105,39 @@ The following are excluded from the construction projection:
 
 New semantically relevant fields require a new schema version. Unknown members fail closed;
 they are not silently ignored.
+
+### 3.1 Transport Envelope
+
+Serialized artifacts use an exact five-member envelope:
+
+```json
+{
+  "construction": {},
+  "construction_fingerprint": "sha256:...",
+  "numerical": {},
+  "numerical_fingerprint": "sha256:...",
+  "schema": "sigmax.schedule-artifact-envelope/1"
+}
+```
+
+The illustrative empty projections above are not valid runtime values. A valid envelope MUST:
+
+1. contain exactly the five members shown;
+2. embed complete v1 construction and numerical projections;
+3. repeat both lowercase SHA-256 identities outside the projections;
+4. carry the numerical identity inside the construction projection;
+5. use the canonical UTF-8 bytes defined in Section 7;
+6. contain no BOM, insignificant whitespace, or trailing newline.
+
+The runtime parser accepts canonical `bytes` or Unicode text. Before JSON decoding, it rejects
+transport larger than **1,048,576 bytes**, a Unicode or UTF-8 BOM, and invalid UTF-8. During
+decoding, it rejects duplicate object names, JSON floating literals, and non-standard
+`NaN`/`Infinity` constants. It then verifies the exact envelope fields, canonical byte form,
+both projection schemas, schedule validity, the embedded numerical identity, and both
+recomputed fingerprints.
+
+Transport fingerprints prove integrity of these exact canonical values; they do not
+authenticate the producer.
 
 ## 4. Numerical Projection
 

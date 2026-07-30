@@ -1,5 +1,14 @@
 """Public contracts for the framework-independent schedule core."""
 
+from comfyui_sigmax.core.artifacts import (
+    ArtifactBuildMetadata,
+    ArtifactField,
+    ScheduleArtifact,
+    TypedArtifactValue,
+    build_schedule_artifact,
+    deserialize_schedule_artifact,
+    serialize_schedule_artifact,
+)
 from comfyui_sigmax.core.base_grids import (
     krea_reciprocal_step_grid,
     linear_endpoint_grid,
@@ -45,10 +54,13 @@ from comfyui_sigmax.core.terminal_slicing import (
 from comfyui_sigmax.core.validation import validate_sigma_schedule
 
 __all__ = [
+    "ArtifactBuildMetadata",
+    "ArtifactField",
     "BaseGridSpec",
     "EvidenceLevel",
     "OverrideRecord",
     "Provenance",
+    "ScheduleArtifact",
     "ScheduleContractError",
     "ScheduleInputs",
     "ScheduleOwnership",
@@ -59,11 +71,14 @@ __all__ = [
     "TerminalPolicy",
     "TransformContract",
     "TransformStage",
+    "TypedArtifactValue",
     "apply_terminal_policy",
     "build_numerical_projection",
+    "build_schedule_artifact",
     "canonical_projection_bytes",
     "construction_fingerprint",
     "denoise_construction_steps",
+    "deserialize_schedule_artifact",
     "direct_ratio_shift",
     "exponential_mu_shift",
     "float_to_ieee_hex",
@@ -72,6 +87,7 @@ __all__ = [
     "no_shift",
     "numerical_fingerprint",
     "require_single_ownership",
+    "serialize_schedule_artifact",
     "slice_denoise_tail",
     "slice_step_range",
     "validate_sigma_schedule",

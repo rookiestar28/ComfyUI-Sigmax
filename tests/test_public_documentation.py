@@ -39,6 +39,16 @@ def test_public_documentation_describes_current_maturity_honestly() -> None:
     assert "not yet validated" in compatibility
 
 
+def test_public_documentation_exposes_current_artifact_transport_contract() -> None:
+    readme = _read(ROOT / "README.md")
+    artifact_spec = _read(ROOT / "docs" / "SCHEDULE_ARTIFACT_SPEC.md")
+
+    assert "serialize_schedule_artifact" in readme
+    assert "deserialize_schedule_artifact" in readme
+    assert "sigmax.schedule-artifact-envelope/1" in artifact_spec
+    assert "1,048,576 bytes" in artifact_spec
+
+
 def test_public_contribution_and_changelog_contract() -> None:
     contributing = _read(ROOT / "CONTRIBUTING.md")
     changelog = _read(ROOT / "CHANGELOG.md")

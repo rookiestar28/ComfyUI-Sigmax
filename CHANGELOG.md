@@ -19,6 +19,7 @@ tracked independently once the profile schema is implemented.
   preflight contracts.
 - Immutable request/result contracts for requested/effective inputs, base grids, terminal and
   slicing policy, provenance, warnings, overrides, and structural sigma values.
+- Exact dependency-free Krea reciprocal-step and generic descending linear base-grid builders.
 - Wheel inventory enforcement for the pure-core package.
 
 ### Security

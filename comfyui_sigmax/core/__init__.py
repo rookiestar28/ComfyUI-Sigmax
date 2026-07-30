@@ -1,5 +1,9 @@
 """Public contracts for the framework-independent schedule core."""
 
+from comfyui_sigmax.core.base_grids import (
+    krea_reciprocal_step_grid,
+    linear_endpoint_grid,
+)
 from comfyui_sigmax.core.request_result import (
     BaseGridSpec,
     EvidenceLevel,
@@ -36,6 +40,8 @@ __all__ = [
     "TerminalPolicy",
     "TransformContract",
     "TransformStage",
+    "krea_reciprocal_step_grid",
+    "linear_endpoint_grid",
     "require_single_ownership",
     "validate_transform_chain",
 ]

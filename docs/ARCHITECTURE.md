@@ -30,6 +30,8 @@ comfyui_sigmax/
   __init__.py   side-effect-free package contract
   py.typed      typing marker
   core/
+    base_grids.py
+                Krea reciprocal-step and generic descending linear grids
     schedule_contracts.py
                 ownership, sigma-domain, and transform-chain preflight
     request_result.py
@@ -70,6 +72,14 @@ Immutable request/result contracts now bind that preflight to:
 The contracts deliberately do not yet claim that sigma values are finite, monotonic, correctly
 terminated, or numerically authoritative. Those checks follow the builders and canonical
 artifact specification.
+
+The first numerical builders are now implemented:
+
+- Krea reciprocal-step returns the non-terminal unit-flow values from `1` through `1 / steps`;
+- generic linear endpoint construction returns a finite strictly descending grid in an
+  explicit non-opaque domain.
+
+Terminal zero is not part of either builder. It remains a later terminal-stage operation.
 
 ## Planned Layered Design
 

@@ -7,7 +7,7 @@ versioned profiles for other flow-matching and diffusion model families.
 > **Status: pre-alpha foundation.** No user-facing ComfyUI nodes are implemented yet. The
 > current repository provides a side-effect-free package shell, packaging metadata, quality
 > gates, and the first framework-independent ownership/domain contracts. It does not yet
-> construct numerical schedules.
+> construct complete shifted/terminal schedules.
 
 ## Why Sigmax
 
@@ -56,16 +56,21 @@ pre-execution compatibility validation, and immutable request/result structures:
 
 ```python
 from comfyui_sigmax.core import ScheduleInputs, ScheduleOwnership, SigmaDomain
+from comfyui_sigmax.core import krea_reciprocal_step_grid
 
 ownership = ScheduleOwnership.EXTERNAL_SIGMAS
 domain = SigmaDomain.UNIT_FLOW
 requested_inputs = ScheduleInputs(steps=8, width=1024, height=1024)
+base_grid = krea_reciprocal_step_grid(8)
 ```
 
 Model-native, externally constructed, and model-patched schedules are mutually exclusive.
 External transforms cannot be silently applied to native or patched ownership. Requested and
 effective inputs are stored separately, and effective step or dimension changes require an
 explicit override record.
+
+The Krea builder returns only the unshifted, non-terminal base grid. Shift and terminal stages
+remain separate so terminal zero cannot be appended or transformed twice.
 
 ## Development Setup
 

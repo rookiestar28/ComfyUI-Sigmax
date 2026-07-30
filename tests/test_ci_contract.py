@@ -89,6 +89,7 @@ class CiContractTests(unittest.TestCase):
         self.assertIn('"browser_e2e": "NOT_APPLICABLE"', runner)
         self.assertIn('"comfyui_host_e2e": "NOT_IMPLEMENTED"', runner)
         self.assertIn('"comfyui_sigmax/core/__init__.py"', runner)
+        self.assertIn('"comfyui_sigmax/core/base_grids.py"', runner)
         self.assertIn('"comfyui_sigmax/core/schedule_contracts.py"', runner)
         self.assertIn('"comfyui_sigmax/core/request_result.py"', runner)
 

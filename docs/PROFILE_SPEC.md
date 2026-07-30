@@ -53,6 +53,17 @@ Any effective change to steps, width, or height requires a matching override rec
 validity and canonical serialization remain pending and must not be inferred from successful
 structural construction.
 
+The Krea reciprocal-step base-grid identifier is now backed by a pure builder. Its output is
+the non-terminal vector:
+
+```text
+1, (steps - 1) / steps, ..., 1 / steps
+```
+
+Appending terminal zero in the later terminal stage reproduces the official unshifted
+`steps + 1` vector. A generic strictly descending linear endpoint builder is also available
+for explicitly declared non-opaque domains; it is not an automatic model default.
+
 ## Required Conceptual Fields
 
 | Area | Required information |

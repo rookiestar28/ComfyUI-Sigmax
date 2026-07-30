@@ -57,6 +57,7 @@ def _inspect_wheel(wheel: Path) -> None:
         "comfyui_sigmax/__init__.py",
         "comfyui_sigmax/py.typed",
         "comfyui_sigmax/core/__init__.py",
+        "comfyui_sigmax/core/base_grids.py",
         "comfyui_sigmax/core/request_result.py",
         "comfyui_sigmax/core/schedule_contracts.py",
     }

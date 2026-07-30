@@ -10,8 +10,10 @@ nodes, RAW native-ComfyUI parity, model weights, GPU execution, and sampler-step
 native ComfyUI schedule parity are validated at 4, 8, 12, and 16 steps. RAW authoritative
 and framework schedule parity is validated across 14 complete 28/52-step geometry cases.
 The dependency-free `ProfileSchemaV1` contract is frozen for these validated external-sigma
-profiles, including separate source/framework/weight license provenance. Registry,
-inheritance, and native or patched schedule-ownership schemas are not yet implemented.
+profiles, including separate source/framework/weight license provenance. The immutable
+exact-key `ProfileRegistry` and explicit inheritance/conflict policy are implemented without
+file or plugin loading. Native or patched schedule-ownership schemas, external document
+parsing, and host-aware resolution are not yet implemented.
 
 The package metadata declares a ComfyUI floor of `0.29.0`, but that is a packaging target
 rather than current host-compatibility evidence. No release should infer working host support

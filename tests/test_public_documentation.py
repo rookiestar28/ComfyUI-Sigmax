@@ -82,6 +82,20 @@ def test_public_documentation_exposes_frozen_profile_schema_v1() -> None:
     assert "profiles/schema_v1.py" in architecture
 
 
+def test_public_documentation_exposes_namespaced_profile_registry() -> None:
+    readme = _read(ROOT / "README.md")
+    architecture = _read(ROOT / "docs" / "ARCHITECTURE.md")
+    profile_spec = _read(ROOT / "docs" / "PROFILE_SPEC.md")
+    changelog = _read(ROOT / "CHANGELOG.md")
+
+    for content in (readme, architecture, profile_spec, changelog):
+        assert "ProfileRegistry" in content
+    assert "builtin_profile_registry" in readme
+    assert "REPLACE_EXTERNAL" in profile_spec
+    assert "profiles/registry.py" in architecture
+    assert "cannot replace a built-in" in profile_spec
+
+
 def test_public_documentation_exposes_core_independence_boundary() -> None:
     readme = _read(ROOT / "README.md")
     compatibility = _read(ROOT / "docs" / "COMPATIBILITY.md")

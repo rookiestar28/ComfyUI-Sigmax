@@ -52,6 +52,37 @@ encoded by IEEE-754 binary64 bits, and `profile_schema_fingerprint()` hashes the
 projection as a `sha256:` identity. The projection is a fingerprint contract, not a general
 JSON profile loader or an authorization to download weights.
 
+## Registry and Inheritance
+
+`ProfileRegistry` is an immutable copy-on-write snapshot of complete `ProfileSchemaV1`
+objects. `ProfileKey` requires an exact namespaced `profile_id` and exact numeric
+`profile_version`; lookup has no implicit latest version, range, prefix match, alias,
+case-folding, or fallback.
+
+The package's `builtin_profile_registry()` contains the exact RAW and Turbo built-ins.
+External registration follows these rules:
+
+- a new exact key is accepted only after the complete schema validates;
+- an identical external key, fingerprint, and inheritance declaration is idempotent;
+- different content under the same key rejects with `ConflictPolicy.REJECT`;
+- `ConflictPolicy.REPLACE_EXTERNAL` is an explicit compare-and-swap operation that requires
+  the exact existing fingerprint;
+- external registration cannot replace a built-in under any policy, even when bytes are
+  identical.
+
+`ProfileInheritance` contains an already registered parent key and a canonical
+`overridden_fields` tuple. The child is still a complete schema; no partial dictionary is
+merged at lookup time. Profile ID and version establish the child identity. Every other
+top-level semantic difference must be declared exactly—missing, extra, duplicate, unknown,
+protected, or unchanged override names fail. An inherited external child must use
+`modified` evidence, so an official parent cannot silently lend official evidence to changed
+behavior. Requiring the parent to exist in the previous immutable snapshot makes cycles
+unrepresentable.
+
+Registry construction performs no file discovery, dynamic import, network access, model
+download, host inspection, or schedule execution. External document parsing and
+model/host/sampler evidence resolution remain separate future boundaries.
+
 ## Implemented Core Vocabulary
 
 Exactly one ownership mode is required:

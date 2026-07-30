@@ -180,8 +180,30 @@ assert schema_identity.startswith("sha256:")
 `ProfileSchemaV1` validates identity, grid/transform/terminal/slicing semantics, recipes,
 detection, compatibility capabilities, and artifact versions. Software source, framework,
 and model-weight provenance remain separately versioned and separately licensed. Schema v1
-freezes the validated external-sigma path; registry/inheritance and native/patch ownership
-contracts remain later work.
+freezes the validated external-sigma path; native/patch ownership contracts remain later
+work.
+
+Complete schemas can now be placed in an immutable exact-key registry:
+
+```python
+from comfyui_sigmax.profiles import (
+    KREA2_TURBO_SCHEMA,
+    ProfileKey,
+    builtin_profile_registry,
+)
+
+registry = builtin_profile_registry()
+entry = registry.resolve(ProfileKey.from_schema(KREA2_TURBO_SCHEMA))
+assert entry.schema is KREA2_TURBO_SCHEMA
+```
+
+`ProfileRegistry` uses exact namespaced IDs and numeric versions; it performs no “latest”,
+prefix, or fallback selection. External conflicts reject by default. Explicit
+compare-and-swap replacement is limited to existing external entries and requires the exact
+old fingerprint; an external registration can never replace an official built-in.
+Inheritance names an already registered parent and the exact canonical top-level fields that
+changed. The child remains a complete validated schema, and inherited external profiles must
+use `modified` evidence.
 
 The first concrete profile is an immutable, evidence-pinned declaration of the official
 Krea 2 Turbo recipe:

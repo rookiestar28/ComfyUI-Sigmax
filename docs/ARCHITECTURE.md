@@ -51,6 +51,8 @@ comfyui_sigmax/
   profiles/
     schema_v1.py
                 frozen profile contract, provenance separation, and canonical fingerprint
+    registry.py
+                exact-key immutable registry, conflicts, and explicit inheritance
     krea2_common.py
                 shared evidence, guidance, dimension policy, and packed-image geometry
     krea2_raw.py
@@ -167,6 +169,14 @@ validation rejects inconsistent domains, transforms, terminal semantics, recipe 
 capabilities, or provenance identities. `profile_schema_fingerprint()` hashes a canonical
 typed projection without importing ComfyUI or Diffusers.
 
+The dependency-free `profiles/registry.py` module implements `ProfileRegistry` as a
+copy-on-write canonical tuple of complete schemas. Exact `ProfileKey` lookup prevents
+implicit version or namespace fallback. External conflicts reject by default; explicit
+compare-and-swap replacement can affect only an existing external entry, never a built-in.
+Inheritance resolves at registration time by comparing every top-level schema field with an
+already registered parent. The declared canonical override set must equal the actual
+semantic difference, and inherited external children require `modified` evidence.
+
 The first concrete profile, `krea2.turbo.official`, is implemented in
 `profiles/krea2_turbo.py`. It pins the official Krea source and framework corroboration,
 declares fixed exponential `mu = 1.15`, eight default steps, terminal zero, deterministic
@@ -263,8 +273,8 @@ Dedicated Turbo and RAW profiles carry model identity, variant, evidence level, 
 base-grid construction, shift parameterization, terminal policy, sampler compatibility, and
 provenance. The implemented Krea-specific evidence resolver exposes status, confidence,
 decisive source, normalized evidence, and warnings. The generic `ProfileSchemaV1` contract is
-implemented; the namespaced registry, inheritance policy, and cross-model resolver remain
-planned.
+implemented together with the exact-key `ProfileRegistry` and explicit inheritance policy.
+Host/model/sampler evidence collection and cross-model capability resolution remain planned.
 
 ### ComfyUI adapters and nodes
 

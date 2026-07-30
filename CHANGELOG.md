@@ -74,6 +74,11 @@ tracked independently from the frozen profile-schema version.
   versioned and licensed `SoftwareSourceProvenance`, `FrameworkProvenance`, and
   `ModelWeightProvenance`; and deterministic typed projection plus
   `profile_schema_fingerprint`.
+- Immutable exact-key `ProfileRegistry` snapshots with namespaced numeric-version keys,
+  deterministic built-ins, idempotent identical registration, fail-closed conflicts,
+  fingerprint-guarded `REPLACE_EXTERNAL`, unconditional built-in protection, and explicit
+  complete-schema inheritance whose declared differences must match and use `modified`
+  evidence.
 
 ### Security
 

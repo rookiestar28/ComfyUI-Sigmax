@@ -18,7 +18,7 @@ detect-secrets, branch coverage, wheel inventory, Windows/WSL wrappers, and Wind
 Python matrix were established in M0-04 through M0-06.
 
 The pure numerical, artifact, capability, core-independence, deterministic property, Krea 2
-Turbo golden-vector, and Krea 2 RAW golden-vector lanes now exist.
+variant-resolution, Turbo golden-vector, and Krea 2 RAW golden-vector lanes now exist.
 The ComfyUI host fixture, framework/host parity suites for RAW, and product nodes do not yet
 exist. Until their roadmap owners create them:
 

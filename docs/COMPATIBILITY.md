@@ -47,7 +47,7 @@ in Python isolated mode.
 Compatibility claims will progress through separate lanes:
 
 1. pure schedule and deterministic property tests — implemented;
-2. authoritative golden tests — Turbo implemented; RAW pending;
+2. authoritative golden tests — Turbo and RAW implemented;
 3. authoritative framework parity tests — Turbo implemented with Diffusers 0.39.0; RAW
    pending;
 4. native ComfyUI schedule parity — Turbo implemented against a pinned host revision;
@@ -89,10 +89,13 @@ landscape, and portrait geometry. RAW authoritative framework parity remains pen
 ## Current Known Limitations
 
 - Node mappings are intentionally empty.
-- No Krea 2 RAW or Turbo automatic variant resolution exists.
+- Krea-specific pure variant resolution exists, but no real-host evidence collector or
+  automatic ComfyUI model inspection exists.
 - The pure schedule/artifact/capability core and dedicated Turbo/RAW structural profiles
-  exist, but no generic profile resolver, public sigma-scheduler node, or full sampler is
-  exposed.
+  exist, but no generic cross-model profile resolver, public sigma-scheduler node, or full
+  sampler is exposed.
+- Filename and local-header matches are suggestions only; the shared ComfyUI model class and
+  common tensor keys are family-only and cannot resolve RAW versus Turbo.
 - No ComfyUI version has completed real-host node/workflow E2E validation.
 - macOS and native hosted Ubuntu evidence are not yet available.
 - Image-quality comparisons are not correctness evidence and have not begun.

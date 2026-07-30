@@ -195,22 +195,33 @@ calculated `mu` plus whether the value extrapolates beyond the 256-to-6400 seque
 The upstream affine formula is deliberately unclamped. `build_krea2_raw_schedule()` does not
 accept arbitrary steps: it requires either the named 28-step framework recipe or named
 52-step official-full recipe. Complete independent float64/float32 goldens cover five square
-plus landscape/portrait geometry cases. Framework parity and variant resolution still
-require their own numerical and integration evidence.
+plus landscape/portrait geometry cases. Framework parity still requires its own numerical
+evidence.
 
 ## Matching and Variant Resolution
 
-Resolution priority is planned as:
+The Krea-specific pure resolver implements this evidence order:
 
 1. explicit user-selected profile and variant;
 2. trusted metadata retained by a profiled loader;
-3. verified checkpoint metadata or hash;
-4. compatible internal model configuration;
-5. filename suggestion;
-6. visible generic fallback, when technically valid.
+3. trusted Diffusers `Krea2Pipeline.is_distilled` metadata;
+4. verified official checkpoint SHA-256;
+5. local safetensors header suggestion;
+6. filename suggestion;
+7. family-only tensor keys or model class.
 
 An internal model class alone must not be treated as sufficient when multiple variants share
-that class. Strict official mode must fail rather than guess.
+that class. Local headers and filenames do not resolve official identity. Conflicting strong
+evidence remains unresolved, and strict official mode raises rather than guessing. The
+resolver retains normalized reason codes rather than private paths or arbitrary metadata.
+
+The exact official single-file identities currently recognized are:
+
+- RAW: `f99bb0ff8e362b77342bc4994e0c50906fe7ef7074864b181b7d48d2fa6d03d7`;
+- Turbo: `78bbf8f4165eda19cea3cb06c78089221932a39e2eed8af9da741f942c47ffb3`.
+
+Converted, quantized, fine-tuned, repackaged, or metadata-rewritten files require explicit or
+other trusted evidence; similar filenames do not inherit these identities.
 
 ## Result Metadata
 

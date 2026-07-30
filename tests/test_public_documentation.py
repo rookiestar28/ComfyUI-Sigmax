@@ -5,6 +5,11 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from comfyui_sigmax.profiles import (
+    KREA2_RAW_OFFICIAL_SHA256,
+    KREA2_TURBO_OFFICIAL_SHA256,
+)
+
 ROOT = Path(__file__).resolve().parents[1]
 PUBLIC_DOCUMENTS = (
     ROOT / "README.md",
@@ -129,6 +134,22 @@ def test_public_documentation_exposes_raw_structural_profile_boundary() -> None:
     assert "packed image sequence length" in compatibility.lower()
     assert "resolve_krea2_image_geometry" in architecture
     assert "M3-02" not in readme
+
+
+def test_public_documentation_exposes_fail_closed_variant_resolution() -> None:
+    readme = _read(ROOT / "README.md")
+    architecture = _read(ROOT / "docs" / "ARCHITECTURE.md")
+    profile_spec = _read(ROOT / "docs" / "PROFILE_SPEC.md")
+    compatibility = _read(ROOT / "docs" / "COMPATIBILITY.md")
+
+    assert "resolve_krea2_variant" in readme
+    assert "suggestions" in readme.lower()
+    assert "strict official mode" in readme.lower()
+    assert "krea2_variant.py" in architecture
+    assert "conflicting resolving evidence" in architecture.lower()
+    assert KREA2_RAW_OFFICIAL_SHA256 in profile_spec
+    assert KREA2_TURBO_OFFICIAL_SHA256 in profile_spec
+    assert "family-only" in compatibility.lower()
 
 
 def test_public_contribution_and_changelog_contract() -> None:

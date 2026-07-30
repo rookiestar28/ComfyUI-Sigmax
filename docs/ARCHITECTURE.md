@@ -55,6 +55,8 @@ comfyui_sigmax/
                 immutable RAW profile, dynamic-mu provenance, and exact-recipe builder
     krea2_turbo.py
                 immutable official-recipe declaration and structural schedule builder
+    krea2_variant.py
+                pure evidence normalization and fail-closed RAW/Turbo resolution
 
 scripts/
   preflight_check.py          local environment validation
@@ -200,6 +202,12 @@ five square and two orientation cases. Its precision-80 Decimal oracle independe
 geometry and affine-`mu` math and imports neither product nor optional framework code. RAW
 framework parity remains a later numerical layer.
 
+The Krea-specific variant resolver is also implemented in the pure profile layer. It resolves
+only explicit selection, trusted profile/framework metadata, or exact verified official
+SHA-256 evidence. Local header and filename signals remain suggestions, while tensor keys and
+the shared ComfyUI model class remain family-only. Conflicting resolving evidence is never
+hidden by precedence, and strict official mode fails closed.
+
 ## Planned Layered Design
 
 ```text
@@ -229,11 +237,11 @@ This layer must not require ComfyUI or Diffusers for closed-form schedule formul
 
 ### Profile resolver and registry
 
-The first dedicated Turbo profile carries model identity, variant, evidence level, sigma
-domain, base-grid construction, shift parameterization, terminal policy, sampler
-compatibility, and provenance. A generic schema, registry, and automatic resolver remain
-planned. Automatic resolution must expose confidence and fail closed when an official profile
-is ambiguous.
+Dedicated Turbo and RAW profiles carry model identity, variant, evidence level, sigma domain,
+base-grid construction, shift parameterization, terminal policy, sampler compatibility, and
+provenance. The implemented Krea-specific evidence resolver exposes status, confidence,
+decisive source, normalized evidence, and warnings. A generic schema, registry, and
+cross-model resolver remain planned.
 
 ### ComfyUI adapters and nodes
 

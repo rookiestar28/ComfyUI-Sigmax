@@ -11,8 +11,10 @@ versioned profiles for other flow-matching and diffusion model families.
 > provides typed model/profile/sampler capability preflight and complete independent
 > 4/8/12/16-step Turbo golden vectors plus authoritative parity against pinned Krea code and
 > Diffusers 0.39.0, plus native-ComfyUI Turbo schedule parity. Complete independent RAW
-> 28/52-step golden vectors now cover square, landscape, and portrait geometry. No ComfyUI
-> nodes are exposed, and RAW framework parity remains pending. The complete core and profile
+> 28/52-step golden vectors now cover square, landscape, and portrait geometry. A pure
+> fail-closed resolver distinguishes authoritative/verified variant evidence from visible
+> header and filename suggestions. No ComfyUI nodes are exposed, and RAW framework parity
+> remains pending. The complete core and profile
 > layer are dependency-free and have enforced
 > isolation/property/golden/parity contract lanes.
 
@@ -213,7 +215,26 @@ Euler capabilities. It keeps `krea2.raw.official-full-52` (Krea guidance 3.5 / C
 dimension upward to 16, calculates the packed image sequence length, and derives official
 unclamped RAW `mu`. `build_krea2_raw_schedule()` composes an exact named 28- or 52-step
 recipe; it does not accept an arbitrary silently modified step count. Automatic variant
-resolution is not exported yet.
+resolution never trusts the shared ComfyUI model class or filename alone:
+
+```python
+from comfyui_sigmax.profiles import (
+    KREA2_TURBO_OFFICIAL_SHA256,
+    Krea2Variant,
+    resolve_krea2_variant,
+)
+
+resolution = resolve_krea2_variant(
+    checkpoint_sha256=KREA2_TURBO_OFFICIAL_SHA256,
+    filename="renamed.safetensors",
+)
+assert resolution.resolved_variant is Krea2Variant.TURBO
+```
+
+Explicit selection, trusted Sigmax/Diffusers metadata, and exact official file hashes can
+resolve a variant. Local safetensors metadata and filenames only produce visible suggestions
+in flexible mode; tensor keys and the shared ComfyUI `Krea2` class confirm only the family.
+Strict official mode raises on suggestions, ambiguity, or conflicting strong evidence.
 
 The committed `tests/golden/krea2_raw_v1.json` fixture contains 14 complete terminal-inclusive
 RAW cases: both named recipes across 256, 512, 768, 1024, and 1280 square resolutions plus

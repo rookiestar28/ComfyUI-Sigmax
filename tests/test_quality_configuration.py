@@ -111,7 +111,12 @@ class QualityConfigurationTests(unittest.TestCase):
 
         test_sop = (REPOSITORY_ROOT / "tests/TEST_SOP.md").read_text(encoding="utf-8")
         self.assertIn(
-            "The package and project-local quality runner now exist.",
+            "cross-platform full-gate wrappers, and CI workflow",
+            test_sop,
+        )
+        self.assertIn(
+            "The ComfyUI host fixture, numerical core, golden/parity suites, and product nodes "
+            "do not yet",
             test_sop,
         )
 

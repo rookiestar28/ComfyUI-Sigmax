@@ -1,0 +1,90 @@
+# ComfyUI-Sigmax
+
+ComfyUI-Sigmax is a planned model-aware sigma schedule and sampler toolkit for ComfyUI. Its
+first validation targets are Krea 2 Turbo and Krea 2 RAW; the longer-term design supports
+versioned profiles for other flow-matching and diffusion model families.
+
+> **Status: pre-alpha foundation.** No user-facing ComfyUI nodes are implemented yet. The
+> current repository provides a side-effect-free package shell, packaging metadata, quality
+> gates, and the public contracts needed before numerical scheduling work begins.
+
+## Why Sigmax
+
+Sampling systems often mix four different concerns:
+
+1. how a model interprets time or sigma;
+2. how the sigma sequence is constructed;
+3. which numerical sampler integrates model predictions;
+4. which settings are authoritative for a specific model variant.
+
+Sigmax will keep those concerns separate. A schedule must come from an explicit, traceable
+profile; experimental transforms must remain distinguishable from reference behavior; and
+features that require stateful sampler steps must not be represented as inert sigma controls.
+
+## Planned Product Shape
+
+The intended toolkit includes:
+
+- official-parity Krea 2 Turbo and resolution-aware Krea 2 RAW schedules;
+- a pure, independently testable schedule engine;
+- versioned model profiles with evidence and provenance;
+- simple model-aware and advanced schedule nodes;
+- schedule inspection, comparison, metadata, and fingerprints;
+- native ComfyUI Euler reuse where it is mathematically equivalent;
+- separate full-sampler implementations only where sigma tensors are insufficient;
+- numerical golden, parity, property, and integration test lanes.
+
+These are roadmap targets, not claims about the current package.
+
+## Current Repository Surface
+
+The import contract is intentionally minimal:
+
+```python
+import comfyui_sigmax
+
+assert comfyui_sigmax.NODE_CLASS_MAPPINGS == {}
+assert comfyui_sigmax.NODE_DISPLAY_NAME_MAPPINGS == {}
+```
+
+Empty mappings prevent unfinished nodes from being registered. Runtime dependencies are also
+empty; Diffusers is an optional reference dependency used for later parity research.
+
+## Development Setup
+
+Python 3.10 or newer is required.
+
+Windows:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
+powershell -File scripts/run_full_tests_windows.ps1
+```
+
+Linux or WSL:
+
+```bash
+python3 -m venv .venv-wsl
+.venv-wsl/bin/python -m pip install -e '.[dev]'
+bash scripts/run_full_tests_linux.sh
+```
+
+See [Contributing](CONTRIBUTING.md) for the development workflow and
+[Compatibility](docs/COMPATIBILITY.md) for the distinction between validated environments
+and planned host/model support.
+
+## Documentation
+
+- [Architecture](docs/ARCHITECTURE.md)
+- [Provisional model profile specification](docs/PROFILE_SPEC.md)
+- [Compatibility](docs/COMPATIBILITY.md)
+- [Contributing](CONTRIBUTING.md)
+- [Changelog](CHANGELOG.md)
+- [Repository identity](docs/REPOSITORY_IDENTITY.md)
+- [Base import and attribution manifest](docs/BASE_IMPORT_MANIFEST.md)
+
+## License and Attribution
+
+ComfyUI-Sigmax is distributed under the [MIT License](LICENSE.TXT). The project retains
+attribution for its audited source lineage in [NOTICE](NOTICE).

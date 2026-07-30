@@ -12,18 +12,18 @@ Tests must be designed to expose those failures, not merely produce a green resu
 
 ## 2. Current Bootstrap State
 
-The package and project-local quality runner now exist. The canonical package namespace,
-pytest, Ruff, mypy, pre-commit, detect-secrets, and branch-coverage configuration were
-established in M0-04/M0-05.
+The package, project-local quality runner, cross-platform full-gate wrappers, and CI workflow
+contract now exist. The canonical package namespace, pytest, Ruff, mypy, pre-commit,
+detect-secrets, branch coverage, wheel inventory, Windows/WSL wrappers, and Windows/Ubuntu
+Python matrix were established in M0-04 through M0-06.
 
-The cross-platform full-gate scripts, CI workflow, ComfyUI host fixture, numerical core,
-golden/parity suites, and product nodes do not yet exist. Until their roadmap owners create
-them:
+The ComfyUI host fixture, numerical core, golden/parity suites, and product nodes do not yet
+exist. Until their roadmap owners create them:
 
-- implemented direct quality and test commands are mandatory;
+- the OS-specific full-gate wrapper is mandatory acceptance evidence;
+- direct commands remain available for targeted diagnosis;
 - missing future gates remain `NOT_IMPLEMENTED`, not passed;
-- documentation-only work may use the exception in Section 5;
-- M0-06 must wrap the existing direct commands without changing their semantics.
+- documentation-only work may use the exception in Section 5.
 
 ## 3. Required Reading Order
 
@@ -109,8 +109,8 @@ canonical SOP merely to drive the scan.
 
 ### 7.1 Python
 
-- Minimum planned version: Python 3.10.
-- Supported version matrix must be finalized in M0.
+- Minimum supported version: Python 3.10.
+- The foundation matrix covers Python 3.10 and 3.13; expand it only with explicit evidence.
 - Use a repository-local environment:
   - Windows: `.venv`
   - Linux/WSL: `.venv-wsl`
@@ -231,7 +231,7 @@ Rules:
 ```powershell
 python -m ruff format --check .
 python -m ruff check .
-python -m mypy comfyui_sigmax tests
+python -m mypy comfyui_sigmax tests scripts
 ```
 
 The paths, Python floor, lint selection, and strictness are defined in `pyproject.toml`.
@@ -360,11 +360,10 @@ profile, node, or workflow contract is affected.
 
 ### Stage 8 - Packaging and Clean-Install Checks
 
-Planned baseline:
+Current baseline:
 
 ```powershell
-python -m build
-python -m pytest tests/packaging
+python -m build --wheel --outdir .tmp/dist
 ```
 
 Verify:
@@ -373,6 +372,9 @@ Verify:
 - optional dependencies remain optional;
 - node package import has no forbidden side effects;
 - licenses and attribution are included;
+- the wheel contains only the declared package and required metadata;
+- internal planning, research, caches, tests, and local paths are absent;
+- runtime dependency metadata is empty until an approved runtime dependency is introduced.
 - internal files, model weights, caches, and secrets are excluded.
 
 ### Stage 9 - Test Health, Coverage, and Debt Governance

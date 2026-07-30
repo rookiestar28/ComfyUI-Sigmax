@@ -12,15 +12,15 @@ Command definitions remain in `tests/TEST_SOP.md`. Real-host lifecycle requireme
 
 | Capability | State | Activation dependency |
 | --- | --- | --- |
-| Documentation checks | Available manually | Current bootstrap |
-| CI configuration self-tests | `NOT_IMPLEMENTED` | M0-04/M0-05 |
+| Documentation checks | Implemented in pytest | M0-07 public contract |
+| CI configuration self-tests | Implemented | M0-06 |
 | Pure-core tests | `NOT_IMPLEMENTED` | M1 |
 | Golden/parity tests | `NOT_IMPLEMENTED` | M2/M3 |
 | Adapter/integration tests | `NOT_IMPLEMENTED` | M4 |
 | Real ComfyUI H1/H2 | `NOT_IMPLEMENTED` | M0/M4 harness |
 | Browser E2E | `NOT_APPLICABLE` | Deliberate web-extension roadmap item |
 | GPU/real-model tests | Optional and unapproved | Explicit requirement and authorization |
-| CI workflows | `NOT_IMPLEMENTED` | Git plus M0-04/M0-05/M0-06 |
+| CI workflows | Configured; hosted runtime evidence pending | M0-06 |
 
 An unavailable lane is never a pass.
 

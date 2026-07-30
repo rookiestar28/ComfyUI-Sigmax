@@ -15,6 +15,10 @@ tracked independently from the frozen profile-schema version.
 - Cross-platform Windows and Linux/WSL full-gate wrappers.
 - Minimal-permission continuous-integration workflow contract.
 - Public architecture, profile-schema, compatibility, and contribution documentation.
+- An objective model profile contribution guide covering separate source/framework/weight
+  provenance and licenses, mathematical/domain/capability declarations, fail-closed detection,
+  evidence levels, complete golden/parity proof, validator-clean workflows, supported-host
+  applicability, security, limitations, review checklists, and automatic rejection conditions.
 - Framework-independent schedule ownership, sigma-domain, transform-stage, and double-shift
   preflight contracts.
 - Immutable request/result contracts for requested/effective inputs, base grids, terminal and
@@ -129,7 +133,8 @@ tracked independently from the frozen profile-schema version.
 
 ### Known limitations
 
-- No cross-family generic profile fallback, real-host-validated workflow, or sampler is implemented.
-- Real ComfyUI host, model-weight, GPU, and sampler-step validation remain pending.
+- No cross-family generic profile fallback or sampler is implemented.
+- Real ComfyUI model-free Turbo/RAW workflows are validated only on the pinned supported host;
+  model-weight, GPU, sampler-step, and image validation remain pending.
 
 [Unreleased]: https://github.com/rookiestar28/ComfyUI-Sigmax/commits/main

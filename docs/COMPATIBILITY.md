@@ -106,6 +106,12 @@ Compatibility claims will progress through separate lanes:
 
 Passing a lower tier does not imply a higher tier.
 
+New or changed model profiles must satisfy the
+[model profile contribution guide](PROFILE_CONTRIBUTION_GUIDE.md). In particular, source,
+framework, and weight licenses remain separate; evidence level is scoped to the executed proof;
+and a validator-clean fixture does not imply supported-host, sampler, model-weight, GPU, or image
+conformance.
+
 The implemented property lane checks mathematical and serialization invariants. The Krea 2
 Turbo structural profile pins evidence and the golden lane compares the production builder
 against complete independent float64 and float32 fixtures. The initial bounds are `1e-8` and

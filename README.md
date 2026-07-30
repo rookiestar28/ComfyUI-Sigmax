@@ -605,6 +605,7 @@ and planned host/model support.
 
 - [Architecture](docs/ARCHITECTURE.md)
 - [Model profile schema v1 specification](docs/PROFILE_SPEC.md)
+- [Model profile contribution guide](docs/PROFILE_CONTRIBUTION_GUIDE.md)
 - [Schedule artifact specification](docs/SCHEDULE_ARTIFACT_SPEC.md)
 - [Execution receipt and portable bundle specification](docs/EXECUTION_RECEIPT_SPEC.md)
 - [Workflow metadata specification](docs/WORKFLOW_METADATA_SPEC.md)

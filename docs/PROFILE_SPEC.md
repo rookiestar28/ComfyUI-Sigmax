@@ -47,6 +47,12 @@ A framework or source license never implies a model-weight license. Public locat
 HTTPS, secret-like fields and private local paths are rejected, and all identifiers and lists
 must be canonical and bounded.
 
+Contributor evidence and review requirements are specified separately in the
+[model profile contribution guide](PROFILE_CONTRIBUTION_GUIDE.md). The guide maps this frozen
+runtime contract to required licenses, formulas, capabilities, detection, goldens, parity,
+workflow/host evidence, limitations, and objective rejection conditions; it does not add a
+runtime loader or schema field.
+
 `profile_schema_projection()` produces a deterministic typed projection. Floating values are
 encoded by IEEE-754 binary64 bits, and `profile_schema_fingerprint()` hashes the canonical
 projection as a `sha256:` identity. The projection is a fingerprint contract, not a general
@@ -360,6 +366,11 @@ An official or framework-reference profile is incomplete without:
 - explicit float tolerances;
 - at least one integration workflow;
 - documented detection limits and known incompatibilities.
+
+The contribution guide additionally requires complete vector/device/dtype/error evidence,
+separate provenance licenses, validator-clean workflow metadata, and supported-host execution
+when runtime behavior is affected. Passing a lower evidence tier never implies sampler,
+model-weight, GPU, or image conformance.
 
 See [Architecture](ARCHITECTURE.md) for layer ownership and
 [Compatibility](COMPATIBILITY.md) for current support status.

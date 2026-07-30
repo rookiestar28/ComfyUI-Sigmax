@@ -70,7 +70,35 @@ Describe:
 Do not describe attractive output alone as schedule correctness. Numerical construction,
 provenance, and reproducibility are required.
 
+## Model Profile Contributions
+
+A model profile is accepted as an evidence package, not as a set of preferred values. Follow
+the [model profile contribution guide](docs/PROFILE_CONTRIBUTION_GUIDE.md) and include its
+copyable pull-request checklist.
+
+At minimum, profile review requires:
+
+- separate pinned software-source, framework, and model-weight provenance with a separate
+  license declaration for each resource layer;
+- explicit formulas, domains, ownership, grid/transforms/order, terminal/slicing, geometry,
+  recipes, guidance, capabilities, and fail-closed detection;
+- independent complete float64/float32 goldens, formula tests, pinned parity with dtype/device
+  and error bounds, deterministic identities, and reproducible regeneration;
+- a canonical validator-clean workflow plus supported-host evidence whenever node, adapter,
+  workflow, or host behavior changes;
+- evidence level, known limitations, migration impact, attribution, security, dependency,
+  package, and rollback review.
+
+An override, inherited child, step change, formula change, or other material deviation from
+reference behavior uses `modified` evidence. Image quality, filenames, local headers, shared
+model classes, or queue acceptance cannot substitute for numerical identity, exact variant
+evidence, or completed execution.
+
 ## License
 
 By contributing, you agree that your contribution is distributed under the repository's
 [MIT License](LICENSE.TXT). Retain applicable attribution notices.
+
+The repository license does not grant rights to upstream software, frameworks, model weights,
+datasets, trademarks, or generated media. Missing or incompatible rights for any required
+resource layer block acceptance.

@@ -116,6 +116,7 @@ and planned host/model support.
 
 - [Architecture](docs/ARCHITECTURE.md)
 - [Provisional model profile specification](docs/PROFILE_SPEC.md)
+- [Schedule artifact specification](docs/SCHEDULE_ARTIFACT_SPEC.md)
 - [Compatibility](docs/COMPATIBILITY.md)
 - [Contributing](CONTRIBUTING.md)
 - [Changelog](CHANGELOG.md)

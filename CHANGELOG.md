@@ -24,6 +24,8 @@ tracked independently once the profile schema is implemented.
   with stable endpoint and extreme finite-control behavior.
 - Explicit terminal append/preserve, terminal-inclusive step-range slicing, and
   ComfyUI-compatible partial-denoise tail policies with strict boundary checks.
+- Versioned canonical schedule artifact specification with separate numerical and
+  construction identities, typed IEEE-754 tokens, and cross-process golden fixtures.
 - Wheel inventory enforcement for the pure-core package.
 
 ### Security

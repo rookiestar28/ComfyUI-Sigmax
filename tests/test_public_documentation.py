@@ -12,6 +12,7 @@ PUBLIC_DOCUMENTS = (
     ROOT / "CHANGELOG.md",
     ROOT / "docs" / "ARCHITECTURE.md",
     ROOT / "docs" / "PROFILE_SPEC.md",
+    ROOT / "docs" / "SCHEDULE_ARTIFACT_SPEC.md",
     ROOT / "docs" / "COMPATIBILITY.md",
 )
 

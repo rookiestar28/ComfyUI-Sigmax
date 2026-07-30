@@ -104,3 +104,58 @@ jobs:
           path: .tmp/krea2_turbo_parity_v1.json
           if-no-files-found: warn
           retention-days: 14
+
+  native-comfyui-parity-pinned:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        # actions/checkout v6.0.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # pragma: allowlist secret
+
+      - name: Set up Python
+        # actions/setup-python v6.2.0
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # pragma: allowlist secret
+        with:
+          python-version: "3.13"
+
+      - name: Fetch pinned ComfyUI source
+        shell: bash
+        run: |
+          git init .tmp/ComfyUI
+          git -C .tmp/ComfyUI remote add origin https://github.com/Comfy-Org/ComfyUI.git
+          git -C .tmp/ComfyUI fetch --depth 1 origin \
+            e651b7bef55a5376343dcb1c0edb79f0142c985e  # pragma: allowlist secret
+          git -C .tmp/ComfyUI checkout --detach FETCH_HEAD
+
+      - name: Create isolated native parity environment
+        shell: bash
+        run: |
+          python -m venv .venv-comfy-parity
+          .venv-comfy-parity/bin/python -m pip install -e '.[dev]'
+          .venv-comfy-parity/bin/python -m pip install \
+            -r requirements/parity-comfyui-native.txt
+
+      - name: Regenerate native ComfyUI parity report
+        shell: bash
+        run: |
+          .venv-comfy-parity/bin/python -m scripts.run_krea2_comfy_native_parity \
+            --comfyui-root .tmp/ComfyUI \
+            --output .tmp/krea2_turbo_comfy_native_parity_v1.json
+
+      - name: Verify committed native evidence
+        shell: bash
+        run: |
+          cmp --silent \
+            tests/parity/fixtures/krea2_turbo_comfy_native_parity_v1.json \
+            .tmp/krea2_turbo_comfy_native_parity_v1.json
+
+      - name: Publish native parity evidence
+        if: always()
+        # actions/upload-artifact v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # pragma: allowlist secret
+        with:
+          name: krea2-turbo-comfy-native-parity-python-3.13
+          path: .tmp/krea2_turbo_comfy_native_parity_v1.json
+          if-no-files-found: warn
+          retention-days: 14

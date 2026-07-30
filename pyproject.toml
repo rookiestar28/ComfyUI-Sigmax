@@ -65,6 +65,7 @@ select = ["E4", "E7", "E9", "F", "I", "UP", "B", "S", "SIM", "RUF"]
 "tests/**/*.py" = ["S101", "S603"]
 "tests/*.py" = ["S101", "S603"]
 "scripts/run_full_gate.py" = ["S603"]
+"scripts/run_krea2_comfy_native_parity.py" = ["S603"]
 
 [tool.mypy]
 python_version = "3.10"

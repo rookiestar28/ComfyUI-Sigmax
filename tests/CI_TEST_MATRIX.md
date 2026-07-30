@@ -18,7 +18,7 @@ Command definitions remain in `tests/TEST_SOP.md`. Real-host lifecycle requireme
 | Deterministic property tests | Implemented | M1-07 |
 | Krea 2 Turbo golden vectors | Implemented | M2-02 |
 | Framework parity tests | Implemented | M2-03 |
-| Native ComfyUI parity tests | `NOT_IMPLEMENTED` | M2-04/M3 |
+| Native ComfyUI parity tests | Implemented | M2-04 |
 | Adapter/integration tests | `NOT_IMPLEMENTED` | M4 |
 | Real ComfyUI H1/H2 | `NOT_IMPLEMENTED` | M0/M4 harness |
 | Browser E2E | `NOT_APPLICABLE` | Deliberate web-extension roadmap item |
@@ -101,6 +101,14 @@ review and cannot silently redefine supported behavior.
 - No unreviewed reference checkout execution.
 - Complete vectors and error statistics, not selected-point assertions.
 
+### Native ComfyUI Parity
+
+- Exact reviewed ComfyUI revision and behavior-bearing blobs.
+- Isolated Python 3.13 dependency lock; no default-runtime dependency change.
+- Offline CPU import of the actual `ModelSamplingFlux` and registered `simple` scheduler.
+- Complete 4/8/12/16-step vectors, bounded table-quantization policy, and canonical evidence.
+- No model weights, host server, workflow execution, or copied GPL implementation.
+
 ### Adapter Contract
 
 - May import reviewed ComfyUI APIs or controlled stubs.
@@ -141,9 +149,9 @@ Planned hotspot families:
 - import/package/optional-dependency boundaries.
 
 Coverage is a gap detector, not proof of numerical correctness. Deterministic property tests,
-complete Krea 2 Turbo 4/8/12/16-step goldens, and authoritative Turbo differential parity are
-implemented. RAW goldens/parity, native ComfyUI parity, and scheduled mutation evidence
-remain mandatory when their roadmap stages activate.
+complete Krea 2 Turbo 4/8/12/16-step goldens, authoritative Turbo differential parity, and
+native ComfyUI Turbo schedule parity are implemented. RAW goldens/parity and scheduled
+mutation evidence remain mandatory when their roadmap stages activate.
 
 ## 8. Skip, XFail, Retry, and Quarantine Policy
 

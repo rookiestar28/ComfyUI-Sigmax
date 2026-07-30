@@ -36,7 +36,7 @@ LANE_STATUS: Final = {
     "golden": "IMPLEMENTED",
     "gpu_model_weights": "NOT_IMPLEMENTED",
     "mutation": "NOT_IMPLEMENTED",
-    "native_comfyui_parity": "NOT_IMPLEMENTED",
+    "native_comfyui_parity": "IMPLEMENTED",
     "property": "IMPLEMENTED",
 }
 

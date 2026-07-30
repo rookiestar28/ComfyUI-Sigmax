@@ -172,6 +172,14 @@ canonical gate validates the report contract, and hosted CI regenerates it byte 
 This establishes formula and framework schedule parity without claiming native ComfyUI host
 or sampler parity.
 
+The native ComfyUI schedule lane is a third, isolated boundary. It verifies the exact host
+revision and source blobs, sets reviewed CPU mode before host imports, instantiates the real
+`ModelSamplingFlux`, and dispatches the registered `simple` scheduler. Its committed report
+stores complete 4/8/12/16-step vectors and an explicit quantization reason for non-divisible
+table indexing. This lane executes GPL framework code as a reference but copies no framework
+implementation into the MIT package. It still does not start a host, register a node, execute
+Euler latent steps, or load model weights.
+
 ## Planned Layered Design
 
 ```text

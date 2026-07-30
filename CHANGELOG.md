@@ -48,7 +48,11 @@ tracked independently once the profile schema is implemented.
 - Authoritative Krea 2 Turbo framework parity harness with pinned Krea source, exact
   Diffusers 0.39.0 / NumPy 2.3.4 / Torch 2.9.0 execution, complete canonical report vectors,
   enforced error bounds, schedule fingerprints, fail-closed dependency checks, and isolated
-  hosted-CI regeneration. Native-ComfyUI parity remains a separate pending lane.
+  hosted-CI regeneration.
+- Native-ComfyUI parity against pinned `ModelSamplingFlux` and registered `simple` behavior,
+  with exact source/dependency checks, complete 4/8/12/16-step vectors, explicit integer-table
+  quantization policy, fail-closed canonical evidence, and a separate hosted regeneration
+  lane.
 
 ### Security
 
@@ -61,8 +65,8 @@ tracked independently once the profile schema is implemented.
 
 ### Known limitations
 
-- No user-facing ComfyUI node, generic profile resolver, native-host-validated schedule, or
+- No user-facing ComfyUI node, generic profile resolver, real-host-validated workflow, or
   sampler is implemented.
-- Real ComfyUI host, model-weight, GPU, and native-ComfyUI parity validation remain pending.
+- Real ComfyUI host, model-weight, GPU, and sampler-step validation remain pending.
 
 [Unreleased]: https://github.com/rookiestar28/ComfyUI-Sigmax/commits/main

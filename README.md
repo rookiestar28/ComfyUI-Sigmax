@@ -195,8 +195,16 @@ imports every core and profile module. Static import-boundary and deterministic
 property/metamorphic/golden tests provide complementary evidence. These checks prove
 framework independence and detect Turbo formula drift. The default gate validates the
 committed parity report without importing optional frameworks; a dedicated hosted CI job
-recreates that report in an isolated exactly pinned Diffusers environment. Native ComfyUI
-execution parity remains a separate pending validation stage.
+recreates that report in an isolated exactly pinned Diffusers environment.
+
+The separate
+`tests/parity/fixtures/krea2_turbo_comfy_native_parity_v1.json` report executes the actual
+pinned ComfyUI `ModelSamplingFlux` and registered `simple` scheduler on CPU. It records
+complete 4-, 8-, 12-, and 16-step float32 vectors, source blobs, environment versions, and
+fingerprints. Exact table-position cases remain within `1e-6`; the 12-step case has an
+explicit `2e-4` bound for ComfyUI's documented 10,000-entry integer-index quantization. This
+proves native schedule parity only: no checkpoint, Euler latent integration, host process, or
+workflow is executed.
 
 ## Development Setup
 

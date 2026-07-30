@@ -107,7 +107,7 @@ class CiContractTests(unittest.TestCase):
         self.assertIn('"core_independence": "IMPLEMENTED"', runner)
         self.assertIn('"framework_parity": "IMPLEMENTED"', runner)
         self.assertIn('"golden": "IMPLEMENTED"', runner)
-        self.assertIn('"native_comfyui_parity": "NOT_IMPLEMENTED"', runner)
+        self.assertIn('"native_comfyui_parity": "IMPLEMENTED"', runner)
         self.assertIn('"property": "IMPLEMENTED"', runner)
 
     def test_workflow_contract(self) -> None:
@@ -131,6 +131,14 @@ class CiContractTests(unittest.TestCase):
         self.assertIn("requirements/parity-krea2-turbo.txt", workflow)
         self.assertIn("scripts.run_krea2_turbo_parity", workflow)
         self.assertIn("tests/parity/fixtures/krea2_turbo_parity_v1.json", workflow)
+        self.assertIn("native-comfyui-parity-pinned:", workflow)
+        self.assertIn("requirements/parity-comfyui-native.txt", workflow)
+        self.assertIn("scripts.run_krea2_comfy_native_parity", workflow)
+        self.assertIn("tests/parity/fixtures/krea2_turbo_comfy_native_parity_v1.json", workflow)
+        self.assertIn(
+            "e651b7bef55a5376343dcb1c0edb79f0142c985e",  # pragma: allowlist secret
+            workflow,
+        )
         self.assertIn(
             "043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",  # pragma: allowlist secret
             workflow,
@@ -146,9 +154,9 @@ class CiContractTests(unittest.TestCase):
         matrix = (REPOSITORY_ROOT / "tests/CI_TEST_MATRIX.md").read_text(encoding="utf-8")
         normalized_matrix = " ".join(matrix.split())
         self.assertIn("| Framework parity tests | Implemented | M2-03 |", matrix)
-        self.assertIn("| Native ComfyUI parity tests | `NOT_IMPLEMENTED` | M2-04/M3 |", matrix)
+        self.assertIn("| Native ComfyUI parity tests | Implemented | M2-04 |", matrix)
         self.assertIn(
-            "authoritative Turbo differential parity are implemented",
+            "native ComfyUI Turbo schedule parity are implemented",
             normalized_matrix,
         )
 

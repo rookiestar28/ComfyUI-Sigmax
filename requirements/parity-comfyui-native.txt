@@ -1,0 +1,16 @@
+# Isolated M2-04 native ComfyUI parity environment. Not runtime dependencies.
+comfy-aimdo==0.4.10
+comfy-kitchen==0.2.23
+einops==0.8.2
+numpy==2.5.1
+packaging==26.2
+pillow==12.3.0
+psutil==7.2.2
+safetensors==0.8.0
+scipy==1.18.0
+sentencepiece==0.2.2
+torch==2.13.0
+torchsde==0.2.6
+torchvision==0.28.0
+tqdm==4.70.0
+transformers==5.14.1

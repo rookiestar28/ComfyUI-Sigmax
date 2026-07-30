@@ -99,6 +99,9 @@ def test_public_documentation_exposes_turbo_golden_boundary() -> None:
 
     assert "krea2_turbo_v1.json" in readme
     assert "krea2_turbo_parity_v1.json" in readme
+    assert "krea2_turbo_comfy_native_parity_v1.json" in readme
+    assert "ModelSamplingFlux" in readme
+    assert "integer-index quantization" in readme
     assert "Decimal" in architecture
     assert "float64" in compatibility and "float32" in compatibility
     assert "5.960464477539063e-08" in compatibility

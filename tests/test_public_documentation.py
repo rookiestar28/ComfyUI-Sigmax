@@ -49,6 +49,18 @@ def test_public_documentation_exposes_current_artifact_transport_contract() -> N
     assert "1,048,576 bytes" in artifact_spec
 
 
+def test_public_documentation_exposes_capability_preflight_contract() -> None:
+    readme = _read(ROOT / "README.md")
+    architecture = _read(ROOT / "docs" / "ARCHITECTURE.md")
+    profile_spec = _read(ROOT / "docs" / "PROFILE_SPEC.md")
+
+    assert "ModelCapabilities" in readme
+    assert "ProfileCapabilities" in readme
+    assert "SamplerCapabilities" in readme
+    assert "CompatibilityDecision" in architecture
+    assert all(level in profile_spec.lower() for level in ("allow", "warn", "reject"))
+
+
 def test_public_contribution_and_changelog_contract() -> None:
     contributing = _read(ROOT / "CONTRIBUTING.md")
     changelog = _read(ROOT / "CHANGELOG.md")

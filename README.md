@@ -7,8 +7,8 @@ versioned profiles for other flow-matching and diffusion model families.
 > **Status: pre-alpha foundation.** No user-facing ComfyUI nodes are implemented yet. The
 > current repository provides a side-effect-free package shell, packaging metadata, quality
 > gates, framework-independent schedule primitives, and canonical schedule-artifact
-> serialization. It does not yet expose model profiles, parity-validated Krea 2 schedules, or
-> ComfyUI nodes.
+> serialization. It also provides typed model/profile/sampler capability preflight, but does
+> not yet expose resolved model profiles, parity-validated Krea 2 schedules, or ComfyUI nodes.
 
 ## Why Sigmax
 
@@ -115,6 +115,39 @@ assert restored == artifact
 The parser bounds input size, rejects duplicate keys, BOMs, invalid UTF-8, JSON floating
 literals, non-standard constants, unknown schema fields, and non-canonical encodings. It
 recomputes both numerical and construction fingerprints before returning an artifact.
+
+Model, profile, sampler, and requested execution features also have immutable capability
+contracts:
+
+```python
+from comfyui_sigmax.core import (
+    CompatibilityLevel,
+    ExecutionFeatureRequest,
+    ModelCapabilities,
+    ProfileCapabilities,
+    SamplerCapabilities,
+    evaluate_compatibility,
+    require_compatible,
+)
+
+# `model`, `profile`, and `sampler` are validated capability declarations.
+decision = evaluate_compatibility(
+    model=model,
+    profile=profile,
+    sampler=sampler,
+    request=ExecutionFeatureRequest(),
+)
+assert decision.level in {
+    CompatibilityLevel.ALLOW,
+    CompatibilityLevel.WARN,
+}
+require_compatible(decision)
+```
+
+The preflight checks model family and variant, prediction and sigma domains, schedule
+ownership, terminal requirements, deterministic or stochastic behavior, noise ownership,
+sampler state, partial denoise, and per-token timesteps. Its stable reason codes distinguish
+`ALLOW`, `WARN`, and `REJECT`; rejected combinations fail before host or sampler execution.
 
 ## Development Setup
 

@@ -3,9 +3,8 @@
 ## Status
 
 This specification is **provisional** and **not frozen**. The foundational ownership, domain,
-and transform-stage vocabulary is implemented, while profile fields, serialization format,
-and schema versioning may change as the pure schedule engine and Krea 2 reference profiles are
-validated.
+transform-stage, artifact, and capability vocabulary is implemented, while resolved profile
+serialization and schema versioning may change as Krea 2 reference profiles are validated.
 
 ## Purpose
 
@@ -50,8 +49,9 @@ The implemented immutable request/result layer also separates:
 - user-facing `warnings` from explicit value changes.
 
 Any effective change to steps, width, or height requires a matching override record. Numerical
-validity and canonical serialization remain pending and must not be inferred from successful
-structural construction.
+validity is checked separately from structural construction. Validated results can be encoded
+as versioned canonical schedule artifacts with separate numerical and construction
+fingerprints.
 
 The Krea reciprocal-step base-grid identifier is now backed by a pure builder. Its output is
 the non-terminal vector:
@@ -65,6 +65,30 @@ Appending terminal zero in the separate terminal stage reproduces the official u
 ComfyUI-compatible denoise-tail slicing are now pure-core operations. A generic strictly
 descending linear endpoint builder is also available for explicitly declared non-opaque
 domains; it is not an automatic model default.
+
+## Implemented Capability Preflight
+
+The capability layer keeps host discovery, profile requirements, and sampler behavior
+separate:
+
+| Contract | Declares |
+| --- | --- |
+| `ModelCapabilities` | Model family/variant, accepted prediction and sigma domains, accepted schedule ownership, and optional execution features |
+| `ProfileCapabilities` | Required prediction/domain/ownership, terminal policy, execution modes, noise owners, allowed sampler state, features, and reference samplers |
+| `SamplerCapabilities` | Accepted semantics, terminal requirement, deterministic/stochastic behavior, noise ownership, state requirements, and feature support |
+
+Every evaluation considers the complete canonical capability dimension set and produces a
+`CompatibilityDecision`:
+
+- `ALLOW` means all declared semantics are compatible and the sampler is a profile reference;
+- `WARN` means the combination is compatible but the sampler is not a declared reference;
+- `REJECT` contains stable reason codes and fails at `require_compatible()` before execution.
+
+The decision vocabulary includes model family and variant, prediction type, sigma domain,
+schedule ownership, terminal requirement, execution behavior, noise ownership, sampler state,
+partial denoise, per-token timesteps, and reference-sampler status. Profile resolution will
+construct these declarations later; the pure core does not inspect a host model or guess a
+variant.
 
 ## Required Conceptual Fields
 

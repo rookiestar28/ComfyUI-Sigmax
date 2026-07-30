@@ -30,6 +30,9 @@ tracked independently once the profile schema is implemented.
   projections, and numerical/construction SHA-256 fingerprint functions.
 - Immutable schedule artifacts with versioned canonical UTF-8 transport, complete effective
   construction metadata, strict untrusted-input parsing, and dual-fingerprint verification.
+- Immutable model, profile, sampler, and execution-feature capability declarations with
+  canonical allow/warn/reject decisions, stable reason codes, and a fail-before-execution
+  compatibility gate.
 - Wheel inventory enforcement for the pure-core package.
 
 ### Security

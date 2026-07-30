@@ -40,6 +40,14 @@ comfyui_sigmax/
                 exponential-mu, direct-ratio, and explicit identity transforms
     terminal_slicing.py
                 terminal append/preserve, step ranges, and denoise-tail slicing
+    validation.py
+                complete external-schedule numerical and policy validation
+    fingerprints.py
+                canonical projections and numerical/construction identities
+    artifacts.py
+                immutable artifact assembly and strict canonical JSON transport
+    capabilities.py
+                model/profile/sampler declarations and execution preflight decisions
 
 scripts/
   preflight.py          local environment validation
@@ -73,9 +81,10 @@ Immutable request/result contracts now bind that preflight to:
 - warnings and explicit requested-to-effective overrides;
 - the structural sigma tuple and validated final domain.
 
-The contracts deliberately do not yet claim that sigma values are finite, monotonic, correctly
-terminated, or numerically authoritative. Those checks follow the builders and canonical
-artifact specification.
+Complete external schedules can now be checked for finite values, strict decrease, exact
+transition count, domain bounds, and terminal policy. Validated results can be projected into
+immutable schedule artifacts with separate numerical and construction identities, then
+transported as bounded canonical JSON with strict untrusted-input rejection.
 
 The first numerical builders are now implemented:
 
@@ -108,6 +117,23 @@ Manual empty or out-of-range requests fail. ComfyUI's later `force_full_denoise`
 replacement remains a host/sampler execution policy and is not hidden in terminal
 construction.
 
+Framework-independent capability declarations now define the compatibility boundary before
+host integration:
+
+- `ModelCapabilities` declares accepted prediction types, sigma domains, schedule ownerships,
+  and support for partial denoise or per-token timesteps.
+- `ProfileCapabilities` binds one model family/variant to prediction, domain, ownership,
+  terminal behavior, permitted deterministic/stochastic modes, noise owners, sampler state,
+  feature support, and reference sampler identifiers.
+- `SamplerCapabilities` declares accepted semantics plus terminal, state, noise, and execution
+  requirements.
+- `CompatibilityDecision` returns a canonical `ALLOW`, `WARN`, or `REJECT` result with stable
+  reason codes across every considered capability dimension.
+
+The execution gate raises before sampler work on `REJECT`. A compatible non-reference sampler
+is a warning rather than an unsupported claim. These declarations do not resolve a profile,
+inspect ComfyUI, or execute a sampler; those remain later layers.
+
 ## Planned Layered Design
 
 ```text
@@ -124,7 +150,7 @@ Optional sampler backends
 
 ### Pure schedule engine
 
-Planned responsibilities:
+Responsibilities implemented or completed by the end of the pure-core stage:
 
 - construct explicit base grids;
 - compose the implemented named and domain-checked time shifts;

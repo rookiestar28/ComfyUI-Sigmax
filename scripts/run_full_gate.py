@@ -74,6 +74,8 @@ def _inspect_wheel(wheel: Path) -> None:
         "comfyui_sigmax/core/shifts.py",
         "comfyui_sigmax/core/terminal_slicing.py",
         "comfyui_sigmax/core/validation.py",
+        "comfyui_sigmax/nodes/__init__.py",
+        "comfyui_sigmax/nodes/krea2_sigma_scheduler.py",
         "comfyui_sigmax/profiles/__init__.py",
         "comfyui_sigmax/profiles/krea2_common.py",
         "comfyui_sigmax/profiles/krea2_raw.py",

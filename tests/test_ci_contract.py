@@ -106,6 +106,8 @@ class CiContractTests(unittest.TestCase):
         self.assertIn('"comfyui_sigmax/core/capabilities.py"', runner)
         self.assertIn('"comfyui_sigmax/core/fingerprints.py"', runner)
         self.assertIn('"comfyui_sigmax/core/validation.py"', runner)
+        self.assertIn('"comfyui_sigmax/nodes/__init__.py"', runner)
+        self.assertIn('"comfyui_sigmax/nodes/krea2_sigma_scheduler.py"', runner)
         self.assertIn('"comfyui_sigmax/profiles/__init__.py"', runner)
         self.assertIn('"comfyui_sigmax/profiles/krea2_common.py"', runner)
         self.assertIn('"comfyui_sigmax/profiles/krea2_raw.py"', runner)

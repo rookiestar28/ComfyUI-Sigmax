@@ -187,6 +187,12 @@ legacy/current, V3, deprecation, and experimental metadata while serializing `/o
 Node Definition JSON v2 projections. Registration requires explicit `Sigmax.<Name>` IDs and
 rejects collisions; it does not select profiles, inspect model files, or imply host execution.
 
+`Sigmax.Krea2SigmaScheduler` is the first consumer. Its `sigmax.krea2-sigma-node/1` information
+records the selected built-in profile and exact recipe/evidence, requested/effective dimensions,
+fixed or resolution-derived shift, manual output range, warnings, and complete/output numerical
+fingerprints. Strict mode rejects modified Turbo steps and the RAW framework-reference recipe.
+The node requires explicit variant selection and never promotes filename/model-class suggestions.
+
 ## Required Conceptual Fields
 
 | Area | Required information |

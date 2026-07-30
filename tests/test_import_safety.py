@@ -44,7 +44,10 @@ BOOTSTRAP_PROBE = textwrap.dedent(
     spec.loader.exec_module(module)
 
     payload = {
-        "class_mappings": module.NODE_CLASS_MAPPINGS,
+        "class_mappings": {
+            key: value.__name__
+            for key, value in module.NODE_CLASS_MAPPINGS.items()
+        },
         "display_mappings": module.NODE_DISPLAY_NAME_MAPPINGS,
         "version": module.__version__,
         "uses_package_mappings": (
@@ -95,10 +98,14 @@ class ImportSafetyTests(unittest.TestCase):
         self.assertEqual("", result.stderr)
         self.assertEqual(
             {
-                "class_mappings": {},
+                "class_mappings": {
+                    "Sigmax.Krea2SigmaScheduler": "Krea2SigmaScheduler",
+                },
                 "comfy_loaded": False,
                 "diffusers_loaded": False,
-                "display_mappings": {},
+                "display_mappings": {
+                    "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler",
+                },
                 "torch_call_unchanged": True,
                 "uses_package_mappings": True,
                 "version": "0.1.0.dev0",
@@ -126,8 +133,12 @@ class ImportSafetyTests(unittest.TestCase):
             import __init__ as bootstrap
 
             assert bootstrap.__version__ == "0.1.0.dev0"
-            assert bootstrap.NODE_CLASS_MAPPINGS == {}
-            assert bootstrap.NODE_DISPLAY_NAME_MAPPINGS == {}
+            assert sorted(bootstrap.NODE_CLASS_MAPPINGS) == [
+                "Sigmax.Krea2SigmaScheduler"
+            ]
+            assert bootstrap.NODE_DISPLAY_NAME_MAPPINGS == {
+                "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler"
+            }
             """
         )
         result = subprocess.run(

@@ -459,12 +459,16 @@ def test_registration_contracts_are_immutable() -> None:
         registry.entries = ()  # type: ignore[misc]
 
 
-def test_builtin_registry_and_package_mappings_remain_empty_until_product_node() -> None:
+def test_builtin_registry_and_package_mappings_expose_only_validated_product_nodes() -> None:
     import comfyui_sigmax
+    from comfyui_sigmax.nodes import Krea2SigmaScheduler
 
-    assert builtin_node_registry().entries == ()
-    assert comfyui_sigmax.NODE_CLASS_MAPPINGS == {}
-    assert comfyui_sigmax.NODE_DISPLAY_NAME_MAPPINGS == {}
+    registry = builtin_node_registry()
+    assert tuple(item.node_id for item in registry.entries) == ("Sigmax.Krea2SigmaScheduler",)
+    assert {"Sigmax.Krea2SigmaScheduler": Krea2SigmaScheduler} == comfyui_sigmax.NODE_CLASS_MAPPINGS
+    assert comfyui_sigmax.NODE_DISPLAY_NAME_MAPPINGS == {
+        "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler"
+    }
     assert comfyui_sigmax.NODE_CLASS_MAPPINGS is not builtin_node_registry().class_mappings()
 
 

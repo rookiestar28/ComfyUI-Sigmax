@@ -45,6 +45,7 @@ ISOLATED_PROBE: Final = textwrap.dedent(
     packages = [
         importlib.import_module("comfyui_sigmax.adapters"),
         importlib.import_module("comfyui_sigmax.core"),
+        importlib.import_module("comfyui_sigmax.nodes"),
         importlib.import_module("comfyui_sigmax.profiles"),
     ]
     modules = sorted(

@@ -13,6 +13,7 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 PURE_PACKAGE_ROOTS = (
     REPOSITORY_ROOT / "comfyui_sigmax" / "adapters",
     REPOSITORY_ROOT / "comfyui_sigmax" / "core",
+    REPOSITORY_ROOT / "comfyui_sigmax" / "nodes",
     REPOSITORY_ROOT / "comfyui_sigmax" / "profiles",
 )
 OPTIONAL_FRAMEWORKS = ("comfy", "diffusers")

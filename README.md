@@ -4,7 +4,8 @@ ComfyUI-Sigmax is a planned model-aware sigma schedule and sampler toolkit for C
 first validation targets are Krea 2 Turbo and Krea 2 RAW; the longer-term design supports
 versioned profiles for other flow-matching and diffusion model families.
 
-> **Status: pre-alpha foundation.** No user-facing ComfyUI nodes are implemented yet. The
+> **Status: pre-alpha foundation.** The first user-facing `Krea 2 Sigma Scheduler` node is
+> implemented as a statically validated legacy/current ComfyUI contract. The
 > current repository provides a side-effect-free package shell, packaging metadata, quality
 > gates, framework-independent schedule primitives, canonical schedule-artifact
 > serialization, a frozen `ProfileSchemaV1`, and evidence-pinned Krea 2 Turbo and RAW
@@ -19,8 +20,9 @@ versioned profiles for other flow-matching and diffusion model families.
 > public `/system_stats`, `/features`, `/object_info`, and Node Definition v2 evidence into
 > immutable model/host/sampler contracts. A pure `sigmax.node-registration/1` catalog also
 > discovers legacy/current and V3 node definitions, validates Node Definition v2 wire schemas,
-> and produces collision-safe namespaced mappings. Its built-in catalog remains empty until the
-> first user-facing node lands; RAW native-ComfyUI and real-host parity remain pending. The
+> and produces collision-safe namespaced mappings. Its built-in catalog now contains only
+> `Sigmax.Krea2SigmaScheduler`; RAW native-ComfyUI and real-host node/workflow parity remain
+> pending. The
 > complete core and profile
 > layer are dependency-free and have enforced
 > isolation/property/golden/parity contract lanes.
@@ -60,12 +62,15 @@ The import contract is intentionally minimal:
 ```python
 import comfyui_sigmax
 
-assert comfyui_sigmax.NODE_CLASS_MAPPINGS == {}
-assert comfyui_sigmax.NODE_DISPLAY_NAME_MAPPINGS == {}
+assert sorted(comfyui_sigmax.NODE_CLASS_MAPPINGS) == ["Sigmax.Krea2SigmaScheduler"]
+assert comfyui_sigmax.NODE_DISPLAY_NAME_MAPPINGS == {
+    "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler"
+}
 ```
 
-Empty mappings prevent unfinished nodes from being registered. Runtime dependencies are also
-empty; Diffusers is used only in a separate, exactly pinned parity environment.
+Only validated product nodes enter these mappings. Runtime dependencies remain empty; the node
+loads host-provided Torch only when it executes, and Diffusers remains isolated to an exactly
+pinned parity environment.
 
 The pure core currently exposes explicit schedule ownership, sigma domains, transform stages,
 pre-execution compatibility validation, and immutable request/result structures:
@@ -278,8 +283,17 @@ Definition JSON v2 projections. V3 classes are discovered through `GET_SCHEMA()`
 `GET_NODE_INFO_V1()` and may share the mapping projection with legacy classes. Activation through
 the current experimental numbered API is rejected when stability is required. This design avoids
 the pinned loader's mutually exclusive `NODE_CLASS_MAPPINGS`/`comfy_entrypoint` branches and is
-independent of the normalized installation-directory name. The built-in catalog and exported
-node mappings are intentionally empty until a product node is implemented.
+independent of the normalized installation-directory name. The built-in catalog now exposes only
+`Sigmax.Krea2SigmaScheduler`.
+
+The `Krea 2 Sigma Scheduler` requires an explicit `Turbo` or `RAW` choice, width and height,
+steps, strict-official mode, and terminal-inclusive start/end slicing. Strict mode accepts only
+Turbo 8-step and RAW official 52-step construction; relaxed mode additionally allows modified
+Turbo step counts and the named RAW 28-step framework-reference recipe. It returns a ComfyUI
+`SIGMAS` tensor plus deterministic `sigmax.krea2-sigma-node/1` JSON containing the exact profile,
+recipe/evidence, requested/effective geometry, applied shift, selected range, warnings, and
+complete/output fingerprints. This is a sigma scheduler, not a sampler: it does not execute
+Euler, apply guidance, patch model sampling, or claim live-host workflow validation.
 
 The first concrete profile is an immutable, evidence-pinned declaration of the official
 Krea 2 Turbo recipe:

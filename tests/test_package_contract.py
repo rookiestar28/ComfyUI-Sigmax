@@ -47,6 +47,7 @@ class PackageContractTests(unittest.TestCase):
                 "comfyui_sigmax",
                 "comfyui_sigmax.adapters",
                 "comfyui_sigmax.core",
+                "comfyui_sigmax.nodes",
                 "comfyui_sigmax.profiles",
             ],
             metadata["tool"]["setuptools"]["packages"],
@@ -81,6 +82,8 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "adapters" / "__init__.py").is_file())
         self.assertTrue((package_path / "adapters" / "comfyui.py").is_file())
         self.assertTrue((package_path / "adapters" / "registration.py").is_file())
+        self.assertTrue((package_path / "nodes" / "__init__.py").is_file())
+        self.assertTrue((package_path / "nodes" / "krea2_sigma_scheduler.py").is_file())
 
         sys.path.insert(0, str(REPOSITORY_ROOT))
         self.addCleanup(sys.path.remove, str(REPOSITORY_ROOT))
@@ -89,8 +92,14 @@ class PackageContractTests(unittest.TestCase):
         self.addCleanup(sys.modules.pop, "comfyui_sigmax", None)
 
         self.assertEqual("0.1.0.dev0", package.__version__)
-        self.assertEqual({}, package.NODE_CLASS_MAPPINGS)
-        self.assertEqual({}, package.NODE_DISPLAY_NAME_MAPPINGS)
+        self.assertEqual(
+            ["Sigmax.Krea2SigmaScheduler"],
+            sorted(package.NODE_CLASS_MAPPINGS),
+        )
+        self.assertEqual(
+            {"Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler"},
+            package.NODE_DISPLAY_NAME_MAPPINGS,
+        )
 
 
 if __name__ == "__main__":

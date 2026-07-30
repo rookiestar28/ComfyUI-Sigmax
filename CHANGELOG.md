@@ -92,6 +92,10 @@ tracked independently from the frozen profile-schema version.
   copy-on-write idempotent registration, fail-closed collision handling, installation-directory
   independence, mixed legacy/current and V3 mapping discovery, lifecycle metadata preservation,
   and fresh `/object_info` plus Node Definition JSON v2 wire projections.
+- The first user-facing `Sigmax.Krea2SigmaScheduler` legacy/current node with explicit RAW/Turbo
+  selection, required geometry, strict-official enforcement, named RAW recipes,
+  terminal-inclusive manual slicing, execution-time-only host Torch conversion, and deterministic
+  `sigmax.krea2-sigma-node/1` schedule information with complete/output fingerprints.
 
 ### Security
 
@@ -104,8 +108,7 @@ tracked independently from the frozen profile-schema version.
 
 ### Known limitations
 
-- No user-facing ComfyUI node, generic profile resolver, real-host-validated workflow, or
-  sampler is implemented.
+- No generic profile resolver, real-host-validated workflow, or sampler is implemented.
 - Real ComfyUI host, model-weight, GPU, and sampler-step validation remain pending.
 
 [Unreleased]: https://github.com/rookiestar28/ComfyUI-Sigmax/commits/main

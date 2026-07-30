@@ -38,7 +38,7 @@ def test_public_documentation_describes_current_maturity_honestly() -> None:
     profile_spec = _read(ROOT / "docs" / "PROFILE_SPEC.md").lower()
 
     assert "pre-alpha" in readme
-    assert "no user-facing comfyui nodes" in readme
+    assert "first user-facing `krea 2 sigma scheduler` node" in readme
     assert "planned" in architecture and "implemented" in architecture
     assert "frozen" in profile_spec and "sigmax.model-profile/1" in profile_spec
     assert "not yet validated" in compatibility
@@ -109,8 +109,25 @@ def test_public_documentation_exposes_node_registration_boundary() -> None:
     assert "Sigmax.<Name>" in readme
     assert "GET_SCHEMA()" in architecture
     assert "Node Definition JSON v2" in profile_spec
-    assert "built-in catalog is empty" in compatibility
+    assert "Sigmax.Krea2SigmaScheduler" in compatibility
     assert "real-host node/workflow E2E" in compatibility
+
+
+def test_public_documentation_exposes_krea2_sigma_scheduler_node() -> None:
+    readme = _read(ROOT / "README.md")
+    architecture = _read(ROOT / "docs" / "ARCHITECTURE.md")
+    profile_spec = _read(ROOT / "docs" / "PROFILE_SPEC.md")
+    compatibility = _read(ROOT / "docs" / "COMPATIBILITY.md")
+    changelog = _read(ROOT / "CHANGELOG.md")
+
+    for content in (readme, architecture, profile_spec, compatibility, changelog):
+        assert "Sigmax.Krea2SigmaScheduler" in content
+        assert "sigmax.krea2-sigma-node/1" in content
+    assert "strict-official" in readme
+    assert "terminal-inclusive" in readme
+    assert "not a sampler" in readme
+    assert "execution time" in architecture
+    assert "real-host" in compatibility
 
 
 def test_public_documentation_exposes_frozen_profile_schema_v1() -> None:

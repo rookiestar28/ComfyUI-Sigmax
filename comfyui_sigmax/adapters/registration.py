@@ -572,8 +572,16 @@ def require_registration_compatible(
 
 
 def builtin_node_registry() -> NodeRegistry:
-    """Return the validated built-in catalog; product-node milestones populate it later."""
+    """Return the validated built-in product-node catalog."""
 
     # IMPORTANT: the reviewed loader ignores comfy_entrypoint when mappings are non-None.
-    # Mixed future V1/V3 nodes must therefore share this one validated mapping projection.
-    return NodeRegistry.empty()
+    # Mixed V1/V3 nodes must therefore share this one validated mapping projection.
+    from comfyui_sigmax.nodes import Krea2SigmaScheduler
+
+    return NodeRegistry.empty().register(
+        discover_legacy_registration(
+            node_id="Sigmax.Krea2SigmaScheduler",
+            display_name="Krea 2 Sigma Scheduler",
+            node_class=Krea2SigmaScheduler,
+        )
+    )

@@ -76,12 +76,15 @@ scripts/
 tests/
   numerical, artifact, capability, property, import, package, quality, CI,
   documentation contracts, and independent Turbo golden vectors
+
+comfyui_sigmax/nodes/
+  krea2_sigma_scheduler.py  thin explicit RAW/Turbo SIGMAS product node
 ```
 
 The dependency-free `adapters/registration.py` module owns the immutable node catalog and
-wire-schema projections. The package still exports empty ComfyUI node mappings because the
-built-in catalog contains no product node yet. Importing it does not register schedulers, patch
-PyTorch, import Diffusers, or alter host process state.
+wire-schema projections. The package exports only the validated
+`Sigmax.Krea2SigmaScheduler` mapping. Importing it does not load Torch or ComfyUI, patch PyTorch,
+import Diffusers, or alter host process state.
 
 The full gate proves this boundary before the test suite: a clean project-local environment
 must resolve neither ComfyUI nor Diffusers, and a `python -I` subprocess installs explicit
@@ -320,9 +323,15 @@ experimental rather than promoted to stable.
 Pinned ComfyUI loading treats `NODE_CLASS_MAPPINGS` and `comfy_entrypoint` as mutually exclusive
 branches. Sigmax therefore exposes one mixed mapping projection: legacy/current classes keep
 their public V1 definitions, while V3 classes remain recognizable through `GET_SCHEMA()` and
-`GET_NODE_INFO_V1()`. It does not expose an inert V3 entrypoint beside mappings. The registration
-catalog is empty until product nodes land. Planned nodes will expose a simple model-aware path,
-an advanced explicit schedule path, and schedule inspection/comparison outputs.
+`GET_NODE_INFO_V1()`. It does not expose an inert V3 entrypoint beside mappings.
+
+The first catalog entry is the legacy/current `Sigmax.Krea2SigmaScheduler`. Its pure function
+selects only the validated Turbo builder or one of the two named RAW recipes, enforces
+strict-official mode, and applies the existing terminal-inclusive manual slice. The node boundary
+then converts the tuple through host-provided Torch at execution time. Its second output is
+deterministic `sigmax.krea2-sigma-node/1` JSON that separates complete-construction and selected
+output fingerprints. It constructs sigmas only; it does not sample or patch the model. Planned
+later nodes add model-aware selection, advanced schedules, and inspection/comparison outputs.
 
 ### Sampler strategy
 

@@ -42,6 +42,7 @@ packages = [
     "comfyui_sigmax",
     "comfyui_sigmax.adapters",
     "comfyui_sigmax.core",
+    "comfyui_sigmax.nodes",
     "comfyui_sigmax.profiles",
 ]
 include-package-data = true

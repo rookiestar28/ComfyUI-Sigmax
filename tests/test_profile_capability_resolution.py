@@ -74,7 +74,7 @@ def _host(
         evidence_version="1",
         host_id="comfyui",
         host_version="0.29.0",
-        host_revision="e651b7bef55a5376343dcb1c0edb79f0142c985e",
+        host_revision="e651b7bef55a5376343dcb1c0edb79f0142c985e",  # pragma: allowlist secret
         capabilities=tuple(
             HostCapabilityEvidence(
                 capability_id=capability_id,
@@ -365,7 +365,7 @@ def test_resolution_contracts_are_immutable() -> None:
             evidence_version="1",
             host_id="comfyui",
             host_version="0.29.0",
-            host_revision="e651b7bef55a5376343dcb1c0edb79f0142c985e",
+            host_revision="e651b7bef55a5376343dcb1c0edb79f0142c985e",  # pragma: allowlist secret
             capabilities=(
                 HostCapabilityEvidence(
                     capability_id="x.capability",
@@ -423,7 +423,7 @@ def test_host_capabilities_require_canonical_order() -> None:
             evidence_version="1",
             host_id="comfyui",
             host_version="0.29.0",
-            host_revision="e651b7bef55a5376343dcb1c0edb79f0142c985e",
+            host_revision="e651b7bef55a5376343dcb1c0edb79f0142c985e",  # pragma: allowlist secret
             capabilities=(
                 HostCapabilityEvidence(
                     capability_id="schedule.external_sigmas",

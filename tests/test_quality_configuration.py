@@ -121,11 +121,12 @@ class QualityConfigurationTests(unittest.TestCase):
             test_sop,
         )
         self.assertIn(
-            "The ComfyUI host fixture, framework/host parity",
+            "The ComfyUI host fixture, native-ComfyUI/host parity",
             test_sop,
         )
-        self.assertIn("Krea 2 RAW golden-vector lanes now exist", test_sop)
-        self.assertIn("suites for RAW, and product nodes do not yet", test_sop)
+        self.assertIn("Krea 2 RAW golden-vector", test_sop)
+        self.assertIn("suites for RAW,", test_sop)
+        self.assertIn("and product nodes do not yet exist", test_sop)
         self.assertIn("core-independence", test_sop)
         self.assertIn("Turbo golden-vector", test_sop)
 

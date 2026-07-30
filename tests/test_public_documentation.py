@@ -93,7 +93,7 @@ def test_public_documentation_exposes_structural_krea2_turbo_profile() -> None:
     assert "authoritative framework parity" in compatibility.lower()
     assert "diffusers 0.39.0" in compatibility.lower()
     assert "native comfyui parity" in compatibility.lower()
-    assert "pending" in compatibility.lower()
+    assert "real-host" in compatibility.lower()
 
 
 def test_public_documentation_exposes_turbo_golden_boundary() -> None:
@@ -134,6 +134,20 @@ def test_public_documentation_exposes_raw_structural_profile_boundary() -> None:
     assert "packed image sequence length" in compatibility.lower()
     assert "resolve_krea2_image_geometry" in architecture
     assert "M3-02" not in readme
+
+
+def test_public_documentation_exposes_raw_parity_boundary() -> None:
+    readme = _read(ROOT / "README.md")
+    architecture = _read(ROOT / "docs" / "ARCHITECTURE.md")
+    compatibility = _read(ROOT / "docs" / "COMPATIBILITY.md")
+    changelog = _read(ROOT / "CHANGELOG.md")
+
+    assert "krea2_raw_parity_v1.json" in readme
+    assert "FlowMatchEulerDiscreteScheduler" in readme
+    assert "1.1920928955078125e-07" in readme
+    assert "run_krea2_raw_parity.py" in architecture
+    assert "all 14" in compatibility
+    assert "Krea 2 RAW parity" in changelog
 
 
 def test_public_documentation_exposes_fail_closed_variant_resolution() -> None:

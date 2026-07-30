@@ -105,6 +105,50 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+  raw-parity-pinned:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        # actions/checkout v6.0.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # pragma: allowlist secret
+
+      - name: Set up Python
+        # actions/setup-python v6.2.0
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # pragma: allowlist secret
+        with:
+          python-version: "3.13"
+
+      - name: Create isolated RAW parity environment
+        shell: bash
+        run: |
+          python -m venv .venv-parity
+          .venv-parity/bin/python -m pip install -e '.[dev]'
+          .venv-parity/bin/python -m pip install -r requirements/parity-krea2-turbo.txt
+
+      - name: Regenerate pinned Krea 2 RAW parity report
+        shell: bash
+        run: |
+          .venv-parity/bin/python -m scripts.run_krea2_raw_parity \
+            --output .tmp/krea2_raw_parity_v1.json
+
+      - name: Verify committed RAW parity evidence
+        shell: bash
+        run: |
+          cmp --silent \
+            tests/parity/fixtures/krea2_raw_parity_v1.json \
+            .tmp/krea2_raw_parity_v1.json
+
+      - name: Publish RAW parity evidence
+        if: always()
+        # actions/upload-artifact v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # pragma: allowlist secret
+        with:
+          name: krea2-raw-parity-python-3.13
+          path: .tmp/krea2_raw_parity_v1.json
+          if-no-files-found: warn
+          retention-days: 14
+
   native-comfyui-parity-pinned:
     runs-on: ubuntu-latest
 

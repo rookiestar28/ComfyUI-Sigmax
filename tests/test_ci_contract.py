@@ -15,6 +15,7 @@ class CiContractTests(unittest.TestCase):
             "scripts/preflight_check.py",
             "scripts/run_full_gate.py",
             "scripts/run_krea2_turbo_parity.py",
+            "scripts/run_krea2_raw_parity.py",
             "scripts/run_full_tests_windows.ps1",
             "scripts/run_full_tests_linux.sh",
             "requirements/parity-krea2-turbo.txt",
@@ -133,6 +134,9 @@ class CiContractTests(unittest.TestCase):
         self.assertIn("requirements/parity-krea2-turbo.txt", workflow)
         self.assertIn("scripts.run_krea2_turbo_parity", workflow)
         self.assertIn("tests/parity/fixtures/krea2_turbo_parity_v1.json", workflow)
+        self.assertIn("raw-parity-pinned:", workflow)
+        self.assertIn("scripts.run_krea2_raw_parity", workflow)
+        self.assertIn("tests/parity/fixtures/krea2_raw_parity_v1.json", workflow)
         self.assertIn("native-comfyui-parity-pinned:", workflow)
         self.assertIn("requirements/parity-comfyui-native.txt", workflow)
         self.assertIn("scripts.run_krea2_comfy_native_parity", workflow)
@@ -155,12 +159,13 @@ class CiContractTests(unittest.TestCase):
     def test_matrix_records_framework_and_host_parity_separately(self) -> None:
         matrix = (REPOSITORY_ROOT / "tests/CI_TEST_MATRIX.md").read_text(encoding="utf-8")
         normalized_matrix = " ".join(matrix.split())
-        self.assertIn("| Framework parity tests | Implemented | M2-03 |", matrix)
+        self.assertIn("| Framework parity tests | Implemented | M2-03, M3-05 |", matrix)
         self.assertIn("| Native ComfyUI parity tests | Implemented | M2-04 |", matrix)
         self.assertIn(
             "native ComfyUI Turbo schedule parity are implemented",
             normalized_matrix,
         )
+        self.assertIn("parity over all 14 recipe/geometry cases", normalized_matrix)
 
 
 if __name__ == "__main__":

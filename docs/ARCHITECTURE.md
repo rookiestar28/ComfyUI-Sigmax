@@ -63,6 +63,7 @@ scripts/
   check_core_independence.py  isolated pure-layer optional-framework blocker
   parity/                     independent official adapter and report contract
   run_krea2_turbo_parity.py   isolated pinned Diffusers execution
+  run_krea2_raw_parity.py     isolated RAW dynamic-shift and scheduler execution
   run_full_gate.py            canonical ordered acceptance gate
   OS wrappers                 repo-local environment selection
 
@@ -199,8 +200,18 @@ named recipes through existing pure grid, shift, terminal, and validation stages
 
 The independent RAW golden lane stores complete 28/52-step float64 and float32 vectors for
 five square and two orientation cases. Its precision-80 Decimal oracle independently repeats
-geometry and affine-`mu` math and imports neither product nor optional framework code. RAW
-framework parity remains a later numerical layer.
+geometry and affine-`mu` math and imports neither product nor optional framework code.
+
+A separate RAW parity lane executes the pinned Krea geometry, affine-`mu`, and timestep
+formulas through a standard-library adapter and executes Diffusers 0.39.0's actual
+`calculate_shift` definition plus `FlowMatchEulerDiscreteScheduler` in an isolated
+environment. Its canonical report contains all 14 terminal-inclusive cases, complete
+vectors, effective geometry, image sequence length, calculated `mu`, source identities,
+dependency versions, errors, tolerances, and fingerprints. Float64 report vectors are
+normalized to a declared 15 significant digits so Windows and Linux `libm` differences below
+the authoritative tolerance cannot change canonical evidence bytes. This proves
+authoritative and framework schedule parity without claiming native ComfyUI, host,
+sampler-step, checkpoint, or image execution.
 
 The Krea-specific variant resolver is also implemented in the pure profile layer. It resolves
 only explicit selection, trusted profile/framework metadata, or exact verified official

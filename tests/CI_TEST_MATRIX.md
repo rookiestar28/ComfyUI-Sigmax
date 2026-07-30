@@ -19,7 +19,7 @@ Command definitions remain in `tests/TEST_SOP.md`. Real-host lifecycle requireme
 | Krea 2 Turbo golden vectors | Implemented | M2-02 |
 | Krea 2 RAW golden vectors | Implemented | M3-03 |
 | Krea 2 variant-resolution contracts | Implemented | M3-04 |
-| Framework parity tests | Implemented | M2-03 |
+| Framework parity tests | Implemented | M2-03, M3-05 |
 | Native ComfyUI parity tests | Implemented | M2-04 |
 | Adapter/integration tests | `NOT_IMPLEMENTED` | M4 |
 | Real ComfyUI H1/H2 | `NOT_IMPLEMENTED` | M0/M4 harness |
@@ -153,9 +153,10 @@ Planned hotspot families:
 Coverage is a gap detector, not proof of numerical correctness. Deterministic property tests,
 complete Krea 2 Turbo 4/8/12/16-step goldens, authoritative Turbo differential parity, native
 ComfyUI Turbo schedule parity are implemented. Complete RAW 28/52-step geometry goldens are
-also implemented. Pure Krea variant-resolution tests enforce strong-evidence conflicts,
-suggestion-only weak signals, and family-only model/tensor signals. RAW framework parity and
-scheduled mutation evidence remain mandatory when their roadmap stages activate.
+also implemented, together with pinned authoritative/framework parity over all 14
+recipe/geometry cases. Pure Krea variant-resolution tests enforce strong-evidence conflicts,
+suggestion-only weak signals, and family-only model/tensor signals. Scheduled mutation
+evidence remains mandatory when its roadmap stage activates.
 
 ## 8. Skip, XFail, Retry, and Quarantine Policy
 

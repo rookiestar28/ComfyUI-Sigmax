@@ -195,8 +195,9 @@ calculated `mu` plus whether the value extrapolates beyond the 256-to-6400 seque
 The upstream affine formula is deliberately unclamped. `build_krea2_raw_schedule()` does not
 accept arbitrary steps: it requires either the named 28-step framework recipe or named
 52-step official-full recipe. Complete independent float64/float32 goldens cover five square
-plus landscape/portrait geometry cases. Framework parity still requires its own numerical
-evidence.
+plus landscape/portrait geometry cases. A separate pinned parity report executes the Krea
+formula and Diffusers 0.39.0 dynamic-shift/scheduler paths for the same 14 complete cases.
+Native ComfyUI, host, sampler-step, checkpoint, and image evidence remain separate.
 
 ## Matching and Variant Resolution
 

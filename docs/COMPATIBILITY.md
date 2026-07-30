@@ -5,9 +5,10 @@
 ComfyUI-Sigmax is a pre-alpha development foundation. The Krea 2 Turbo structural profile
 and formula-composed schedule builder are implemented, along with `krea2.raw.official`
 geometry, sequence-length, and dynamic-`mu` derivation. ComfyUI host integration, user-facing
-nodes, RAW framework parity, model weights, GPU execution, and sampler-step behavior are
-**not yet validated**. Complete Turbo golden vectors, authoritative framework parity, and native
-ComfyUI schedule parity are validated at 4, 8, 12, and 16 steps.
+nodes, RAW native-ComfyUI parity, model weights, GPU execution, and sampler-step behavior are
+**not yet validated**. Complete Turbo golden vectors, authoritative framework parity, and
+native ComfyUI schedule parity are validated at 4, 8, 12, and 16 steps. RAW authoritative
+and framework schedule parity is validated across 14 complete 28/52-step geometry cases.
 
 The package metadata declares a ComfyUI floor of `0.29.0`, but that is a packaging target
 rather than current host-compatibility evidence. No release should infer working host support
@@ -19,9 +20,9 @@ The current package, quality gates, tests, and wheel inventory have been validat
 
 | Environment | Python | Evidence scope |
 | --- | --- | --- |
-| Windows | 3.13 | Core independence, deterministic property, Turbo golden/parity contract, package, quality, unit, coverage, and wheel gates |
-| WSL2/Linux path | 3.10 | Core independence, deterministic property, Turbo golden/parity contract, package, quality, unit, coverage, and wheel gates |
-| Hosted Linux parity lane | 3.13 | Exact Diffusers 0.39.0, NumPy 2.3.4, and Torch 2.9.0 report regeneration |
+| Windows | 3.13 | Core independence, deterministic property, Turbo/RAW golden and parity contracts, package, quality, unit, coverage, and wheel gates |
+| WSL2/Linux path | 3.10 | Core independence, deterministic property, Turbo/RAW golden and parity contracts, package, quality, unit, coverage, and wheel gates |
+| Hosted Linux parity lanes | 3.13 | Exact Diffusers 0.39.0, NumPy 2.3.4, and Torch 2.9.0 Turbo/RAW report regeneration |
 
 The supported Python floor is 3.10. Python versions or operating systems not listed above may
 work, but do not yet have repository acceptance evidence.
@@ -48,8 +49,7 @@ Compatibility claims will progress through separate lanes:
 
 1. pure schedule and deterministic property tests — implemented;
 2. authoritative golden tests — Turbo and RAW implemented;
-3. authoritative framework parity tests — Turbo implemented with Diffusers 0.39.0; RAW
-   pending;
+3. authoritative framework parity tests — Turbo and RAW implemented with Diffusers 0.39.0;
 4. native ComfyUI schedule parity — Turbo implemented against a pinned host revision;
 5. real ComfyUI host import and node integration;
 6. fixed-seed sampler and latent-level comparison;
@@ -84,7 +84,12 @@ guidance recipes separate. Requested dimensions are retained, effective dimensio
 rounded upward to 16, and the packed image sequence length and unclamped dynamic `mu` are
 calculated by dependency-free pure functions. Exact named 28- and 52-step builders are
 validated against 14 complete independent float64/float32 golden cases across square,
-landscape, and portrait geometry. RAW authoritative framework parity remains pending.
+landscape, and portrait geometry. The canonical RAW parity report separately executes all 14
+cases against the pinned Krea formulas and Diffusers 0.39.0. The largest observed Krea error
+is `9.992007221626409e-16`; the largest Diffusers float32 error is
+`1.1920928955078125e-07`. Both remain below the enforced `1e-8` and `1e-6` bounds.
+Canonical float64 evidence uses a declared 15-significant-digit normalization so sub-bound
+platform `libm` noise does not alter report bytes.
 
 ## Current Known Limitations
 

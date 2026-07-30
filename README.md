@@ -11,10 +11,11 @@ versioned profiles for other flow-matching and diffusion model families.
 > provides typed model/profile/sampler capability preflight and complete independent
 > 4/8/12/16-step Turbo golden vectors plus authoritative parity against pinned Krea code and
 > Diffusers 0.39.0, plus native-ComfyUI Turbo schedule parity. Complete independent RAW
-> 28/52-step golden vectors now cover square, landscape, and portrait geometry. A pure
+> 28/52-step golden vectors and executable authoritative/framework parity now cover square,
+> landscape, and portrait geometry. A pure
 > fail-closed resolver distinguishes authoritative/verified variant evidence from visible
-> header and filename suggestions. No ComfyUI nodes are exposed, and RAW framework parity
-> remains pending. The complete core and profile
+> header and filename suggestions. No ComfyUI nodes are exposed, and RAW native-ComfyUI or
+> host parity remains pending. The complete core and profile
 > layer are dependency-free and have enforced
 > isolation/property/golden/parity contract lanes.
 
@@ -257,13 +258,24 @@ Its largest observed Diffusers error is `5.960464477539063e-08`, below the enfor
 float32 tolerance. Only the 8-step result retains official Turbo evidence; the other step
 counts are explicitly modified differential cases.
 
+The separate `tests/parity/fixtures/krea2_raw_parity_v1.json` report executes all 14 RAW
+cases: the named 28- and 52-step recipes at 256, 512, 768, 1024, and 1280 square geometry,
+plus 1360x768 landscape and 768x1360 portrait. It independently executes the pinned Krea
+geometry, affine-`mu`, and timestep formulas at float64 and the actual Diffusers 0.39.0
+`FlowMatchEulerDiscreteScheduler` at float32. The largest observed errors are
+`9.992007221626409e-16` against Krea and `1.1920928955078125e-07` against Diffusers, below
+the enforced `1e-8` and `1e-6` tolerances. The report records complete vectors, requested and
+effective dimensions, image sequence length, calculated `mu`, source identities, dependency
+versions, fingerprints, and error statistics. Its float64 evidence vectors use a declared
+15-significant-digit normalization to remove sub-tolerance platform `libm` noise.
+
 The canonical gate runs `scripts/check_core_independence.py` before pytest. It requires a
 clean dev environment, launches Python isolated mode, blocks `comfy` and `diffusers`, and
 imports every core and profile module. Static import-boundary and deterministic
 property/metamorphic/golden tests provide complementary evidence. These checks prove
-framework independence and detect Turbo formula drift. The default gate validates the
-committed parity report without importing optional frameworks; a dedicated hosted CI job
-recreates that report in an isolated exactly pinned Diffusers environment.
+framework independence and detect formula drift. The default gate validates the committed
+Turbo and RAW parity reports without importing optional frameworks; dedicated hosted CI jobs
+recreate them in isolated exactly pinned Diffusers environments.
 
 The separate
 `tests/parity/fixtures/krea2_turbo_comfy_native_parity_v1.json` report executes the actual

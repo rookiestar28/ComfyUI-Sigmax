@@ -84,6 +84,7 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "adapters" / "registration.py").is_file())
         self.assertTrue((package_path / "nodes" / "__init__.py").is_file())
         self.assertTrue((package_path / "nodes" / "advanced_flowmatch_scheduler.py").is_file())
+        self.assertTrue((package_path / "nodes" / "inspectors.py").is_file())
         self.assertTrue((package_path / "nodes" / "krea2_sigma_scheduler.py").is_file())
         self.assertTrue((package_path / "nodes" / "model_aware_sigma_scheduler.py").is_file())
 
@@ -99,6 +100,8 @@ class PackageContractTests(unittest.TestCase):
                 "Sigmax.AdvancedFlowMatchScheduler",
                 "Sigmax.Krea2SigmaScheduler",
                 "Sigmax.ModelAwareSigmaScheduler",
+                "Sigmax.ProfileInspector",
+                "Sigmax.ScheduleInspector",
             ],
             sorted(package.NODE_CLASS_MAPPINGS),
         )
@@ -107,6 +110,8 @@ class PackageContractTests(unittest.TestCase):
                 "Sigmax.AdvancedFlowMatchScheduler": "Advanced FlowMatch Scheduler",
                 "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler",
                 "Sigmax.ModelAwareSigmaScheduler": "Model-Aware Sigma Scheduler",
+                "Sigmax.ProfileInspector": "Profile Inspector",
+                "Sigmax.ScheduleInspector": "Schedule Inspector",
             },
             package.NODE_DISPLAY_NAME_MAPPINGS,
         )

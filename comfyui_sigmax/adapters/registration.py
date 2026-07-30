@@ -580,6 +580,8 @@ def builtin_node_registry() -> NodeRegistry:
         AdvancedFlowMatchScheduler,
         Krea2SigmaScheduler,
         ModelAwareSigmaScheduler,
+        ProfileInspector,
+        ScheduleInspector,
     )
 
     return NodeRegistry.empty().register_many(
@@ -598,6 +600,16 @@ def builtin_node_registry() -> NodeRegistry:
                 node_id="Sigmax.ModelAwareSigmaScheduler",
                 display_name="Model-Aware Sigma Scheduler",
                 node_class=ModelAwareSigmaScheduler,
+            ),
+            discover_legacy_registration(
+                node_id="Sigmax.ProfileInspector",
+                display_name="Profile Inspector",
+                node_class=ProfileInspector,
+            ),
+            discover_legacy_registration(
+                node_id="Sigmax.ScheduleInspector",
+                display_name="Schedule Inspector",
+                node_class=ScheduleInspector,
             ),
         )
     )

@@ -79,6 +79,7 @@ tests/
 
 comfyui_sigmax/nodes/
   advanced_flowmatch_scheduler.py  explicit configurable unit-flow SIGMAS node
+  inspectors.py  bounded read-only profile and schedule reports
   krea2_sigma_scheduler.py  thin explicit RAW/Turbo SIGMAS product node
   model_aware_sigma_scheduler.py  bounded MODEL probe and exact capability-gated profile node
 ```
@@ -86,7 +87,8 @@ comfyui_sigmax/nodes/
 The dependency-free `adapters/registration.py` module owns the immutable node catalog and
 wire-schema projections. The package exports the validated
 `Sigmax.AdvancedFlowMatchScheduler`, `Sigmax.Krea2SigmaScheduler`, and
-`Sigmax.ModelAwareSigmaScheduler` mappings. Importing them does not load Torch or ComfyUI, patch PyTorch,
+`Sigmax.ModelAwareSigmaScheduler`, `Sigmax.ProfileInspector`, and
+`Sigmax.ScheduleInspector` mappings. Importing them does not load Torch or ComfyUI, patch PyTorch,
 import Diffusers, or alter host process state.
 
 The full gate proves this boundary before the test suite: a clean project-local environment
@@ -356,6 +358,16 @@ typed `ScheduleRequest` and `ScheduleResult` contracts, validates the complete a
 vectors, and emits deterministic `sigmax.advanced-flowmatch-node/1` JSON. The node is
 experimental external-sigma construction, not a sampler, model profile, domain converter, or
 model patch. Planned later nodes add inspection/comparison outputs.
+
+The fourth and fifth catalog entries are `Sigmax.ProfileInspector` and
+`Sigmax.ScheduleInspector`. `inspectors.py` reuses the exact model-aware construction result and
+a bounded static `model_sampling` class read for deterministic
+`sigmax.profile-inspector/1` reports. Schedule inspection accepts only the three implemented
+schedule-information schemas, applies strict JSON/collection limits, normalizes model-aware
+nesting, and recomputes the connected SIGMAS output fingerprint before emitting
+`sigmax.schedule-inspector/1`. Both nodes are read-only and exclude foreign objects, tensors,
+paths, prompts, and arbitrary host metadata from reports. Planned later nodes add comparison
+outputs.
 
 ### Sampler strategy
 

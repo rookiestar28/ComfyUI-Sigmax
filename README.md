@@ -22,7 +22,8 @@ versioned profiles for other flow-matching and diffusion model families.
 > discovers legacy/current and V3 node definitions, validates Node Definition v2 wire schemas,
 > and produces collision-safe namespaced mappings. Its built-in catalog now contains
 > `Sigmax.AdvancedFlowMatchScheduler`, `Sigmax.Krea2SigmaScheduler`, and
-> `Sigmax.ModelAwareSigmaScheduler`; RAW native-ComfyUI and
+> `Sigmax.ModelAwareSigmaScheduler`, `Sigmax.ProfileInspector`, and
+> `Sigmax.ScheduleInspector`; RAW native-ComfyUI and
 > real-host node/workflow parity remain
 > pending. The
 > complete core and profile
@@ -68,11 +69,15 @@ assert sorted(comfyui_sigmax.NODE_CLASS_MAPPINGS) == [
     "Sigmax.AdvancedFlowMatchScheduler",
     "Sigmax.Krea2SigmaScheduler",
     "Sigmax.ModelAwareSigmaScheduler",
+    "Sigmax.ProfileInspector",
+    "Sigmax.ScheduleInspector",
 ]
 assert comfyui_sigmax.NODE_DISPLAY_NAME_MAPPINGS == {
     "Sigmax.AdvancedFlowMatchScheduler": "Advanced FlowMatch Scheduler",
     "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler",
     "Sigmax.ModelAwareSigmaScheduler": "Model-Aware Sigma Scheduler",
+    "Sigmax.ProfileInspector": "Profile Inspector",
+    "Sigmax.ScheduleInspector": "Schedule Inspector",
 }
 ```
 
@@ -293,7 +298,8 @@ the current experimental numbered API is rejected when stability is required. Th
 the pinned loader's mutually exclusive `NODE_CLASS_MAPPINGS`/`comfy_entrypoint` branches and is
 independent of the normalized installation-directory name. The built-in catalog now exposes
 `Sigmax.AdvancedFlowMatchScheduler`, `Sigmax.Krea2SigmaScheduler`, and
-`Sigmax.ModelAwareSigmaScheduler`.
+`Sigmax.ModelAwareSigmaScheduler`, `Sigmax.ProfileInspector`, and
+`Sigmax.ScheduleInspector`.
 
 The `Krea 2 Sigma Scheduler` requires an explicit `Turbo` or `RAW` choice, width and height,
 steps, strict-official mode, and terminal-inclusive start/end slicing. Strict mode accepts only
@@ -324,6 +330,19 @@ append/preserve behavior and terminal-inclusive slicing execute after the primar
 declared order. The node returns deterministic `sigmax.advanced-flowmatch-node/1` information
 and fingerprints. Its provenance is `experimental`: it is not a sampler, registered generic
 model profile, cross-model compatibility claim, or model patch.
+
+`Sigmax.ProfileInspector` is a read-only exact-profile view for an explicitly selected Krea 2
+variant. It reports bounded model identity confidence, the connected native sampling class
+(`ModelSamplingFlux` when present), the `comfy.euler` reference sampler, requested/effective
+dimensions, computed shift, capability decision, provenance, warnings, and fingerprints as
+deterministic `sigmax.profile-inspector/1` JSON. It uses static bounded MODEL reads and never
+serializes or invokes the foreign model.
+
+`Sigmax.ScheduleInspector` accepts connected `SIGMAS` plus one implemented versioned
+`schedule_info` projection. It bounds and validates the JSON, normalizes direct Krea,
+model-aware, or advanced FlowMatch information, recomputes the selected sigma fingerprint, and
+fails if it does not match the advertised output identity. Only a matching read-only
+`sigmax.schedule-inspector/1` report is returned; the node does not modify the schedule.
 
 The first concrete profile is an immutable, evidence-pinned declaration of the official
 Krea 2 Turbo recipe:

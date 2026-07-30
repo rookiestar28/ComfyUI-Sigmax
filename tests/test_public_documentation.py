@@ -291,6 +291,22 @@ def test_public_documentation_exposes_advanced_flowmatch_scheduler_boundary() ->
     assert "not a sampler" in readme.lower()
 
 
+def test_public_documentation_exposes_profile_and_schedule_inspectors() -> None:
+    readme = _read(ROOT / "README.md")
+    architecture = _read(ROOT / "docs" / "ARCHITECTURE.md")
+    compatibility = _read(ROOT / "docs" / "COMPATIBILITY.md")
+    changelog = _read(ROOT / "CHANGELOG.md")
+
+    for content in (readme, architecture, compatibility, changelog):
+        assert "Sigmax.ProfileInspector" in content
+        assert "Sigmax.ScheduleInspector" in content
+        assert "sigmax.profile-inspector/1" in content
+        assert "sigmax.schedule-inspector/1" in content
+    assert "ModelSamplingFlux" in readme
+    assert "fingerprint" in readme.lower()
+    assert "read-only" in compatibility.lower()
+
+
 def test_public_contribution_and_changelog_contract() -> None:
     contributing = _read(ROOT / "CONTRIBUTING.md")
     changelog = _read(ROOT / "CHANGELOG.md")

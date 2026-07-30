@@ -102,6 +102,8 @@ class ImportSafetyTests(unittest.TestCase):
                     "Sigmax.AdvancedFlowMatchScheduler": "AdvancedFlowMatchScheduler",
                     "Sigmax.Krea2SigmaScheduler": "Krea2SigmaScheduler",
                     "Sigmax.ModelAwareSigmaScheduler": "ModelAwareSigmaScheduler",
+                    "Sigmax.ProfileInspector": "ProfileInspector",
+                    "Sigmax.ScheduleInspector": "ScheduleInspector",
                 },
                 "comfy_loaded": False,
                 "diffusers_loaded": False,
@@ -109,6 +111,8 @@ class ImportSafetyTests(unittest.TestCase):
                     "Sigmax.AdvancedFlowMatchScheduler": "Advanced FlowMatch Scheduler",
                     "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler",
                     "Sigmax.ModelAwareSigmaScheduler": "Model-Aware Sigma Scheduler",
+                    "Sigmax.ProfileInspector": "Profile Inspector",
+                    "Sigmax.ScheduleInspector": "Schedule Inspector",
                 },
                 "torch_call_unchanged": True,
                 "uses_package_mappings": True,
@@ -141,11 +145,15 @@ class ImportSafetyTests(unittest.TestCase):
                 "Sigmax.AdvancedFlowMatchScheduler",
                 "Sigmax.Krea2SigmaScheduler",
                 "Sigmax.ModelAwareSigmaScheduler",
+                "Sigmax.ProfileInspector",
+                "Sigmax.ScheduleInspector",
             ]
             assert bootstrap.NODE_DISPLAY_NAME_MAPPINGS == {
                 "Sigmax.AdvancedFlowMatchScheduler": "Advanced FlowMatch Scheduler",
                 "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler",
                 "Sigmax.ModelAwareSigmaScheduler": "Model-Aware Sigma Scheduler",
+                "Sigmax.ProfileInspector": "Profile Inspector",
+                "Sigmax.ScheduleInspector": "Schedule Inspector",
             }
             """
         )

@@ -15,7 +15,9 @@ constructs Turbo or RAW sigmas and returns
 structured `sigmax.krea2-sigma-node/1` schedule information, plus
 `Sigmax.ModelAwareSigmaScheduler`, which requires a Krea 2 MODEL, exposes family-only Auto
 ambiguity, and returns exact-profile capability decisions under
-`sigmax.model-aware-sigma-node/1`. Live ComfyUI host integration, RAW
+`sigmax.model-aware-sigma-node/1`; plus the read-only `Sigmax.ProfileInspector` and
+`Sigmax.ScheduleInspector`, which return `sigmax.profile-inspector/1` and
+`sigmax.schedule-inspector/1` reports. Live ComfyUI host integration, RAW
 native-ComfyUI parity, model weights, GPU
 execution, and sampler-step behavior are
 **not yet validated**. Complete Turbo golden vectors, authoritative framework parity, and
@@ -111,9 +113,13 @@ platform `libm` noise does not alter report bytes.
 
 ## Current Known Limitations
 
-- The three node mappings are `Sigmax.AdvancedFlowMatchScheduler`,
-  `Sigmax.Krea2SigmaScheduler`, and `Sigmax.ModelAwareSigmaScheduler`; their pure behavior and
-  static schemas are covered without claiming real-host loading or workflow execution.
+- The five node mappings are `Sigmax.AdvancedFlowMatchScheduler`,
+  `Sigmax.Krea2SigmaScheduler`, `Sigmax.ModelAwareSigmaScheduler`, `Sigmax.ProfileInspector`,
+  and `Sigmax.ScheduleInspector`; their pure behavior and static schemas are covered without
+  claiming real-host loading or workflow execution.
+- Inspectors are read-only: profile inspection requires explicit Krea variant resolution and a
+  bounded native sampling class, while schedule inspection accepts only implemented Sigmax
+  schemas and requires connected SIGMAS to match the advertised output fingerprint.
 - The advanced FlowMatch node is an `experimental` external `UNIT_FLOW` constructor with explicit
   linear endpoints, one exponential-mu or direct-ratio shift, terminal policy, and slicing. It
   is not evidence that the result is compatible with an arbitrary model.

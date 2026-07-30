@@ -104,6 +104,10 @@ tracked independently from the frozen profile-schema version.
   exclusive exponential-mu/direct-ratio parameterization through one active shift value,
   terminal and slicing stages, typed request/result validation, execution-time-only Torch
   conversion, and deterministic `sigmax.advanced-flowmatch-node/1` information.
+- Read-only `Sigmax.ProfileInspector` and `Sigmax.ScheduleInspector` nodes with bounded static
+  native sampling-class evidence, exact capability/profile reports, controlled versioned
+  schedule-info parsing, connected-SIGMAS fingerprint verification, and deterministic
+  `sigmax.profile-inspector/1` / `sigmax.schedule-inspector/1` output.
 
 ### Security
 

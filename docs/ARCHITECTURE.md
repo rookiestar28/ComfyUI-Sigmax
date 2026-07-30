@@ -357,17 +357,19 @@ policy and terminal-inclusive slicing follow as separate declared stages. The bu
 typed `ScheduleRequest` and `ScheduleResult` contracts, validates the complete and selected
 vectors, and emits deterministic `sigmax.advanced-flowmatch-node/1` JSON. The node is
 experimental external-sigma construction, not a sampler, model profile, domain converter, or
-model patch. Planned later nodes add inspection/comparison outputs.
+model patch.
 
-The fourth and fifth catalog entries are `Sigmax.ProfileInspector` and
-`Sigmax.ScheduleInspector`. `inspectors.py` reuses the exact model-aware construction result and
+The fourth through sixth catalog entries are `Sigmax.ProfileInspector`,
+`Sigmax.ScheduleComparison`, and `Sigmax.ScheduleInspector`. `inspectors.py` reuses the exact
+model-aware construction result and
 a bounded static `model_sampling` class read for deterministic
 `sigmax.profile-inspector/1` reports. Schedule inspection accepts only the three implemented
 schedule-information schemas, applies strict JSON/collection limits, normalizes model-aware
 nesting, and recomputes the connected SIGMAS output fingerprint before emitting
-`sigmax.schedule-inspector/1`. Both nodes are read-only and exclude foreign objects, tensors,
-paths, prompts, and arbitrary host metadata from reports. Planned later nodes add comparison
-outputs.
+`sigmax.schedule-inspector/1`. Schedule comparison reuses that verified producer boundary and
+emits `sigmax.schedule-comparison/1`, aligning only equal-domain/equal-length schedules by sigma
+index and otherwise returning an explicit non-comparable reason. All three nodes are read-only
+and exclude foreign objects, tensors, paths, prompts, and arbitrary host metadata from reports.
 
 ### Sampler strategy
 

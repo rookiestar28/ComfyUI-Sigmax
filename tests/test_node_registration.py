@@ -466,6 +466,7 @@ def test_builtin_registry_and_package_mappings_expose_only_validated_product_nod
         Krea2SigmaScheduler,
         ModelAwareSigmaScheduler,
         ProfileInspector,
+        ScheduleComparison,
         ScheduleInspector,
     )
 
@@ -475,6 +476,7 @@ def test_builtin_registry_and_package_mappings_expose_only_validated_product_nod
         "Sigmax.Krea2SigmaScheduler",
         "Sigmax.ModelAwareSigmaScheduler",
         "Sigmax.ProfileInspector",
+        "Sigmax.ScheduleComparison",
         "Sigmax.ScheduleInspector",
     )
     assert {
@@ -482,6 +484,7 @@ def test_builtin_registry_and_package_mappings_expose_only_validated_product_nod
         "Sigmax.Krea2SigmaScheduler": Krea2SigmaScheduler,
         "Sigmax.ModelAwareSigmaScheduler": ModelAwareSigmaScheduler,
         "Sigmax.ProfileInspector": ProfileInspector,
+        "Sigmax.ScheduleComparison": ScheduleComparison,
         "Sigmax.ScheduleInspector": ScheduleInspector,
     } == comfyui_sigmax.NODE_CLASS_MAPPINGS
     assert comfyui_sigmax.NODE_DISPLAY_NAME_MAPPINGS == {
@@ -489,6 +492,7 @@ def test_builtin_registry_and_package_mappings_expose_only_validated_product_nod
         "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler",
         "Sigmax.ModelAwareSigmaScheduler": "Model-Aware Sigma Scheduler",
         "Sigmax.ProfileInspector": "Profile Inspector",
+        "Sigmax.ScheduleComparison": "Schedule Comparison",
         "Sigmax.ScheduleInspector": "Schedule Inspector",
     }
     assert comfyui_sigmax.NODE_CLASS_MAPPINGS is not builtin_node_registry().class_mappings()

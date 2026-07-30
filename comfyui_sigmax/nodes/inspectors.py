@@ -22,6 +22,8 @@ PROFILE_INSPECTOR_NODE_ID: Final = "Sigmax.ProfileInspector"
 PROFILE_INSPECTOR_SCHEMA_ID: Final = "sigmax.profile-inspector/1"
 SCHEDULE_INSPECTOR_NODE_ID: Final = "Sigmax.ScheduleInspector"
 SCHEDULE_INSPECTOR_SCHEMA_ID: Final = "sigmax.schedule-inspector/1"
+SCHEDULE_COMPARISON_NODE_ID: Final = "Sigmax.ScheduleComparison"
+SCHEDULE_COMPARISON_SCHEMA_ID: Final = "sigmax.schedule-comparison/1"
 _KREA2_SCHEMA_ID: Final = "sigmax.krea2-sigma-node/1"
 _ADVANCED_SCHEMA_ID: Final = "sigmax.advanced-flowmatch-node/1"
 _MAX_STEPS: Final = 10_000
@@ -92,6 +94,30 @@ class ScheduleInspectorResult:
             raise ScheduleContractError("schedule inspector schema is unsupported")
         if not isinstance(self.report_json, str) or not self.report_json:
             raise ScheduleContractError("schedule inspector report is required")
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ScheduleComparisonResult:
+    """Pure schedule comparison report."""
+
+    schema_id: str
+    report_json: str
+
+    def __post_init__(self) -> None:
+        if self.schema_id != SCHEDULE_COMPARISON_SCHEMA_ID:
+            raise ScheduleContractError("schedule comparison schema is unsupported")
+        if not isinstance(self.report_json, str) or not self.report_json:
+            raise ScheduleContractError("schedule comparison report is required")
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class _VerifiedSchedule:
+    values: tuple[float, ...]
+    domain: SigmaDomain
+    source_schema: str
+    fingerprints: dict[str, object]
+    transforms: dict[str, object]
+    inspection: dict[str, object]
 
 
 def _canonical_json(value: dict[str, object]) -> str:
@@ -304,41 +330,58 @@ def _normalized_source(
     raise ScheduleContractError("schedule_info schema is unsupported")
 
 
-def build_schedule_inspection(
+def _source_domain(
+    *,
+    source_schema: str,
+    schedule: dict[str, object],
+) -> SigmaDomain:
+    if source_schema != _ADVANCED_SCHEMA_ID:
+        return SigmaDomain.UNIT_FLOW
+    domain_value = _object(schedule["domain"], label="domain").get("sigma")
+    if not isinstance(domain_value, str):
+        raise ScheduleContractError("sigma domain must be a string")
+    try:
+        domain = SigmaDomain(domain_value)
+    except ValueError as exc:
+        raise ScheduleContractError("sigma domain is unsupported") from exc
+    if domain is SigmaDomain.MODEL_NATIVE:
+        raise ScheduleContractError("opaque MODEL_NATIVE schedules cannot be inspected")
+    return domain
+
+
+def _verified_schedule(
     *,
     sigmas: object,
     schedule_info: object,
-) -> ScheduleInspectorResult:
-    """Verify connected sigmas against one controlled scheduler projection."""
-
+    allowed_domains: frozenset[SigmaDomain],
+) -> _VerifiedSchedule:
     if not isinstance(sigmas, tuple):
         raise ScheduleContractError("pure inspector sigmas must be a tuple")
     if not 2 <= len(sigmas) <= _MAX_STEPS + 1:
         raise ScheduleContractError("sigmas length is outside the inspector limit")
+    source = _decode_schedule_info(schedule_info)
+    source_schema, schedule, model_aware = _normalized_source(source)
+    domain = _source_domain(source_schema=source_schema, schedule=schedule)
+    if domain not in allowed_domains:
+        raise ScheduleContractError(f"inspector does not support {domain.value} schedules")
     values = validate_sigma_schedule(
         sigmas,
-        domain=SigmaDomain.UNIT_FLOW,
+        domain=domain,
         expected_steps=len(sigmas) - 1,
         require_terminal_zero=False,
     )
-    source = _decode_schedule_info(schedule_info)
-    source_schema, schedule, model_aware = _normalized_source(source)
     fingerprints = _fingerprints(schedule.get("fingerprints"))
     advertised = cast(str, fingerprints["output"])
-    computed = sigma_output_fingerprint(values, domain=SigmaDomain.UNIT_FLOW)
+    computed = sigma_output_fingerprint(values, domain=domain)
     if advertised != computed:
         raise ScheduleContractError("connected SIGMAS fingerprint does not match schedule_info")
 
     if source_schema == _ADVANCED_SCHEMA_ID:
-        domain = _object(schedule["domain"], label="domain").get("sigma")
         dimensions: object = None
         profile: object = schedule["provenance"]
     else:
-        domain = SigmaDomain.UNIT_FLOW.value
         dimensions = schedule["dimensions"]
         profile = model_aware["profile"] if model_aware is not None else schedule["profile"]
-    if domain != SigmaDomain.UNIT_FLOW.value:
-        raise ScheduleContractError("inspector supports only UNIT_FLOW schedules")
 
     warnings = _list(schedule.get("warnings", []), label="warnings")
     if not all(isinstance(item, str) and item for item in warnings):
@@ -352,7 +395,7 @@ def build_schedule_inspection(
     report: dict[str, object] = {
         "compatibility": compatibility,
         "dimensions": dimensions,
-        "domain": domain,
+        "domain": domain.value,
         "fingerprints": {
             "advertised_complete": fingerprints["complete"],
             "advertised_output": advertised,
@@ -367,8 +410,162 @@ def build_schedule_inspection(
         "source_schema": source_schema,
         "warnings": warnings,
     }
+    transforms: dict[str, object] = {
+        "base_grid": schedule.get("base_grid"),
+        "shift": schedule["shift"],
+        "slicing": schedule["slicing"],
+        "terminal": schedule.get("terminal"),
+        "transform_order": schedule.get("transform_order"),
+    }
+    return _VerifiedSchedule(
+        values=values,
+        domain=domain,
+        source_schema=source_schema,
+        fingerprints=cast(dict[str, object], report["fingerprints"]),
+        transforms=transforms,
+        inspection=report,
+    )
+
+
+def build_schedule_inspection(
+    *,
+    sigmas: object,
+    schedule_info: object,
+) -> ScheduleInspectorResult:
+    """Verify connected sigmas against one controlled scheduler projection."""
+
+    verified = _verified_schedule(
+        sigmas=sigmas,
+        schedule_info=schedule_info,
+        allowed_domains=frozenset({SigmaDomain.UNIT_FLOW}),
+    )
     return ScheduleInspectorResult(
         schema_id=SCHEDULE_INSPECTOR_SCHEMA_ID,
+        report_json=_canonical_json(verified.inspection),
+    )
+
+
+def _comparison_source(verified: _VerifiedSchedule) -> dict[str, object]:
+    return {
+        "domain": verified.domain.value,
+        "fingerprints": verified.fingerprints,
+        "length": len(verified.values),
+        "source_schema": verified.source_schema,
+        "transforms": verified.transforms,
+    }
+
+
+def build_schedule_comparison(
+    *,
+    sigmas_a: object,
+    schedule_info_a: object,
+    sigmas_b: object,
+    schedule_info_b: object,
+) -> ScheduleComparisonResult:
+    """Compare two verified schedules without implicit alignment or conversion."""
+
+    comparable_domains = frozenset(
+        {
+            SigmaDomain.UNIT_FLOW,
+            SigmaDomain.CONTINUOUS_EDM,
+            SigmaDomain.DISCRETE_TRAINING_INDEX,
+        }
+    )
+    verified_a = _verified_schedule(
+        sigmas=sigmas_a,
+        schedule_info=schedule_info_a,
+        allowed_domains=comparable_domains,
+    )
+    verified_b = _verified_schedule(
+        sigmas=sigmas_b,
+        schedule_info=schedule_info_b,
+        allowed_domains=comparable_domains,
+    )
+    sources = {
+        "a": _comparison_source(verified_a),
+        "b": _comparison_source(verified_b),
+    }
+    if verified_a.domain is not verified_b.domain:
+        report: dict[str, object] = {
+            "alignment": {
+                "domain_a": verified_a.domain.value,
+                "domain_b": verified_b.domain.value,
+                "kind": "none",
+                "terminal_inclusive": True,
+            },
+            "comparable": False,
+            "reason": "comparison.domain_mismatch",
+            "schema": SCHEDULE_COMPARISON_SCHEMA_ID,
+            "sources": sources,
+            "steps": [],
+            "summary": None,
+        }
+    elif len(verified_a.values) != len(verified_b.values):
+        report = {
+            "alignment": {
+                "kind": "none",
+                "length_a": len(verified_a.values),
+                "length_b": len(verified_b.values),
+                "terminal_inclusive": True,
+            },
+            "comparable": False,
+            "reason": "comparison.length_mismatch",
+            "schema": SCHEDULE_COMPARISON_SCHEMA_ID,
+            "sources": sources,
+            "steps": [],
+            "summary": None,
+        }
+    else:
+        rows: list[dict[str, object]] = []
+        absolute_differences: list[float] = []
+        relative_differences: list[float] = []
+        for index, (sigma_a, sigma_b) in enumerate(
+            zip(verified_a.values, verified_b.values, strict=True)
+        ):
+            absolute = abs(sigma_a - sigma_b)
+            denominator = max(abs(sigma_a), abs(sigma_b))
+            relative = 0.0 if denominator == 0.0 else absolute / denominator
+            rows.append(
+                {
+                    "absolute_difference": absolute,
+                    "index": index,
+                    "relative_difference": relative,
+                    "sigma_a": sigma_a,
+                    "sigma_b": sigma_b,
+                }
+            )
+            absolute_differences.append(absolute)
+            relative_differences.append(relative)
+        length = len(rows)
+        maximum_absolute_index = max(range(length), key=absolute_differences.__getitem__)
+        maximum_relative_index = max(range(length), key=relative_differences.__getitem__)
+        report = {
+            "alignment": {
+                "kind": "sigma_index",
+                "length": length,
+                "terminal_inclusive": True,
+            },
+            "comparable": True,
+            "reason": None,
+            "schema": SCHEDULE_COMPARISON_SCHEMA_ID,
+            "sources": sources,
+            "steps": rows,
+            "summary": {
+                "exact_match_count": sum(value == 0.0 for value in absolute_differences),
+                "maximum_absolute_difference": absolute_differences[maximum_absolute_index],
+                "maximum_absolute_index": maximum_absolute_index,
+                "maximum_relative_difference": relative_differences[maximum_relative_index],
+                "maximum_relative_index": maximum_relative_index,
+                "mean_absolute_difference": math.fsum(
+                    value / length for value in absolute_differences
+                ),
+                "mean_relative_difference": math.fsum(
+                    value / length for value in relative_differences
+                ),
+            },
+        }
+    return ScheduleComparisonResult(
+        schema_id=SCHEDULE_COMPARISON_SCHEMA_ID,
         report_json=_canonical_json(report),
     )
 
@@ -461,5 +658,59 @@ class ScheduleInspector:
         result = build_schedule_inspection(
             sigmas=values,
             schedule_info=schedule_info,
+        )
+        return (result.report_json,)
+
+
+def _host_sigma_tuple(value: object) -> tuple[float, ...]:
+    try:
+        length = len(cast(Sequence[object], value))
+    except (TypeError, AttributeError) as exc:
+        raise ScheduleContractError("host SIGMAS must be a bounded sequence") from exc
+    if not 2 <= length <= _MAX_STEPS + 1:
+        raise ScheduleContractError("host SIGMAS length is outside the inspector limit")
+    try:
+        return tuple(float(cast(Any, item)) for item in cast(Sequence[object], value))
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise ScheduleContractError("host SIGMAS must contain numeric values") from exc
+
+
+class ScheduleComparison:
+    """Compare two verified schedules without mutating either input."""
+
+    DESCRIPTION = "Compares two verified Sigmax schedules by terminal-inclusive sigma index."
+    CATEGORY = "Sigmax/inspection"
+    FUNCTION = "compare"
+    RETURN_TYPES = ("STRING",)
+    RETURN_NAMES = ("comparison_report",)
+    OUTPUT_NODE = False
+
+    @classmethod
+    def INPUT_TYPES(cls) -> dict[str, dict[str, tuple[object, ...]]]:
+        schedule_information = (
+            "STRING",
+            {"default": "", "multiline": True},
+        )
+        return {
+            "required": {
+                "sigmas_a": ("SIGMAS",),
+                "schedule_info_a": schedule_information,
+                "sigmas_b": ("SIGMAS",),
+                "schedule_info_b": schedule_information,
+            }
+        }
+
+    def compare(
+        self,
+        sigmas_a: object,
+        schedule_info_a: object,
+        sigmas_b: object,
+        schedule_info_b: object,
+    ) -> tuple[str]:
+        result = build_schedule_comparison(
+            sigmas_a=_host_sigma_tuple(sigmas_a),
+            schedule_info_a=schedule_info_a,
+            sigmas_b=_host_sigma_tuple(sigmas_b),
+            schedule_info_b=schedule_info_b,
         )
         return (result.report_json,)

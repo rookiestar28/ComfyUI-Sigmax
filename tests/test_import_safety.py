@@ -103,6 +103,7 @@ class ImportSafetyTests(unittest.TestCase):
                     "Sigmax.Krea2SigmaScheduler": "Krea2SigmaScheduler",
                     "Sigmax.ModelAwareSigmaScheduler": "ModelAwareSigmaScheduler",
                     "Sigmax.ProfileInspector": "ProfileInspector",
+                    "Sigmax.ScheduleComparison": "ScheduleComparison",
                     "Sigmax.ScheduleInspector": "ScheduleInspector",
                 },
                 "comfy_loaded": False,
@@ -112,6 +113,7 @@ class ImportSafetyTests(unittest.TestCase):
                     "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler",
                     "Sigmax.ModelAwareSigmaScheduler": "Model-Aware Sigma Scheduler",
                     "Sigmax.ProfileInspector": "Profile Inspector",
+                    "Sigmax.ScheduleComparison": "Schedule Comparison",
                     "Sigmax.ScheduleInspector": "Schedule Inspector",
                 },
                 "torch_call_unchanged": True,
@@ -146,6 +148,7 @@ class ImportSafetyTests(unittest.TestCase):
                 "Sigmax.Krea2SigmaScheduler",
                 "Sigmax.ModelAwareSigmaScheduler",
                 "Sigmax.ProfileInspector",
+                "Sigmax.ScheduleComparison",
                 "Sigmax.ScheduleInspector",
             ]
             assert bootstrap.NODE_DISPLAY_NAME_MAPPINGS == {
@@ -153,6 +156,7 @@ class ImportSafetyTests(unittest.TestCase):
                 "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler",
                 "Sigmax.ModelAwareSigmaScheduler": "Model-Aware Sigma Scheduler",
                 "Sigmax.ProfileInspector": "Profile Inspector",
+                "Sigmax.ScheduleComparison": "Schedule Comparison",
                 "Sigmax.ScheduleInspector": "Schedule Inspector",
             }
             """

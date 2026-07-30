@@ -23,7 +23,7 @@ versioned profiles for other flow-matching and diffusion model families.
 > and produces collision-safe namespaced mappings. Its built-in catalog now contains
 > `Sigmax.AdvancedFlowMatchScheduler`, `Sigmax.Krea2SigmaScheduler`, and
 > `Sigmax.ModelAwareSigmaScheduler`, `Sigmax.ProfileInspector`, and
-> `Sigmax.ScheduleInspector`; RAW native-ComfyUI and
+> `Sigmax.ScheduleComparison`, and `Sigmax.ScheduleInspector`; RAW native-ComfyUI and
 > real-host node/workflow parity remain
 > pending. The
 > complete core and profile
@@ -70,6 +70,7 @@ assert sorted(comfyui_sigmax.NODE_CLASS_MAPPINGS) == [
     "Sigmax.Krea2SigmaScheduler",
     "Sigmax.ModelAwareSigmaScheduler",
     "Sigmax.ProfileInspector",
+    "Sigmax.ScheduleComparison",
     "Sigmax.ScheduleInspector",
 ]
 assert comfyui_sigmax.NODE_DISPLAY_NAME_MAPPINGS == {
@@ -77,6 +78,7 @@ assert comfyui_sigmax.NODE_DISPLAY_NAME_MAPPINGS == {
     "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler",
     "Sigmax.ModelAwareSigmaScheduler": "Model-Aware Sigma Scheduler",
     "Sigmax.ProfileInspector": "Profile Inspector",
+    "Sigmax.ScheduleComparison": "Schedule Comparison",
     "Sigmax.ScheduleInspector": "Schedule Inspector",
 }
 ```
@@ -299,7 +301,7 @@ the pinned loader's mutually exclusive `NODE_CLASS_MAPPINGS`/`comfy_entrypoint` 
 independent of the normalized installation-directory name. The built-in catalog now exposes
 `Sigmax.AdvancedFlowMatchScheduler`, `Sigmax.Krea2SigmaScheduler`, and
 `Sigmax.ModelAwareSigmaScheduler`, `Sigmax.ProfileInspector`, and
-`Sigmax.ScheduleInspector`.
+`Sigmax.ScheduleComparison`, and `Sigmax.ScheduleInspector`.
 
 The `Krea 2 Sigma Scheduler` requires an explicit `Turbo` or `RAW` choice, width and height,
 steps, strict-official mode, and terminal-inclusive start/end slicing. Strict mode accepts only
@@ -343,6 +345,13 @@ serializes or invokes the foreign model.
 model-aware, or advanced FlowMatch information, recomputes the selected sigma fingerprint, and
 fails if it does not match the advertised output identity. Only a matching read-only
 `sigmax.schedule-inspector/1` report is returned; the node does not modify the schedule.
+
+`Sigmax.ScheduleComparison` accepts two such verified `SIGMAS`/`schedule_info` pairs. Matching
+domains and lengths are compared by terminal-inclusive sigma index, with absolute differences
+and symmetric relative differences (`abs(a-b) / max(abs(a), abs(b))`, or zero when both are
+zero), plus source transform metadata and aggregate maxima/means. Length or domain mismatch
+returns a deterministic non-comparable `sigmax.schedule-comparison/1` report; it never truncates,
+resamples, or converts a schedule.
 
 The first concrete profile is an immutable, evidence-pinned declaration of the official
 Krea 2 Turbo recipe:

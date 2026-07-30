@@ -581,6 +581,7 @@ def builtin_node_registry() -> NodeRegistry:
         Krea2SigmaScheduler,
         ModelAwareSigmaScheduler,
         ProfileInspector,
+        ScheduleComparison,
         ScheduleInspector,
     )
 
@@ -605,6 +606,11 @@ def builtin_node_registry() -> NodeRegistry:
                 node_id="Sigmax.ProfileInspector",
                 display_name="Profile Inspector",
                 node_class=ProfileInspector,
+            ),
+            discover_legacy_registration(
+                node_id="Sigmax.ScheduleComparison",
+                display_name="Schedule Comparison",
+                node_class=ScheduleComparison,
             ),
             discover_legacy_registration(
                 node_id="Sigmax.ScheduleInspector",

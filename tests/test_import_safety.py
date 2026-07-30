@@ -7,7 +7,6 @@ import textwrap
 import unittest
 from pathlib import Path
 
-
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 
 BOOTSTRAP_PROBE = textwrap.dedent(
@@ -117,6 +116,31 @@ class ImportSafetyTests(unittest.TestCase):
                     (REPOSITORY_ROOT / relative_path).exists(),
                     msg=f"unrelated legacy module remains: {relative_path}",
                 )
+
+    def test_bootstrap_supports_pytest_style_top_level_import(self) -> None:
+        probe = textwrap.dedent(
+            """
+            import sys
+
+            sys.path.insert(0, sys.argv[1])
+            import __init__ as bootstrap
+
+            assert bootstrap.__version__ == "0.1.0.dev0"
+            assert bootstrap.NODE_CLASS_MAPPINGS == {}
+            assert bootstrap.NODE_DISPLAY_NAME_MAPPINGS == {}
+            """
+        )
+        result = subprocess.run(
+            [sys.executable, "-I", "-c", probe, str(REPOSITORY_ROOT)],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(
+            0,
+            result.returncode,
+            msg=f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}",
+        )
 
 
 if __name__ == "__main__":

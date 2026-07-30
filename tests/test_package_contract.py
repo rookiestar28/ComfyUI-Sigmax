@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import importlib
 import sys
-import tomllib
 import unittest
 from pathlib import Path
 
+import tomli as tomllib
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 

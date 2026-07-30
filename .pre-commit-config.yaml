@@ -1,0 +1,43 @@
+default_install_hook_types:
+  - pre-commit
+  - pre-push
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    # v6.0.0
+    rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c  # pragma: allowlist secret
+    hooks:
+      - id: check-ast
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: check-toml
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+
+  - repo: https://github.com/Yelp/detect-secrets
+    # v1.5.0
+    rev: 68e8b45440415753fff70a312ece8da92ba85b4a  # pragma: allowlist secret
+    hooks:
+      - id: detect-secrets
+        args:
+          - --baseline
+          - .secrets.baseline
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # v0.16.0
+    rev: cb8c523fd4835aba42af70f4cad5568db4df0b6c  # pragma: allowlist secret
+    hooks:
+      - id: ruff-check
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    # v2.3.0
+    rev: 41e691678310dfd3833f7ab4e180ddb014310356  # pragma: allowlist secret
+    hooks:
+      - id: mypy
+        files: ^(comfyui_sigmax/|tests/).*\.py$
+        additional_dependencies:
+          - tomli==2.4.1
+        args:
+          - --config-file=pyproject.toml

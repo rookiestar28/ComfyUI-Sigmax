@@ -33,12 +33,15 @@ tracked independently once the profile schema is implemented.
 - Immutable model, profile, sampler, and execution-feature capability declarations with
   canonical allow/warn/reject decisions, stable reason codes, and a fail-before-execution
   compatibility gate.
-- An ordered core-independence gate that requires absent optional frameworks, blocks
-  ComfyUI/Diffusers imports under Python isolated mode, imports every core module, and checks
-  static import roots.
+- An ordered pure-layer independence gate that requires absent optional frameworks, blocks
+  ComfyUI/Diffusers imports under Python isolated mode, imports every core and profile module,
+  and checks static import roots.
 - Dependency-free deterministic property/metamorphic coverage for grids, shifts, terminal
   structure, and capability-decision stability.
 - Wheel inventory enforcement for the pure-core package.
+- An immutable, evidence-pinned Krea 2 Turbo official-recipe profile with fixed exponential
+  `mu = 1.15`, guidance and dimension conventions, deterministic Euler capability
+  declarations, and a dependency-free structural schedule builder.
 
 ### Security
 
@@ -51,7 +54,8 @@ tracked independently once the profile schema is implemented.
 
 ### Known limitations
 
-- No user-facing ComfyUI node, model profile, sigma schedule, or sampler is implemented.
+- No user-facing ComfyUI node, generic profile resolver, parity-validated schedule, or sampler
+  is implemented.
 - Real ComfyUI host, model-weight, GPU, and numerical parity validation remain pending.
 
 [Unreleased]: https://github.com/rookiestar28/ComfyUI-Sigmax/commits/main

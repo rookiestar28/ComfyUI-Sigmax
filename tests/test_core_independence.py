@@ -10,7 +10,10 @@ import sys
 from pathlib import Path
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-CORE_ROOT = REPOSITORY_ROOT / "comfyui_sigmax" / "core"
+PURE_PACKAGE_ROOTS = (
+    REPOSITORY_ROOT / "comfyui_sigmax" / "core",
+    REPOSITORY_ROOT / "comfyui_sigmax" / "profiles",
+)
 OPTIONAL_FRAMEWORKS = ("comfy", "diffusers")
 
 
@@ -18,17 +21,18 @@ def test_core_source_imports_only_stdlib_or_sigmax() -> None:
     allowed_roots = {*sys.stdlib_module_names, "__future__", "comfyui_sigmax"}
     violations: list[str] = []
 
-    for path in sorted(CORE_ROOT.glob("*.py")):
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=path.name)
-        for node in ast.walk(tree):
-            roots: tuple[str, ...] = ()
-            if isinstance(node, ast.Import):
-                roots = tuple(alias.name.split(".", maxsplit=1)[0] for alias in node.names)
-            elif isinstance(node, ast.ImportFrom) and node.module:
-                roots = (node.module.split(".", maxsplit=1)[0],)
-            for root in roots:
-                if root not in allowed_roots:
-                    violations.append(f"{path.name}:{getattr(node, 'lineno', 0)}:{root}")
+    for package_root in PURE_PACKAGE_ROOTS:
+        for path in sorted(package_root.glob("*.py")):
+            tree = ast.parse(path.read_text(encoding="utf-8"), filename=path.name)
+            for node in ast.walk(tree):
+                roots: tuple[str, ...] = ()
+                if isinstance(node, ast.Import):
+                    roots = tuple(alias.name.split(".", maxsplit=1)[0] for alias in node.names)
+                elif isinstance(node, ast.ImportFrom) and node.module:
+                    roots = (node.module.split(".", maxsplit=1)[0],)
+                for root in roots:
+                    if root not in allowed_roots:
+                        violations.append(f"{path.name}:{getattr(node, 'lineno', 0)}:{root}")
 
     assert violations == []
 
@@ -69,7 +73,8 @@ def test_isolated_probe_imports_every_core_module_without_optional_frameworks() 
     assert report["attempted_optional_imports"] == []
     assert report["loaded_optional_modules"] == []
     assert report["modules"] == sorted(
-        f"comfyui_sigmax.core.{path.stem}"
-        for path in CORE_ROOT.glob("*.py")
+        f"comfyui_sigmax.{package_root.name}.{path.stem}"
+        for package_root in PURE_PACKAGE_ROOTS
+        for path in package_root.glob("*.py")
         if path.name != "__init__.py"
     )

@@ -73,6 +73,20 @@ def test_public_documentation_exposes_core_independence_boundary() -> None:
     assert "official model parity" in compatibility
 
 
+def test_public_documentation_exposes_structural_krea2_turbo_profile() -> None:
+    readme = _read(ROOT / "README.md")
+    architecture = _read(ROOT / "docs" / "ARCHITECTURE.md")
+    profile_spec = _read(ROOT / "docs" / "PROFILE_SPEC.md")
+    compatibility = _read(ROOT / "docs" / "COMPATIBILITY.md")
+
+    assert "KREA2_TURBO_PROFILE" in readme
+    assert "build_krea2_turbo_schedule" in readme
+    assert "krea2.turbo.official" in profile_spec
+    assert "profiles/krea2_turbo.py" in architecture
+    assert "structural profile" in compatibility.lower()
+    assert "golden" in compatibility.lower() and "pending" in compatibility.lower()
+
+
 def test_public_contribution_and_changelog_contract() -> None:
     contributing = _read(ROOT / "CONTRIBUTING.md")
     changelog = _read(ROOT / "CHANGELOG.md")

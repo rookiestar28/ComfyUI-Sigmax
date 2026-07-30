@@ -48,10 +48,13 @@ comfyui_sigmax/
                 immutable artifact assembly and strict canonical JSON transport
     capabilities.py
                 model/profile/sampler declarations and execution preflight decisions
+  profiles/
+    krea2_turbo.py
+                immutable official-recipe declaration and structural schedule builder
 
 scripts/
   preflight_check.py          local environment validation
-  check_core_independence.py  isolated all-core optional-framework blocker
+  check_core_independence.py  isolated pure-layer optional-framework blocker
   run_full_gate.py            canonical ordered acceptance gate
   OS wrappers                 repo-local environment selection
 
@@ -65,9 +68,10 @@ patch PyTorch, import Diffusers, or alter host process state.
 
 The full gate proves this boundary before the test suite: a clean project-local environment
 must resolve neither ComfyUI nor Diffusers, and a `python -I` subprocess installs explicit
-import blockers before enumerating and importing every core module. Static AST checks allow
-only Python standard-library and `comfyui_sigmax` import roots. Deterministic property and
-metamorphic tests exercise mathematical invariants without either optional framework.
+import blockers before enumerating and importing every core and profile module. Static AST
+checks allow only Python standard-library and `comfyui_sigmax` import roots. Deterministic
+property and metamorphic tests exercise mathematical invariants without either optional
+framework.
 
 The implemented pure-core preflight requires exactly one ownership mode:
 
@@ -139,8 +143,15 @@ host integration:
   reason codes across every considered capability dimension.
 
 The execution gate raises before sampler work on `REJECT`. A compatible non-reference sampler
-is a warning rather than an unsupported claim. These declarations do not resolve a profile,
-inspect ComfyUI, or execute a sampler; those remain later layers.
+is a warning rather than an unsupported claim.
+
+The first concrete profile, `krea2.turbo.official`, is implemented in
+`profiles/krea2_turbo.py`. It pins the official Krea source and framework corroboration,
+declares fixed exponential `mu = 1.15`, eight default steps, terminal zero, deterministic
+ComfyUI Euler capabilities, guidance conventions, and ceil-to-16 dimensions. Its builder
+composes existing pure-core primitives and records dimension changes and non-reference step
+counts explicitly. It does not inspect ComfyUI, choose a checkpoint variant, execute a
+sampler, or claim numerical parity; those remain later layers and validation items.
 
 ## Planned Layered Design
 
@@ -171,10 +182,11 @@ This layer must not require ComfyUI or Diffusers for closed-form schedule formul
 
 ### Profile resolver and registry
 
-Profiles will carry model identity, variant, evidence level, sigma domain, base-grid
-construction, shift parameterization, terminal policy, sampler compatibility, and provenance.
-Automatic resolution must expose confidence and fail closed when an official profile is
-ambiguous.
+The first dedicated Turbo profile carries model identity, variant, evidence level, sigma
+domain, base-grid construction, shift parameterization, terminal policy, sampler
+compatibility, and provenance. A generic schema, registry, and automatic resolver remain
+planned. Automatic resolution must expose confidence and fail closed when an official profile
+is ambiguous.
 
 ### ComfyUI adapters and nodes
 

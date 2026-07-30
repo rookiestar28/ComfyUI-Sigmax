@@ -316,8 +316,10 @@ Parity tests must record:
 - maximum and mean error;
 - schedule fingerprint.
 
-Parity lanes may use isolated optional environments, but Tier 1 profile work cannot be accepted
-without their passing evidence.
+Parity lanes may use isolated optional environments. An evidence-pinned structural profile
+declaration may land before these lanes exist only when it makes no Tier 1 parity or host
+support claim and the roadmap retains separate blocking golden, framework-parity, and host
+items. A profile cannot be promoted to Tier 1 official parity without their passing evidence.
 
 Pinned parity results must be retained as machine-readable vectors and human-readable error
 summaries when CI exists.
@@ -359,8 +361,11 @@ Host E2E is mandatory when changes affect:
 - sampler execution;
 - host compatibility.
 
-Pure schedule-core changes may omit host E2E only when the plan explains why no adapter,
-profile, node, or workflow contract is affected.
+Pure schedule-core changes may omit host E2E when the plan explains why no adapter, node, or
+workflow contract is affected. A dependency-free structural profile may also omit host E2E
+when it performs no host discovery/import/execution and explicitly defers host compatibility
+claims to a blocking later roadmap item. Profile changes that affect resolution, registration,
+or host execution require host E2E.
 
 ### Stage 8 - Packaging and Clean-Install Checks
 

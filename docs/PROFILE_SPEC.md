@@ -144,6 +144,29 @@ their schedules are equivalent only when `direct_ratio = exp(mu)`.
 
 Missing shift configuration must be an error in strict mode, not a hidden zero.
 
+## First Concrete Profile: Krea 2 Turbo
+
+The immutable `krea2.turbo.official` profile version `1` is implemented before the generic
+profile schema is frozen. It declares:
+
+- `official` evidence with a pinned Krea repository revision as the primary source;
+- pinned Diffusers and ComfyUI framework references;
+- Krea 2 `turbo` and flow-velocity model semantics;
+- `EXTERNAL_SIGMAS` ownership in the `UNIT_FLOW` domain;
+- the `krea.reciprocal_step` base grid;
+- fixed exponential `mu = 1.15`;
+- eight default steps and terminal zero;
+- deterministic `comfy.euler` as its reference sampler;
+- Krea guidance `0.0`, equivalent to standard ComfyUI CFG `1.0`;
+- ceil-to-multiple-of-16 image dimensions.
+
+`build_krea2_turbo_schedule()` composes the existing grid, shift, terminal, validation, and
+request/result contracts. Dimension alignment is recorded as requested-to-effective
+overrides. A non-eight-step request preserves the formula but changes evidence to `modified`
+and emits a warning. The profile is a structural official-recipe implementation; fixed
+golden vectors, authoritative numerical parity, and real-host execution remain required
+before an official-parity product claim.
+
 ## Matching and Variant Resolution
 
 Resolution priority is planned as:

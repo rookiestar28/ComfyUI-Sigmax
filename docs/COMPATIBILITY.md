@@ -2,9 +2,10 @@
 
 ## Current Status
 
-ComfyUI-Sigmax is a pre-alpha development foundation. ComfyUI host integration, user-facing
-nodes, Krea 2 schedules, model weights, GPU execution, and numerical model parity are
-**not yet validated**.
+ComfyUI-Sigmax is a pre-alpha development foundation. The first Krea 2 Turbo structural
+profile and formula-composed schedule builder are implemented. ComfyUI host integration,
+user-facing nodes, Krea 2 RAW, model weights, GPU execution, golden vectors, and numerical
+model parity are **not yet validated**.
 
 The package metadata declares a ComfyUI floor of `0.29.0`, but that is a packaging target
 rather than current host-compatibility evidence. No release should infer working host support
@@ -34,9 +35,9 @@ work, but do not yet have repository acceptance evidence.
 | Model weights and GPU runtime | Not downloaded or exercised |
 
 Diffusers is intended as a pinned parity reference or optional backend. Closed-form schedule
-construction does not require it at runtime. The canonical core lane requires both ComfyUI and
-Diffusers to be absent, blocks attempted imports, and enumerates every core module in Python
-isolated mode.
+construction does not require it at runtime. The canonical pure lane requires both ComfyUI and
+Diffusers to be absent, blocks attempted imports, and enumerates every core and profile module
+in Python isolated mode.
 
 ## Planned Validation Tiers
 
@@ -51,16 +52,17 @@ Compatibility claims will progress through separate lanes:
 
 Passing a lower tier does not imply a higher tier.
 
-The implemented property lane checks mathematical and serialization invariants. It is not an
-official model parity lane; Krea 2 profile goldens and authoritative comparison remain
-unimplemented until M2/M3.
+The implemented property lane checks mathematical and serialization invariants. The Krea 2
+Turbo structural profile pins evidence and composes the declared formula, but it is not an
+official model parity lane. Golden vectors and authoritative comparison remain pending in
+later M2 validation items.
 
 ## Current Known Limitations
 
 - Node mappings are intentionally empty.
-- No Krea 2 RAW or Turbo variant resolution exists.
-- The pure schedule/artifact/capability core exists, but no resolved Krea 2 profile, public
-  sigma-scheduler node, or full sampler is exposed.
+- No Krea 2 RAW or Turbo automatic variant resolution exists.
+- The pure schedule/artifact/capability core and dedicated Turbo structural profile exist, but
+  no generic profile resolver, public sigma-scheduler node, or full sampler is exposed.
 - No ComfyUI version has completed real-host E2E validation.
 - macOS and native hosted Ubuntu evidence are not yet available.
 - Image-quality comparisons are not correctness evidence and have not begun.

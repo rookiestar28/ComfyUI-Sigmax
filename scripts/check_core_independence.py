@@ -42,12 +42,16 @@ ISOLATED_PROBE: Final = textwrap.dedent(
     sys.meta_path.insert(0, blocker)
     sys.path.insert(0, str(repository_root))
 
-    core = importlib.import_module("comfyui_sigmax.core")
+    packages = [
+        importlib.import_module("comfyui_sigmax.core"),
+        importlib.import_module("comfyui_sigmax.profiles"),
+    ]
     modules = sorted(
         module.name
+        for package in packages
         for module in pkgutil.walk_packages(
-            core.__path__,
-            prefix=f"{core.__name__}.",
+            package.__path__,
+            prefix=f"{package.__name__}.",
         )
     )
     for module in modules:
@@ -142,7 +146,7 @@ def main() -> int:
     else:
         modules = cast(list[object], report["modules"])
         print("CORE_INDEPENDENCE=PASS")
-        print(f"Core modules: {len(modules)}")
+        print(f"Pure modules: {len(modules)}")
         print("Optional frameworks installed: 0")
     return 0
 

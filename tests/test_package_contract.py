@@ -43,7 +43,7 @@ class PackageContractTests(unittest.TestCase):
             metadata["build-system"]["build-backend"],
         )
         self.assertEqual(
-            ["comfyui_sigmax", "comfyui_sigmax.core"],
+            ["comfyui_sigmax", "comfyui_sigmax.core", "comfyui_sigmax.profiles"],
             metadata["tool"]["setuptools"]["packages"],
         )
 
@@ -66,6 +66,8 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "core" / "shifts.py").is_file())
         self.assertTrue((package_path / "core" / "terminal_slicing.py").is_file())
         self.assertTrue((package_path / "core" / "validation.py").is_file())
+        self.assertTrue((package_path / "profiles" / "__init__.py").is_file())
+        self.assertTrue((package_path / "profiles" / "krea2_turbo.py").is_file())
 
         sys.path.insert(0, str(REPOSITORY_ROOT))
         self.addCleanup(sys.path.remove, str(REPOSITORY_ROOT))

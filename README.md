@@ -6,10 +6,11 @@ versioned profiles for other flow-matching and diffusion model families.
 
 > **Status: pre-alpha foundation.** No user-facing ComfyUI nodes are implemented yet. The
 > current repository provides a side-effect-free package shell, packaging metadata, quality
-> gates, framework-independent schedule primitives, and canonical schedule-artifact
-> serialization. It also provides typed model/profile/sampler capability preflight, but does
-> not yet expose resolved model profiles, parity-validated Krea 2 schedules, or ComfyUI nodes.
-> The complete core is dependency-free and has an enforced isolation/property test lane.
+> gates, framework-independent schedule primitives, canonical schedule-artifact
+> serialization, and the first evidence-pinned Krea 2 Turbo structural profile. It also
+> provides typed model/profile/sampler capability preflight, but does not yet claim golden or
+> framework parity for Krea 2 and exposes no ComfyUI nodes. The complete core and profile
+> layer are dependency-free and have an enforced isolation/property test lane.
 
 ## Why Sigmax
 
@@ -150,11 +151,33 @@ ownership, terminal requirements, deterministic or stochastic behavior, noise ow
 sampler state, partial denoise, and per-token timesteps. Its stable reason codes distinguish
 `ALLOW`, `WARN`, and `REJECT`; rejected combinations fail before host or sampler execution.
 
+The first concrete profile is an immutable, evidence-pinned declaration of the official
+Krea 2 Turbo recipe:
+
+```python
+from comfyui_sigmax.profiles import (
+    KREA2_TURBO_PROFILE,
+    build_krea2_turbo_schedule,
+)
+
+assert KREA2_TURBO_PROFILE.profile_id == "krea2.turbo.official"
+result = build_krea2_turbo_schedule(width=1025, height=1024)
+assert result.effective_inputs.width == 1040
+assert len(result.sigmas) == 9
+```
+
+The profile declares unit-flow external schedule ownership, the Krea reciprocal-step grid,
+fixed exponential `mu = 1.15`, terminal zero, deterministic ComfyUI Euler capabilities,
+Krea-guidance `0.0` / ComfyUI-CFG `1.0`, and ceil-to-16 dimensions. Its references are pinned
+to immutable Krea, Diffusers, and ComfyUI revisions. Non-eight-step construction is allowed
+only as an explicitly `modified` result. This is structural/formula implementation evidence;
+golden-vector and framework parity are the next validation stage.
+
 The canonical gate runs `scripts/check_core_independence.py` before pytest. It requires a
 clean dev environment, launches Python isolated mode, blocks `comfy` and `diffusers`, and
-imports every core module. Static import-boundary and deterministic property/metamorphic tests
-provide complementary evidence. These checks prove framework independence; they do not claim
-Krea 2 official numerical parity.
+imports every core and profile module. Static import-boundary and deterministic
+property/metamorphic tests provide complementary evidence. These checks prove framework
+independence; they do not claim Krea 2 official numerical parity.
 
 ## Development Setup
 

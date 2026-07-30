@@ -68,6 +68,8 @@ def _inspect_wheel(wheel: Path) -> None:
         "comfyui_sigmax/core/shifts.py",
         "comfyui_sigmax/core/terminal_slicing.py",
         "comfyui_sigmax/core/validation.py",
+        "comfyui_sigmax/profiles/__init__.py",
+        "comfyui_sigmax/profiles/krea2_turbo.py",
     }
     if not required.issubset(names):
         raise RuntimeError(f"Wheel is missing required files: {sorted(required - set(names))}")

@@ -33,9 +33,9 @@ from comfyui_sigmax.profiles import (
     build_krea2_turbo_schedule,
 )
 
-KREA_REVISION = "db3984fbc6e13b34c0064990fc2d95ac64d00058"
-DIFFUSERS_REVISION = "3c468926ffd12b69baa4316e27b09306b8da19a6"
-COMFYUI_REVISION = "e651b7bef55a5376343dcb1c0edb79f0142c985e"
+KREA_REVISION = "db3984fbc6e13b34c0064990fc2d95ac64d00058"  # pragma: allowlist secret
+DIFFUSERS_REVISION = "3c468926ffd12b69baa4316e27b09306b8da19a6"  # pragma: allowlist secret
+COMFYUI_REVISION = "e651b7bef55a5376343dcb1c0edb79f0142c985e"  # pragma: allowlist secret
 
 
 def test_builtin_turbo_profile_declares_exact_official_recipe() -> None:

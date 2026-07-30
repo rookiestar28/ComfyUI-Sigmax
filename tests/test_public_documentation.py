@@ -70,7 +70,7 @@ def test_public_documentation_exposes_core_independence_boundary() -> None:
     assert "ComfyUI" in architecture and "Diffusers" in architecture
     assert "python -I" in architecture
     assert "deterministic property" in compatibility
-    assert "official model parity" in compatibility
+    assert "framework" in compatibility and "native ComfyUI" in compatibility
 
 
 def test_public_documentation_exposes_structural_krea2_turbo_profile() -> None:
@@ -84,7 +84,20 @@ def test_public_documentation_exposes_structural_krea2_turbo_profile() -> None:
     assert "krea2.turbo.official" in profile_spec
     assert "profiles/krea2_turbo.py" in architecture
     assert "structural profile" in compatibility.lower()
-    assert "golden" in compatibility.lower() and "pending" in compatibility.lower()
+    assert "4, 8," in compatibility and "12, and 16" in compatibility
+    assert "framework parity" in compatibility.lower() and "pending" in compatibility.lower()
+
+
+def test_public_documentation_exposes_turbo_golden_boundary() -> None:
+    readme = _read(ROOT / "README.md")
+    architecture = _read(ROOT / "docs" / "ARCHITECTURE.md")
+    compatibility = _read(ROOT / "docs" / "COMPATIBILITY.md")
+    changelog = _read(ROOT / "CHANGELOG.md")
+
+    assert "krea2_turbo_v1.json" in readme
+    assert "Decimal" in architecture
+    assert "float64" in compatibility and "float32" in compatibility
+    assert "framework" in changelog.lower() and "native-comfyui parity" in changelog.lower()
 
 
 def test_public_contribution_and_changelog_contract() -> None:

@@ -4,8 +4,9 @@
 
 ComfyUI-Sigmax is a pre-alpha development foundation. The first Krea 2 Turbo structural
 profile and formula-composed schedule builder are implemented. ComfyUI host integration,
-user-facing nodes, Krea 2 RAW, model weights, GPU execution, golden vectors, and numerical
-model parity are **not yet validated**.
+user-facing nodes, Krea 2 RAW, model weights, GPU execution, and framework/native-ComfyUI
+model parity are **not yet validated**. Complete Turbo golden vectors are validated at 4, 8,
+12, and 16 steps.
 
 The package metadata declares a ComfyUI floor of `0.29.0`, but that is a packaging target
 rather than current host-compatibility evidence. No release should infer working host support
@@ -17,8 +18,8 @@ The current package, quality gates, tests, and wheel inventory have been validat
 
 | Environment | Python | Evidence scope |
 | --- | --- | --- |
-| Windows | 3.13 | Core independence, deterministic property, package, quality, unit, coverage, and wheel gates |
-| WSL2/Linux path | 3.10 | Core independence, deterministic property, package, quality, unit, coverage, and wheel gates |
+| Windows | 3.13 | Core independence, deterministic property, Turbo golden, package, quality, unit, coverage, and wheel gates |
+| WSL2/Linux path | 3.10 | Core independence, deterministic property, Turbo golden, package, quality, unit, coverage, and wheel gates |
 
 The supported Python floor is 3.10. Python versions or operating systems not listed above may
 work, but do not yet have repository acceptance evidence.
@@ -44,18 +45,20 @@ in Python isolated mode.
 Compatibility claims will progress through separate lanes:
 
 1. pure schedule and deterministic property tests — implemented;
-2. authoritative golden and framework parity tests;
-3. real ComfyUI host import and node integration;
-4. fixed-seed sampler and latent-level comparison;
-5. approved model/GPU workflows;
-6. latest-host compatibility signals.
+2. authoritative golden tests — Turbo implemented; RAW pending;
+3. framework parity tests — pending;
+4. real ComfyUI host import and node integration;
+5. fixed-seed sampler and latent-level comparison;
+6. approved model/GPU workflows;
+7. latest-host compatibility signals.
 
 Passing a lower tier does not imply a higher tier.
 
 The implemented property lane checks mathematical and serialization invariants. The Krea 2
-Turbo structural profile pins evidence and composes the declared formula, but it is not an
-official model parity lane. Golden vectors and authoritative comparison remain pending in
-later M2 validation items.
+Turbo structural profile pins evidence and the golden lane compares the production builder
+against complete independent float64 and float32 fixtures. The initial bounds are `1e-8` and
+`1e-6`, respectively. This is not framework or host parity; Krea/Diffusers and native ComfyUI
+comparison remain pending in later M2 validation items.
 
 ## Current Known Limitations
 

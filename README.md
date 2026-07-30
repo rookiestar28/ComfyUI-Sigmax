@@ -8,9 +8,10 @@ versioned profiles for other flow-matching and diffusion model families.
 > current repository provides a side-effect-free package shell, packaging metadata, quality
 > gates, framework-independent schedule primitives, canonical schedule-artifact
 > serialization, and the first evidence-pinned Krea 2 Turbo structural profile. It also
-> provides typed model/profile/sampler capability preflight, but does not yet claim golden or
-> framework parity for Krea 2 and exposes no ComfyUI nodes. The complete core and profile
-> layer are dependency-free and have an enforced isolation/property test lane.
+> provides typed model/profile/sampler capability preflight and complete independent
+> 4/8/12/16-step Turbo golden vectors, but does not yet claim framework or native-ComfyUI
+> parity and exposes no ComfyUI nodes. The complete core and profile layer are dependency-free
+> and have enforced isolation/property/golden test lanes.
 
 ## Why Sigmax
 
@@ -170,14 +171,22 @@ The profile declares unit-flow external schedule ownership, the Krea reciprocal-
 fixed exponential `mu = 1.15`, terminal zero, deterministic ComfyUI Euler capabilities,
 Krea-guidance `0.0` / ComfyUI-CFG `1.0`, and ceil-to-16 dimensions. Its references are pinned
 to immutable Krea, Diffusers, and ComfyUI revisions. Non-eight-step construction is allowed
-only as an explicitly `modified` result. This is structural/formula implementation evidence;
-golden-vector and framework parity are the next validation stage.
+only as an explicitly `modified` result.
+
+The committed `tests/golden/krea2_turbo_v1.json` fixture freezes complete terminal-inclusive
+4-, 8-, 12-, and 16-step float64 and IEEE-754 float32 vectors. A standard-library-only
+high-precision Decimal generator imports no Sigmax, ComfyUI, Diffusers, NumPy, or PyTorch
+code; regeneration must match the canonical fixture byte for byte. The eight-step vector also
+passes a separate implementation of Krea's official direct expression. This is independent
+golden/formula evidence, while Krea/Diffusers execution and native ComfyUI parity remain later
+validation stages.
 
 The canonical gate runs `scripts/check_core_independence.py` before pytest. It requires a
 clean dev environment, launches Python isolated mode, blocks `comfy` and `diffusers`, and
 imports every core and profile module. Static import-boundary and deterministic
-property/metamorphic tests provide complementary evidence. These checks prove framework
-independence; they do not claim Krea 2 official numerical parity.
+property/metamorphic/golden tests provide complementary evidence. These checks prove
+framework independence and detect Turbo formula drift; they do not claim Krea/Diffusers or
+native ComfyUI execution parity.
 
 ## Development Setup
 

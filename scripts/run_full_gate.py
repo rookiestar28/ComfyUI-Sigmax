@@ -31,9 +31,11 @@ LANE_STATUS: Final = {
     "browser_e2e": "NOT_APPLICABLE",
     "comfyui_host_e2e": "NOT_IMPLEMENTED",
     "core_independence": "IMPLEMENTED",
-    "golden_parity": "NOT_IMPLEMENTED",
+    "framework_parity": "NOT_IMPLEMENTED",
+    "golden": "IMPLEMENTED",
     "gpu_model_weights": "NOT_IMPLEMENTED",
     "mutation": "NOT_IMPLEMENTED",
+    "native_comfyui_parity": "NOT_IMPLEMENTED",
     "property": "IMPLEMENTED",
 }
 

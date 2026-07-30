@@ -60,7 +60,7 @@ scripts/
 
 tests/
   numerical, artifact, capability, property, import, package, quality, CI,
-  and documentation contracts
+  documentation contracts, and independent Turbo golden vectors
 ```
 
 The package exports empty ComfyUI node mappings. Importing it does not register schedulers,
@@ -152,6 +152,14 @@ ComfyUI Euler capabilities, guidance conventions, and ceil-to-16 dimensions. Its
 composes existing pure-core primitives and records dimension changes and non-reference step
 counts explicitly. It does not inspect ComfyUI, choose a checkpoint variant, execute a
 sampler, or claim numerical parity; those remain later layers and validation items.
+
+The first model golden lane stores complete 4/8/12/16-step vectors separately from product
+code. Its generator uses precision-80 `Decimal` evaluation of an algebraically simplified
+official formula, rounds once to binary64, and explicitly quantizes binary32 with `struct`.
+The generator cannot import Sigmax or optional frameworks. An additional eight-step
+official-direct binary64 calculation cross-checks the fixture, while production uses the
+stable log-odds implementation. Golden formula evidence remains distinct from framework and
+host execution parity.
 
 ## Planned Layered Design
 

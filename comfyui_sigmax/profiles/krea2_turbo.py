@@ -151,21 +151,21 @@ _KREA_REFERENCE: Final = EvidenceReference(
     source_id="krea.krea2.official",
     evidence=EvidenceLevel.OFFICIAL,
     url="https://github.com/krea-ai/krea-2",
-    revision="db3984fbc6e13b34c0064990fc2d95ac64d00058",
+    revision="db3984fbc6e13b34c0064990fc2d95ac64d00058",  # pragma: allowlist secret
     locators=("README.md", "inference.py", "sampling.py"),
 )
 _DIFFUSERS_REFERENCE: Final = EvidenceReference(
     source_id="diffusers.krea2.framework",
     evidence=EvidenceLevel.FRAMEWORK_REFERENCE,
     url="https://github.com/huggingface/diffusers",
-    revision="3c468926ffd12b69baa4316e27b09306b8da19a6",
+    revision="3c468926ffd12b69baa4316e27b09306b8da19a6",  # pragma: allowlist secret
     locators=("src/diffusers/pipelines/krea2/pipeline_krea2.py",),
 )
 _COMFYUI_REFERENCE: Final = EvidenceReference(
     source_id="comfyui.krea2.framework",
     evidence=EvidenceLevel.FRAMEWORK_REFERENCE,
     url="https://github.com/Comfy-Org/ComfyUI",
-    revision="e651b7bef55a5376343dcb1c0edb79f0142c985e",
+    revision="e651b7bef55a5376343dcb1c0edb79f0142c985e",  # pragma: allowlist secret
     locators=(
         "comfy/k_diffusion/sampling.py",
         "comfy/model_sampling.py",
@@ -200,7 +200,7 @@ _PROFILE_CAPABILITIES: Final = ProfileCapabilities(
 )
 _REFERENCE_SAMPLER_CAPABILITIES: Final = SamplerCapabilities(
     sampler_id="comfy.euler",
-    sampler_version="e651b7bef55a5376343dcb1c0edb79f0142c985e",
+    sampler_version="e651b7bef55a5376343dcb1c0edb79f0142c985e",  # pragma: allowlist secret
     accepted_prediction_types=(PredictionType.FLOW_VELOCITY,),
     accepted_sigma_domains=(SigmaDomain.UNIT_FLOW,),
     accepted_ownerships=(ScheduleOwnership.EXTERNAL_SIGMAS,),

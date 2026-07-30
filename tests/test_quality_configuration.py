@@ -121,14 +121,17 @@ class QualityConfigurationTests(unittest.TestCase):
             test_sop,
         )
         self.assertIn(
-            "The ComfyUI host fixture, model golden/parity suites, and product nodes do not yet",
+            "The ComfyUI host fixture, framework/host parity",
             test_sop,
         )
+        self.assertIn("suites, RAW goldens, and product nodes do not yet exist", test_sop)
         self.assertIn("core-independence", test_sop)
+        self.assertIn("Krea 2 Turbo golden", test_sop)
 
         ci_matrix = (REPOSITORY_ROOT / "tests" / "CI_TEST_MATRIX.md").read_text(encoding="utf-8")
         self.assertIn("| Pure-core tests | Implemented", ci_matrix)
         self.assertIn("| Deterministic property tests | Implemented", ci_matrix)
+        self.assertIn("| Krea 2 Turbo golden vectors | Implemented", ci_matrix)
 
 
 if __name__ == "__main__":

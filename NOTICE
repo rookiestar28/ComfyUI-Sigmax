@@ -1,0 +1,20 @@
+ComfyUI-Sigmax
+
+This project is derived from and currently contains a transitional, audited import from:
+
+    ComfyUI-EulerDiscreteScheduler
+    Copyright (c) 2025 erosDiffusion
+    Licensed under the MIT License
+
+Audited source snapshot:
+
+    https://github.com/econotintas/ComfyUI-EulerDiscreteScheduler.git
+    revision 01d02765735d042ae6c3d0b5d031b826a22ad0f8
+
+Historical source and attribution repository:
+
+    https://github.com/erosDiffusion/ComfyUI-EulerDiscreteScheduler
+
+The complete MIT license text is preserved in LICENSE.TXT. The imported source is retained as
+a migration baseline and is not represented as Krea 2-aware, production-ready, or endorsed by
+the original author.

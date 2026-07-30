@@ -1,0 +1,62 @@
+{
+  "artifact": {
+    "construction_fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    "construction_schema": "sigmax.schedule-artifact/1",
+    "numerical_fingerprint": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+    "receipt_schema": "sigmax.execution-receipt-envelope/1"
+  },
+  "compatibility": {
+    "considered": [
+      "model_identity",
+      "prediction_type",
+      "sigma_domain",
+      "schedule_ownership",
+      "terminal_sigma",
+      "execution_behavior",
+      "noise_ownership",
+      "sampler_state",
+      "partial_denoise",
+      "per_token_timesteps",
+      "reference_sampler"
+    ],
+    "level": "allow",
+    "reasons": [
+      "compatible"
+    ]
+  },
+  "profile": {
+    "id": "krea2.turbo.official",
+    "version": "1"
+  },
+  "receipts": [
+    {
+      "construction_fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "numerical_fingerprint": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "receipt_fingerprint": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+      "schema": "sigmax.execution-receipt-envelope/1",
+      "status": "succeeded"
+    }
+  ],
+  "requirements": {
+    "host": {
+      "api_version": "legacy_v1",
+      "id": "comfyui",
+      "version": "0.29.0"
+    },
+    "nodes": [
+      {
+        "id": "Sigmax.Krea2SigmaScheduler",
+        "version": "1"
+      },
+      {
+        "id": "Sigmax.ScheduleInspector",
+        "version": "1"
+      }
+    ],
+    "package": {
+      "id": "comfyui-sigmax",
+      "version": "0.1.0.dev0"
+    }
+  },
+  "schema": "sigmax.workflow-metadata/1"
+}

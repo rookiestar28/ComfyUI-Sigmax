@@ -19,6 +19,7 @@ PUBLIC_DOCUMENTS = (
     ROOT / "docs" / "PROFILE_SPEC.md",
     ROOT / "docs" / "SCHEDULE_ARTIFACT_SPEC.md",
     ROOT / "docs" / "EXECUTION_RECEIPT_SPEC.md",
+    ROOT / "docs" / "WORKFLOW_METADATA_SPEC.md",
     ROOT / "docs" / "COMPATIBILITY.md",
 )
 
@@ -68,6 +69,19 @@ def test_public_documentation_exposes_receipt_and_bundle_boundary() -> None:
     )
     assert "does not yet execute" in receipt_spec
     assert "not yet validated" in compatibility
+
+
+def test_public_documentation_exposes_workflow_metadata_boundary() -> None:
+    readme = _read(ROOT / "README.md")
+    workflow_spec = _read(ROOT / "docs" / "WORKFLOW_METADATA_SPEC.md")
+    architecture = _read(ROOT / "docs" / "ARCHITECTURE.md")
+
+    assert "attach_workflow_metadata" in readme
+    assert "sigmax.workflow-metadata/1" in workflow_spec
+    assert "extra.comfyui_sigmax" in workflow_spec
+    assert all(version in workflow_spec for version in ("0.4", "version `1`"))
+    assert "does not validate" in workflow_spec
+    assert "workflow_metadata.py" in architecture
 
 
 def test_public_documentation_exposes_capability_preflight_contract() -> None:

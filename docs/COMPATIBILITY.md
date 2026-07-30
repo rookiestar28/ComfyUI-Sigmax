@@ -41,6 +41,11 @@ ownership, compatibility, and fingerprints, but do not execute ComfyUI or a samp
 receipts are contract/serialization evidence only; real-host receipt production is not yet
 validated.
 
+Workflow metadata supports static copy-on-write attachment to official ComfyUI workflow forms
+`0.4` and `1`. It preserves unrelated graph and `extra` data and verifies the embedded Sigmax
+metadata envelope, but deliberately does not validate node/link/widget compatibility or claim
+that the workflow loads in a running host.
+
 ## Validated Foundation Environments
 
 The current package, quality gates, tests, and wheel inventory have been validated locally on:

@@ -85,6 +85,18 @@ from comfyui_sigmax.core.terminal_slicing import (
     slice_step_range,
 )
 from comfyui_sigmax.core.validation import validate_sigma_schedule
+from comfyui_sigmax.core.workflow_metadata import (
+    WorkflowArtifactReference,
+    WorkflowHostRequirement,
+    WorkflowMetadata,
+    WorkflowReceiptReference,
+    WorkflowRequirement,
+    attach_workflow_metadata,
+    deserialize_workflow_metadata,
+    detach_workflow_metadata,
+    extract_workflow_metadata,
+    serialize_workflow_metadata,
+)
 
 __all__ = [
     "ArtifactBuildMetadata",
@@ -127,7 +139,13 @@ __all__ = [
     "TransformContract",
     "TransformStage",
     "TypedArtifactValue",
+    "WorkflowArtifactReference",
+    "WorkflowHostRequirement",
+    "WorkflowMetadata",
+    "WorkflowReceiptReference",
+    "WorkflowRequirement",
     "apply_terminal_policy",
+    "attach_workflow_metadata",
     "build_execution_receipt",
     "build_numerical_projection",
     "build_schedule_artifact",
@@ -137,9 +155,12 @@ __all__ = [
     "deserialize_execution_receipt",
     "deserialize_portable_execution_bundle",
     "deserialize_schedule_artifact",
+    "deserialize_workflow_metadata",
+    "detach_workflow_metadata",
     "direct_ratio_shift",
     "evaluate_compatibility",
     "exponential_mu_shift",
+    "extract_workflow_metadata",
     "float_to_ieee_hex",
     "krea_reciprocal_step_grid",
     "linear_endpoint_grid",
@@ -150,6 +171,7 @@ __all__ = [
     "serialize_execution_receipt",
     "serialize_portable_execution_bundle",
     "serialize_schedule_artifact",
+    "serialize_workflow_metadata",
     "slice_denoise_tail",
     "slice_step_range",
     "validate_sigma_schedule",

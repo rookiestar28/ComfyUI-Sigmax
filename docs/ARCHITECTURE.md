@@ -48,6 +48,8 @@ comfyui_sigmax/
                 immutable artifact assembly and strict canonical JSON transport
     execution_receipts.py
                 execution evidence and portable artifact/receipt bundle transport
+    workflow_metadata.py
+                portable workflow requirements and non-destructive graph attachment
     capabilities.py
                 model/profile/sampler declarations and execution preflight decisions
   profiles/
@@ -132,6 +134,13 @@ model-evaluation counts, and one truthful final status. `PortableExecutionBundle
 unchanged schedule-artifact envelope beside the receipt envelope and verifies their fingerprints
 and effective-input cross-links. Neither contract runs a sampler or infers success from
 construction or static capability evidence.
+
+Workflow metadata is a third reference layer. Its canonical projection records package, node,
+host/API, profile, compatibility, artifact, and receipt requirements, while the surrounding
+ComfyUI graph remains host-owned passthrough data. Attachment changes only the namespaced
+`extra.comfyui_sigmax` member of supported version `0.4` and version `1` mappings. It does not
+convert or validate nodes, links, widgets, models, or subgraphs; static/live graph validation
+belongs to a later host-validation boundary.
 
 The first numerical builders are now implemented:
 

@@ -33,6 +33,8 @@ tracked independently from the frozen profile-schema version.
 - Immutable execution receipts and portable artifact/receipt bundles with explicit status,
   host/model/sampler identities, RNG ownership, transition/model-evaluation counts, strict
   canonical transport, and construction/numerical cross-link verification.
+- Versioned workflow metadata with package/node/host requirements, profile and compatibility
+  evidence, artifact/receipt references, and non-destructive ComfyUI 0.4/1 graph attachment.
 - Immutable model, profile, sampler, and execution-feature capability declarations with
   canonical allow/warn/reject decisions, stable reason codes, and a fail-before-execution
   compatibility gate.

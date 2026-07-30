@@ -73,6 +73,7 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "core" / "shifts.py").is_file())
         self.assertTrue((package_path / "core" / "terminal_slicing.py").is_file())
         self.assertTrue((package_path / "core" / "validation.py").is_file())
+        self.assertTrue((package_path / "core" / "workflow_metadata.py").is_file())
         self.assertTrue((package_path / "profiles" / "__init__.py").is_file())
         self.assertTrue((package_path / "profiles" / "krea2_common.py").is_file())
         self.assertTrue((package_path / "profiles" / "krea2_raw.py").is_file())

@@ -174,6 +174,27 @@ requires complete counts and a non-rejected compatibility decision; failure/inte
 stable reason codes. The current package does not execute a sampler and does not expose a node
 that can manually assert success.
 
+Portable workflow metadata records exact package, node, host/API, profile, compatibility,
+artifact, and receipt requirements without embedding complete artifacts, receipts, prompts, or
+machine-local data:
+
+```python
+from comfyui_sigmax.core import (
+    attach_workflow_metadata,
+    extract_workflow_metadata,
+)
+
+saved_workflow = attach_workflow_metadata(workflow, metadata)
+restored_metadata = extract_workflow_metadata(saved_workflow)
+assert restored_metadata == metadata
+```
+
+Metadata uses the versioned `sigmax.workflow-metadata/1` contract under the
+`extra.comfyui_sigmax` namespace. Attachment supports ComfyUI workflow versions `0.4` and `1`,
+preserves nodes, links, widgets, subgraphs, positions, and unrelated `extra` members, and rejects
+conflicting or malformed existing metadata. It does not validate the surrounding graph or claim
+live-host compatibility.
+
 Model, profile, sampler, and requested execution features also have immutable capability
 contracts:
 
@@ -534,6 +555,7 @@ and planned host/model support.
 - [Model profile schema v1 specification](docs/PROFILE_SPEC.md)
 - [Schedule artifact specification](docs/SCHEDULE_ARTIFACT_SPEC.md)
 - [Execution receipt and portable bundle specification](docs/EXECUTION_RECEIPT_SPEC.md)
+- [Workflow metadata specification](docs/WORKFLOW_METADATA_SPEC.md)
 - [Compatibility](docs/COMPATIBILITY.md)
 - [Contributing](CONTRIBUTING.md)
 - [Changelog](CHANGELOG.md)

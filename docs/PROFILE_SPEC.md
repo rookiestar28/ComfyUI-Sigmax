@@ -285,8 +285,10 @@ The immutable `krea2.turbo.official` profile version `1` is bound to
 request/result contracts. Dimension alignment is recorded as requested-to-effective
 overrides. A non-eight-step request preserves the formula but changes evidence to `modified`
 and emits a warning. The profile is a structural official-recipe implementation; fixed
-golden vectors and authoritative Krea/Diffusers numerical parity are now enforced. Real
-ComfyUI host and sampler execution remain required before a native-host product claim.
+golden vectors and authoritative Krea/Diffusers numerical parity are now enforced. Pinned-host
+controlled deterministic Euler execution is validated separately through complete latent
+traces and a truthful success receipt. Real Krea checkpoint/GPU/image execution and deferred
+sampler product semantics remain required before a native-host product claim.
 
 ## Krea 2 RAW Profile and Geometry Derivation
 
@@ -316,7 +318,9 @@ accept arbitrary steps: it requires either the named 28-step framework recipe or
 52-step official-full recipe. Complete independent float64/float32 goldens cover five square
 plus landscape/portrait geometry cases. A separate pinned parity report executes the Krea
 formula and Diffusers 0.39.0 dynamic-shift/scheduler paths for the same 14 complete cases.
-Native ComfyUI, host, sampler-step, checkpoint, and image evidence remain separate.
+Native ComfyUI schedule/host and controlled deterministic-Euler evidence remain separate from
+RAW checkpoint, GPU, image, stochastic, resumable, partial-denoise-execution, and
+advanced-workflow evidence.
 
 ## Matching and Variant Resolution
 

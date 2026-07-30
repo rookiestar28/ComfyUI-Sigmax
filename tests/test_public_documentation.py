@@ -67,7 +67,9 @@ def test_public_documentation_exposes_receipt_and_bundle_boundary() -> None:
     assert all(
         status in receipt_spec for status in ("not_executed", "succeeded", "failed", "interrupted")
     )
-    assert "does not yet execute" in receipt_spec
+    assert "contracts do not execute a" in receipt_spec
+    assert "M5-01 H3 harness is the first validated real-host producer" in receipt_spec
+    assert "does not let normal workflows self-assert success" in receipt_spec
     assert "not yet validated" in compatibility
 
 

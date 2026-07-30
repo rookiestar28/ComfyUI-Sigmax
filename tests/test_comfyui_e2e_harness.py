@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import copy
 import importlib.util
+import json
 from pathlib import Path
 from types import ModuleType
 from typing import Any, cast
 
 import pytest
+from comfyui_sigmax.adapters.registration import builtin_node_registry
 from comfyui_sigmax.core import ScheduleContractError
 from comfyui_sigmax.nodes.inspectors import build_schedule_inspection
 from comfyui_sigmax.nodes.krea2_sigma_scheduler import build_krea2_sigma_schedule
@@ -16,6 +19,8 @@ from comfyui_sigmax.nodes.turbo_workflow_output import build_turbo_workflow_outp
 
 ROOT = Path(__file__).resolve().parents[1]
 HARNESS_PATH = ROOT / "scripts" / "run_comfyui_e2e.py"
+H3_TEST_PACK = ROOT / "tests" / "fixtures" / "comfyui_h3_nodes" / "__init__.py"
+NATIVE_EULER_FIXTURE = ROOT / "tests" / "parity" / "fixtures" / "krea2_native_euler_parity_v1.json"
 
 
 def _harness() -> ModuleType:
@@ -75,6 +80,14 @@ def _raw_bundle_json(
     ).bundle_json
 
 
+def _native_euler_case() -> dict[str, Any]:
+    report = cast(
+        dict[str, Any],
+        json.loads(NATIVE_EULER_FIXTURE.read_text(encoding="utf-8")),
+    )
+    return cast(dict[str, Any], report["case"])
+
+
 def test_api_prompt_executes_scheduler_inspector_and_output_chain() -> None:
     prompt = _harness().build_turbo_api_prompt()
 
@@ -107,6 +120,282 @@ def test_api_prompt_executes_scheduler_inspector_and_output_chain() -> None:
             },
         },
     }
+
+
+def test_h3_prompt_connects_one_schedule_to_native_probe_and_artifact_output() -> None:
+    prompt = _harness().build_native_euler_h3_api_prompt()
+
+    assert prompt == {
+        "1": {
+            "class_type": "Sigmax.Krea2SigmaScheduler",
+            "inputs": {
+                "variant": "Turbo",
+                "steps": 8,
+                "width": 1024,
+                "height": 1024,
+                "strict_official": True,
+                "start_step": 0,
+                "end_step": -1,
+            },
+        },
+        "2": {
+            "class_type": "Sigmax.ScheduleInspector",
+            "inputs": {
+                "sigmas": ["1", 0],
+                "schedule_info": ["1", 1],
+            },
+        },
+        "3": {
+            "class_type": "Sigmax.TurboWorkflowOutput",
+            "inputs": {
+                "sigmas": ["1", 0],
+                "schedule_info": ["1", 1],
+                "schedule_report": ["2", 0],
+            },
+        },
+        "4": {
+            "class_type": "SigmaxTest.NativeEulerProbe",
+            "inputs": {
+                "sigmas": ["1", 0],
+                "schedule_info": ["1", 1],
+            },
+        },
+    }
+
+
+def test_h3_partial_schedule_prompt_targets_explicit_runtime_rejection() -> None:
+    prompt = _harness().build_native_euler_h3_partial_rejection_prompt()
+
+    assert prompt == {
+        "1": {
+            "class_type": "Sigmax.Krea2SigmaScheduler",
+            "inputs": {
+                "variant": "Turbo",
+                "steps": 8,
+                "width": 1024,
+                "height": 1024,
+                "strict_official": True,
+                "start_step": 1,
+                "end_step": -1,
+            },
+        },
+        "4": {
+            "class_type": "SigmaxTest.NativeEulerProbe",
+            "inputs": {
+                "sigmas": ["1", 0],
+                "schedule_info": ["1", 1],
+            },
+        },
+    }
+
+
+def test_h3_test_pack_is_namespaced_staged_only_and_not_public(
+    tmp_path: Path,
+) -> None:
+    harness = _harness()
+    run_path = tmp_path / "owned-run"
+    (run_path / "base" / "custom_nodes").mkdir(parents=True)
+
+    staged = harness._stage_h3_test_pack(run_path)
+
+    assert H3_TEST_PACK.is_file()
+    assert staged == (run_path / "base" / "custom_nodes" / "ComfyUI-Sigmax-H3" / "__init__.py")
+    assert staged.read_bytes() == H3_TEST_PACK.read_bytes()
+    assert "SigmaxTest.NativeEulerProbe" not in builtin_node_registry().class_mappings()
+
+
+def _native_euler_h3_history(*, case: dict[str, Any] | None = None) -> dict[str, Any]:
+    complete = case or _native_euler_case()
+    trace = {
+        field: complete[field]
+        for field in (
+            "counts",
+            "deterministic_rerun",
+            "initial_state",
+            "native_final",
+            "native_steps",
+            "rerun_final",
+            "sigmas",
+            "steps",
+        )
+    }
+    return {
+        "prompt-h3": {
+            "prompt": [
+                0,
+                "prompt-h3",
+                _harness().build_native_euler_h3_api_prompt(),
+                {},
+                ["3", "4"],
+                {},
+            ],
+            "outputs": {
+                "3": {"sigmax_execution_bundle": [_bundle_json()]},
+                "4": {
+                    "sigmax_native_euler_trace": [
+                        json.dumps(
+                            trace,
+                            allow_nan=False,
+                            ensure_ascii=False,
+                            separators=(",", ":"),
+                            sort_keys=True,
+                        )
+                    ]
+                },
+            },
+            "status": {
+                "completed": True,
+                "status_str": "success",
+                "messages": [],
+            },
+        }
+    }
+
+
+def test_h3_history_builds_success_receipt_only_after_complete_native_trace() -> None:
+    summary = _harness().verify_native_euler_h3_history(
+        _native_euler_h3_history(),
+        prompt_id="prompt-h3",
+    )
+
+    assert summary["status"] == "succeeded"
+    assert summary["sampler_id"] == "comfy.euler"
+    assert summary["counts"] == {
+        "effective_model_evaluations": 8,
+        "effective_transitions": 8,
+        "requested_model_evaluations": 8,
+        "requested_transitions": 8,
+    }
+    assert summary["native_step_count"] == 8
+    assert summary["deterministic_rerun"] is True
+    assert summary["final_state"] == _native_euler_case()["native_final"]
+    assert summary["shift_count"] == 1
+    assert summary["schedule_ownership"] == "external_sigmas"
+    assert summary["noise_ownership"] == {
+        "model": "none",
+        "sampler": "none",
+        "schedule": "none",
+    }
+    assert summary["unsupported_features"] == [
+        "advanced_workflows",
+        "partial_denoise_execution",
+        "resume",
+        "stochastic_euler",
+    ]
+    receipt = cast(dict[str, Any], summary["receipt"])
+    assert receipt["execution"] == {"reason_code": None, "status": "succeeded"}
+    assert receipt["counts"] == summary["counts"]
+    assert receipt["artifact"]["numerical_fingerprint"] == (
+        "sha256:24984ad4412a3c47103a52cfe3af16bb9df8789f98401d9fc281b3f6ca0892ac"
+    )
+
+
+def test_h3_partial_schedule_is_terminal_rejection_without_receipt() -> None:
+    prompt = _harness().build_native_euler_h3_partial_rejection_prompt()
+    history = {
+        "prompt-h3-partial": {
+            "prompt": [0, "prompt-h3-partial", prompt, {}, ["4"]],
+            "outputs": {},
+            "status": {
+                "completed": False,
+                "status_str": "error",
+                "messages": [
+                    [
+                        "execution_start",
+                        {"prompt_id": "prompt-h3-partial", "timestamp": 0},
+                    ],
+                    [
+                        "execution_cached",
+                        {
+                            "nodes": [],
+                            "prompt_id": "prompt-h3-partial",
+                            "timestamp": 0,
+                        },
+                    ],
+                    [
+                        "execution_error",
+                        {
+                            "prompt_id": "prompt-h3-partial",
+                            "node_id": "4",
+                            "node_type": "SigmaxTest.NativeEulerProbe",
+                            "executed": ["1"],
+                            "exception_message": (
+                                "H3 sigmas must be one float32 eight-transition schedule\n"
+                            ),
+                            "exception_type": "ValueError",
+                            "traceback": ["bounded"],
+                            "current_inputs": {},
+                            "current_outputs": ["4"],
+                            "timestamp": 1,
+                        },
+                    ],
+                ],
+            },
+        }
+    }
+
+    assert _harness().verify_native_euler_h3_partial_rejection(
+        history,
+        prompt_id="prompt-h3-partial",
+    ) == {
+        "case_id": "partial_denoise_execution",
+        "exception_type": "ValueError",
+        "node_id": "4",
+        "partial_output": False,
+        "receipt_created": False,
+        "status": "error",
+    }
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    (
+        "incomplete",
+        "stale_prompt",
+        "missing_artifact",
+        "missing_trace",
+        "short_trace",
+        "wrong_count",
+        "wrong_output",
+        "nondeterministic",
+    ),
+)
+def test_h3_history_rejects_partial_stale_or_tampered_execution(
+    mutation: str,
+) -> None:
+    history = _native_euler_h3_history(case=copy.deepcopy(_native_euler_case()))
+    entry = cast(dict[str, Any], history["prompt-h3"])
+    if mutation == "incomplete":
+        cast(dict[str, Any], entry["status"])["completed"] = False
+    elif mutation == "stale_prompt":
+        cast(list[Any], entry["prompt"])[2] = {}
+    elif mutation == "missing_artifact":
+        cast(dict[str, Any], entry["outputs"]).pop("3")
+    elif mutation == "missing_trace":
+        cast(dict[str, Any], entry["outputs"]).pop("4")
+    else:
+        outputs = cast(dict[str, Any], entry["outputs"])
+        trace_text = cast(
+            list[str], cast(dict[str, Any], outputs["4"])["sigmax_native_euler_trace"]
+        )[0]
+        trace = cast(dict[str, Any], json.loads(trace_text))
+        if mutation == "short_trace":
+            cast(list[Any], trace["native_steps"]).pop()
+        elif mutation == "wrong_count":
+            cast(dict[str, Any], trace["counts"])["effective_transitions"] = 7
+        elif mutation == "wrong_output":
+            cast(list[Any], cast(list[Any], trace["native_steps"])[3]["output_state"])[0] = 99
+        else:
+            trace["deterministic_rerun"] = False
+        cast(dict[str, Any], outputs["4"])["sigmax_native_euler_trace"] = [
+            json.dumps(trace, separators=(",", ":"), sort_keys=True)
+        ]
+
+    with pytest.raises(ScheduleContractError):
+        _harness().verify_native_euler_h3_history(
+            history,
+            prompt_id="prompt-h3",
+        )
 
 
 @pytest.mark.parametrize(

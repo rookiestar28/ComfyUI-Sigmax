@@ -124,7 +124,7 @@ narrow boundary:
 It returns an untrusted JSON object for normal validation. It does not load ComfyUI modules,
 execute node code, start a host, or establish H1/H2 real-host evidence.
 
-## Real-Host H1/H2 Boundary
+## Real-Host H1/H2 and Native-Euler H3 Boundary
 
 `scripts/run_comfyui_e2e.py` owns the separate real-host lane for ComfyUI `0.29.0` revision
 `e651b7bef55a5376343dcb1c0edb79f0142c985e`.
@@ -152,6 +152,13 @@ rejection without a prompt ID or partial output. Host traffic is bounded credent
 literal `127.0.0.1`, process state is isolated, and successful runs remove their owned temporary
 state after shutdown and port-release verification.
 
+The activated M5-01 H3 lane connects the same accepted Turbo schedule to a namespaced,
+release-excluded controlled-flow test node. That node invokes the pinned host's actual native
+Euler implementation twice on CPU float32 data. The driver requires all eight step inputs,
+velocities, denoised values, outputs, sigma pairs, transitions, and model evaluations to match an
+independent flow-Euler oracle; then it builds an artifact-linked `succeeded` receipt. H3 leaves
+the production eight-node registry and H2 `not_executed` receipts unchanged.
+
 ## Package Identity and Normalized Directories
 
 Physical custom-node directory names are not workflow identities. A canonical Sigmax node must
@@ -167,6 +174,8 @@ Renamed or version-normalized install directories must not leak into these publi
 ## Current Limitation
 
 H1/H2 executes model-free schedule construction, inspection, publication, and metadata reload.
-It does not load model weights, execute Euler/model evaluations, produce a successful sampler
-receipt, use a GPU, or generate/compare images. Evidence applies only to the exact pinned host
-revision; static and live schema reports remain insufficient substitutes for H1/H2.
+H3 additionally validates controlled deterministic native-Euler execution and a successful
+sampler receipt. No lane loads Krea model weights, uses a GPU, generates/compares images, or
+validates stochastic, resumable, partial-denoise-execution, or advanced-workflow behavior.
+Evidence applies only to the exact pinned host revision; static and live schema reports remain
+insufficient substitutes for real-host H1/H2/H3.

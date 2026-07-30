@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import platform
@@ -29,10 +30,21 @@ if str(REPOSITORY_ROOT) not in sys.path:
 
 from comfyui_sigmax.adapters.registration import builtin_node_registry  # noqa: E402
 from comfyui_sigmax.core import (  # noqa: E402
+    ExecutionComponent,
+    ExecutionFeatureRequest,
+    ExecutionHost,
+    ExecutionReceiptMetadata,
+    ExecutionRngOwnership,
     ExecutionStatus,
+    NoiseOwnership,
+    PortableExecutionBundle,
     ScheduleContractError,
+    build_execution_receipt,
+    canonical_projection_bytes,
     deserialize_portable_execution_bundle,
+    evaluate_compatibility,
 )
+from comfyui_sigmax.profiles import KREA2_TURBO_SCHEMA  # noqa: E402
 from comfyui_sigmax.workflows import (  # noqa: E402
     WorkflowValidationLane,
     load_canonical_workflow_fixtures,
@@ -42,10 +54,22 @@ from comfyui_sigmax.workflows.validation import (  # noqa: E402
     CANONICAL_HOST_REVISION,
     CANONICAL_HOST_VERSION,
 )
+from scripts.parity.krea2_native_euler_report import (  # noqa: E402
+    SOURCE_BLOBS as NATIVE_EULER_SOURCE_BLOBS,
+)
+from scripts.parity.krea2_native_euler_report import (  # noqa: E402
+    build_native_euler_report,
+)
 
 _LOOPBACK: Final = "127.0.0.1"
 _OUTPUT_NODE_ID: Final = "3"
+_H3_OUTPUT_NODE_ID: Final = "4"
 _BUNDLE_KEY: Final = "sigmax_execution_bundle"
+_H3_TRACE_KEY: Final = "sigmax_native_euler_trace"
+_H3_TEST_PACK_NAME: Final = "ComfyUI-Sigmax-H3"
+_H3_TEST_PACK_SOURCE: Final = (
+    REPOSITORY_ROOT / "tests" / "fixtures" / "comfyui_h3_nodes" / "__init__.py"
+)
 _EXPECTED_NUMERICAL_FINGERPRINT: Final = (
     "sha256:24984ad4412a3c47103a52cfe3af16bb9df8789f98401d9fc281b3f6ca0892ac"
 )
@@ -135,6 +159,33 @@ def build_turbo_api_prompt() -> dict[str, object]:
                 "schedule_report": ["2", 0],
             },
         },
+    }
+
+
+def build_native_euler_h3_api_prompt() -> dict[str, object]:
+    """Return the controlled scheduler -> artifact output + native Euler H3 graph."""
+
+    prompt = build_turbo_api_prompt()
+    prompt[_H3_OUTPUT_NODE_ID] = {
+        "class_type": "SigmaxTest.NativeEulerProbe",
+        "inputs": {
+            "sigmas": ["1", 0],
+            "schedule_info": ["1", 1],
+        },
+    }
+    return prompt
+
+
+def build_native_euler_h3_partial_rejection_prompt() -> dict[str, object]:
+    """Return a partial schedule that M5-01 must reject instead of misclaiming."""
+
+    prompt = build_native_euler_h3_api_prompt()
+    scheduler = cast(dict[str, object], prompt["1"])
+    inputs = cast(dict[str, object], scheduler["inputs"])
+    inputs["start_step"] = 1
+    return {
+        "1": scheduler,
+        _H3_OUTPUT_NODE_ID: prompt[_H3_OUTPUT_NODE_ID],
     }
 
 
@@ -254,6 +305,220 @@ def verify_turbo_history(
         "schedule_ownership": ownership["schedule"],
         "shift_count": shift_count,
         "status": execution["status"],
+    }
+
+
+def _component_fingerprint(projection: Mapping[str, object]) -> str:
+    return "sha256:" + hashlib.sha256(canonical_projection_bytes(dict(projection))).hexdigest()
+
+
+def verify_native_euler_h3_history(
+    history: object,
+    *,
+    prompt_id: str,
+) -> dict[str, object]:
+    """Validate actual native Euler trace, then and only then build success evidence."""
+
+    root = _object(history, label="H3 history")
+    entry = _object(root.get(prompt_id), label="H3 prompt history entry")
+    status = _object(entry.get("status"), label="H3 prompt status")
+    if status.get("completed") is not True or status.get("status_str") != "success":
+        raise ScheduleContractError("H3 history does not prove completed success")
+    prompt_tuple = _array(entry.get("prompt"), label="H3 retained prompt tuple")
+    if len(prompt_tuple) < 3 or prompt_tuple[2] != build_native_euler_h3_api_prompt():
+        raise ScheduleContractError("H3 retained API graph is missing or stale")
+    outputs = _object(entry.get("outputs"), label="H3 prompt outputs")
+
+    artifact_output = _object(
+        outputs.get(_OUTPUT_NODE_ID),
+        label="H3 artifact output",
+    )
+    bundle_values = _array(
+        artifact_output.get(_BUNDLE_KEY),
+        label="H3 construction bundle",
+    )
+    if len(bundle_values) != 1 or not isinstance(bundle_values[0], str):
+        raise ScheduleContractError("H3 construction bundle is malformed")
+    construction_bundle = deserialize_portable_execution_bundle(bundle_values[0])
+
+    trace_output = _object(
+        outputs.get(_H3_OUTPUT_NODE_ID),
+        label="H3 native Euler output",
+    )
+    trace_values = _array(trace_output.get(_H3_TRACE_KEY), label="H3 native Euler trace")
+    if len(trace_values) != 1 or not isinstance(trace_values[0], str):
+        raise ScheduleContractError("H3 native Euler trace is malformed")
+    try:
+        trace_bytes = trace_values[0].encode("utf-8")
+    except UnicodeError as exc:
+        raise ScheduleContractError("H3 native Euler trace is not valid Unicode") from exc
+    trace = _decode_json(trace_bytes, label="H3 native Euler trace")
+    try:
+        report = build_native_euler_report(trace)
+    except (TypeError, ValueError) as exc:
+        raise ScheduleContractError("H3 native Euler trace failed parity validation") from exc
+    case = _object(report["case"], label="H3 validated Euler case")
+    counts = _object(case["counts"], label="H3 validated execution counts")
+
+    artifact = construction_bundle.artifact
+    construction = artifact.construction_projection()
+    ownership = _object(construction.get("ownership"), label="H3 artifact ownership")
+    transforms = _array(construction.get("transforms"), label="H3 artifact transforms")
+    shift_count = sum(
+        _object(item, label="H3 artifact transform").get("id") == "krea.exponential_mu"
+        for item in transforms
+    )
+    if ownership != {
+        "schedule": "external_sigmas",
+        "shift": "construction_pipeline",
+    }:
+        raise ScheduleContractError("H3 artifact ownership permits an implicit second shift")
+    if shift_count != 1:
+        raise ScheduleContractError("H3 artifact must contain exactly one time shift")
+    if artifact.numerical_fingerprint != _EXPECTED_NUMERICAL_FINGERPRINT:
+        raise ScheduleContractError("H3 artifact numerical fingerprint drifted")
+
+    compatibility = evaluate_compatibility(
+        model=KREA2_TURBO_SCHEMA.model_capabilities,
+        profile=KREA2_TURBO_SCHEMA.profile_capabilities,
+        sampler=KREA2_TURBO_SCHEMA.reference_sampler_capabilities,
+        request=ExecutionFeatureRequest(),
+    )
+    receipt = build_execution_receipt(
+        artifact,
+        metadata=ExecutionReceiptMetadata(
+            compatibility=compatibility,
+            host=ExecutionHost(
+                identifier="comfyui",
+                version=CANONICAL_HOST_VERSION,
+                revision=CANONICAL_HOST_REVISION,
+                api_version="legacy_v1",
+            ),
+            model=ExecutionComponent(
+                identifier="sigmax.controlled-flow-model",
+                version="1",
+                fingerprint=_component_fingerprint(
+                    {
+                        "biases": ["0.0625", "-0.125", "0.1875", "-0.25"],
+                        "fixture": "m5-01",
+                        "formula": "x*0.125+sigma*0.25+bias+(index+1)*0.03125",
+                    }
+                ),
+            ),
+            sampler=ExecutionComponent(
+                identifier="comfy.euler",
+                version=CANONICAL_HOST_VERSION,
+                fingerprint=_component_fingerprint(
+                    {
+                        "blobs": [
+                            {"blob": blob, "path": path}
+                            for path, blob in sorted(NATIVE_EULER_SOURCE_BLOBS.items())
+                        ],
+                        "host_revision": CANONICAL_HOST_REVISION,
+                        "function": "comfy.k_diffusion.sampling.sample_euler",
+                    }
+                ),
+            ),
+            rng_ownership=ExecutionRngOwnership(
+                schedule=NoiseOwnership.NONE,
+                model=NoiseOwnership.NONE,
+                sampler=NoiseOwnership.NONE,
+            ),
+            requested_transitions=cast(int, counts["requested_transitions"]),
+            effective_transitions=cast(int, counts["effective_transitions"]),
+            requested_model_evaluations=cast(int, counts["requested_model_evaluations"]),
+            effective_model_evaluations=cast(int, counts["effective_model_evaluations"]),
+            status=ExecutionStatus.SUCCEEDED,
+        ),
+    )
+    # Cross-link construction and success evidence without replacing the truthful H2 receipt.
+    PortableExecutionBundle(artifact=artifact, receipt=receipt)
+    return {
+        "artifact_construction_fingerprint": artifact.construction_fingerprint,
+        "artifact_numerical_fingerprint": artifact.numerical_fingerprint,
+        "counts": dict(counts),
+        "deterministic_rerun": case["deterministic_rerun"],
+        "final_state": case["native_final"],
+        "native_step_count": len(_array(case["native_steps"], label="H3 native steps")),
+        "noise_ownership": {
+            "model": "none",
+            "sampler": "none",
+            "schedule": "none",
+        },
+        "receipt": receipt.projection(),
+        "receipt_fingerprint": receipt.receipt_fingerprint,
+        "sampler_id": "comfy.euler",
+        "schedule_ownership": ownership["schedule"],
+        "shift_count": shift_count,
+        "status": "succeeded",
+        "trace_fingerprint": case["trace_fingerprint"],
+        "unsupported_features": [
+            "advanced_workflows",
+            "partial_denoise_execution",
+            "resume",
+            "stochastic_euler",
+        ],
+    }
+
+
+def verify_native_euler_h3_partial_rejection(
+    history: object,
+    *,
+    prompt_id: str,
+) -> dict[str, object]:
+    """Require partial-denoise execution to fail at the test-only H3 boundary."""
+
+    root = _object(history, label="H3 partial rejection history")
+    entry = _object(root.get(prompt_id), label="H3 partial rejection entry")
+    status = _object(entry.get("status"), label="H3 partial rejection status")
+    if status.get("completed") is not False or status.get("status_str") != "error":
+        raise ScheduleContractError("H3 partial schedule is not a terminal rejection")
+    prompt_tuple = _array(entry.get("prompt"), label="H3 partial retained prompt tuple")
+    if len(prompt_tuple) < 3 or prompt_tuple[2] != build_native_euler_h3_partial_rejection_prompt():
+        raise ScheduleContractError("H3 partial rejection retained a stale graph")
+    if _object(entry.get("outputs"), label="H3 partial outputs"):
+        raise ScheduleContractError("H3 partial rejection produced a partial output")
+    messages = _array(status.get("messages"), label="H3 partial rejection messages")
+    events = [_array(item, label="H3 partial rejection event") for item in messages]
+    if [item[0] if item else None for item in events] != [
+        "execution_start",
+        "execution_cached",
+        "execution_error",
+    ]:
+        raise ScheduleContractError("H3 partial rejection event sequence drifted")
+    cached = _object(events[1][1], label="H3 partial cached event")
+    if cached.get("prompt_id") != prompt_id or not isinstance(cached.get("nodes"), list):
+        raise ScheduleContractError("H3 partial cached evidence drifted")
+    detail = _object(events[2][1], label="H3 partial error detail")
+    if detail.get("prompt_id") != prompt_id:
+        raise ScheduleContractError("H3 partial rejection prompt identity drifted")
+    if (
+        detail.get("node_id") != _H3_OUTPUT_NODE_ID
+        or detail.get("node_type") != "SigmaxTest.NativeEulerProbe"
+    ):
+        raise ScheduleContractError("H3 partial rejection node identity drifted")
+    if (
+        detail.get("exception_type") != "ValueError"
+        or detail.get("exception_message")
+        != "H3 sigmas must be one float32 eight-transition schedule\n"
+    ):
+        raise ScheduleContractError("H3 partial rejection exception contract drifted")
+    if detail.get("executed") != ["1"]:
+        raise ScheduleContractError("H3 partial rejection executed-node evidence drifted")
+    current_outputs = detail.get("current_outputs")
+    if (
+        not isinstance(current_outputs, list)
+        or _H3_OUTPUT_NODE_ID not in current_outputs
+        or _OUTPUT_NODE_ID in current_outputs
+    ):
+        raise ScheduleContractError("H3 partial rejection output-node evidence drifted")
+    return {
+        "case_id": "partial_denoise_execution",
+        "exception_type": detail["exception_type"],
+        "node_id": detail["node_id"],
+        "partial_output": False,
+        "receipt_created": False,
+        "status": status["status_str"],
     }
 
 
@@ -712,6 +977,18 @@ def _stage_extension(run_path: Path) -> Path:
     return custom_node
 
 
+def _stage_h3_test_pack(run_path: Path) -> Path:
+    """Stage the repository-owned release-excluded H3 fixture pack."""
+
+    if not _H3_TEST_PACK_SOURCE.is_file():
+        raise ScheduleContractError("H3 test-pack source is missing")
+    target_root = run_path / "base" / "custom_nodes" / _H3_TEST_PACK_NAME
+    target_root.mkdir(parents=True)
+    target = target_root / "__init__.py"
+    shutil.copy2(_H3_TEST_PACK_SOURCE, target)
+    return target
+
+
 def _run_import_probe(
     *, host_python: Path, comfyui_root: Path, staged_node: Path
 ) -> dict[str, Any]:
@@ -1010,6 +1287,7 @@ def _host_command(
         "--disable-all-custom-nodes",
         "--whitelist-custom-nodes",
         "ComfyUI-Sigmax",
+        _H3_TEST_PACK_NAME,
     ]
 
 
@@ -1027,7 +1305,7 @@ def _write_evidence(path: Path | None, evidence: Mapping[str, object]) -> None:
 
 
 def run(args: argparse.Namespace) -> dict[str, object]:
-    """Execute one isolated H1 plus Turbo and M3-06 RAW H2 run."""
+    """Execute isolated H1, activated H2 workflows, and M5-01 H3."""
 
     started = time.time()
     comfyui_root = Path(args.comfyui_root).resolve()
@@ -1052,6 +1330,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
     for name in ("base", "input", "output", "temp", "user"):
         (run_path / name).mkdir()
     staged_node = _stage_extension(run_path)
+    _stage_h3_test_pack(run_path)
     import_probe = _run_import_probe(
         host_python=host_python,
         comfyui_root=comfyui_root,
@@ -1066,7 +1345,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
     succeeded = False
     evidence: dict[str, object] = {
         "schema": "sigmax.comfyui-host-e2e-evidence/2",
-        "lanes": ["H1", "H2_TURBO_M2_05", "H2_RAW_M3_06"],
+        "lanes": ["H1", "H2_TURBO_M2_05", "H2_RAW_M3_06", "H3_EULER_M5_01"],
         "host": {
             "id": "comfyui",
             "version": CANONICAL_HOST_VERSION,
@@ -1195,6 +1474,29 @@ def run(args: argparse.Namespace) -> dict[str, object]:
                 )
             )
             evidence["h2_raw_rejections"] = rejected_results
+
+            h3_prompt_id, h3_history = _submit_successful_prompt(
+                base_url=base_url,
+                client_id="sigmax-m5-01-native-euler",
+                prompt=build_native_euler_h3_api_prompt(),
+                execution_timeout=args.execution_timeout,
+            )
+            evidence["h3_native_euler"] = verify_native_euler_h3_history(
+                h3_history,
+                prompt_id=h3_prompt_id,
+            )
+            h3_rejected_id, h3_rejected_history = _submit_rejected_runtime_prompt(
+                base_url=base_url,
+                client_id="sigmax-m5-01-native-euler-partial-rejection",
+                prompt=build_native_euler_h3_partial_rejection_prompt(),
+                execution_timeout=args.execution_timeout,
+            )
+            evidence["h3_native_euler_rejections"] = [
+                verify_native_euler_h3_partial_rejection(
+                    h3_rejected_history,
+                    prompt_id=h3_rejected_id,
+                )
+            ]
             succeeded = True
     finally:
         if process is not None:

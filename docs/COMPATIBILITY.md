@@ -21,11 +21,15 @@ ambiguity, and returns exact-profile capability decisions under
 `sigmax.schedule-inspector/1` reports. Separate `Sigmax.RawWorkflowOutput` and
 `Sigmax.TurboWorkflowOutput` nodes publish verified model-free artifact bundles through prompt
 history. Real-host import and model-free workflow execution are validated on pinned ComfyUI
-`0.29.0` revision `e651b7bef55a5376343dcb1c0edb79f0142c985e`; RAW native model-sampling
-parity, model weights, GPU execution, sampler-step behavior, and image generation are
-**not yet validated**. Complete Turbo golden vectors, authoritative framework parity, and
-native ComfyUI schedule parity are validated at 4, 8, 12, and 16 steps. RAW authoritative
-and framework schedule parity is validated across 14 complete 28/52-step geometry cases.
+`0.29.0` revision `e651b7bef55a5376343dcb1c0edb79f0142c985e`. Controlled deterministic
+native-Euler sampler steps are validated there through complete eight-step latent traces,
+independent flow-equation recomputation, exact execution counts, deterministic reruns, and an
+artifact-linked success receipt. RAW native model execution, real Krea model weights, GPU
+execution, image generation, stochastic/resumable semantics, partial-denoise execution, and
+advanced workflows are **not yet validated**. Complete Turbo golden vectors, authoritative
+framework parity, and native ComfyUI schedule parity are validated at 4, 8, 12, and 16 steps.
+RAW authoritative and framework schedule parity is validated across 14 complete 28/52-step
+geometry cases.
 The dependency-free `ProfileSchemaV1` contract is frozen for these validated external-sigma
 profiles, including separate source/framework/weight license provenance. The immutable
 exact-key `ProfileRegistry` and explicit inheritance/conflict policy are implemented without
@@ -36,13 +40,16 @@ The package metadata declares a ComfyUI floor of `0.29.0`. Adapter fixtures and 
 review define the exact static-contract window, while the repository H1/H2 harness defines the
 real-host node/workflow E2E window at `0.29.0` revision
 `e651b7bef55a5376343dcb1c0edb79f0142c985e`; this remains narrower than the packaging
-declaration. Other revisions require separate evidence.
+declaration. The H3 deterministic-Euler proof uses the same exact host revision. Other revisions
+require separate evidence.
 
 Versioned execution receipts and portable artifact/receipt bundles are implemented as
 dependency-free pure contracts. They record explicit status, counts, component identities, RNG
 ownership, compatibility, and fingerprints. The RAW/Turbo output nodes create canonical
 `not_executed` receipts after host schedule construction and inspection. They do not claim that
-a model or sampler ran; successful sampler receipts remain unvalidated.
+a model or sampler ran. The separate M5-01 H3 lane validates a controlled native-Euler execution
+trace first and then builds a `succeeded` receipt against the unchanged Turbo artifact; that
+receipt does not upgrade the H2 workflow receipts or establish real-model execution.
 
 Workflow metadata supports copy-on-write attachment to official ComfyUI workflow forms `0.4`
 and `1`. It preserves unrelated graph and `extra` data and verifies the embedded Sigmax metadata

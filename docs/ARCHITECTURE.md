@@ -81,7 +81,7 @@ scripts/
   parity/                     independent official adapter and report contract
   run_krea2_turbo_parity.py   isolated pinned Diffusers execution
   run_krea2_raw_parity.py     isolated RAW dynamic-shift and scheduler execution
-  run_comfyui_e2e.py          isolated pinned-host H1 and model-free Turbo/RAW H2
+  run_comfyui_e2e.py          isolated pinned-host H1, Turbo/RAW H2, and native-Euler H3
   run_full_gate.py            canonical ordered acceptance gate
   OS wrappers                 repo-local environment selection
 
@@ -168,6 +168,16 @@ RAW graphs to completed history. RAW history verification cross-checks requested
 geometry, sequence length, recipe/evidence, dynamic `mu`, canonical artifact and receipt
 fingerprints, external ownership, one shift, and submitted workflow metadata reload. Its
 receipt status stays `not_executed` because no model or sampler step runs.
+
+M5-01 activates a separate H3 proof in the same owned host lifecycle. A namespaced test-only
+node pack, excluded from the wheel and production registry, invokes the pinned host's actual
+`comfy.k_diffusion.sampling.sample_euler` on a nontrivial controlled flow-velocity fixture. The
+driver validates every sigma, input, velocity, denoised value, output state, transition and
+model-evaluation count against an independent framework-free Euler oracle, requires an identical
+second run, then binds a `succeeded` receipt to the existing Turbo schedule artifact. Existing
+H2 receipts remain `not_executed`; the H3 proof does not add a duplicate public sampler or imply
+model-weight, GPU, image, stochastic, resumable, partial-denoise-execution, or advanced-workflow
+support.
 
 The first numerical builders are now implemented:
 

@@ -177,8 +177,8 @@ The scripts must:
 4. expose ComfyUI-Sigmax without modifying the user's normal custom-node installation;
 5. start ComfyUI on loopback with a unique port;
 6. poll a bounded readiness endpoint while also watching for early process exit;
-7. run H1 and the implemented M2-05 Turbo plus M3-06 RAW H2 lanes; run later lanes only after
-   activation;
+7. run H1, the implemented M2-05 Turbo plus M3-06 RAW H2 lanes, and the activated M5-01
+   deterministic native-Euler H3 lane; run other later lanes only after activation;
 8. collect redacted logs and results;
 9. request graceful shutdown when supported, wait a bounded interval, then terminate the
    verified process tree if required;

@@ -247,6 +247,15 @@ length, dynamic `mu`, artifact and receipt cross-links, numerical fingerprint, e
 ownership, and exactly one time shift. The receipt remains truthfully `not_executed`: the host
 ran schedule construction and inspection, not a model or sampler step.
 
+The activated M5-01 H3 lane separately stages a release-excluded
+`SigmaxTest.NativeEulerProbe`. It connects the same official eight-step Turbo schedule to the
+pinned host's actual `comfy.euler`, records all eight nontrivial CPU float32 latent transitions
+and model evaluations, independently recomputes the official flow Euler equation, repeats the
+run deterministically, verifies terminal-zero and single-shift ownership, and only then creates
+a `succeeded` receipt linked to the unchanged schedule artifact. This is controlled model-free
+sampler-step evidence, not a Krea checkpoint, GPU, image-quality, stochastic, resume,
+partial-denoise-execution, or advanced-workflow claim.
+
 Model, profile, sampler, and requested execution features also have immutable capability
 contracts:
 

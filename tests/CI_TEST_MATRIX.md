@@ -79,7 +79,7 @@ unreviewed version numbers.
 | `golden` | Yes | Yes | Yes | Ubuntu + representative Windows | Full vectors + fingerprints |
 | `parity-pinned` | When Tier 1 affected | Yes | Yes | Isolated pinned optional env | Max/mean error artifact |
 | `adapter-contract` | When adapter affected | Yes | Yes | Ubuntu + Windows representative | Schema/registration report |
-| `host-known-good` | When host affected | Yes | Yes | Pinned ComfyUI CPU host | Redacted host log + H1/H2 JUnit |
+| `host-known-good` | When host affected | Yes | Yes | Pinned ComfyUI CPU host | Redacted host log + applicable H1/H2/H3 evidence |
 | `host-latest` | No | No | Yes/manual | Latest reviewed ComfyUI | Compatibility report |
 | `package` | Yes | Yes | Yes | Supported Python matrix | Package inventory + clean install |
 | `mutation-property` | No | No | Yes/manual | Pure-core environment | Survivors + reproducible seeds |

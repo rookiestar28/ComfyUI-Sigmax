@@ -62,6 +62,11 @@ tracked independently from the frozen profile-schema version.
   with exact source/dependency checks, complete 4/8/12/16-step vectors, explicit integer-table
   quantization policy, fail-closed canonical evidence, and a separate hosted regeneration
   lane.
+- Pinned native-ComfyUI deterministic Euler parity with complete eight-step latent traces,
+  independent flow-equation recomputation, exact transition/model-evaluation counts,
+  deterministic reruns, fail-closed source/dependency checks, a release-excluded real-host H3
+  probe, single-shift/external-sigma verification, and artifact-linked `succeeded` execution
+  receipts.
 - Immutable `krea2.raw.official` structural profile with resolution-linear exponential-shift
   endpoints, upstream-unclamped extrapolation, ceil-to-16 dimensions, deterministic Euler
   capabilities, and separate `krea2.raw.official-full-52` and
@@ -135,6 +140,8 @@ tracked independently from the frozen profile-schema version.
 
 - No cross-family generic profile fallback or sampler is implemented.
 - Real ComfyUI model-free Turbo/RAW workflows are validated only on the pinned supported host;
-  model-weight, GPU, sampler-step, and image validation remain pending.
+  controlled deterministic native-Euler sampler steps are validated there, while real Krea
+  model-weight, GPU, image, stochastic, resumable, partial-denoise-execution, and
+  advanced-workflow validation remain pending.
 
 [Unreleased]: https://github.com/rookiestar28/ComfyUI-Sigmax/commits/main

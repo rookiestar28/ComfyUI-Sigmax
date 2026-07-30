@@ -80,8 +80,17 @@ operating systems.
 
 ## 5. Current execution boundary
 
-The current package exposes pure receipt and bundle contracts but does not yet execute a sampler
-or start ComfyUI. A successful receipt can be built only when a caller supplies explicit,
-internally consistent runtime evidence. Sigmax does not currently expose a UI node that lets a
-workflow manually claim successful execution. Real-host execution receipts remain pending the
-corresponding sampler/host execution path and E2E validation.
+The runtime package exposes pure receipt and bundle contracts; those contracts do not execute a
+sampler or start ComfyUI. A successful receipt can be built only after an execution boundary
+supplies explicit, internally consistent evidence. Sigmax does not expose a production UI node
+that lets a workflow manually claim successful execution.
+
+The repository-owned M5-01 H3 harness is the first validated real-host producer. It stages a
+release-excluded test node, executes the pinned host's actual deterministic `comfy.euler` over a
+controlled eight-transition flow-velocity fixture, records and independently validates every
+latent update and model evaluation, verifies deterministic rerun and single-shift ownership, and
+only then calls `build_execution_receipt()` with `succeeded`. Its receipt is cross-linked to the
+existing Turbo construction artifact. This proves the receipt path for that exact controlled
+host execution; it does not let normal workflows self-assert success or establish real Krea
+checkpoint, GPU, image, stochastic, resumable, partial-denoise-execution, or advanced-workflow
+support.

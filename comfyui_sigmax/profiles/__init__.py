@@ -52,6 +52,20 @@ from comfyui_sigmax.profiles.registry import (
     RegisteredProfile,
     builtin_profile_registry,
 )
+from comfyui_sigmax.profiles.resolution import (
+    CAPABILITY_RESOLUTION_SCHEMA_ID,
+    CAPABILITY_RESOLUTION_SCHEMA_VERSION,
+    HostCapabilities,
+    HostCapabilityEvidence,
+    HostCapabilityLifecycle,
+    HostCapabilityRequirement,
+    ModelCapabilityEvidence,
+    ModelIdentityEvidence,
+    ModelIdentityStatus,
+    ProfileCapabilityDecision,
+    model_identity_from_krea2_resolution,
+    resolve_profile_capabilities,
+)
 from comfyui_sigmax.profiles.schema_v1 import (
     PROFILE_SCHEMA_ID,
     PROFILE_SCHEMA_VERSION,
@@ -75,6 +89,8 @@ from comfyui_sigmax.profiles.schema_v1 import (
 )
 
 __all__ = [
+    "CAPABILITY_RESOLUTION_SCHEMA_ID",
+    "CAPABILITY_RESOLUTION_SCHEMA_VERSION",
     "KREA2_RAW_DIFFUSERS_REFERENCE_28",
     "KREA2_RAW_OFFICIAL_FULL_52",
     "KREA2_RAW_OFFICIAL_SHA256",
@@ -96,6 +112,10 @@ __all__ = [
     "FrameworkProvenance",
     "GuidanceConvention",
     "GuidanceDeclaration",
+    "HostCapabilities",
+    "HostCapabilityEvidence",
+    "HostCapabilityLifecycle",
+    "HostCapabilityRequirement",
     "InferenceRecipe",
     "Krea2ImageGeometry",
     "Krea2RawProfile",
@@ -110,7 +130,11 @@ __all__ = [
     "Krea2VariantResolutionError",
     "Krea2VariantResolutionStatus",
     "LicenseDeclaration",
+    "ModelCapabilityEvidence",
+    "ModelIdentityEvidence",
+    "ModelIdentityStatus",
     "ModelWeightProvenance",
+    "ProfileCapabilityDecision",
     "ProfileField",
     "ProfileInheritance",
     "ProfileKey",
@@ -132,8 +156,10 @@ __all__ = [
     "calculate_krea2_raw_mu",
     "collect_krea2_variant_evidence",
     "derive_krea2_raw_shift",
+    "model_identity_from_krea2_resolution",
     "profile_schema_fingerprint",
     "profile_schema_projection",
     "resolve_krea2_image_geometry",
     "resolve_krea2_variant",
+    "resolve_profile_capabilities",
 ]

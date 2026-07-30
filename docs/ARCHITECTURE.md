@@ -53,6 +53,8 @@ comfyui_sigmax/
                 frozen profile contract, provenance separation, and canonical fingerprint
     registry.py
                 exact-key immutable registry, conflicts, and explicit inheritance
+    resolution.py
+                pure profile/model/host/sampler capability composition
     krea2_common.py
                 shared evidence, guidance, dimension policy, and packed-image geometry
     krea2_raw.py
@@ -177,6 +179,14 @@ Inheritance resolves at registration time by comparing every top-level schema fi
 already registered parent. The declared canonical override set must equal the actual
 semantic difference, and inherited external children require `modified` evidence.
 
+The dependency-free `profiles/resolution.py` module composes a registered profile with normalized
+model identity/capabilities, host lifecycle evidence, sampler capabilities, and requested execution
+features. It returns the versioned `sigmax.capability-resolution/1` decision, retains the exact
+profile key/fingerprint and host revision, and namespaces the existing core compatibility reasons.
+Only confirmed identity is executable. Required host capabilities must be `landed`; missing,
+`experimental`, and `unsupported` lifecycle evidence reject before execution. The module performs
+no host probing, schedule construction, or sampling.
+
 The first concrete profile, `krea2.turbo.official`, is implemented in
 `profiles/krea2_turbo.py`. It pins the official Krea source and framework corroboration,
 declares fixed exponential `mu = 1.15`, eight default steps, terminal zero, deterministic
@@ -274,7 +284,8 @@ base-grid construction, shift parameterization, terminal policy, sampler compati
 provenance. The implemented Krea-specific evidence resolver exposes status, confidence,
 decisive source, normalized evidence, and warnings. The generic `ProfileSchemaV1` contract is
 implemented together with the exact-key `ProfileRegistry` and explicit inheritance policy.
-Host/model/sampler evidence collection and cross-model capability resolution remain planned.
+Generic capability resolution is implemented as a pure composition layer over those contracts.
+Host/model/sampler evidence collection and ComfyUI probing remain planned adapter work.
 
 ### ComfyUI adapters and nodes
 

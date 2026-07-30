@@ -70,6 +70,7 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "profiles" / "krea2_common.py").is_file())
         self.assertTrue((package_path / "profiles" / "krea2_raw.py").is_file())
         self.assertTrue((package_path / "profiles" / "registry.py").is_file())
+        self.assertTrue((package_path / "profiles" / "resolution.py").is_file())
         self.assertTrue((package_path / "profiles" / "schema_v1.py").is_file())
         self.assertTrue((package_path / "profiles" / "krea2_turbo.py").is_file())
 

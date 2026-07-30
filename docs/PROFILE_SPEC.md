@@ -155,9 +155,25 @@ Every evaluation considers the complete canonical capability dimension set and p
 
 The decision vocabulary includes model family and variant, prediction type, sigma domain,
 schedule ownership, terminal requirement, execution behavior, noise ownership, sampler state,
-partial denoise, per-token timesteps, and reference-sampler status. Profile resolution will
-construct these declarations later; the pure core does not inspect a host model or guess a
-variant.
+partial denoise, per-token timesteps, and reference-sampler status.
+
+## Implemented Capability Resolution
+
+`resolve_profile_capabilities()` composes one exact `RegisteredProfile` with:
+
+- normalized `ModelIdentityEvidence` plus `ModelCapabilities`;
+- versioned `HostCapabilities` whose entries retain `landed`, `experimental`, or `unsupported`
+  lifecycle;
+- one `SamplerCapabilities` declaration;
+- one `ExecutionFeatureRequest`.
+
+The immutable `ProfileCapabilityDecision` uses `sigmax.capability-resolution/1`, retains the exact
+profile key/fingerprint and host identity/revision, records every required host capability, and
+namespaces the existing core reason codes under `core.*`. Confirmed identity is required;
+suggested, ambiguous, conflicting, and unknown identity never becomes confirmed because a
+capability string matches. Missing, experimental, or unsupported required host capabilities
+reject. The resolver does not inspect a live host, construct sigmas, or execute a sampler; host
+evidence collection remains adapter work.
 
 ## Required Conceptual Fields
 

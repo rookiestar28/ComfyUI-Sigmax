@@ -66,6 +66,20 @@ def test_public_documentation_exposes_capability_preflight_contract() -> None:
     assert all(level in profile_spec.lower() for level in ("allow", "warn", "reject"))
 
 
+def test_public_documentation_exposes_capability_resolution_contract() -> None:
+    readme = _read(ROOT / "README.md")
+    architecture = _read(ROOT / "docs" / "ARCHITECTURE.md")
+    profile_spec = _read(ROOT / "docs" / "PROFILE_SPEC.md")
+    changelog = _read(ROOT / "CHANGELOG.md")
+
+    for content in (readme, architecture, profile_spec, changelog):
+        assert "sigmax.capability-resolution/1" in content
+    assert "resolve_profile_capabilities" in readme
+    assert "profiles/resolution.py" in architecture
+    assert all(lifecycle in profile_spec for lifecycle in ("landed", "experimental", "unsupported"))
+    assert "does not inspect a live host" in profile_spec
+
+
 def test_public_documentation_exposes_frozen_profile_schema_v1() -> None:
     readme = _read(ROOT / "README.md")
     architecture = _read(ROOT / "docs" / "ARCHITECTURE.md")

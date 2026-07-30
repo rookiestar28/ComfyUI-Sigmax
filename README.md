@@ -205,6 +205,59 @@ Inheritance names an already registered parent and the exact canonical top-level
 changed. The child remains a complete validated schema, and inherited external profiles must
 use `modified` evidence.
 
+Registered profiles can be resolved against normalized model, host, and sampler evidence
+without importing ComfyUI or executing sampling:
+
+```python
+from comfyui_sigmax.core import ExecutionFeatureRequest
+from comfyui_sigmax.profiles import (
+    HostCapabilities,
+    HostCapabilityEvidence,
+    HostCapabilityLifecycle,
+    ModelCapabilityEvidence,
+    model_identity_from_krea2_resolution,
+    resolve_krea2_variant,
+    resolve_profile_capabilities,
+)
+
+identity = model_identity_from_krea2_resolution(resolve_krea2_variant(explicit_variant="turbo"))
+model = ModelCapabilityEvidence(
+    evidence_version="1",
+    identity=identity,
+    capabilities=entry.schema.model_capabilities,
+)
+host = HostCapabilities(
+    evidence_version="1",
+    host_id="comfyui",
+    host_version="0.29.0",
+    host_revision="e651b7bef55a5376343dcb1c0edb79f0142c985e",  # pragma: allowlist secret
+    capabilities=(
+        HostCapabilityEvidence(
+            capability_id="sampler.comfy.euler",
+            lifecycle=HostCapabilityLifecycle.LANDED,
+        ),
+        HostCapabilityEvidence(
+            capability_id="schedule.external_sigmas",
+            lifecycle=HostCapabilityLifecycle.LANDED,
+        ),
+    ),
+)
+decision = resolve_profile_capabilities(
+    registered_profile=entry,
+    model=model,
+    host=host,
+    sampler=entry.schema.reference_sampler_capabilities,
+    request=ExecutionFeatureRequest(),
+)
+assert decision.schema_id == "sigmax.capability-resolution/1"
+```
+
+Only confirmed model identity can pass. Suggested, ambiguous, conflicting, or unknown identity
+stays unresolved even if a declared capability variant happens to match. Every required host
+capability retains a `landed`, `experimental`, `unsupported`, or missing result; required
+experimental capabilities fail closed because they are not stable host APIs. Adapter-side host
+probing and sampling remain separate later layers.
+
 The first concrete profile is an immutable, evidence-pinned declaration of the official
 Krea 2 Turbo recipe:
 

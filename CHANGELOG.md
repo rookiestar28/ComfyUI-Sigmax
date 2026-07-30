@@ -79,6 +79,10 @@ tracked independently from the frozen profile-schema version.
   fingerprint-guarded `REPLACE_EXTERNAL`, unconditional built-in protection, and explicit
   complete-schema inheritance whose declared differences must match and use `modified`
   evidence.
+- Versioned `sigmax.capability-resolution/1` composition of exact registered profiles, confirmed
+  model identity/capabilities, explicit host lifecycle evidence, sampler capabilities, and
+  execution-feature requests; required missing, experimental, or unsupported host capabilities
+  and all weak/unresolved model identity states fail closed before sampling.
 
 ### Security
 

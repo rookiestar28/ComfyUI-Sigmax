@@ -75,6 +75,7 @@ def _inspect_wheel(wheel: Path) -> None:
         "comfyui_sigmax/profiles/krea2_common.py",
         "comfyui_sigmax/profiles/krea2_raw.py",
         "comfyui_sigmax/profiles/krea2_turbo.py",
+        "comfyui_sigmax/profiles/resolution.py",
     }
     if not required.issubset(names):
         raise RuntimeError(f"Wheel is missing required files: {sorted(required - set(names))}")

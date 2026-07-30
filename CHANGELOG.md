@@ -30,6 +30,9 @@ tracked independently from the frozen profile-schema version.
   projections, and numerical/construction SHA-256 fingerprint functions.
 - Immutable schedule artifacts with versioned canonical UTF-8 transport, complete effective
   construction metadata, strict untrusted-input parsing, and dual-fingerprint verification.
+- Immutable execution receipts and portable artifact/receipt bundles with explicit status,
+  host/model/sampler identities, RNG ownership, transition/model-evaluation counts, strict
+  canonical transport, and construction/numerical cross-link verification.
 - Immutable model, profile, sampler, and execution-feature capability declarations with
   canonical allow/warn/reject decisions, stable reason codes, and a fail-before-execution
   compatibility gate.

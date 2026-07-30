@@ -66,6 +66,7 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "core" / "base_grids.py").is_file())
         self.assertTrue((package_path / "core" / "artifacts.py").is_file())
         self.assertTrue((package_path / "core" / "capabilities.py").is_file())
+        self.assertTrue((package_path / "core" / "execution_receipts.py").is_file())
         self.assertTrue((package_path / "core" / "fingerprints.py").is_file())
         self.assertTrue((package_path / "core" / "request_result.py").is_file())
         self.assertTrue((package_path / "core" / "schedule_contracts.py").is_file())

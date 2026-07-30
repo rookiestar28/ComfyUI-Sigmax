@@ -35,6 +35,12 @@ source review currently define an exact static-contract window of `0.29.0`; this
 the packaging declaration and is not real-host node/workflow evidence. No release should infer
 working host execution from either declaration alone.
 
+Versioned execution receipts and portable artifact/receipt bundles are implemented as
+dependency-free pure contracts. They record explicit status, counts, component identities, RNG
+ownership, compatibility, and fingerprints, but do not execute ComfyUI or a sampler. Current
+receipts are contract/serialization evidence only; real-host receipt production is not yet
+validated.
+
 ## Validated Foundation Environments
 
 The current package, quality gates, tests, and wheel inventory have been validated locally on:
@@ -134,6 +140,8 @@ platform `libm` noise does not alter report bytes.
 - Filename and local-header matches are suggestions only; the shared ComfyUI model class and
   common tensor keys are family-only and cannot resolve RAW versus Turbo.
 - No ComfyUI version has completed real-host node/workflow E2E validation.
+- No current node can manually assert a successful execution receipt; successful real-host
+  receipt production remains pending an executed and validated sampler path.
 - The current `v0_0_2` V3 API is discoverable but experimental; activation is rejected when a
   stable numbered API is required.
 - macOS and native hosted Ubuntu evidence are not yet available.

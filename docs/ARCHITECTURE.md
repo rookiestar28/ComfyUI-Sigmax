@@ -46,6 +46,8 @@ comfyui_sigmax/
                 canonical projections and numerical/construction identities
     artifacts.py
                 immutable artifact assembly and strict canonical JSON transport
+    execution_receipts.py
+                execution evidence and portable artifact/receipt bundle transport
     capabilities.py
                 model/profile/sampler declarations and execution preflight decisions
   profiles/
@@ -87,9 +89,9 @@ comfyui_sigmax/nodes/
 The dependency-free `adapters/registration.py` module owns the immutable node catalog and
 wire-schema projections. The package exports the validated
 `Sigmax.AdvancedFlowMatchScheduler`, `Sigmax.Krea2SigmaScheduler`, and
-`Sigmax.ModelAwareSigmaScheduler`, `Sigmax.ProfileInspector`, and
-`Sigmax.ScheduleInspector` mappings. Importing them does not load Torch or ComfyUI, patch PyTorch,
-import Diffusers, or alter host process state.
+`Sigmax.ModelAwareSigmaScheduler`, `Sigmax.ProfileInspector`,
+`Sigmax.ScheduleComparison`, and `Sigmax.ScheduleInspector` mappings. Importing them does not
+load Torch or ComfyUI, patch PyTorch, import Diffusers, or alter host process state.
 
 The full gate proves this boundary before the test suite: a clean project-local environment
 must resolve neither ComfyUI nor Diffusers, and a `python -I` subprocess installs explicit
@@ -122,6 +124,14 @@ Complete external schedules can now be checked for finite values, strict decreas
 transition count, domain bounds, and terminal policy. Validated results can be projected into
 immutable schedule artifacts with separate numerical and construction identities, then
 transported as bounded canonical JSON with strict untrusted-input rejection.
+
+Execution evidence is a separate immutable layer. `ExecutionReceipt` binds the artifact's
+construction/numerical identities to effective inputs, profile, complete compatibility decision,
+host/model/sampler identities, explicit RNG ownership, requested/effective transition and
+model-evaluation counts, and one truthful final status. `PortableExecutionBundle` carries the
+unchanged schedule-artifact envelope beside the receipt envelope and verifies their fingerprints
+and effective-input cross-links. Neither contract runs a sampler or infers success from
+construction or static capability evidence.
 
 The first numerical builders are now implemented:
 

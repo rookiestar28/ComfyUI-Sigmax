@@ -151,6 +151,29 @@ The parser bounds input size, rejects duplicate keys, BOMs, invalid UTF-8, JSON 
 literals, non-standard constants, unknown schema fields, and non-canonical encodings. It
 recomputes both numerical and construction fingerprints before returning an artifact.
 
+Execution outcomes use a separate immutable `ExecutionReceipt`; schedule construction never
+implies successful model or sampler execution. Receipts bind explicit host/model/sampler,
+compatibility, RNG-ownership, transition/model-evaluation counts, and final status evidence to
+the existing construction and numerical fingerprints:
+
+```python
+from comfyui_sigmax.core import (
+    PortableExecutionBundle,
+    build_execution_receipt,
+    serialize_portable_execution_bundle,
+)
+
+# `metadata` is explicit validated runtime evidence.
+receipt = build_execution_receipt(artifact, metadata=metadata)
+bundle = PortableExecutionBundle(artifact=artifact, receipt=receipt)
+portable_payload = serialize_portable_execution_bundle(bundle)
+```
+
+The receipt statuses are `not_executed`, `succeeded`, `failed`, and `interrupted`. Success
+requires complete counts and a non-rejected compatibility decision; failure/interruption require
+stable reason codes. The current package does not execute a sampler and does not expose a node
+that can manually assert success.
+
 Model, profile, sampler, and requested execution features also have immutable capability
 contracts:
 
@@ -510,6 +533,7 @@ and planned host/model support.
 - [Architecture](docs/ARCHITECTURE.md)
 - [Model profile schema v1 specification](docs/PROFILE_SPEC.md)
 - [Schedule artifact specification](docs/SCHEDULE_ARTIFACT_SPEC.md)
+- [Execution receipt and portable bundle specification](docs/EXECUTION_RECEIPT_SPEC.md)
 - [Compatibility](docs/COMPATIBILITY.md)
 - [Contributing](CONTRIBUTING.md)
 - [Changelog](CHANGELOG.md)

@@ -18,6 +18,7 @@ PUBLIC_DOCUMENTS = (
     ROOT / "docs" / "ARCHITECTURE.md",
     ROOT / "docs" / "PROFILE_SPEC.md",
     ROOT / "docs" / "SCHEDULE_ARTIFACT_SPEC.md",
+    ROOT / "docs" / "EXECUTION_RECEIPT_SPEC.md",
     ROOT / "docs" / "COMPATIBILITY.md",
 )
 
@@ -52,6 +53,21 @@ def test_public_documentation_exposes_current_artifact_transport_contract() -> N
     assert "deserialize_schedule_artifact" in readme
     assert "sigmax.schedule-artifact-envelope/1" in artifact_spec
     assert "1,048,576 bytes" in artifact_spec
+
+
+def test_public_documentation_exposes_receipt_and_bundle_boundary() -> None:
+    readme = _read(ROOT / "README.md")
+    receipt_spec = _read(ROOT / "docs" / "EXECUTION_RECEIPT_SPEC.md")
+    compatibility = _read(ROOT / "docs" / "COMPATIBILITY.md")
+
+    assert "build_execution_receipt" in readme
+    assert "sigmax.execution-receipt/1" in receipt_spec
+    assert "sigmax.portable-execution-bundle/1" in receipt_spec
+    assert all(
+        status in receipt_spec for status in ("not_executed", "succeeded", "failed", "interrupted")
+    )
+    assert "does not yet execute" in receipt_spec
+    assert "not yet validated" in compatibility
 
 
 def test_public_documentation_exposes_capability_preflight_contract() -> None:

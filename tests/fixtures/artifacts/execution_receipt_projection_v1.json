@@ -1,0 +1,72 @@
+{
+  "artifact": {
+    "construction_fingerprint": "sha256:75bcad9758ebd38cfe911a898c4f82350c3141ebd293e6db5e15007f8ef446ef",
+    "numerical_fingerprint": "sha256:958cbb51e05aa008f8786fbd363b6542afab2056e304b7a5655ad54384d62beb"
+  },
+  "compatibility": {
+    "considered": [
+      "model_identity",
+      "prediction_type",
+      "sigma_domain",
+      "schedule_ownership",
+      "terminal_sigma",
+      "execution_behavior",
+      "noise_ownership",
+      "sampler_state",
+      "partial_denoise",
+      "per_token_timesteps",
+      "reference_sampler"
+    ],
+    "level": "allow",
+    "reasons": [
+      "compatible"
+    ]
+  },
+  "counts": {
+    "effective_model_evaluations": 4,
+    "effective_transitions": 4,
+    "requested_model_evaluations": 4,
+    "requested_transitions": 4
+  },
+  "effective_inputs": {
+    "compatibility": {
+      "decision": "allow"
+    },
+    "height": 768,
+    "precision": "float64",
+    "profile": "fixture.profile",
+    "profile_version": "1",
+    "steps": 4,
+    "width": 1024
+  },
+  "execution": {
+    "reason_code": null,
+    "status": "succeeded"
+  },
+  "host": {
+    "api_version": "legacy_v1",
+    "id": "comfyui",
+    "revision": "host-revision",
+    "version": "0.29.0"
+  },
+  "model": {
+    "fingerprint": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    "id": "fixture.model",
+    "version": "1"
+  },
+  "profile": {
+    "id": "fixture.profile",
+    "version": "1"
+  },
+  "rng_ownership": {
+    "model": "none",
+    "sampler": "none",
+    "schedule": "none"
+  },
+  "sampler": {
+    "fingerprint": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+    "id": "comfy.euler",
+    "version": "0.29.0"
+  },
+  "schema": "sigmax.execution-receipt/1"
+}

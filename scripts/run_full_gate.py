@@ -60,6 +60,7 @@ def _inspect_wheel(wheel: Path) -> None:
         "comfyui_sigmax/core/base_grids.py",
         "comfyui_sigmax/core/request_result.py",
         "comfyui_sigmax/core/schedule_contracts.py",
+        "comfyui_sigmax/core/shifts.py",
     }
     if not required.issubset(names):
         raise RuntimeError(f"Wheel is missing required files: {sorted(required - set(names))}")

@@ -92,6 +92,7 @@ class CiContractTests(unittest.TestCase):
         self.assertIn('"comfyui_sigmax/core/base_grids.py"', runner)
         self.assertIn('"comfyui_sigmax/core/schedule_contracts.py"', runner)
         self.assertIn('"comfyui_sigmax/core/request_result.py"', runner)
+        self.assertIn('"comfyui_sigmax/core/shifts.py"', runner)
 
     def test_workflow_contract(self) -> None:
         workflow = (REPOSITORY_ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")

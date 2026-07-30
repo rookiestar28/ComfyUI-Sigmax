@@ -106,12 +106,15 @@ A transform may run only when its declared input domain matches the current sche
 The profile must name the formula and its parameters. A generic field called only `shift` is
 insufficient because models and frameworks use incompatible parameterizations.
 
-Initial planned forms include:
+Implemented pure-core forms include:
 
 - exponential `mu` shifting;
 - direct-ratio shifting;
 - an explicit no-shift policy;
-- resolution-derived shifting when supported by an authoritative profile.
+
+Resolution-derived parameter selection remains planned and must be supplied by an
+authoritative profile. The exponential and direct controls are distinct: at exponent `1`,
+their schedules are equivalent only when `direct_ratio = exp(mu)`.
 
 Missing shift configuration must be an error in strict mode, not a hidden zero.
 

@@ -36,6 +36,8 @@ comfyui_sigmax/
                 ownership, sigma-domain, and transform-chain preflight
     request_result.py
                 immutable requested/effective inputs and structural results
+    shifts.py
+                exponential-mu, direct-ratio, and explicit identity transforms
 
 scripts/
   preflight.py          local environment validation
@@ -81,6 +83,16 @@ The first numerical builders are now implemented:
 
 Terminal zero is not part of either builder. It remains a later terminal-stage operation.
 
+The first pointwise shifts are also implemented:
+
+- Krea/Flux exponential `mu`, including an explicit positive exponent;
+- discrete-flow direct ratio, named separately from `mu`;
+- an explicit no-shift identity path.
+
+They accept only finite unit-flow tuples and reject model-native or other domains. Exact zero
+and one endpoints are preserved, and algebraically equivalent stable evaluation prevents
+extreme finite controls from overflowing. Resolution-to-`mu` derivation remains profile work.
+
 ## Planned Layered Design
 
 ```text
@@ -100,7 +112,7 @@ Optional sampler backends
 Planned responsibilities:
 
 - construct explicit base grids;
-- apply named and domain-checked time shifts;
+- compose the implemented named and domain-checked time shifts;
 - apply at most one compatible optional spacing transform;
 - append terminal values and slice schedules;
 - validate monotonicity, finiteness, length, and domain;

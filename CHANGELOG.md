@@ -20,6 +20,8 @@ tracked independently once the profile schema is implemented.
 - Immutable request/result contracts for requested/effective inputs, base grids, terminal and
   slicing policy, provenance, warnings, overrides, and structural sigma values.
 - Exact dependency-free Krea reciprocal-step and generic descending linear base-grid builders.
+- Dependency-free exponential-`mu`, direct-ratio, and explicit no-shift unit-flow transforms
+  with stable endpoint and extreme finite-control behavior.
 - Wheel inventory enforcement for the pure-core package.
 
 ### Security

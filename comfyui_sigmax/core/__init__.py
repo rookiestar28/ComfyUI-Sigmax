@@ -24,6 +24,11 @@ from comfyui_sigmax.core.schedule_contracts import (
     require_single_ownership,
     validate_transform_chain,
 )
+from comfyui_sigmax.core.shifts import (
+    direct_ratio_shift,
+    exponential_mu_shift,
+    no_shift,
+)
 
 __all__ = [
     "BaseGridSpec",
@@ -40,8 +45,11 @@ __all__ = [
     "TerminalPolicy",
     "TransformContract",
     "TransformStage",
+    "direct_ratio_shift",
+    "exponential_mu_shift",
     "krea_reciprocal_step_grid",
     "linear_endpoint_grid",
+    "no_shift",
     "require_single_ownership",
     "validate_transform_chain",
 ]

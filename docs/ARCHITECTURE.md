@@ -78,12 +78,14 @@ tests/
   documentation contracts, and independent Turbo golden vectors
 
 comfyui_sigmax/nodes/
+  advanced_flowmatch_scheduler.py  explicit configurable unit-flow SIGMAS node
   krea2_sigma_scheduler.py  thin explicit RAW/Turbo SIGMAS product node
   model_aware_sigma_scheduler.py  bounded MODEL probe and exact capability-gated profile node
 ```
 
 The dependency-free `adapters/registration.py` module owns the immutable node catalog and
-wire-schema projections. The package exports the validated `Sigmax.Krea2SigmaScheduler` and
+wire-schema projections. The package exports the validated
+`Sigmax.AdvancedFlowMatchScheduler`, `Sigmax.Krea2SigmaScheduler`, and
 `Sigmax.ModelAwareSigmaScheduler` mappings. Importing them does not load Torch or ComfyUI, patch PyTorch,
 import Diffusers, or alter host process state.
 
@@ -342,7 +344,18 @@ Explicit selection follows the existing evidence precedence, resolves an exact b
 `ProfileKey`, and runs `resolve_profile_capabilities()` against the profile's reference sampler
 and a pinned, visibly labeled ComfyUI `static_contract`. Only ALLOW/WARN reaches the M4-01 builder.
 Deterministic `sigmax.model-aware-sigma-node/1` JSON carries the full decision and stable reason
-codes. Planned later nodes add advanced schedules and inspection/comparison outputs.
+codes.
+
+The third catalog entry is `Sigmax.AdvancedFlowMatchScheduler`. Its
+`advanced_flowmatch_scheduler.py` pure boundary accepts only the constructible `UNIT_FLOW`
+sigma/time domain, builds a descending linear endpoint grid, and executes exactly one
+`PRIMARY_TIME_SHIFT` using exponential-mu or direct-ratio parameterization. A single
+mode-dependent value prevents mutually exclusive UI controls from becoming inert. Terminal
+policy and terminal-inclusive slicing follow as separate declared stages. The builder creates
+typed `ScheduleRequest` and `ScheduleResult` contracts, validates the complete and selected
+vectors, and emits deterministic `sigmax.advanced-flowmatch-node/1` JSON. The node is
+experimental external-sigma construction, not a sampler, model profile, domain converter, or
+model patch. Planned later nodes add inspection/comparison outputs.
 
 ### Sampler strategy
 

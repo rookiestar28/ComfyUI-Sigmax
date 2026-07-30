@@ -99,12 +99,14 @@ class ImportSafetyTests(unittest.TestCase):
         self.assertEqual(
             {
                 "class_mappings": {
+                    "Sigmax.AdvancedFlowMatchScheduler": "AdvancedFlowMatchScheduler",
                     "Sigmax.Krea2SigmaScheduler": "Krea2SigmaScheduler",
                     "Sigmax.ModelAwareSigmaScheduler": "ModelAwareSigmaScheduler",
                 },
                 "comfy_loaded": False,
                 "diffusers_loaded": False,
                 "display_mappings": {
+                    "Sigmax.AdvancedFlowMatchScheduler": "Advanced FlowMatch Scheduler",
                     "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler",
                     "Sigmax.ModelAwareSigmaScheduler": "Model-Aware Sigma Scheduler",
                 },
@@ -136,10 +138,12 @@ class ImportSafetyTests(unittest.TestCase):
 
             assert bootstrap.__version__ == "0.1.0.dev0"
             assert sorted(bootstrap.NODE_CLASS_MAPPINGS) == [
+                "Sigmax.AdvancedFlowMatchScheduler",
                 "Sigmax.Krea2SigmaScheduler",
                 "Sigmax.ModelAwareSigmaScheduler",
             ]
             assert bootstrap.NODE_DISPLAY_NAME_MAPPINGS == {
+                "Sigmax.AdvancedFlowMatchScheduler": "Advanced FlowMatch Scheduler",
                 "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler",
                 "Sigmax.ModelAwareSigmaScheduler": "Model-Aware Sigma Scheduler",
             }

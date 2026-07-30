@@ -9,7 +9,9 @@ normalizes reviewed public host/node schemas and derives model/host/sampler capa
 A pure `sigmax.node-registration/1` catalog validates legacy/current, V3, `/object_info`, and
 Node Definition JSON v2 registration shapes with explicit namespaced IDs and fail-closed
 collisions. Its built-in catalog contains the statically validated legacy/current
-`Sigmax.Krea2SigmaScheduler`, which explicitly constructs Turbo or RAW sigmas and returns
+`Sigmax.AdvancedFlowMatchScheduler`, an experimental explicit `UNIT_FLOW` constructor returning
+`sigmax.advanced-flowmatch-node/1` information; `Sigmax.Krea2SigmaScheduler`, which explicitly
+constructs Turbo or RAW sigmas and returns
 structured `sigmax.krea2-sigma-node/1` schedule information, plus
 `Sigmax.ModelAwareSigmaScheduler`, which requires a Krea 2 MODEL, exposes family-only Auto
 ambiguity, and returns exact-profile capability decisions under
@@ -109,9 +111,12 @@ platform `libm` noise does not alter report bytes.
 
 ## Current Known Limitations
 
-- The two node mappings are `Sigmax.Krea2SigmaScheduler` and
-  `Sigmax.ModelAwareSigmaScheduler`; their pure behavior and static schemas are covered without
-  claiming real-host loading or workflow execution.
+- The three node mappings are `Sigmax.AdvancedFlowMatchScheduler`,
+  `Sigmax.Krea2SigmaScheduler`, and `Sigmax.ModelAwareSigmaScheduler`; their pure behavior and
+  static schemas are covered without claiming real-host loading or workflow execution.
+- The advanced FlowMatch node is an `experimental` external `UNIT_FLOW` constructor with explicit
+  linear endpoints, one exponential-mu or direct-ratio shift, terminal policy, and slicing. It
+  is not evidence that the result is compatible with an arbitrary model.
 - Krea-specific variant resolution and a bounded static ComfyUI evidence adapter exist, but no
   live transport or automatic model-file inspection exists; family-only Auto mode therefore
   rejects as ambiguous.

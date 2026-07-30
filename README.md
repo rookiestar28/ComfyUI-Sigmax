@@ -21,7 +21,8 @@ versioned profiles for other flow-matching and diffusion model families.
 > immutable model/host/sampler contracts. A pure `sigmax.node-registration/1` catalog also
 > discovers legacy/current and V3 node definitions, validates Node Definition v2 wire schemas,
 > and produces collision-safe namespaced mappings. Its built-in catalog now contains
-> `Sigmax.Krea2SigmaScheduler` and `Sigmax.ModelAwareSigmaScheduler`; RAW native-ComfyUI and
+> `Sigmax.AdvancedFlowMatchScheduler`, `Sigmax.Krea2SigmaScheduler`, and
+> `Sigmax.ModelAwareSigmaScheduler`; RAW native-ComfyUI and
 > real-host node/workflow parity remain
 > pending. The
 > complete core and profile
@@ -64,10 +65,12 @@ The import contract is intentionally minimal:
 import comfyui_sigmax
 
 assert sorted(comfyui_sigmax.NODE_CLASS_MAPPINGS) == [
+    "Sigmax.AdvancedFlowMatchScheduler",
     "Sigmax.Krea2SigmaScheduler",
     "Sigmax.ModelAwareSigmaScheduler",
 ]
 assert comfyui_sigmax.NODE_DISPLAY_NAME_MAPPINGS == {
+    "Sigmax.AdvancedFlowMatchScheduler": "Advanced FlowMatch Scheduler",
     "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler",
     "Sigmax.ModelAwareSigmaScheduler": "Model-Aware Sigma Scheduler",
 }
@@ -289,7 +292,8 @@ Definition JSON v2 projections. V3 classes are discovered through `GET_SCHEMA()`
 the current experimental numbered API is rejected when stability is required. This design avoids
 the pinned loader's mutually exclusive `NODE_CLASS_MAPPINGS`/`comfy_entrypoint` branches and is
 independent of the normalized installation-directory name. The built-in catalog now exposes
-`Sigmax.Krea2SigmaScheduler` and `Sigmax.ModelAwareSigmaScheduler`.
+`Sigmax.AdvancedFlowMatchScheduler`, `Sigmax.Krea2SigmaScheduler`, and
+`Sigmax.ModelAwareSigmaScheduler`.
 
 The `Krea 2 Sigma Scheduler` requires an explicit `Turbo` or `RAW` choice, width and height,
 steps, strict-official mode, and terminal-inclusive start/end slicing. Strict mode accepts only
@@ -310,6 +314,16 @@ complete capability resolver. Its deterministic `sigmax.model-aware-sigma-node/1
 contains stable reason codes, the profile key/fingerprint/evidence, the full capability decision,
 and a clearly labeled pinned `static_contract` host record. This is also not a sampler and does
 not claim real-host validation.
+
+The `Advanced FlowMatch Scheduler` (`Sigmax.AdvancedFlowMatchScheduler`) constructs an explicitly
+external `UNIT_FLOW` schedule from a finite descending linear endpoint grid. It selects exactly
+one primary shift parameterization—`exponential_mu` or `direct_ratio`—and uses one
+mode-dependent `shift_value`, so mutually exclusive parameter controls cannot become inert.
+Their identity values (`mu = 0`, `ratio = 1`) provide an explicit no-shift result. Terminal
+append/preserve behavior and terminal-inclusive slicing execute after the primary shift in the
+declared order. The node returns deterministic `sigmax.advanced-flowmatch-node/1` information
+and fingerprints. Its provenance is `experimental`: it is not a sampler, registered generic
+model profile, cross-model compatibility claim, or model patch.
 
 The first concrete profile is an immutable, evidence-pinned declaration of the official
 Krea 2 Turbo recipe:

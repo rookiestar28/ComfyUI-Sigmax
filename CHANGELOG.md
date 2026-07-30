@@ -100,6 +100,10 @@ tracked independently from the frozen profile-schema version.
   visible Auto ambiguity, exact built-in profile lookup, existing evidence precedence, complete
   capability gating, stable reason codes, a pinned `static_contract` host label, M4-01 numerical
   delegation, and deterministic `sigmax.model-aware-sigma-node/1` information.
+- `Sigmax.AdvancedFlowMatchScheduler` with explicit `UNIT_FLOW` linear endpoints, mutually
+  exclusive exponential-mu/direct-ratio parameterization through one active shift value,
+  terminal and slicing stages, typed request/result validation, execution-time-only Torch
+  conversion, and deterministic `sigmax.advanced-flowmatch-node/1` information.
 
 ### Security
 

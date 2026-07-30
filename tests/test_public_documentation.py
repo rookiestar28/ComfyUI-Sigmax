@@ -276,6 +276,21 @@ def test_public_documentation_exposes_fail_closed_variant_resolution() -> None:
     assert "family-only" in compatibility.lower()
 
 
+def test_public_documentation_exposes_advanced_flowmatch_scheduler_boundary() -> None:
+    readme = _read(ROOT / "README.md")
+    architecture = _read(ROOT / "docs" / "ARCHITECTURE.md")
+    compatibility = _read(ROOT / "docs" / "COMPATIBILITY.md")
+    changelog = _read(ROOT / "CHANGELOG.md")
+
+    for content in (readme, architecture, compatibility, changelog):
+        assert "Sigmax.AdvancedFlowMatchScheduler" in content
+        assert "sigmax.advanced-flowmatch-node/1" in content
+    assert "exponential_mu" in readme and "direct_ratio" in readme
+    assert "UNIT_FLOW" in readme
+    assert "experimental" in compatibility.lower()
+    assert "not a sampler" in readme.lower()
+
+
 def test_public_contribution_and_changelog_contract() -> None:
     contributing = _read(ROOT / "CONTRIBUTING.md")
     changelog = _read(ROOT / "CHANGELOG.md")

@@ -40,7 +40,7 @@ def test_public_documentation_describes_current_maturity_honestly() -> None:
     assert "pre-alpha" in readme
     assert "no user-facing comfyui nodes" in readme
     assert "planned" in architecture and "implemented" in architecture
-    assert "provisional" in profile_spec and "not frozen" in profile_spec
+    assert "frozen" in profile_spec and "sigmax.model-profile/1" in profile_spec
     assert "not yet validated" in compatibility
 
 
@@ -64,6 +64,22 @@ def test_public_documentation_exposes_capability_preflight_contract() -> None:
     assert "SamplerCapabilities" in readme
     assert "CompatibilityDecision" in architecture
     assert all(level in profile_spec.lower() for level in ("allow", "warn", "reject"))
+
+
+def test_public_documentation_exposes_frozen_profile_schema_v1() -> None:
+    readme = _read(ROOT / "README.md")
+    architecture = _read(ROOT / "docs" / "ARCHITECTURE.md")
+    profile_spec = _read(ROOT / "docs" / "PROFILE_SPEC.md")
+    changelog = _read(ROOT / "CHANGELOG.md")
+
+    for content in (readme, architecture, profile_spec, changelog):
+        assert "ProfileSchemaV1" in content
+    assert "sigmax.model-profile/1" in profile_spec
+    assert "SoftwareSourceProvenance" in profile_spec
+    assert "FrameworkProvenance" in profile_spec
+    assert "ModelWeightProvenance" in profile_spec
+    assert "profile_schema_fingerprint" in readme
+    assert "profiles/schema_v1.py" in architecture
 
 
 def test_public_documentation_exposes_core_independence_boundary() -> None:

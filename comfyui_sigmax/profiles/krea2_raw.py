@@ -35,7 +35,12 @@ from comfyui_sigmax.core import (
     validate_sigma_schedule,
 )
 from comfyui_sigmax.profiles.krea2_common import (
+    KREA2_ARTIFACT_VERSIONS,
+    KREA2_DETECTION,
+    KREA2_FRAMEWORK_PROVENANCE,
     KREA2_REFERENCES,
+    KREA2_SLICING,
+    KREA_SOFTWARE_PROVENANCE,
     DimensionAlignmentMode,
     DimensionPolicy,
     EvidenceReference,
@@ -46,6 +51,20 @@ from comfyui_sigmax.profiles.krea2_common import (
     _require_identifier,
     _require_positive_integer,
     resolve_krea2_image_geometry,
+)
+from comfyui_sigmax.profiles.schema_v1 import (
+    PROFILE_SCHEMA_ID,
+    PROFILE_SCHEMA_VERSION,
+    BaseGridDeclaration,
+    GuidanceDeclaration,
+    InferenceRecipe,
+    LicenseDeclaration,
+    ModelWeightProvenance,
+    ProfileField,
+    ProfileSchemaV1,
+    StepRangeDeclaration,
+    TerminalDeclaration,
+    TransformDeclaration,
 )
 
 _ENGINE_VERSION: Final = "0.1.0.dev0"
@@ -193,6 +212,125 @@ _REFERENCE_SAMPLER_CAPABILITIES: Final = SamplerCapabilities(
     supports_per_token_timesteps=False,
 )
 
+_RAW_WEIGHT_PROVENANCE: Final = ModelWeightProvenance(
+    record_version="1",
+    weight_id="krea.krea2.raw.weights",
+    resource_version="1.0",
+    revision="6b0ece7fffb640c5e3bcbe0a7f10f66b8e60a603",  # pragma: allowlist secret
+    sha256=(
+        "f99bb0ff8e362b77342bc4994e0c50906fe7ef7074864b181b7d48d2fa6d03d7"  # pragma: allowlist secret
+    ),
+    url="https://huggingface.co/krea/Krea-2-Raw",
+    license=LicenseDeclaration(
+        declaration_version="1",
+        identifier="LicenseRef-Krea-2-Community",
+        name="Krea 2 Community License",
+        url="https://huggingface.co/krea/Krea-2-Raw/blob/main/LICENSE.pdf",
+    ),
+)
+KREA2_RAW_SCHEMA: Final = ProfileSchemaV1(
+    schema_id=PROFILE_SCHEMA_ID,
+    schema_version=PROFILE_SCHEMA_VERSION,
+    profile_id="krea2.raw.official",
+    profile_version="1",
+    display_name="Krea 2 RAW Official",
+    model_family="krea2",
+    model_variant="raw",
+    evidence=EvidenceLevel.OFFICIAL,
+    primary_source_id="krea.krea2.official",
+    prediction_type=PredictionType.FLOW_VELOCITY,
+    sigma_domain=SigmaDomain.UNIT_FLOW,
+    ownership=ScheduleOwnership.EXTERNAL_SIGMAS,
+    base_grid=BaseGridDeclaration(
+        identifier="krea.reciprocal_step",
+        output_domain=SigmaDomain.UNIT_FLOW,
+        terminal_included=False,
+    ),
+    transforms=(
+        TransformDeclaration(
+            identifier="krea.exponential_mu",
+            stage=TransformStage.PRIMARY_TIME_SHIFT,
+            input_domain=SigmaDomain.UNIT_FLOW,
+            output_domain=SigmaDomain.UNIT_FLOW,
+            parameters=(
+                ProfileField(name="base_image_seq_len", value=256),
+                ProfileField(name="base_mu", value=0.5),
+                ProfileField(name="extrapolation", value="upstream_unclamped"),
+                ProfileField(name="max_image_seq_len", value=6400),
+                ProfileField(name="max_mu", value=1.15),
+                ProfileField(name="mode", value="resolution_linear"),
+            ),
+        ),
+        TransformDeclaration(
+            identifier="terminal.append_zero",
+            stage=TransformStage.TERMINAL,
+            input_domain=SigmaDomain.UNIT_FLOW,
+            output_domain=SigmaDomain.UNIT_FLOW,
+        ),
+    ),
+    terminal=TerminalDeclaration(
+        policy=TerminalPolicy.APPEND_ZERO,
+        sigma=TerminalSigma.ZERO,
+        value=0.0,
+    ),
+    slicing=KREA2_SLICING,
+    recipes=(
+        InferenceRecipe(
+            recipe_id=KREA2_RAW_DIFFUSERS_REFERENCE_28.recipe_id,
+            evidence=KREA2_RAW_DIFFUSERS_REFERENCE_28.evidence,
+            source_id=KREA2_RAW_DIFFUSERS_REFERENCE_28.evidence_source_id,
+            steps=StepRangeDeclaration(
+                minimum=28,
+                maximum=28,
+                default=28,
+                reference_steps=(28,),
+                allow_modified=False,
+            ),
+            guidance=GuidanceDeclaration(
+                model_convention="krea.guidance",
+                host_convention="comfy.cfg",
+                model_value=4.5,
+                host_value=5.5,
+            ),
+        ),
+        InferenceRecipe(
+            recipe_id=KREA2_RAW_OFFICIAL_FULL_52.recipe_id,
+            evidence=KREA2_RAW_OFFICIAL_FULL_52.evidence,
+            source_id=KREA2_RAW_OFFICIAL_FULL_52.evidence_source_id,
+            steps=StepRangeDeclaration(
+                minimum=52,
+                maximum=52,
+                default=52,
+                reference_steps=(52,),
+                allow_modified=False,
+            ),
+            guidance=GuidanceDeclaration(
+                model_convention="krea.guidance",
+                host_convention="comfy.cfg",
+                model_value=3.5,
+                host_value=4.5,
+            ),
+        ),
+    ),
+    detection=KREA2_DETECTION,
+    model_capabilities=_MODEL_CAPABILITIES,
+    profile_capabilities=_PROFILE_CAPABILITIES,
+    reference_sampler_capabilities=_REFERENCE_SAMPLER_CAPABILITIES,
+    artifact_versions=KREA2_ARTIFACT_VERSIONS,
+    software_sources=(KREA_SOFTWARE_PROVENANCE,),
+    frameworks=KREA2_FRAMEWORK_PROVENANCE,
+    model_weights=(_RAW_WEIGHT_PROVENANCE,),
+    parameters=(
+        ProfileField(name="dimension_alignment_mode", value="ceil_multiple"),
+        ProfileField(name="dimension_multiple", value=16),
+    ),
+    known_limitations=(
+        "Automatic ComfyUI host evidence collection is not implemented.",
+        "Resolution shift extrapolates outside the reference sequence-length interval.",
+        "Real-host, native RAW, and sampler-step execution remain unvalidated.",
+    ),
+)
+
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Krea2RawProfile:
@@ -236,6 +374,7 @@ class Krea2RawProfile:
     model_capabilities: ModelCapabilities = _MODEL_CAPABILITIES
     profile_capabilities: ProfileCapabilities = _PROFILE_CAPABILITIES
     reference_sampler_capabilities: SamplerCapabilities = _REFERENCE_SAMPLER_CAPABILITIES
+    schema: ProfileSchemaV1 = KREA2_RAW_SCHEMA
 
     def __post_init__(self) -> None:
         expected_scalars = (
@@ -281,6 +420,7 @@ class Krea2RawProfile:
             self.model_capabilities != _MODEL_CAPABILITIES
             or self.profile_capabilities != _PROFILE_CAPABILITIES
             or self.reference_sampler_capabilities != _REFERENCE_SAMPLER_CAPABILITIES
+            or self.schema is not KREA2_RAW_SCHEMA
         ):
             raise ScheduleContractError("Krea 2 RAW capability declarations are inconsistent")
 

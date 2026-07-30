@@ -9,6 +9,9 @@ nodes, RAW native-ComfyUI parity, model weights, GPU execution, and sampler-step
 **not yet validated**. Complete Turbo golden vectors, authoritative framework parity, and
 native ComfyUI schedule parity are validated at 4, 8, 12, and 16 steps. RAW authoritative
 and framework schedule parity is validated across 14 complete 28/52-step geometry cases.
+The dependency-free `ProfileSchemaV1` contract is frozen for these validated external-sigma
+profiles, including separate source/framework/weight license provenance. Registry,
+inheritance, and native or patched schedule-ownership schemas are not yet implemented.
 
 The package metadata declares a ComfyUI floor of `0.29.0`, but that is a packaging target
 rather than current host-compatibility evidence. No release should infer working host support

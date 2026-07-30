@@ -2,8 +2,8 @@
 
 All notable user-visible changes will be documented in this file.
 
-The project follows semantic versioning for package releases. Model profile versions will be
-tracked independently once the profile schema is implemented.
+The project follows semantic versioning for package releases. Model profile versions are
+tracked independently from the frozen profile-schema version.
 
 ## [Unreleased]
 
@@ -14,7 +14,7 @@ tracked independently once the profile schema is implemented.
 - Repository-local quality, test, coverage, and wheel validation.
 - Cross-platform Windows and Linux/WSL full-gate wrappers.
 - Minimal-permission continuous-integration workflow contract.
-- Public architecture, provisional profile, compatibility, and contribution documentation.
+- Public architecture, profile-schema, compatibility, and contribution documentation.
 - Framework-independent schedule ownership, sigma-domain, transform-stage, and double-shift
   preflight contracts.
 - Immutable request/result contracts for requested/effective inputs, base grids, terminal and
@@ -69,6 +69,11 @@ tracked independently once the profile schema is implemented.
 - Immutable Krea 2 variant-evidence and resolution contracts with explicit/trusted/verified
   resolution, suggestion-only local headers and filenames, family-only tensor/model-class
   signals, exact official file hashes, conflict detection, and strict fail-closed behavior.
+- Frozen dependency-free `ProfileSchemaV1` (`sigmax.model-profile/1`) with strict cross-field
+  schedule, recipe, detection, capability, and artifact-version validation; separately
+  versioned and licensed `SoftwareSourceProvenance`, `FrameworkProvenance`, and
+  `ModelWeightProvenance`; and deterministic typed projection plus
+  `profile_schema_fingerprint`.
 
 ### Security
 

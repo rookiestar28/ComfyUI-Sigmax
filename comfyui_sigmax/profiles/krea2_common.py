@@ -9,6 +9,14 @@ from enum import Enum
 from typing import Final
 
 from comfyui_sigmax.core import EvidenceLevel, ScheduleContractError
+from comfyui_sigmax.profiles.schema_v1 import (
+    ArtifactVersionDeclaration,
+    DetectionDeclaration,
+    FrameworkProvenance,
+    LicenseDeclaration,
+    SlicingDeclaration,
+    SoftwareSourceProvenance,
+)
 
 _IDENTIFIER_PATTERN: Final = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
 _COMMIT_PATTERN: Final = re.compile(r"^[0-9a-f]{40}$")
@@ -232,4 +240,71 @@ KREA2_REFERENCES: Final = (
     KREA_REFERENCE,
     DIFFUSERS_REFERENCE,
     COMFYUI_REFERENCE,
+)
+
+APACHE_2_LICENSE: Final = LicenseDeclaration(
+    declaration_version="1",
+    identifier="Apache-2.0",
+    name="Apache License 2.0",
+    url="https://www.apache.org/licenses/LICENSE-2.0",
+)
+GPL_3_ONLY_LICENSE: Final = LicenseDeclaration(
+    declaration_version="1",
+    identifier="GPL-3.0-only",
+    name="GNU General Public License v3.0 only",
+    url="https://www.gnu.org/licenses/gpl-3.0.html",
+)
+KREA_SOFTWARE_PROVENANCE: Final = SoftwareSourceProvenance(
+    record_version="1",
+    source_id=KREA_REFERENCE.source_id,
+    resource_version=None,
+    revision=KREA_REFERENCE.revision,
+    url=KREA_REFERENCE.url,
+    license=APACHE_2_LICENSE,
+    locators=KREA_REFERENCE.locators,
+)
+COMFYUI_FRAMEWORK_PROVENANCE: Final = FrameworkProvenance(
+    record_version="1",
+    framework_id=COMFYUI_REFERENCE.source_id,
+    resource_version=None,
+    revision=COMFYUI_REFERENCE.revision,
+    url=COMFYUI_REFERENCE.url,
+    license=GPL_3_ONLY_LICENSE,
+    locators=COMFYUI_REFERENCE.locators,
+)
+DIFFUSERS_FRAMEWORK_PROVENANCE: Final = FrameworkProvenance(
+    record_version="1",
+    framework_id=DIFFUSERS_REFERENCE.source_id,
+    resource_version="0.39.0",
+    revision=DIFFUSERS_REFERENCE.revision,
+    url=DIFFUSERS_REFERENCE.url,
+    license=APACHE_2_LICENSE,
+    locators=DIFFUSERS_REFERENCE.locators,
+)
+KREA2_FRAMEWORK_PROVENANCE: Final = (
+    COMFYUI_FRAMEWORK_PROVENANCE,
+    DIFFUSERS_FRAMEWORK_PROVENANCE,
+)
+KREA2_DETECTION: Final = DetectionDeclaration(
+    strategy_id="krea2.variant.evidence-v1",
+    strict_default=True,
+    ambiguity_requires_explicit=True,
+    resolving_sources=(
+        "explicit_selection",
+        "trusted_profile_metadata",
+        "trusted_framework_metadata",
+        "verified_sha256",
+    ),
+    suggestion_sources=("local_header_signal", "filename_signal"),
+    family_only_sources=("local_tensor_signal", "model_class_signal"),
+)
+KREA2_ARTIFACT_VERSIONS: Final = ArtifactVersionDeclaration(
+    numerical_schema="sigmax.numerical-schedule/1",
+    construction_schema="sigmax.schedule-artifact/1",
+    envelope_schema="sigmax.schedule-artifact-envelope/1",
+)
+KREA2_SLICING: Final = SlicingDeclaration(
+    supports_step_range=True,
+    supports_denoise_tail=True,
+    zero_denoise_is_empty=True,
 )

@@ -7,7 +7,8 @@ versioned profiles for other flow-matching and diffusion model families.
 > **Status: pre-alpha foundation.** No user-facing ComfyUI nodes are implemented yet. The
 > current repository provides a side-effect-free package shell, packaging metadata, quality
 > gates, framework-independent schedule primitives, canonical schedule-artifact
-> serialization, and evidence-pinned Krea 2 Turbo and RAW structural profiles. It also
+> serialization, a frozen `ProfileSchemaV1`, and evidence-pinned Krea 2 Turbo and RAW
+> structural profiles. It also
 > provides typed model/profile/sampler capability preflight and complete independent
 > 4/8/12/16-step Turbo golden vectors plus authoritative parity against pinned Krea code and
 > Diffusers 0.39.0, plus native-ComfyUI Turbo schedule parity. Complete independent RAW
@@ -157,6 +158,30 @@ The preflight checks model family and variant, prediction and sigma domains, sch
 ownership, terminal requirements, deterministic or stochastic behavior, noise ownership,
 sampler state, partial denoise, and per-token timesteps. Its stable reason codes distinguish
 `ALLOW`, `WARN`, and `REJECT`; rejected combinations fail before host or sampler execution.
+
+The frozen profile contract exposes deterministic schema identities without importing host
+frameworks:
+
+```python
+from comfyui_sigmax.profiles import (
+    KREA2_RAW_SCHEMA,
+    KREA2_TURBO_SCHEMA,
+    ProfileSchemaV1,
+    profile_schema_fingerprint,
+)
+
+assert isinstance(KREA2_TURBO_SCHEMA, ProfileSchemaV1)
+assert KREA2_TURBO_SCHEMA.schema_id == "sigmax.model-profile/1"
+assert KREA2_RAW_SCHEMA.model_variant == "raw"
+schema_identity = profile_schema_fingerprint(KREA2_TURBO_SCHEMA)
+assert schema_identity.startswith("sha256:")
+```
+
+`ProfileSchemaV1` validates identity, grid/transform/terminal/slicing semantics, recipes,
+detection, compatibility capabilities, and artifact versions. Software source, framework,
+and model-weight provenance remain separately versioned and separately licensed. Schema v1
+freezes the validated external-sigma path; registry/inheritance and native/patch ownership
+contracts remain later work.
 
 The first concrete profile is an immutable, evidence-pinned declaration of the official
 Krea 2 Turbo recipe:
@@ -313,7 +338,7 @@ and planned host/model support.
 ## Documentation
 
 - [Architecture](docs/ARCHITECTURE.md)
-- [Provisional model profile specification](docs/PROFILE_SPEC.md)
+- [Model profile schema v1 specification](docs/PROFILE_SPEC.md)
 - [Schedule artifact specification](docs/SCHEDULE_ARTIFACT_SPEC.md)
 - [Compatibility](docs/COMPATIBILITY.md)
 - [Contributing](CONTRIBUTING.md)

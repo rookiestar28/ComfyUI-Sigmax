@@ -1,10 +1,14 @@
-# Provisional Model Profile Specification
+# Model Profile Schema v1 Specification
 
 ## Status
 
-This specification is **provisional** and **not frozen**. The foundational ownership, domain,
-transform-stage, artifact, and capability vocabulary is implemented, while resolved profile
-serialization and schema versioning may change as Krea 2 reference profiles are validated.
+The runtime contract identified by `sigmax.model-profile/1` is **frozen**. Additive or
+incompatible contract changes require a new schema identifier; profile content continues to
+use its own independently versioned `profile_version`.
+
+Schema v1 freezes the validated externally supplied sigma path used by Krea 2 Turbo and RAW.
+It deliberately rejects `MODEL_NATIVE` and `MODEL_PATCH` ownership rather than implying that
+those future integration paths already have a stable profile contract.
 
 ## Purpose
 
@@ -13,6 +17,40 @@ and validate a schedule for one model family or variant. Profiles prevent model-
 values from becoming undocumented global defaults.
 
 Profiles do not contain model weights and do not authorize model downloads.
+
+## Frozen Runtime Schema
+
+`ProfileSchemaV1` is an immutable, dependency-free contract. Its required areas are:
+
+| Area | v1 declaration |
+| --- | --- |
+| Identity | Schema/profile versions, stable profile ID, display name, model family, and variant |
+| Evidence | Evidence level and a `primary_source_id` that resolves to pinned source provenance |
+| Schedule | Prediction type, sigma domain, external ownership, base grid, ordered transforms, terminal, and slicing |
+| Recipes | Named guidance conventions, bounded step ranges, reference steps, and source identity |
+| Detection | Ordered evidence methods, minimum confirmation confidence, strict default, and ambiguity policy |
+| Compatibility | Exact `ModelCapabilities`, `ProfileCapabilities`, and reference `SamplerCapabilities` contracts |
+| Artifacts | Supported construction-envelope, numerical-projection, and execution-receipt schema versions |
+| Provenance | Separately versioned software-source, framework, and model-weight records and licenses |
+| Extension data | Canonically ordered typed `ProfileField` parameters and public known limitations |
+
+The provenance types are intentionally distinct:
+
+- `SoftwareSourceProvenance` pins source code with a 40-hex revision and its own
+  `LicenseDeclaration`;
+- `FrameworkProvenance` pins each corroborating framework and its independently declared
+  license;
+- `ModelWeightProvenance` pins the public model resource version and SHA-256 while declaring
+  its separate weight license.
+
+A framework or source license never implies a model-weight license. Public locators must use
+HTTPS, secret-like fields and private local paths are rejected, and all identifiers and lists
+must be canonical and bounded.
+
+`profile_schema_projection()` produces a deterministic typed projection. Floating values are
+encoded by IEEE-754 binary64 bits, and `profile_schema_fingerprint()` hashes the canonical
+projection as a `sha256:` identity. The projection is a fingerprint contract, not a general
+JSON profile loader or an authorization to download weights.
 
 ## Implemented Core Vocabulary
 
@@ -148,8 +186,8 @@ Missing shift configuration must be an error in strict mode, not a hidden zero.
 
 ## First Concrete Profile: Krea 2 Turbo
 
-The immutable `krea2.turbo.official` profile version `1` is implemented before the generic
-profile schema is frozen. It declares:
+The immutable `krea2.turbo.official` profile version `1` is bound to
+`KREA2_TURBO_SCHEMA`, a validated `ProfileSchemaV1`. It declares:
 
 - `official` evidence with a pinned Krea repository revision as the primary source;
 - pinned Diffusers and ComfyUI framework references;

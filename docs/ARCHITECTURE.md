@@ -49,6 +49,8 @@ comfyui_sigmax/
     capabilities.py
                 model/profile/sampler declarations and execution preflight decisions
   profiles/
+    schema_v1.py
+                frozen profile contract, provenance separation, and canonical fingerprint
     krea2_common.py
                 shared evidence, guidance, dimension policy, and packed-image geometry
     krea2_raw.py
@@ -156,6 +158,15 @@ host integration:
 The execution gate raises before sampler work on `REJECT`. A compatible non-reference sampler
 is a warning rather than an unsupported claim.
 
+The dependency-free `profiles/schema_v1.py` module freezes `ProfileSchemaV1` under
+`sigmax.model-profile/1`. It composes identity, schedule construction, recipes, detection,
+capabilities, artifact versions, bounded extension fields, and known limitations. Software
+source, framework, and model-weight provenance use distinct versioned types with independent
+license declarations, so one artifact's license cannot be inherited by another. Cross-field
+validation rejects inconsistent domains, transforms, terminal semantics, recipe sources,
+capabilities, or provenance identities. `profile_schema_fingerprint()` hashes a canonical
+typed projection without importing ComfyUI or Diffusers.
+
 The first concrete profile, `krea2.turbo.official`, is implemented in
 `profiles/krea2_turbo.py`. It pins the official Krea source and framework corroboration,
 declares fixed exponential `mu = 1.15`, eight default steps, terminal zero, deterministic
@@ -251,8 +262,9 @@ This layer must not require ComfyUI or Diffusers for closed-form schedule formul
 Dedicated Turbo and RAW profiles carry model identity, variant, evidence level, sigma domain,
 base-grid construction, shift parameterization, terminal policy, sampler compatibility, and
 provenance. The implemented Krea-specific evidence resolver exposes status, confidence,
-decisive source, normalized evidence, and warnings. A generic schema, registry, and
-cross-model resolver remain planned.
+decisive source, normalized evidence, and warnings. The generic `ProfileSchemaV1` contract is
+implemented; the namespaced registry, inheritance policy, and cross-model resolver remain
+planned.
 
 ### ComfyUI adapters and nodes
 

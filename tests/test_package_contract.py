@@ -69,6 +69,7 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "profiles" / "__init__.py").is_file())
         self.assertTrue((package_path / "profiles" / "krea2_common.py").is_file())
         self.assertTrue((package_path / "profiles" / "krea2_raw.py").is_file())
+        self.assertTrue((package_path / "profiles" / "schema_v1.py").is_file())
         self.assertTrue((package_path / "profiles" / "krea2_turbo.py").is_file())
 
         sys.path.insert(0, str(REPOSITORY_ROOT))

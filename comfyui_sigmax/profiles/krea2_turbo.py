@@ -36,12 +36,31 @@ from comfyui_sigmax.core import (
 from comfyui_sigmax.profiles.krea2_common import (
     COMFYUI_REFERENCE,
     DIFFUSERS_REFERENCE,
+    KREA2_ARTIFACT_VERSIONS,
+    KREA2_DETECTION,
+    KREA2_FRAMEWORK_PROVENANCE,
+    KREA2_SLICING,
     KREA_REFERENCE,
+    KREA_SOFTWARE_PROVENANCE,
     DimensionAlignmentMode,
     DimensionPolicy,
     EvidenceReference,
     GuidanceConvention,
     ShiftParameterization,
+)
+from comfyui_sigmax.profiles.schema_v1 import (
+    PROFILE_SCHEMA_ID,
+    PROFILE_SCHEMA_VERSION,
+    BaseGridDeclaration,
+    GuidanceDeclaration,
+    InferenceRecipe,
+    LicenseDeclaration,
+    ModelWeightProvenance,
+    ProfileField,
+    ProfileSchemaV1,
+    StepRangeDeclaration,
+    TerminalDeclaration,
+    TransformDeclaration,
 )
 
 _ENGINE_VERSION: Final = "0.1.0.dev0"
@@ -90,6 +109,100 @@ _REFERENCE_SAMPLER_CAPABILITIES: Final = SamplerCapabilities(
     supports_per_token_timesteps=False,
 )
 
+_TURBO_WEIGHT_PROVENANCE: Final = ModelWeightProvenance(
+    record_version="1",
+    weight_id="krea.krea2.turbo.weights",
+    resource_version="1.0",
+    revision="98e0fe118d17c9e3547fbb2e25acdbae2cadf7c7",  # pragma: allowlist secret
+    sha256=(
+        "78bbf8f4165eda19cea3cb06c78089221932a39e2eed8af9da741f942c47ffb3"  # pragma: allowlist secret
+    ),
+    url="https://huggingface.co/krea/Krea-2-Turbo",
+    license=LicenseDeclaration(
+        declaration_version="1",
+        identifier="LicenseRef-Krea-2-Community",
+        name="Krea 2 Community License",
+        url="https://huggingface.co/krea/Krea-2-Turbo/blob/main/LICENSE.pdf",
+    ),
+)
+KREA2_TURBO_SCHEMA: Final = ProfileSchemaV1(
+    schema_id=PROFILE_SCHEMA_ID,
+    schema_version=PROFILE_SCHEMA_VERSION,
+    profile_id="krea2.turbo.official",
+    profile_version="1",
+    display_name="Krea 2 Turbo Official",
+    model_family="krea2",
+    model_variant="turbo",
+    evidence=EvidenceLevel.OFFICIAL,
+    primary_source_id="krea.krea2.official",
+    prediction_type=PredictionType.FLOW_VELOCITY,
+    sigma_domain=SigmaDomain.UNIT_FLOW,
+    ownership=ScheduleOwnership.EXTERNAL_SIGMAS,
+    base_grid=BaseGridDeclaration(
+        identifier="krea.reciprocal_step",
+        output_domain=SigmaDomain.UNIT_FLOW,
+        terminal_included=False,
+    ),
+    transforms=(
+        TransformDeclaration(
+            identifier="krea.exponential_mu",
+            stage=TransformStage.PRIMARY_TIME_SHIFT,
+            input_domain=SigmaDomain.UNIT_FLOW,
+            output_domain=SigmaDomain.UNIT_FLOW,
+            parameters=(ProfileField(name="mu", value=1.15),),
+        ),
+        TransformDeclaration(
+            identifier="terminal.append_zero",
+            stage=TransformStage.TERMINAL,
+            input_domain=SigmaDomain.UNIT_FLOW,
+            output_domain=SigmaDomain.UNIT_FLOW,
+        ),
+    ),
+    terminal=TerminalDeclaration(
+        policy=TerminalPolicy.APPEND_ZERO,
+        sigma=TerminalSigma.ZERO,
+        value=0.0,
+    ),
+    slicing=KREA2_SLICING,
+    recipes=(
+        InferenceRecipe(
+            recipe_id="krea2.turbo.official-8",
+            evidence=EvidenceLevel.OFFICIAL,
+            source_id="krea.krea2.official",
+            steps=StepRangeDeclaration(
+                minimum=1,
+                maximum=None,
+                default=8,
+                reference_steps=(8,),
+                allow_modified=True,
+            ),
+            guidance=GuidanceDeclaration(
+                model_convention="krea.guidance",
+                host_convention="comfy.cfg",
+                model_value=0.0,
+                host_value=1.0,
+            ),
+        ),
+    ),
+    detection=KREA2_DETECTION,
+    model_capabilities=_MODEL_CAPABILITIES,
+    profile_capabilities=_PROFILE_CAPABILITIES,
+    reference_sampler_capabilities=_REFERENCE_SAMPLER_CAPABILITIES,
+    artifact_versions=KREA2_ARTIFACT_VERSIONS,
+    software_sources=(KREA_SOFTWARE_PROVENANCE,),
+    frameworks=KREA2_FRAMEWORK_PROVENANCE,
+    model_weights=(_TURBO_WEIGHT_PROVENANCE,),
+    parameters=(
+        ProfileField(name="dimension_alignment_mode", value="ceil_multiple"),
+        ProfileField(name="dimension_multiple", value=16),
+    ),
+    known_limitations=(
+        "Automatic ComfyUI host evidence collection is not implemented.",
+        "Only the eight-step recipe retains official Turbo evidence.",
+        "Real-host and sampler-step execution remain unvalidated.",
+    ),
+)
+
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Krea2TurboProfile:
@@ -128,6 +241,7 @@ class Krea2TurboProfile:
     model_capabilities: ModelCapabilities = _MODEL_CAPABILITIES
     profile_capabilities: ProfileCapabilities = _PROFILE_CAPABILITIES
     reference_sampler_capabilities: SamplerCapabilities = _REFERENCE_SAMPLER_CAPABILITIES
+    schema: ProfileSchemaV1 = KREA2_TURBO_SCHEMA
 
     def __post_init__(self) -> None:
         expected_scalars = (
@@ -167,6 +281,7 @@ class Krea2TurboProfile:
             self.model_capabilities != _MODEL_CAPABILITIES
             or self.profile_capabilities != _PROFILE_CAPABILITIES
             or self.reference_sampler_capabilities != _REFERENCE_SAMPLER_CAPABILITIES
+            or self.schema is not KREA2_TURBO_SCHEMA
         ):
             raise ScheduleContractError("Krea 2 Turbo capability declarations are inconsistent")
 

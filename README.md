@@ -72,6 +72,7 @@ assert sorted(comfyui_sigmax.NODE_CLASS_MAPPINGS) == [
     "Sigmax.ProfileInspector",
     "Sigmax.ScheduleComparison",
     "Sigmax.ScheduleInspector",
+    "Sigmax.TurboWorkflowOutput",
 ]
 assert comfyui_sigmax.NODE_DISPLAY_NAME_MAPPINGS == {
     "Sigmax.AdvancedFlowMatchScheduler": "Advanced FlowMatch Scheduler",
@@ -80,11 +81,13 @@ assert comfyui_sigmax.NODE_DISPLAY_NAME_MAPPINGS == {
     "Sigmax.ProfileInspector": "Profile Inspector",
     "Sigmax.ScheduleComparison": "Schedule Comparison",
     "Sigmax.ScheduleInspector": "Schedule Inspector",
+    "Sigmax.TurboWorkflowOutput": "Turbo Workflow Output",
 }
 ```
 
-Only validated product nodes enter these mappings. Runtime dependencies remain empty; the node
-loads host-provided Torch only when it executes, and Diffusers remains isolated to an exactly
+Only validated product nodes enter these mappings. Runtime dependencies remain empty; schedule
+nodes load host-provided Torch only when they execute, the Turbo workflow output publishes a
+canonical model-free artifact/receipt bundle, and Diffusers remains isolated to an exactly
 pinned parity environment.
 
 The pure core currently exposes explicit schedule ownership, sigma domains, transform stages,

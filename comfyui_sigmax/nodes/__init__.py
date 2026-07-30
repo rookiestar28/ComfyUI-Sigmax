@@ -31,6 +31,7 @@ from comfyui_sigmax.nodes.krea2_sigma_scheduler import (
     Krea2SigmaNodeResult,
     Krea2SigmaScheduler,
     Krea2SigmaVariant,
+    bind_krea2_sigma_output_info,
     build_krea2_sigma_schedule,
     sigma_output_fingerprint,
 )
@@ -45,6 +46,14 @@ from comfyui_sigmax.nodes.model_aware_sigma_scheduler import (
     ModelFamilyProbe,
     build_model_aware_sigma_schedule,
     probe_model_family,
+)
+from comfyui_sigmax.nodes.turbo_workflow_output import (
+    TURBO_WORKFLOW_BUNDLE_UI_KEY,
+    TURBO_WORKFLOW_OUTPUT_NODE_ID,
+    TURBO_WORKFLOW_OUTPUT_SCHEMA_ID,
+    TurboWorkflowOutput,
+    TurboWorkflowOutputResult,
+    build_turbo_workflow_output,
 )
 
 __all__ = [
@@ -61,6 +70,9 @@ __all__ = [
     "SCHEDULE_COMPARISON_SCHEMA_ID",
     "SCHEDULE_INSPECTOR_NODE_ID",
     "SCHEDULE_INSPECTOR_SCHEMA_ID",
+    "TURBO_WORKFLOW_BUNDLE_UI_KEY",
+    "TURBO_WORKFLOW_OUTPUT_NODE_ID",
+    "TURBO_WORKFLOW_OUTPUT_SCHEMA_ID",
     "AdvancedFlowMatchNodeResult",
     "AdvancedFlowMatchScheduler",
     "AdvancedFlowMatchShiftMode",
@@ -78,12 +90,16 @@ __all__ = [
     "ScheduleComparisonResult",
     "ScheduleInspector",
     "ScheduleInspectorResult",
+    "TurboWorkflowOutput",
+    "TurboWorkflowOutputResult",
+    "bind_krea2_sigma_output_info",
     "build_advanced_flowmatch_schedule",
     "build_krea2_sigma_schedule",
     "build_model_aware_sigma_schedule",
     "build_profile_inspection",
     "build_schedule_comparison",
     "build_schedule_inspection",
+    "build_turbo_workflow_output",
     "probe_model_family",
     "sigma_output_fingerprint",
 ]

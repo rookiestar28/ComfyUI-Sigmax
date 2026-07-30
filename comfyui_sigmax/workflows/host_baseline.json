@@ -121,6 +121,40 @@
       "output_node": false,
       "deprecated": false,
       "experimental": false
+    },
+    "Sigmax.TurboWorkflowOutput": {
+      "input": {
+        "required": {
+          "schedule_info": [
+            "STRING",
+            {
+              "default": "",
+              "multiline": true
+            }
+          ],
+          "schedule_report": [
+            "STRING",
+            {
+              "default": "",
+              "multiline": true
+            }
+          ],
+          "sigmas": [
+            "SIGMAS"
+          ]
+        }
+      },
+      "output": [],
+      "output_is_list": [],
+      "output_name": [],
+      "name": "Sigmax.TurboWorkflowOutput",
+      "display_name": "Turbo Workflow Output",
+      "description": "Verifies the strict eight-step Turbo schedule and publishes a model-free artifact bundle with a not-executed sampler receipt.",
+      "python_module": "comfyui_sigmax.nodes",
+      "category": "Sigmax/workflows",
+      "output_node": true,
+      "deprecated": false,
+      "experimental": false
     }
   },
   "node_definition_v2": {
@@ -215,6 +249,34 @@
       "description": "Verifies connected SIGMAS against bounded versioned Sigmax schedule information.",
       "category": "Sigmax/inspection",
       "output_node": false,
+      "python_module": "comfyui_sigmax.nodes",
+      "deprecated": false,
+      "experimental": false
+    },
+    "Sigmax.TurboWorkflowOutput": {
+      "inputs": {
+        "schedule_info": {
+          "name": "schedule_info",
+          "type": "STRING",
+          "isOptional": false
+        },
+        "schedule_report": {
+          "name": "schedule_report",
+          "type": "STRING",
+          "isOptional": false
+        },
+        "sigmas": {
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "isOptional": false
+        }
+      },
+      "outputs": [],
+      "name": "Sigmax.TurboWorkflowOutput",
+      "display_name": "Turbo Workflow Output",
+      "description": "Verifies the strict eight-step Turbo schedule and publishes a model-free artifact bundle with a not-executed sampler receipt.",
+      "category": "Sigmax/workflows",
+      "output_node": true,
       "python_module": "comfyui_sigmax.nodes",
       "deprecated": false,
       "experimental": false

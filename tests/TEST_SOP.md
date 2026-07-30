@@ -19,8 +19,10 @@ Python matrix were established in M0-04 through M0-06.
 
 The pure numerical, artifact, capability, core-independence, deterministic property, Krea 2
 variant-resolution, Turbo golden-vector, Krea 2 RAW golden-vector, and Turbo/RAW framework
-parity lanes now exist. The ComfyUI host fixture, native-ComfyUI/host parity suites for RAW,
-and product nodes do not yet exist. Until their roadmap owners create them:
+parity lanes now exist. Validated product nodes, adapter/integration tests, the isolated
+real-ComfyUI H1 harness, and the M2-05 strict Turbo H2 workflow lane also exist. Native
+ComfyUI/host parity suites for RAW, the RAW/auto H2 publication lanes, sampler H3, and GPU H4
+remain owned by later roadmap items. Until their roadmap owners create them:
 
 - the OS-specific full-gate wrapper is mandatory acceptance evidence;
 - direct commands remain available for targeted diagnosis;

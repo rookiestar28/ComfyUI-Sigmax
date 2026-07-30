@@ -90,6 +90,7 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "nodes" / "inspectors.py").is_file())
         self.assertTrue((package_path / "nodes" / "krea2_sigma_scheduler.py").is_file())
         self.assertTrue((package_path / "nodes" / "model_aware_sigma_scheduler.py").is_file())
+        self.assertTrue((package_path / "nodes" / "turbo_workflow_output.py").is_file())
         self.assertTrue((package_path / "workflows" / "__init__.py").is_file())
         self.assertTrue((package_path / "workflows" / "validation.py").is_file())
         self.assertTrue((package_path / "workflows" / "fixtures.json").is_file())
@@ -110,6 +111,7 @@ class PackageContractTests(unittest.TestCase):
                 "Sigmax.ProfileInspector",
                 "Sigmax.ScheduleComparison",
                 "Sigmax.ScheduleInspector",
+                "Sigmax.TurboWorkflowOutput",
             ],
             sorted(package.NODE_CLASS_MAPPINGS),
         )
@@ -121,6 +123,7 @@ class PackageContractTests(unittest.TestCase):
                 "Sigmax.ProfileInspector": "Profile Inspector",
                 "Sigmax.ScheduleComparison": "Schedule Comparison",
                 "Sigmax.ScheduleInspector": "Schedule Inspector",
+                "Sigmax.TurboWorkflowOutput": "Turbo Workflow Output",
             },
             package.NODE_DISPLAY_NAME_MAPPINGS,
         )

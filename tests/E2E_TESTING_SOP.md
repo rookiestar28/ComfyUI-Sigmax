@@ -19,14 +19,18 @@ are separate, explicit lanes.
 
 ## 2. Current Status
 
-The host E2E harness does not yet exist. It is a required M0/M4 deliverable.
+The cross-platform host E2E harness and canonical entrypoints are implemented.
 
-Until the harness is implemented:
+Current implemented scope:
 
-- host E2E status is `NOT_IMPLEMENTED`;
-- node/workflow milestones cannot be accepted;
-- documentation-only work may use the exception in `tests/TEST_SOP.md`;
-- pure-core work may proceed only when its plan proves no ComfyUI contract is affected.
+- H0 package/import safety;
+- H1 isolated real-host registration and public schema validation;
+- M2-05 strict official eight-step Turbo H2 schedule execution, artifact, receipt, and
+  no-double-shift evidence.
+
+The RAW square/non-square, strict-auto rejection, and full save/reload H2 inventory remains
+`NOT_IMPLEMENTED` until M3-06. H3 and H4 retain their later activation rules below. A missing
+later lane is never a pass.
 
 ## 3. Test Lanes
 
@@ -102,11 +106,13 @@ Recommended environment variables:
 
 ```text
 COMFYUI_ROOT
+SIGMAX_COMFYUI_PYTHON
 SIGMAX_E2E_TMP
 SIGMAX_COMFYUI_REVISION
 ```
 
-Exact names become authoritative when the harness is implemented.
+These names are authoritative. `COMFYUI_ROOT` selects the reviewed checkout;
+`SIGMAX_COMFYUI_PYTHON` selects its compatible isolated interpreter.
 
 ### 4.1 Model-Free Host Fixture Architecture
 
@@ -137,9 +143,7 @@ remain separate assertions.
   approval and prior inspection.
 - Terminate the test host after the run, including after failure.
 
-## 6. Planned Canonical Commands
-
-Once M0/M4 implements the harness, the intended entry points are:
+## 6. Canonical Commands
 
 ### Windows PowerShell
 
@@ -148,6 +152,7 @@ python --version
 python -c "import sys; print(sys.executable)"
 
 $env:COMFYUI_ROOT = "C:\path\to\pinned\ComfyUI"
+$env:SIGMAX_COMFYUI_PYTHON = "C:\path\to\host-venv\Scripts\python.exe"
 powershell -File scripts/run_comfyui_e2e_windows.ps1
 ```
 
@@ -156,10 +161,12 @@ powershell -File scripts/run_comfyui_e2e_windows.ps1
 ```bash
 python3 --version
 export COMFYUI_ROOT="/path/to/pinned/ComfyUI"
+export SIGMAX_COMFYUI_PYTHON="/path/to/host-venv/bin/python"
 bash scripts/run_comfyui_e2e_linux.sh
 ```
 
-These commands are planned contracts, not available commands, until their scripts exist.
+The wrappers use `.venv` on Windows and `.venv-wsl` on Linux/WSL for the Sigmax validation
+driver. The separately selected host interpreter owns ComfyUI-only dependencies.
 
 The scripts must:
 
@@ -169,7 +176,7 @@ The scripts must:
 4. expose ComfyUI-Sigmax without modifying the user's normal custom-node installation;
 5. start ComfyUI on loopback with a unique port;
 6. poll a bounded readiness endpoint while also watching for early process exit;
-7. run H1/H2 and selected later lanes;
+7. run H1 and the implemented M2-05 Turbo H2 lane; run later lanes only after activation;
 8. collect redacted logs and results;
 9. request graceful shutdown when supported, wait a bounded interval, then terminate the
    verified process tree if required;

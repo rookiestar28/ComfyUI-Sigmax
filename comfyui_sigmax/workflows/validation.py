@@ -39,6 +39,12 @@ CANONICAL_HOST_REVISION: Final = "e651b7bef55a5376343dcb1c0edb79f0142c985e"
 _MAX_LIVE_BYTES: Final = 2_000_000
 _MAX_TEXT: Final = 256
 _WIDGET_TYPES: Final = frozenset({"STRING", "INT", "FLOAT", "BOOLEAN", "COMBO"})
+_SUPPORTED_PYTHON_MODULES: Final = frozenset(
+    {
+        SIGMAX_NODE_MODULE,
+        "custom_nodes.ComfyUI-Sigmax",
+    }
+)
 
 
 class WorkflowScanMode(str, Enum):
@@ -481,6 +487,15 @@ def _report(
     issues: Sequence[WorkflowIssue],
 ) -> WorkflowValidationReport:
     first = sorted(fixtures, key=lambda item: item.identifier)[0]
+    requirements: dict[str, WorkflowRequirement] = {}
+    for fixture in fixtures:
+        for requirement in fixture.nodes:
+            existing = requirements.get(requirement.identifier)
+            if existing is not None and existing != requirement:
+                raise ScheduleContractError(
+                    "workflow fixtures disagree on one node requirement version"
+                )
+            requirements[requirement.identifier] = requirement
     ordered_issues = tuple(sorted(issues, key=_issue_sort_key))
     compatible = not ordered_issues
     observational = lane is WorkflowValidationLane.LATEST_HOST
@@ -490,7 +505,7 @@ def _report(
         host_version=host_version,
         host_revision=host_revision,
         package=first.package,
-        nodes=first.nodes,
+        nodes=tuple(requirements[key] for key in sorted(requirements)),
         workflow_count=len(fixtures),
         issues=ordered_issues,
         compatible=compatible,
@@ -604,7 +619,7 @@ def _validate_node(
     host_node: ComfyNodeDefinition,
 ) -> list[WorkflowIssue]:
     issues: list[WorkflowIssue] = []
-    if raw_host_node.get("python_module") != SIGMAX_NODE_MODULE:
+    if raw_host_node.get("python_module") not in _SUPPORTED_PYTHON_MODULES:
         issues.append(
             _new_issue(
                 kind=WorkflowIssueKind.NORMALIZED_DIRECTORY_FAILURE,
@@ -868,8 +883,17 @@ def validate_workflow_fixtures(
     host_revision = _text(host_revision, label="workflow validation host revision")
     ordered = tuple(sorted(fixtures, key=lambda item: item.identifier))
     first = ordered[0]
-    if any(item.package != first.package or item.nodes != first.nodes for item in ordered):
-        raise ScheduleContractError("workflow fixtures disagree on package or node requirements")
+    if any(item.package != first.package for item in ordered):
+        raise ScheduleContractError("workflow fixtures disagree on package requirements")
+    node_versions: dict[str, WorkflowRequirement] = {}
+    for fixture in ordered:
+        for requirement in fixture.nodes:
+            existing = node_versions.get(requirement.identifier)
+            if existing is not None and existing != requirement:
+                raise ScheduleContractError(
+                    "workflow fixtures disagree on one node requirement version"
+                )
+            node_versions[requirement.identifier] = requirement
     raw_host_nodes = dict(object_info)
     try:
         normalized = normalize_object_info(raw_host_nodes)

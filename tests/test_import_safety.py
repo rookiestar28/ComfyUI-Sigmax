@@ -105,6 +105,7 @@ class ImportSafetyTests(unittest.TestCase):
                     "Sigmax.ProfileInspector": "ProfileInspector",
                     "Sigmax.ScheduleComparison": "ScheduleComparison",
                     "Sigmax.ScheduleInspector": "ScheduleInspector",
+                    "Sigmax.TurboWorkflowOutput": "TurboWorkflowOutput",
                 },
                 "comfy_loaded": False,
                 "diffusers_loaded": False,
@@ -115,6 +116,7 @@ class ImportSafetyTests(unittest.TestCase):
                     "Sigmax.ProfileInspector": "Profile Inspector",
                     "Sigmax.ScheduleComparison": "Schedule Comparison",
                     "Sigmax.ScheduleInspector": "Schedule Inspector",
+                    "Sigmax.TurboWorkflowOutput": "Turbo Workflow Output",
                 },
                 "torch_call_unchanged": True,
                 "uses_package_mappings": True,
@@ -150,6 +152,7 @@ class ImportSafetyTests(unittest.TestCase):
                 "Sigmax.ProfileInspector",
                 "Sigmax.ScheduleComparison",
                 "Sigmax.ScheduleInspector",
+                "Sigmax.TurboWorkflowOutput",
             ]
             assert bootstrap.NODE_DISPLAY_NAME_MAPPINGS == {
                 "Sigmax.AdvancedFlowMatchScheduler": "Advanced FlowMatch Scheduler",
@@ -158,6 +161,7 @@ class ImportSafetyTests(unittest.TestCase):
                 "Sigmax.ProfileInspector": "Profile Inspector",
                 "Sigmax.ScheduleComparison": "Schedule Comparison",
                 "Sigmax.ScheduleInspector": "Schedule Inspector",
+                "Sigmax.TurboWorkflowOutput": "Turbo Workflow Output",
             }
             """
         )
@@ -172,6 +176,46 @@ class ImportSafetyTests(unittest.TestCase):
             result.returncode,
             msg=f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}",
         )
+
+
+def test_bootstrap_supports_dynamic_comfyui_custom_node_loader() -> None:
+    probe = textwrap.dedent(
+        """
+        import importlib.util
+        import json
+        import sys
+        from pathlib import Path
+
+        root = Path(sys.argv[1]).resolve()
+        spec = importlib.util.spec_from_file_location(
+            "custom_nodes.ComfyUI_Sigmax",
+            root / "__init__.py",
+            submodule_search_locations=[str(root)],
+        )
+        assert spec is not None and spec.loader is not None
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = module
+        spec.loader.exec_module(module)
+        print(json.dumps(sorted(module.NODE_CLASS_MAPPINGS)))
+        """
+    )
+    result = subprocess.run(
+        [sys.executable, "-I", "-S", "-c", probe, str(REPOSITORY_ROOT)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert json.loads(result.stdout) == [
+        "Sigmax.AdvancedFlowMatchScheduler",
+        "Sigmax.Krea2SigmaScheduler",
+        "Sigmax.ModelAwareSigmaScheduler",
+        "Sigmax.ProfileInspector",
+        "Sigmax.ScheduleComparison",
+        "Sigmax.ScheduleInspector",
+        "Sigmax.TurboWorkflowOutput",
+    ]
 
 
 if __name__ == "__main__":

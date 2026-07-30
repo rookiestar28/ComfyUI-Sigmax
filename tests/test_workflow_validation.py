@@ -83,19 +83,23 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
     for fixture in fixtures:
         workflow = fixture.workflow
         assert workflow["version"] == 0.4
-        assert workflow["last_node_id"] == 2
-        assert workflow["last_link_id"] == 2
-        assert len(cast(list[object], workflow["nodes"])) == 2
-        assert len(cast(list[object], workflow["links"])) == 2
+        expected_output = fixture.variant == "Turbo"
+        assert workflow["last_node_id"] == (3 if expected_output else 2)
+        assert workflow["last_link_id"] == (5 if expected_output else 2)
+        assert len(cast(list[object], workflow["nodes"])) == (3 if expected_output else 2)
+        assert len(cast(list[object], workflow["links"])) == (5 if expected_output else 2)
         metadata = extract_workflow_metadata(workflow)
         assert metadata is not None
         assert metadata.package.identifier == "comfyui-sigmax"
         assert metadata.package.version == "0.1.0.dev0"
         assert metadata.host.version == CANONICAL_HOST_VERSION
-        assert tuple(item.identifier for item in metadata.nodes) == (
+        expected_nodes = [
             "Sigmax.Krea2SigmaScheduler",
             "Sigmax.ScheduleInspector",
-        )
+        ]
+        if expected_output:
+            expected_nodes.append("Sigmax.TurboWorkflowOutput")
+        assert tuple(item.identifier for item in metadata.nodes) == tuple(expected_nodes)
         assert metadata.profile.identifier == (
             "krea2.raw.official" if fixture.variant == "RAW" else "krea2.turbo.official"
         )
@@ -125,6 +129,7 @@ def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
     assert tuple(baseline.object_info) == (
         "Sigmax.Krea2SigmaScheduler",
         "Sigmax.ScheduleInspector",
+        "Sigmax.TurboWorkflowOutput",
     )
     assert report.scan_mode is WorkflowScanMode.PINNED_STATIC
     assert report.lane is WorkflowValidationLane.KNOWN_GOOD
@@ -140,6 +145,7 @@ def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
     assert projection["nodes"] == [
         {"id": "Sigmax.Krea2SigmaScheduler", "version": "1"},
         {"id": "Sigmax.ScheduleInspector", "version": "1"},
+        {"id": "Sigmax.TurboWorkflowOutput", "version": "1"},
     ]
 
 
@@ -259,6 +265,22 @@ def test_workflow_package_identity_detects_normalized_directory_drift() -> None:
 
     assert WorkflowIssueKind.NORMALIZED_DIRECTORY_FAILURE in _issue_kinds(report)
     assert report.gate_passed is False
+
+
+def test_live_loader_accepts_only_the_canonical_comfyui_custom_node_module() -> None:
+    object_info = _object_info_copy()
+    for node in object_info.values():
+        cast(dict[str, object], node)["python_module"] = "custom_nodes.ComfyUI-Sigmax"
+
+    report = validate_live_workflow_fixtures(
+        object_info=object_info,
+        host_version=CANONICAL_HOST_VERSION,
+        host_revision=CANONICAL_HOST_REVISION,
+        lane=WorkflowValidationLane.KNOWN_GOOD,
+    )
+
+    assert report.gate_passed is True
+    assert report.issues == ()
 
 
 def test_latest_host_findings_remain_observational_and_separately_labeled() -> None:
@@ -832,12 +854,26 @@ def test_validator_rejects_invalid_entry_contracts(kwargs: dict[str, object]) ->
         validate_workflow_fixtures(**cast(Any, arguments))
 
 
-def test_validator_rejects_fixture_requirement_disagreement() -> None:
+def test_validator_allows_per_fixture_nodes_but_rejects_requirement_disagreement() -> None:
     raw, turbo = load_canonical_workflow_fixtures()
     changed_package = replace(turbo.package, version="9.9.9")
     with pytest.raises(ScheduleContractError):
         validate_workflow_fixtures(
             fixtures=(raw, replace(turbo, package=changed_package)),
+            object_info=_object_info_copy(),
+            scan_mode=WorkflowScanMode.PINNED_STATIC,
+            lane=WorkflowValidationLane.KNOWN_GOOD,
+            host_version=CANONICAL_HOST_VERSION,
+            host_revision=CANONICAL_HOST_REVISION,
+        )
+
+    conflicting_nodes = (
+        replace(turbo.nodes[0], version="9"),
+        *turbo.nodes[1:],
+    )
+    with pytest.raises(ScheduleContractError):
+        validate_workflow_fixtures(
+            fixtures=(raw, replace(turbo, nodes=conflicting_nodes)),
             object_info=_object_info_copy(),
             scan_mode=WorkflowScanMode.PINNED_STATIC,
             lane=WorkflowValidationLane.KNOWN_GOOD,

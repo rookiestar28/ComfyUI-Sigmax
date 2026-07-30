@@ -258,6 +258,10 @@
         {
           "id": "Sigmax.ScheduleInspector",
           "version": "1"
+        },
+        {
+          "id": "Sigmax.TurboWorkflowOutput",
+          "version": "1"
         }
       ],
       "host": {
@@ -309,11 +313,16 @@
           "node_id": 2,
           "node_type": "Sigmax.ScheduleInspector",
           "widget_slots": []
+        },
+        {
+          "node_id": 3,
+          "node_type": "Sigmax.TurboWorkflowOutput",
+          "widget_slots": []
         }
       ],
       "workflow": {
-        "last_node_id": 2,
-        "last_link_id": 2,
+        "last_node_id": 3,
+        "last_link_id": 5,
         "nodes": [
           {
             "id": 1,
@@ -334,7 +343,8 @@
                 "name": "sigmas",
                 "type": "SIGMAS",
                 "links": [
-                  1
+                  1,
+                  3
                 ],
                 "slot_index": 0
               },
@@ -342,7 +352,8 @@
                 "name": "schedule_info",
                 "type": "STRING",
                 "links": [
-                  2
+                  2,
+                  4
                 ],
                 "slot_index": 1
               }
@@ -391,12 +402,52 @@
               {
                 "name": "schedule_report",
                 "type": "STRING",
-                "links": null,
+                "links": [
+                  5
+                ],
                 "slot_index": 0
               }
             ],
             "properties": {
               "Node name for S&R": "Sigmax.ScheduleInspector",
+              "cnr_id": "comfyui-sigmax"
+            },
+            "widgets_values": []
+          },
+          {
+            "id": 3,
+            "type": "Sigmax.TurboWorkflowOutput",
+            "pos": [
+              820,
+              80
+            ],
+            "size": [
+              330,
+              150
+            ],
+            "flags": {},
+            "order": 2,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "sigmas",
+                "type": "SIGMAS",
+                "link": 3
+              },
+              {
+                "name": "schedule_info",
+                "type": "STRING",
+                "link": 4
+              },
+              {
+                "name": "schedule_report",
+                "type": "STRING",
+                "link": 5
+              }
+            ],
+            "outputs": [],
+            "properties": {
+              "Node name for S&R": "Sigmax.TurboWorkflowOutput",
               "cnr_id": "comfyui-sigmax"
             },
             "widgets_values": []
@@ -418,6 +469,30 @@
             2,
             1,
             "STRING"
+          ],
+          [
+            3,
+            1,
+            0,
+            3,
+            0,
+            "SIGMAS"
+          ],
+          [
+            4,
+            1,
+            1,
+            3,
+            1,
+            "STRING"
+          ],
+          [
+            5,
+            2,
+            0,
+            3,
+            2,
+            "STRING"
           ]
         ],
         "groups": [],
@@ -426,7 +501,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-              "construction_fingerprint": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+              "construction_fingerprint": "sha256:e9577bb2e885b5d23fc12f66327f0dad882bd4a60bcba41daf72722b352a0910",
               "construction_schema": "sigmax.schedule-artifact/1",
               "numerical_fingerprint": "sha256:24984ad4412a3c47103a52cfe3af16bb9df8789f98401d9fc281b3f6ca0892ac",
               "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -454,7 +529,15 @@
               "id": "krea2.turbo.official",
               "version": "1"
             },
-            "receipts": [],
+            "receipts": [
+              {
+                "construction_fingerprint": "sha256:e9577bb2e885b5d23fc12f66327f0dad882bd4a60bcba41daf72722b352a0910",
+                "numerical_fingerprint": "sha256:24984ad4412a3c47103a52cfe3af16bb9df8789f98401d9fc281b3f6ca0892ac",
+                "receipt_fingerprint": "sha256:d2cab6b0717d67f85bed50fdc58b906b53b875af4bd7d051ad79e8fa9acfa664",
+                "schema": "sigmax.execution-receipt-envelope/1",
+                "status": "not_executed"
+              }
+            ],
             "requirements": {
               "host": {
                 "api_version": "legacy_v1",
@@ -469,6 +552,10 @@
                 {
                   "id": "Sigmax.ScheduleInspector",
                   "version": "1"
+                },
+                {
+                  "id": "Sigmax.TurboWorkflowOutput",
+                  "version": "1"
                 }
               ],
               "package": {
@@ -478,7 +565,7 @@
             },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:de32bf0ee98e12ada0df93437ceae3155257ea8d532db73eba0244f9c71f1910",
+            "metadata_fingerprint": "sha256:64a809ea0fcaa2675d0cbe83dc5248f3dca37dd7946559e990103843b8af50a3",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         },

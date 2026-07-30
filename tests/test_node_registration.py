@@ -468,6 +468,7 @@ def test_builtin_registry_and_package_mappings_expose_only_validated_product_nod
         ProfileInspector,
         ScheduleComparison,
         ScheduleInspector,
+        TurboWorkflowOutput,
     )
 
     registry = builtin_node_registry()
@@ -478,6 +479,7 @@ def test_builtin_registry_and_package_mappings_expose_only_validated_product_nod
         "Sigmax.ProfileInspector",
         "Sigmax.ScheduleComparison",
         "Sigmax.ScheduleInspector",
+        "Sigmax.TurboWorkflowOutput",
     )
     assert {
         "Sigmax.AdvancedFlowMatchScheduler": AdvancedFlowMatchScheduler,
@@ -486,6 +488,7 @@ def test_builtin_registry_and_package_mappings_expose_only_validated_product_nod
         "Sigmax.ProfileInspector": ProfileInspector,
         "Sigmax.ScheduleComparison": ScheduleComparison,
         "Sigmax.ScheduleInspector": ScheduleInspector,
+        "Sigmax.TurboWorkflowOutput": TurboWorkflowOutput,
     } == comfyui_sigmax.NODE_CLASS_MAPPINGS
     assert comfyui_sigmax.NODE_DISPLAY_NAME_MAPPINGS == {
         "Sigmax.AdvancedFlowMatchScheduler": "Advanced FlowMatch Scheduler",
@@ -494,6 +497,7 @@ def test_builtin_registry_and_package_mappings_expose_only_validated_product_nod
         "Sigmax.ProfileInspector": "Profile Inspector",
         "Sigmax.ScheduleComparison": "Schedule Comparison",
         "Sigmax.ScheduleInspector": "Schedule Inspector",
+        "Sigmax.TurboWorkflowOutput": "Turbo Workflow Output",
     }
     assert comfyui_sigmax.NODE_CLASS_MAPPINGS is not builtin_node_registry().class_mappings()
 

@@ -21,8 +21,9 @@ Command definitions remain in `tests/TEST_SOP.md`. Real-host lifecycle requireme
 | Krea 2 variant-resolution contracts | Implemented | M3-04 |
 | Framework parity tests | Implemented | M2-03, M3-05 |
 | Native ComfyUI parity tests | Implemented | M2-04 |
-| Adapter/integration tests | `NOT_IMPLEMENTED` | M4 |
-| Real ComfyUI H1/H2 | `NOT_IMPLEMENTED` | M0/M4 harness |
+| Adapter/integration tests | Implemented | M4-01 through M4-10 |
+| Real ComfyUI H1 | Implemented | M2-05 harness |
+| Real ComfyUI H2 | Turbo implemented; RAW/auto pending | M2-05; M3-06 |
 | Browser E2E | `NOT_APPLICABLE` | Deliberate web-extension roadmap item |
 | GPU/real-model tests | Optional and unapproved | Explicit requirement and authorization |
 | CI workflows | Configured; hosted runtime evidence pending | M0-06 |

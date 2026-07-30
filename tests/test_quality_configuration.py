@@ -154,12 +154,13 @@ class QualityConfigurationTests(unittest.TestCase):
             test_sop,
         )
         self.assertIn(
-            "The ComfyUI host fixture, native-ComfyUI/host parity",
+            "real-ComfyUI H1 harness",
             test_sop,
         )
+        self.assertIn("M2-05 strict Turbo H2 workflow lane also exist", test_sop)
         self.assertIn("Krea 2 RAW golden-vector", test_sop)
-        self.assertIn("suites for RAW,", test_sop)
-        self.assertIn("and product nodes do not yet exist", test_sop)
+        self.assertIn("the RAW/auto H2 publication lanes, sampler H3, and GPU H4", test_sop)
+        self.assertIn("Validated product nodes, adapter/integration tests", test_sop)
         self.assertIn("core-independence", test_sop)
         self.assertIn("Turbo golden-vector", test_sop)
 
@@ -167,6 +168,8 @@ class QualityConfigurationTests(unittest.TestCase):
         self.assertIn("| Pure-core tests | Implemented", ci_matrix)
         self.assertIn("| Deterministic property tests | Implemented", ci_matrix)
         self.assertIn("| Krea 2 Turbo golden vectors | Implemented", ci_matrix)
+        self.assertIn("| Real ComfyUI H1 | Implemented", ci_matrix)
+        self.assertIn("| Real ComfyUI H2 | Turbo implemented; RAW/auto pending", ci_matrix)
 
 
 if __name__ == "__main__":

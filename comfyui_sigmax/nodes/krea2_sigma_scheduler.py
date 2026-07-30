@@ -134,6 +134,33 @@ def _canonical_info(projection: dict[str, object]) -> str:
         raise ScheduleContractError("schedule information is not canonical JSON") from exc
 
 
+def bind_krea2_sigma_output_info(
+    result: Krea2SigmaNodeResult,
+    *,
+    output_sigmas: tuple[float, ...],
+) -> str:
+    """Bind trusted schedule information to the exact values crossing a host boundary."""
+
+    if not isinstance(result, Krea2SigmaNodeResult):
+        raise ScheduleContractError("output binding requires a Krea2SigmaNodeResult")
+    if not isinstance(output_sigmas, tuple) or len(output_sigmas) != len(result.sigmas):
+        raise ScheduleContractError("output binding sigma length is inconsistent")
+    values = validate_sigma_schedule(
+        output_sigmas,
+        domain=result.domain,
+        expected_steps=len(output_sigmas) - 1,
+        require_terminal_zero=False,
+    )
+    projection = json.loads(result.schedule_info_json)
+    if not isinstance(projection, dict):
+        raise ScheduleContractError("schedule information root must be an object")
+    fingerprints = projection.get("fingerprints")
+    if not isinstance(fingerprints, dict):
+        raise ScheduleContractError("schedule information fingerprints must be an object")
+    fingerprints["output"] = sigma_output_fingerprint(values, domain=result.domain)
+    return _canonical_info(projection)
+
+
 def build_krea2_sigma_schedule(
     *,
     variant: object,
@@ -324,4 +351,12 @@ class Krea2SigmaScheduler:
         except (ImportError, KeyError) as exc:
             # CRITICAL: keep Torch execution-only; package imports must remain dependency-free.
             raise RuntimeError("ComfyUI host execution requires Torch FloatTensor support") from exc
-        return (float_tensor(result.sigmas), result.schedule_info_json)
+        tensor = float_tensor(result.sigmas)
+        try:
+            host_values = tuple(float(value) for value in tensor.tolist())
+        except (AttributeError, TypeError, ValueError, OverflowError) as exc:
+            raise RuntimeError("ComfyUI host tensor must expose numeric tolist output") from exc
+        return (
+            tensor,
+            bind_krea2_sigma_output_info(result, output_sigmas=host_values),
+        )

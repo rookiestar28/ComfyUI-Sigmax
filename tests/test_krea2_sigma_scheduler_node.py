@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib
 import json
+import struct
 import sys
 from dataclasses import FrozenInstanceError
 from types import SimpleNamespace
@@ -335,7 +336,12 @@ def test_runtime_node_converts_only_at_execution_time(
 
     def float_tensor(values: tuple[float, ...]) -> object:
         calls.append(tuple(values))
-        return SimpleNamespace(values=tuple(values), device="cpu")
+        quantized = tuple(struct.unpack(">f", struct.pack(">f", value))[0] for value in values)
+        return SimpleNamespace(
+            values=quantized,
+            device="cpu",
+            tolist=lambda: list(quantized),
+        )
 
     monkeypatch.setitem(sys.modules, "torch", SimpleNamespace(FloatTensor=float_tensor))
     output = Krea2SigmaScheduler().build(
@@ -351,8 +357,13 @@ def test_runtime_node_converts_only_at_execution_time(
     tensor = cast(SimpleNamespace, output[0])
     assert len(output) == 2
     assert tensor.device == "cpu"
-    assert calls == [tensor.values]
-    assert json.loads(output[1])["schema"] == KREA2_SIGMA_NODE_SCHEMA_ID
+    assert calls != [tensor.values]
+    info = json.loads(output[1])
+    assert info["schema"] == KREA2_SIGMA_NODE_SCHEMA_ID
+    assert info["fingerprints"]["output"] == sigma_output_fingerprint(
+        tensor.values,
+        domain=SigmaDomain.UNIT_FLOW,
+    )
 
 
 @pytest.mark.parametrize("failure", ("missing_module", "missing_float_tensor"))

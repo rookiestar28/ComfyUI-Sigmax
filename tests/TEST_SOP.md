@@ -177,7 +177,7 @@ reproduction and pinning is insufficient bugfix evidence.
 
 ## 9. Planned Full Validation Gate
 
-M0 must provide equivalent Windows and Linux/WSL entry scripts. Planned names:
+M0 provides equivalent Windows and Linux/WSL entry scripts:
 
 ```powershell
 powershell -File scripts/run_full_tests_windows.ps1
@@ -187,7 +187,8 @@ powershell -File scripts/run_full_tests_windows.ps1
 bash scripts/run_full_tests_linux.sh
 ```
 
-Until those scripts exist, run each implemented stage explicitly.
+Both wrappers call `scripts/run_full_gate.py`, which is the canonical stage ordering. Direct
+commands remain useful for targeted diagnosis, but acceptance uses the OS wrapper.
 
 Gate classes, triggers, job roles, and artifact requirements are defined in
 `tests/CI_TEST_MATRIX.md`. A targeted `fast` run is never acceptance evidence by itself.
@@ -204,7 +205,7 @@ Validate:
 - no incompatible Node requirement in a Python-only run.
 - CI policy/configuration contracts when workflows or launchers exist.
 
-Planned canonical command:
+Canonical command:
 
 ```powershell
 python scripts/preflight_check.py

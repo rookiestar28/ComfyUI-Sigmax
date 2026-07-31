@@ -88,6 +88,29 @@ def _native_euler_case() -> dict[str, Any]:
     return cast(dict[str, Any], report["case"])
 
 
+def test_harness_defaults_to_pinned_known_good_validation() -> None:
+    harness = _harness()
+    arguments = harness._parser().parse_args([])
+
+    assert arguments.host_version == "0.29.0"
+    assert arguments.validation_lane == "known_good"
+
+
+def test_harness_latest_host_mode_requires_explicit_version_and_lane() -> None:
+    harness = _harness()
+    arguments = harness._parser().parse_args(
+        [
+            "--host-version",
+            "0.29.2",
+            "--validation-lane",
+            "latest_host",
+        ]
+    )
+
+    assert arguments.host_version == "0.29.2"
+    assert arguments.validation_lane == "latest_host"
+
+
 def test_api_prompt_executes_scheduler_inspector_and_output_chain() -> None:
     prompt = _harness().build_turbo_api_prompt()
 

@@ -20,6 +20,7 @@ PUBLIC_DOCUMENTS = (
     ROOT / "docs" / "SCHEDULE_ARTIFACT_SPEC.md",
     ROOT / "docs" / "SCHEDULE_REPORT_SPEC.md",
     ROOT / "docs" / "NUMERICAL_BENCHMARK_MATRIX_SPEC.md",
+    ROOT / "docs" / "DEPENDENCY_COMPATIBILITY_MATRIX_SPEC.md",
     ROOT / "docs" / "EXECUTION_RECEIPT_SPEC.md",
     ROOT / "docs" / "WORKFLOW_METADATA_SPEC.md",
     ROOT / "docs" / "COMPATIBILITY.md",
@@ -426,6 +427,24 @@ def test_public_documentation_exposes_numerical_benchmark_matrix_boundary() -> N
     assert "not_evaluated" in specification
     assert "dependency-free" in compatibility
     assert "| Numerical benchmark matrix | Implemented | M7-02 |" in ci_matrix
+
+
+def test_public_documentation_exposes_dependency_compatibility_boundary() -> None:
+    readme = _read(ROOT / "README.md")
+    architecture = _read(ROOT / "docs" / "ARCHITECTURE.md")
+    compatibility = _read(ROOT / "docs" / "COMPATIBILITY.md")
+    specification = _read(ROOT / "docs" / "DEPENDENCY_COMPATIBILITY_MATRIX_SPEC.md")
+    ci_matrix = _read(ROOT / "tests" / "CI_TEST_MATRIX.md")
+
+    for content in (readme, architecture, specification):
+        assert "sigmax.dependency-compatibility-matrix/1" in content
+        assert "latest" in content
+        assert "unavailable" in content
+    assert "Python 3.10" in compatibility and "October 2026" in compatibility
+    assert "@sha256:" in specification
+    assert "registry_access_denied" in specification
+    assert "release/HEAD latest-host evidence implemented" in ci_matrix
+    assert "official container explicitly unavailable/non-blocking" in ci_matrix
 
 
 def test_public_documents_do_not_expose_internal_workspace_material() -> None:

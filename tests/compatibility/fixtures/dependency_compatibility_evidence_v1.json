@@ -1,0 +1,135 @@
+{
+  "lanes": [
+    {
+      "blocking": true,
+      "components": {
+        "comfy_api": null,
+        "comfyui": null,
+        "container": null,
+        "diffusers": null,
+        "python": "3.13.9",
+        "torch": null
+      },
+      "evidence_kind": "executed_invariant_contract",
+      "evidence_source": "tests/compatibility/fixtures/windows_py313_v1.json",
+      "id": "core-windows-py313",
+      "platform": "windows",
+      "reason": "compatible",
+      "role": "supported",
+      "status": "passed"
+    },
+    {
+      "blocking": true,
+      "components": {
+        "comfy_api": null,
+        "comfyui": null,
+        "container": null,
+        "diffusers": null,
+        "python": "3.10.12",
+        "torch": null
+      },
+      "evidence_kind": "executed_invariant_contract",
+      "evidence_source": "tests/compatibility/fixtures/wsl_py310_v1.json",
+      "id": "core-wsl-py310",
+      "platform": "wsl",
+      "reason": "compatible",
+      "role": "supported",
+      "status": "passed"
+    },
+    {
+      "blocking": false,
+      "components": {
+        "comfy_api": null,
+        "comfyui": "0.29.0+head.5cc026f5.b81b3f01.fe7a1438.a0fd4131.d2ebda25",
+        "container": null,
+        "diffusers": null,
+        "python": "3.13.9",
+        "torch": "2.13.0+cpu"
+      },
+      "evidence_kind": "executed_latest_host",
+      "evidence_source": "tests/compatibility/fixtures/comfyui_head_v1.json",
+      "host_version": "0.29.0+head.5cc026f5",
+      "host_revision": "5cc026f5b81b3f01fe7a1438a0fd4131d2ebda25",
+      "id": "latest-comfyui-head",
+      "platform": "windows",
+      "reason": "compatible",
+      "role": "latest_informational",
+      "status": "passed"
+    },
+    {
+      "blocking": false,
+      "components": {
+        "comfy_api": null,
+        "comfyui": "0.29.2+rev.322122449c9d2ba8b8df1bb517364527dd0615f1",
+        "container": null,
+        "diffusers": null,
+        "python": "3.13.9",
+        "torch": "2.13.0+cpu"
+      },
+      "evidence_kind": "executed_latest_host",
+      "evidence_source": "tests/compatibility/fixtures/comfyui_release_v0292_v1.json",
+      "host_version": "0.29.2",
+      "host_revision": "322122449c9d2ba8b8df1bb517364527dd0615f1",
+      "id": "latest-comfyui-release-v029",
+      "platform": "windows",
+      "reason": "compatible",
+      "role": "latest_informational",
+      "status": "passed"
+    },
+    {
+      "blocking": false,
+      "components": {
+        "comfy_api": null,
+        "comfyui": "source-default-v0.19.3",
+        "container": "ghcr.io/comfy-org/comfyui-ci-container:comfyui-v0.5.1",
+        "diffusers": null,
+        "python": "3.12",
+        "torch": "unbounded-cpu"
+      },
+      "evidence_kind": "official_registry_observation",
+      "evidence_source": "tests/compatibility/fixtures/dependency_compatibility_evidence_v1.json",
+      "id": "official-comfyui-ci-container",
+      "platform": "linux_container",
+      "reason": "registry_access_denied",
+      "role": "latest_informational",
+      "status": "unavailable"
+    },
+    {
+      "blocking": true,
+      "components": {
+        "comfy_api": "v0_0_2-experimental",
+        "comfyui": "0.29.0+rev.e651b7be.f55a5376.343dcb1c.0edb79f0.142c985e",
+        "container": null,
+        "diffusers": null,
+        "python": "3.13",
+        "torch": "2.13.0"
+      },
+      "evidence_kind": "accepted_pinned_host",
+      "evidence_source": "tests/benchmarks/fixtures/known_good_host_attempts_v1.json",
+      "id": "pinned-comfyui029-windows-py313-torch213",
+      "platform": "windows",
+      "reason": "compatible",
+      "role": "known_good",
+      "status": "passed"
+    },
+    {
+      "blocking": true,
+      "components": {
+        "comfy_api": null,
+        "comfyui": null,
+        "container": null,
+        "diffusers": "0.39.0",
+        "python": "3.13",
+        "torch": "2.9.0"
+      },
+      "evidence_kind": "accepted_framework_parity",
+      "evidence_source": "tests/parity/fixtures/krea2_turbo_parity_v1.json",
+      "id": "pinned-diffusers039-linux-py313-torch290",
+      "platform": "linux_host",
+      "reason": "compatible",
+      "role": "known_good",
+      "status": "passed"
+    }
+  ],
+  "schema": "sigmax.dependency-compatibility-evidence/1"
+}

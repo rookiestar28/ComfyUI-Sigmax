@@ -1428,7 +1428,14 @@ def run(args: argparse.Namespace) -> dict[str, object]:
     host_revision = _git_revision(comfyui_root)
     if host_revision != args.expected_revision:
         raise ScheduleContractError(
-            "selected ComfyUI revision is not the pinned known-good revision"
+            "selected ComfyUI revision does not match the exact expected revision"
+        )
+    validation_lane = WorkflowValidationLane(args.validation_lane)
+    if validation_lane is WorkflowValidationLane.KNOWN_GOOD and (
+        args.host_version != CANONICAL_HOST_VERSION or host_revision != CANONICAL_HOST_REVISION
+    ):
+        raise ScheduleContractError(
+            "known-good validation requires the canonical pinned host identity"
         )
 
     owned_root = Path(args.temp_root).resolve()
@@ -1459,7 +1466,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         "lanes": ["H1", "H2_TURBO_M2_05", "H2_RAW_M3_06", "H3_EULER_M5_01"],
         "host": {
             "id": "comfyui",
-            "version": CANONICAL_HOST_VERSION,
+            "version": args.host_version,
             "revision": host_revision,
         },
         "sigmax_revision": _git_revision(REPOSITORY_ROOT),
@@ -1509,9 +1516,9 @@ def run(args: argparse.Namespace) -> dict[str, object]:
                 raise ScheduleContractError("live host is missing one or more Sigmax node IDs")
             live_report = validate_live_workflow_fixtures(
                 object_info=filtered,
-                host_version=CANONICAL_HOST_VERSION,
+                host_version=args.host_version,
                 host_revision=host_revision,
-                lane=WorkflowValidationLane.KNOWN_GOOD,
+                lane=validation_lane,
             )
             if not live_report.gate_passed or live_report.issues:
                 issue_payload = [issue.projection() for issue in live_report.issues]
@@ -1538,9 +1545,9 @@ def run(args: argparse.Namespace) -> dict[str, object]:
             }
             repeat_report = validate_live_workflow_fixtures(
                 object_info=repeat_filtered,
-                host_version=CANONICAL_HOST_VERSION,
+                host_version=args.host_version,
                 host_revision=host_revision,
-                lane=WorkflowValidationLane.KNOWN_GOOD,
+                lane=validation_lane,
             )
             repeat_h1_summary = {
                 "expected_node_ids": list(expected_ids),
@@ -1742,6 +1749,15 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--expected-revision",
         default=os.environ.get("SIGMAX_COMFYUI_REVISION", CANONICAL_HOST_REVISION),
+    )
+    parser.add_argument(
+        "--host-version",
+        default=CANONICAL_HOST_VERSION,
+    )
+    parser.add_argument(
+        "--validation-lane",
+        choices=[item.value for item in WorkflowValidationLane],
+        default=WorkflowValidationLane.KNOWN_GOOD.value,
     )
     parser.add_argument(
         "--temp-root",

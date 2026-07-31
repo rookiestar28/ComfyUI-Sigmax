@@ -77,6 +77,8 @@ The current package, quality gates, tests, and wheel inventory have been validat
 | WSL2/Linux path | 3.10 | Core independence, deterministic property, Turbo/RAW golden and parity contracts, package, quality, unit, coverage, and wheel gates |
 | Hosted Linux parity lanes | 3.13 | Exact Diffusers 0.39.0, NumPy 2.3.4, and Torch 2.9.0 Turbo/RAW report regeneration |
 | Pinned ComfyUI host | 3.13 | H1 import/schema safety and H2 model-free Turbo/RAW workflow execution on ComfyUI 0.29.0 revision `e651b7b…` |
+| Latest ComfyUI release observation | 3.13 | Non-blocking H1/H2/H3 first/repeat execution on official v0.29.2 revision `32212244…`, Torch 2.13.0+CPU, no model weights |
+| Latest ComfyUI HEAD observation | 3.13 | Non-blocking H1/H2/H3 first/repeat execution on pinned HEAD `5cc026f5…`, Torch 2.13.0+CPU, no model weights |
 
 The supported Python floor is 3.10. Python versions or operating systems not listed above may
 work, but do not yet have repository acceptance evidence.
@@ -90,6 +92,7 @@ work, but do not yet have repository acceptance evidence.
 | Diffusers | Optional `reference` extra, currently `>=0.39,<0.40` |
 | Matplotlib | Optional `plot` extra, currently `>=3.10,<3.12`; lazy and outside core |
 | Numerical benchmark matrix | Packaged canonical JSON; dependency-free loader; no model weights |
+| Dependency compatibility matrix | Packaged canonical JSON; fixed local runner; no implicit acquisition |
 | ComfyUI | Optional host; not imported by the package shell or pure adapter |
 | Node/browser tooling | Not required by the current Python-only foundation |
 | Model weights and GPU runtime | Not downloaded or exercised |
@@ -103,6 +106,30 @@ Canonical schedule and comparison reports remain standard-library-only. PNG/SVG 
 separate optional path: Python 3.10 resolves the compatible Matplotlib 3.10 line, while current
 Python 3.11+ environments may use 3.11. Plot output is not required to import Sigmax, build or
 compare reports, execute nodes, or validate artifacts and receipts.
+
+## Dependency Compatibility Evidence
+
+The versioned `sigmax.dependency-compatibility-matrix/1` resource distinguishes blocking
+`known_good`/`supported` lanes from `latest_informational` observations. Latest observations
+cannot silently expand support, and unavailable lanes are never PASS.
+
+The fixed invariant contract currently passes twice on native Windows Python 3.13.9 and WSL
+Python 3.10.12 with identical source/test-selection identities and zero mandatory runtime
+dependencies. It binds Turbo/RAW goldens and parity, workflow schemas, capability/receipt
+conformance, serialization identities, and the M7-02 numerical matrix.
+
+The pinned framework baseline remains Diffusers 0.39.0 with Torch 2.9.0. The pinned real-host
+baseline remains ComfyUI 0.29.0 revision
+`e651b7bef55a5376343dcb1c0edb79f0142c985e`, Python 3.13, Torch 2.13.0, and experimental
+numbered API `v0_0_2`. These are accepted source-evidence references, not newly rerun external
+lanes.
+
+Python 3.10 reaches upstream end of life in October 2026, so its floor is a dated pre-alpha
+compatibility commitment that must be reviewed before stable release. Current ComfyUI
+release/HEAD rows remain `not_evaluated` pending explicit execution approval. The official
+Comfy Org CI-container row remains `unavailable`: its mutable tag and source were observed, but
+an immutable registry digest could not be obtained. No third-party image substitutes for that
+lane.
 
 ## Planned Validation Tiers
 

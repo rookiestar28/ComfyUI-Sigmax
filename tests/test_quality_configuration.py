@@ -111,6 +111,8 @@ class QualityConfigurationTests(unittest.TestCase):
             for path, findings in baseline["results"].items()
         }
         expected_hash = "024469e0164c7a1285a3177a3ab35c7b110d39b9"  # pragma: allowlist secret
+        head_hash = "ba2d9a512ac48100b11ca25836a795bc97546b8a"  # pragma: allowlist secret
+        release_hash = "985aa069eea4d28101857c9f25efd3f7574c971c"  # pragma: allowlist secret
         self.assertEqual(
             {
                 "comfyui_sigmax/workflows/host_baseline.json": [
@@ -130,6 +132,44 @@ class QualityConfigurationTests(unittest.TestCase):
                         "is_verified": False,
                         "line_number": 37,
                     }
+                ],
+                "tests/compatibility/fixtures/comfyui_head_v1.json": [
+                    {
+                        "type": "Hex High Entropy String",
+                        "filename": "tests/compatibility/fixtures/comfyui_head_v1.json",
+                        "hashed_secret": head_hash,
+                        "is_verified": False,
+                        "line_number": 1,
+                    }
+                ],
+                "tests/compatibility/fixtures/comfyui_release_v0292_v1.json": [
+                    {
+                        "type": "Hex High Entropy String",
+                        "filename": ("tests/compatibility/fixtures/comfyui_release_v0292_v1.json"),
+                        "hashed_secret": release_hash,
+                        "is_verified": False,
+                        "line_number": 1,
+                    }
+                ],
+                "tests/compatibility/fixtures/dependency_compatibility_evidence_v1.json": [
+                    {
+                        "type": "Hex High Entropy String",
+                        "filename": (
+                            "tests/compatibility/fixtures/dependency_compatibility_evidence_v1.json"
+                        ),
+                        "hashed_secret": head_hash,
+                        "is_verified": False,
+                        "line_number": 52,
+                    },
+                    {
+                        "type": "Hex High Entropy String",
+                        "filename": (
+                            "tests/compatibility/fixtures/dependency_compatibility_evidence_v1.json"
+                        ),
+                        "hashed_secret": release_hash,
+                        "is_verified": False,
+                        "line_number": 72,
+                    },
                 ],
             },
             normalized_results,

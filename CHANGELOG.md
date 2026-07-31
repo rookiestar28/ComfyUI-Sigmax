@@ -42,6 +42,9 @@ tracked independently from the frozen profile-schema version.
 - A packaged dependency-free numerical benchmark matrix summarizing capability-filtered
   Turbo/RAW parity, H2 artifact/receipt workflows, H3 deterministic Euler, source identities,
   runtime/count/repeat evidence, and explicit non-evaluated BF16/quantized lanes.
+- A strict dependency compatibility matrix with repeated Windows/WSL invariant evidence,
+  exact pinned Diffusers/ComfyUI/API baselines, latest-host separation, immutable-container
+  requirements, and explicit non-PASS external lanes.
 - Versioned workflow metadata with package/node/host requirements, profile and compatibility
   evidence, artifact/receipt references, and non-destructive ComfyUI 0.4/1 graph attachment.
 - Immutable model, profile, sampler, and execution-feature capability declarations with

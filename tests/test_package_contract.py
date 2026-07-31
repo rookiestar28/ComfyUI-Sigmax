@@ -51,6 +51,7 @@ class PackageContractTests(unittest.TestCase):
                 "comfyui_sigmax",
                 "comfyui_sigmax.adapters",
                 "comfyui_sigmax.benchmarks",
+                "comfyui_sigmax.compatibility",
                 "comfyui_sigmax.core",
                 "comfyui_sigmax.nodes",
                 "comfyui_sigmax.profiles",
@@ -91,6 +92,8 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "adapters" / "__init__.py").is_file())
         self.assertTrue((package_path / "adapters" / "comfyui.py").is_file())
         self.assertTrue((package_path / "adapters" / "registration.py").is_file())
+        self.assertTrue((package_path / "compatibility" / "__init__.py").is_file())
+        self.assertTrue((package_path / "compatibility_matrix.py").is_file())
         self.assertTrue((package_path / "nodes" / "__init__.py").is_file())
         self.assertTrue((package_path / "nodes" / "advanced_flowmatch_scheduler.py").is_file())
         self.assertTrue((package_path / "nodes" / "inspectors.py").is_file())
@@ -106,6 +109,7 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "benchmark_matrix.py").is_file())
         self.assertTrue((package_path / "benchmarks" / "__init__.py").is_file())
         self.assertTrue((package_path / "benchmarks" / "numerical_matrix_v1.json").is_file())
+        self.assertTrue((package_path / "compatibility" / "matrix_v1.json").is_file())
 
         sys.path.insert(0, str(REPOSITORY_ROOT))
         self.addCleanup(sys.path.remove, str(REPOSITORY_ROOT))

@@ -79,8 +79,13 @@ comfyui_sigmax/
   benchmarks/
     numerical_matrix_v1.json
                 canonical capability-filtered numerical and host evidence matrix
+  compatibility/
+    matrix_v1.json
+                canonical dependency, host, API, and platform compatibility evidence
   benchmark_matrix.py
                 strict dependency-free packaged matrix loader and validator
+  compatibility_matrix.py
+                strict role/status/digest-aware compatibility matrix loader
   plotting.py
                 lazy optional headless PNG/SVG report renderer
 
@@ -94,6 +99,10 @@ scripts/
   validate_schedule_plots.py  isolated optional headless plot validation
   generate_numerical_benchmark_matrix.py
                               deterministic public-evidence matrix generation/check
+  generate_dependency_compatibility_matrix.py
+                              deterministic compatibility evidence generation/check
+  run_dependency_compatibility_lane.py
+                              fixed non-acquiring Windows/WSL invariant runner
   run_full_gate.py            canonical ordered acceptance gate
   OS wrappers                 repo-local environment selection
 
@@ -137,6 +146,15 @@ every source fixture by exact content identity and retains requested/effective g
 transition/evaluation counts, RNG ownership, runtimes, results, and first/repeat state. It does
 not enter node registration or core schedule math and cannot turn unavailable BF16, quantized,
 GPU, or model-weight evidence into PASS.
+
+The separate dependency-free `compatibility_matrix.py` boundary validates
+`sigmax.dependency-compatibility-matrix/1`. Its role and status contracts keep blocking
+known-good/supported evidence separate from latest/informational observations and unavailable
+lanes. The fixed local runner executes the same golden, parity, workflow, capability,
+serialization, package, and M7-02 identity contract twice on approved Windows/WSL interpreters;
+it never installs dependencies or acquires a host/container. Executed container rows require an
+immutable registry digest. A mutable tag, source review, registry denial, configured CI job, or
+successful repeat after a failed first attempt cannot become PASS.
 
 The full gate proves this boundary before the test suite: a clean project-local environment
 must resolve neither ComfyUI nor Diffusers, and a `python -I` subprocess installs explicit

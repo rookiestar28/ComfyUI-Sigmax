@@ -535,6 +535,34 @@ See the
 [numerical benchmark matrix specification](docs/NUMERICAL_BENCHMARK_MATRIX_SPEC.md) for its
 schema, source binding, evidence hierarchy, and limitations.
 
+### Dependency compatibility matrix
+
+The dependency-free compatibility resource separates exact blocking baselines from
+latest/informational and unavailable lanes:
+
+```python
+from comfyui_sigmax.compatibility_matrix import (
+    load_dependency_compatibility_matrix,
+)
+
+matrix = load_dependency_compatibility_matrix()
+windows = matrix.require_lane("core-windows-py313")
+assert windows["status"] == "passed"
+```
+
+`sigmax.dependency-compatibility-matrix/1` records exact Python, PyTorch, Diffusers, ComfyUI,
+numbered Comfy API, platform, and container identities where applicable. Windows 3.13 and WSL
+3.10 execute the same golden/workflow/capability/serialization contract twice. Existing pinned
+Diffusers 0.39.0 and ComfyUI 0.29.0 evidence remains distinct from the current release and HEAD.
+
+The separate latest-host rows passed on official ComfyUI `v0.29.2` and pinned repository HEAD
+`5cc026f5…`, using Python 3.13.9 and Torch 2.13.0+CPU without model weights. They remain
+non-blocking observations and do not promote the supported 0.29.0 baseline. The official Comfy
+Org CI-container row is `unavailable` because an immutable registry digest could not be obtained;
+under the explicit compatibility policy this is non-PASS but non-blocking, and neither mutable
+tags, source inspection, nor third-party images may substitute. See the
+[dependency compatibility matrix specification](docs/DEPENDENCY_COMPATIBILITY_MATRIX_SPEC.md).
+
 The first concrete profile is an immutable, evidence-pinned declaration of the official
 Krea 2 Turbo recipe:
 

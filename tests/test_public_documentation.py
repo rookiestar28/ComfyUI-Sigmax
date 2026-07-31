@@ -42,6 +42,21 @@ def test_required_public_documents_exist() -> None:
     assert not missing, f"Missing public documentation: {missing}"
 
 
+def test_v1_changelog_has_a_dated_release_and_new_unreleased_section() -> None:
+    changelog = _read(ROOT / "CHANGELOG.md")
+
+    unreleased = "## [Unreleased]"
+    release = "## [1.0.0] - 2026-08-01"
+    assert changelog.count(unreleased) == 1
+    assert changelog.count(release) == 1
+    assert changelog.index(unreleased) < changelog.index(release)
+    assert (
+        "[Unreleased]: https://github.com/rookiestar28/ComfyUI-Sigmax/compare/v1.0.0...HEAD"
+        in changelog
+    )
+    assert "[1.0.0]: https://github.com/rookiestar28/ComfyUI-Sigmax/tree/v1.0.0" in changelog
+
+
 def test_v1_user_guide_covers_installation_examples_migration_and_support() -> None:
     readme = _read(ROOT / "README.md")
     guide = _read(ROOT / "docs" / "USER_GUIDE.md")

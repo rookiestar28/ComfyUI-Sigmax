@@ -7,6 +7,10 @@ tracked independently from the frozen profile-schema version.
 
 ## [Unreleased]
 
+No changes yet.
+
+## [1.0.0] - 2026-08-01
+
 ### Added
 
 - A source-derived, fingerprinted `sigmax.public-contract-manifest/1` freezing built-in node IDs,
@@ -172,4 +176,5 @@ tracked independently from the frozen profile-schema version.
   model-weight, GPU, image, stochastic, resumable, partial-denoise-execution, and
   advanced-workflow validation remain pending.
 
-[Unreleased]: https://github.com/rookiestar28/ComfyUI-Sigmax/commits/main
+[Unreleased]: https://github.com/rookiestar28/ComfyUI-Sigmax/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/rookiestar28/ComfyUI-Sigmax/tree/v1.0.0

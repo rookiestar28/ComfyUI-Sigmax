@@ -28,9 +28,12 @@ from comfyui_sigmax.core.capabilities import (
 from comfyui_sigmax.core.fingerprints import canonical_projection_bytes
 from comfyui_sigmax.core.schedule_contracts import ScheduleContractError
 
-_RECEIPT_SCHEMA = "sigmax.execution-receipt/1"
-_RECEIPT_ENVELOPE_SCHEMA = "sigmax.execution-receipt-envelope/1"
-_BUNDLE_SCHEMA = "sigmax.portable-execution-bundle/1"
+EXECUTION_RECEIPT_SCHEMA = "sigmax.execution-receipt/1"
+EXECUTION_RECEIPT_ENVELOPE_SCHEMA = "sigmax.execution-receipt-envelope/1"
+PORTABLE_EXECUTION_BUNDLE_SCHEMA = "sigmax.portable-execution-bundle/1"
+_RECEIPT_SCHEMA = EXECUTION_RECEIPT_SCHEMA
+_RECEIPT_ENVELOPE_SCHEMA = EXECUTION_RECEIPT_ENVELOPE_SCHEMA
+_BUNDLE_SCHEMA = PORTABLE_EXECUTION_BUNDLE_SCHEMA
 _SHA256_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
 _IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.+-]{0,127}$")
 _REASON_PATTERN = re.compile(r"^[a-z][a-z0-9_.-]{0,127}$")

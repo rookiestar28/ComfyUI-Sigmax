@@ -8,7 +8,7 @@
 - **Numerical projection schema:** `sigmax.numerical-schedule/1`
 - **Transport envelope schema:** `sigmax.schedule-artifact-envelope/1`
 - **Canonicalization profile:** Sigmax Canonical Projection v1
-- **Maturity:** implemented and normative for pre-alpha v1; not yet a stable public API
+- **Maturity:** frozen public v1 contract under `sigmax.public-contract-manifest/1`
 
 This document defines how Sigmax will describe a completed schedule construction and how it
 will assign deterministic identities to the resulting numerical schedule and its construction

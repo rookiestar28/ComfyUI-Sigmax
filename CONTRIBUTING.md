@@ -40,6 +40,9 @@ Python or `pre-commit`; follow the reported local command and rerun.
 - Cite authoritative sources and numerical tolerances for parity claims.
 - Label non-authoritative behavior as framework-reference, community, or experimental.
 - Keep changes focused and preserve source attribution.
+- Treat identifiers in `sigmax.public-contract-manifest/1` as frozen. Run
+  `python scripts/generate_public_contract_manifest.py --check`; any intentional breaking
+  change requires a new schema major, a project major-version plan, and a migration note.
 
 ## Validation
 

@@ -9,6 +9,9 @@ tracked independently from the frozen profile-schema version.
 
 ### Added
 
+- A source-derived, fingerprinted `sigmax.public-contract-manifest/1` freezing built-in node IDs,
+  public profile/capability/artifact/receipt schemas, stable capability reason codes, and the
+  versioned compatibility and migration policy.
 - Side-effect-free `comfyui_sigmax` package shell with intentionally empty node mappings.
 - Python packaging metadata and typed-package marker.
 - Repository-local quality, test, coverage, and wheel validation.

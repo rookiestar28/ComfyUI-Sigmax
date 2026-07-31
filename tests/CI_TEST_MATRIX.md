@@ -26,6 +26,7 @@ Command definitions remain in `tests/TEST_SOP.md`. Real-host lifecycle requireme
 | Co-installation mutation matrix | Ten deterministic synthetic first/repeat scenarios implemented; no external pack code executed | M7-08 |
 | Performance budgets | Windows/WSL pure first/repeat limits plus two pinned-host startup observations implemented | M7-05 |
 | Environment guardrails | Versioned venv/cache/lock/Unicode/temp/optional diagnostics run before every full gate | M7-06 |
+| Stable public contracts | Source-derived fingerprinted node/schema/reason manifest plus migration policy implemented | M8-01 |
 | Adapter/integration tests | Implemented | M4-01 through M4-10 |
 | Real ComfyUI H1 | Implemented | M2-05 harness |
 | Real ComfyUI H2 | Turbo and RAW/auto implemented | M2-05; M3-06 |
@@ -65,6 +66,7 @@ Change-aware selection may accelerate `fast`. It must not remove a required `pr-
 | Double shift/wrong ownership | Adapter integration matrix | H2 native, external-sigma, and patch workflows |
 | Inert node control | Input-to-executed-path contract | H2 result or error changes with the control |
 | Node ID/schema drift | V3 schema snapshot | H1 `/object_info` and reload/idempotency |
+| Frozen public-contract drift | Manifest generator check + strict loader negatives | Migration-policy review and package inventory |
 | Global import side effect | Fresh subprocess import | PyTorch call identity and optional dependency absence |
 | Workflow metadata drift | JSON round-trip tests | H2 save/reload fingerprint and profile version |
 | Sampler step drift | Step-level differential/property tests | Fixed seed/state, partial denoise, terminal behavior |

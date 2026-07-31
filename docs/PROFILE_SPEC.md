@@ -6,6 +6,9 @@ The runtime contract identified by `sigmax.model-profile/1` is **frozen**. Addit
 incompatible contract changes require a new schema identifier; profile content continues to
 use its own independently versioned `profile_version`.
 
+The identity is included in `sigmax.public-contract-manifest/1`; its supported migration rules
+are normative in [Stable public contracts](STABLE_PUBLIC_CONTRACTS.md).
+
 Schema v1 freezes the validated externally supplied sigma path used by Krea 2 Turbo and RAW.
 It deliberately rejects `MODEL_NATIVE` and `MODEL_PATCH` ownership rather than implying that
 those future integration paths already have a stable profile contract.

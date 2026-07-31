@@ -1,6 +1,9 @@
 """Public contracts for the framework-independent schedule core."""
 
 from comfyui_sigmax.core.artifacts import (
+    NUMERICAL_SCHEDULE_SCHEMA,
+    SCHEDULE_ARTIFACT_ENVELOPE_SCHEMA,
+    SCHEDULE_ARTIFACT_SCHEMA,
     ArtifactBuildMetadata,
     ArtifactField,
     ScheduleArtifact,
@@ -33,6 +36,9 @@ from comfyui_sigmax.core.capabilities import (
     require_compatible,
 )
 from comfyui_sigmax.core.execution_receipts import (
+    EXECUTION_RECEIPT_ENVELOPE_SCHEMA,
+    EXECUTION_RECEIPT_SCHEMA,
+    PORTABLE_EXECUTION_BUNDLE_SCHEMA,
     ExecutionComponent,
     ExecutionHost,
     ExecutionReceipt,
@@ -114,6 +120,12 @@ from comfyui_sigmax.core.workflow_metadata import (
 )
 
 __all__ = [
+    "EXECUTION_RECEIPT_ENVELOPE_SCHEMA",
+    "EXECUTION_RECEIPT_SCHEMA",
+    "NUMERICAL_SCHEDULE_SCHEMA",
+    "PORTABLE_EXECUTION_BUNDLE_SCHEMA",
+    "SCHEDULE_ARTIFACT_ENVELOPE_SCHEMA",
+    "SCHEDULE_ARTIFACT_SCHEMA",
     "SCHEDULE_COMPARISON_REPORT_ENVELOPE_SCHEMA",
     "SCHEDULE_COMPARISON_REPORT_SCHEMA",
     "SCHEDULE_REPORT_ENVELOPE_SCHEMA",

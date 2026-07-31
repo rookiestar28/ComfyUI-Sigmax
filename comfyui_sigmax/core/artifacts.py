@@ -35,9 +35,12 @@ from comfyui_sigmax.core.schedule_contracts import (
 )
 from comfyui_sigmax.core.validation import validate_sigma_schedule
 
-_ENVELOPE_SCHEMA = "sigmax.schedule-artifact-envelope/1"
-_CONSTRUCTION_SCHEMA = "sigmax.schedule-artifact/1"
-_NUMERICAL_SCHEMA = "sigmax.numerical-schedule/1"
+SCHEDULE_ARTIFACT_ENVELOPE_SCHEMA = "sigmax.schedule-artifact-envelope/1"
+SCHEDULE_ARTIFACT_SCHEMA = "sigmax.schedule-artifact/1"
+NUMERICAL_SCHEDULE_SCHEMA = "sigmax.numerical-schedule/1"
+_ENVELOPE_SCHEMA = SCHEDULE_ARTIFACT_ENVELOPE_SCHEMA
+_CONSTRUCTION_SCHEMA = SCHEDULE_ARTIFACT_SCHEMA
+_NUMERICAL_SCHEMA = NUMERICAL_SCHEDULE_SCHEMA
 _ENVELOPE_FIELDS = frozenset(
     {
         "construction",

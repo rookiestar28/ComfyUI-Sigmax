@@ -88,6 +88,9 @@ comfyui_sigmax/
   performance/
     matrix_v1.json
                 canonical integer-unit performance budgets and observations
+  contracts/
+    manifest_v1.json
+                canonical frozen node/schema/reason-code inventory and migration policy
   benchmark_matrix.py
                 strict dependency-free packaged matrix loader and validator
   compatibility_matrix.py
@@ -98,6 +101,8 @@ comfyui_sigmax/
                 immutable host snapshots and pure protected-seam evaluator
   performance_budgets.py
                 immutable budget, observation, and first/repeat evaluation contracts
+  public_contracts.py
+                strict source-bound loader for the stable public contract manifest
   performance_matrix.py
                 strict packaged performance evidence loader
   plotting.py

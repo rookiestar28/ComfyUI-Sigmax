@@ -33,8 +33,10 @@ _PROFILE_KEY_PATTERN: Final = re.compile(
     r"^[a-z0-9][a-z0-9_-]*(?:\.[a-z0-9][a-z0-9_-]*)+@[0-9]+(?:\.[0-9]+)*$"
 )
 _FINGERPRINT_PATTERN: Final = re.compile(r"^sha256:[0-9a-f]{64}$")
-_CORE_REASON_CODES: Final = frozenset(f"core.{reason.value}" for reason in CompatibilityReason)
-_ADDITIONAL_REASON_CODES: Final = frozenset(
+CAPABILITY_RESOLUTION_CORE_REASON_CODES: Final = frozenset(
+    f"core.{reason.value}" for reason in CompatibilityReason
+)
+CAPABILITY_RESOLUTION_ADDITIONAL_REASON_CODES: Final = frozenset(
     {
         "host.capability_experimental",
         "host.capability_missing",
@@ -294,10 +296,12 @@ class ProfileCapabilityDecision:
             raise ScheduleContractError("core_decision must be CompatibilityDecision")
 
         reason_set = set(self.reason_codes)
-        if not reason_set.issubset(_CORE_REASON_CODES | _ADDITIONAL_REASON_CODES):
+        if not reason_set.issubset(
+            CAPABILITY_RESOLUTION_CORE_REASON_CODES | CAPABILITY_RESOLUTION_ADDITIONAL_REASON_CODES
+        ):
             raise ScheduleContractError("resolution contains an unsupported reason code")
-        additional_reasons = reason_set & _ADDITIONAL_REASON_CODES
-        actual_core_reasons = reason_set & _CORE_REASON_CODES
+        additional_reasons = reason_set & CAPABILITY_RESOLUTION_ADDITIONAL_REASON_CODES
+        actual_core_reasons = reason_set & CAPABILITY_RESOLUTION_CORE_REASON_CODES
         expected_core_reasons = {f"core.{reason.value}" for reason in self.core_decision.reasons}
         if additional_reasons and expected_core_reasons == {"core.compatible"}:
             expected_core_reasons = set()

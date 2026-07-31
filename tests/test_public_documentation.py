@@ -16,6 +16,7 @@ PUBLIC_DOCUMENTS = (
     ROOT / "CONTRIBUTING.md",
     ROOT / "CHANGELOG.md",
     ROOT / "docs" / "ARCHITECTURE.md",
+    ROOT / "docs" / "STABLE_PUBLIC_CONTRACTS.md",
     ROOT / "docs" / "PROFILE_SPEC.md",
     ROOT / "docs" / "SCHEDULE_ARTIFACT_SPEC.md",
     ROOT / "docs" / "SCHEDULE_REPORT_SPEC.md",
@@ -36,6 +37,21 @@ def _read(path: Path) -> str:
 def test_required_public_documents_exist() -> None:
     missing = [path.relative_to(ROOT).as_posix() for path in PUBLIC_DOCUMENTS if not path.is_file()]
     assert not missing, f"Missing public documentation: {missing}"
+
+
+def test_public_documentation_exposes_frozen_contract_and_migration_policy() -> None:
+    readme = _read(ROOT / "README.md")
+    architecture = _read(ROOT / "docs" / "ARCHITECTURE.md")
+    specification = _read(ROOT / "docs" / "STABLE_PUBLIC_CONTRACTS.md")
+    ci_matrix = _read(ROOT / "tests" / "CI_TEST_MATRIX.md")
+
+    for content in (readme, specification):
+        assert "sigmax.public-contract-manifest/1" in content
+        assert "migration" in content.lower()
+    assert "manifest_v1.json" in architecture
+    assert "all eight built-in node" in readme
+    assert "Unknown schema identifiers fail" in specification
+    assert "| Stable public contracts |" in ci_matrix
 
 
 def test_public_documentation_exposes_coinstallation_mutation_boundary() -> None:

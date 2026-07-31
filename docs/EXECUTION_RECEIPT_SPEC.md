@@ -6,7 +6,7 @@
 - **Receipt envelope schema:** `sigmax.execution-receipt-envelope/1`
 - **Portable bundle schema:** `sigmax.portable-execution-bundle/1`
 - **Construction artifact dependency:** `sigmax.schedule-artifact-envelope/1`
-- **Maturity:** implemented and normative for pre-alpha v1; not yet a stable public API
+- **Maturity:** frozen public v1 contract under `sigmax.public-contract-manifest/1`
 
 This specification keeps construction evidence and execution evidence separate. A schedule
 artifact records what Sigmax constructed. An execution receipt records the explicit outcome

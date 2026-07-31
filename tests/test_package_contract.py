@@ -53,6 +53,7 @@ class PackageContractTests(unittest.TestCase):
                 "comfyui_sigmax.benchmarks",
                 "comfyui_sigmax.coinstallation",
                 "comfyui_sigmax.compatibility",
+                "comfyui_sigmax.contracts",
                 "comfyui_sigmax.core",
                 "comfyui_sigmax.nodes",
                 "comfyui_sigmax.performance",
@@ -95,6 +96,9 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "adapters" / "comfyui.py").is_file())
         self.assertTrue((package_path / "adapters" / "registration.py").is_file())
         self.assertTrue((package_path / "compatibility" / "__init__.py").is_file())
+        self.assertTrue((package_path / "contracts" / "__init__.py").is_file())
+        self.assertTrue((package_path / "contracts" / "manifest_v1.json").is_file())
+        self.assertTrue((package_path / "public_contracts.py").is_file())
         self.assertTrue((package_path / "compatibility_matrix.py").is_file())
         self.assertTrue((package_path / "coinstallation" / "__init__.py").is_file())
         self.assertTrue((package_path / "coinstallation_matrix.py").is_file())

@@ -770,9 +770,27 @@ See [Contributing](CONTRIBUTING.md) for the development workflow and
 [Compatibility](docs/COMPATIBILITY.md) for the distinction between validated environments
 and planned host/model support.
 
+### Stable public contracts
+
+M8-01 freezes the release-facing contract boundary in the packaged
+`sigmax.public-contract-manifest/1`. Its canonical fingerprint covers all eight built-in node
+IDs and node schemas, the profile/capability schemas, schedule artifact and execution receipt
+schemas, and the stable capability reason-code vocabularies. The source-derived check is:
+
+```powershell
+python scripts/generate_public_contract_manifest.py --check
+```
+
+Existing frozen identifiers are exact. Breaking field or semantic changes require a new schema
+major, a project major-version plan, and a migration note; node renames additionally require an
+explicit compatibility alias. Unknown schemas fail closed. See
+[Stable public contracts](docs/STABLE_PUBLIC_CONTRACTS.md) for the versioned migration policy and
+the exact boundary.
+
 ## Documentation
 
 - [Architecture](docs/ARCHITECTURE.md)
+- [Stable public contracts and migration policy](docs/STABLE_PUBLIC_CONTRACTS.md)
 - [Model profile schema v1 specification](docs/PROFILE_SPEC.md)
 - [Model profile contribution guide](docs/PROFILE_CONTRIBUTION_GUIDE.md)
 - [Schedule artifact specification](docs/SCHEDULE_ARTIFACT_SPEC.md)

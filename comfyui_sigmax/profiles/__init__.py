@@ -53,6 +53,8 @@ from comfyui_sigmax.profiles.registry import (
     builtin_profile_registry,
 )
 from comfyui_sigmax.profiles.resolution import (
+    CAPABILITY_RESOLUTION_ADDITIONAL_REASON_CODES,
+    CAPABILITY_RESOLUTION_CORE_REASON_CODES,
     CAPABILITY_RESOLUTION_SCHEMA_ID,
     CAPABILITY_RESOLUTION_SCHEMA_VERSION,
     HostCapabilities,
@@ -89,6 +91,8 @@ from comfyui_sigmax.profiles.schema_v1 import (
 )
 
 __all__ = [
+    "CAPABILITY_RESOLUTION_ADDITIONAL_REASON_CODES",
+    "CAPABILITY_RESOLUTION_CORE_REASON_CODES",
     "CAPABILITY_RESOLUTION_SCHEMA_ID",
     "CAPABILITY_RESOLUTION_SCHEMA_VERSION",
     "KREA2_RAW_DIFFUSERS_REFERENCE_28",

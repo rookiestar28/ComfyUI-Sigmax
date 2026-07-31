@@ -7,8 +7,9 @@ from comfyui_sigmax.public_contracts import (
     PublicContractManifest,
     load_public_contract_manifest,
 )
+from comfyui_sigmax.version import VERSION
 
-__version__ = "0.1.0.dev0"
+__version__ = VERSION
 
 # Node milestones populate these mappings only after their behavior is validated.
 _BUILTIN_NODE_REGISTRY = builtin_node_registry()

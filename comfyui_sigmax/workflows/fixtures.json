@@ -6,7 +6,7 @@
       "variant": "RAW",
       "package": {
         "id": "comfyui-sigmax",
-        "version": "0.1.0.dev0"
+        "version": "1.0.0"
       },
       "nodes": [
         {
@@ -319,12 +319,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "0.1.0.dev0"
+                  "version": "1.0.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:251d9f6cba4a752cc45bc549b791f0793950f11c01975931b13c10eb017b2396",
+          "metadata_fingerprint": "sha256:f090c369062263b111b7f9c33e579d99447eb7a3ef6316fbce280c080fb6639f",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -335,7 +335,7 @@
       "variant": "RAW",
       "package": {
         "id": "comfyui-sigmax",
-        "version": "0.1.0.dev0"
+        "version": "1.0.0"
       },
       "nodes": [
         {
@@ -648,12 +648,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "0.1.0.dev0"
+                  "version": "1.0.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:c7be8ccd00feba91bfca7a005719a6a3e0b4d8ba6dc0ea4c35be3a86b020ad1b",
+          "metadata_fingerprint": "sha256:b7b596c468357c78a8470a8d61505c2cd049fd517351dca9585fb48ad3d04944",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -664,7 +664,7 @@
       "variant": "RAW",
       "package": {
         "id": "comfyui-sigmax",
-        "version": "0.1.0.dev0"
+        "version": "1.0.0"
       },
       "nodes": [
         {
@@ -977,12 +977,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "0.1.0.dev0"
+                  "version": "1.0.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:31d43f4e9d4a1a5ace8b9e3186bcadb1af13884e5c22754044844357ce751fac",
+          "metadata_fingerprint": "sha256:6a2a4753b659c1ff1c7d3beeba39199ee9fca228af4bf4dd817651ee0145e3be",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -993,7 +993,7 @@
       "variant": "Turbo",
       "package": {
         "id": "comfyui-sigmax",
-        "version": "0.1.0.dev0"
+        "version": "1.0.0"
       },
       "nodes": [
         {
@@ -1305,12 +1305,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "0.1.0.dev0"
+                  "version": "1.0.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:64a809ea0fcaa2675d0cbe83dc5248f3dca37dd7946559e990103843b8af50a3",
+          "metadata_fingerprint": "sha256:9c1f879564ca591387b595da2ba52332aa1906ec8ed709fefd6bb03b6fc03e29",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         },

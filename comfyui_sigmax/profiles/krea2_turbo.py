@@ -62,8 +62,9 @@ from comfyui_sigmax.profiles.schema_v1 import (
     TerminalDeclaration,
     TransformDeclaration,
 )
+from comfyui_sigmax.version import VERSION
 
-_ENGINE_VERSION: Final = "0.1.0.dev0"
+_ENGINE_VERSION: Final = VERSION
 _ALIGNMENT_REASON: Final = "Krea 2 pads image dimensions up to a multiple of 16"
 _MODIFIED_STEPS_WARNING: Final = (
     "requested steps differ from the official Turbo 8-step recipe; evidence is modified"

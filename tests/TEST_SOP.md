@@ -404,6 +404,18 @@ The `sigmax.release-audit/1` report must pass its separate tracked-file, depende
 provenance/license, Registry metadata, secret-scan, and archive sections. This does not replace
 the wheel clean-install check or authorize publishing.
 
+For a Comfy Registry candidate, stage the intended files and validate the exact Git-indexed ZIP:
+
+```powershell
+python scripts/validate_registry_artifact.py --archive .tmp/comfy-registry/comfyui-sigmax-1.0.0.zip --check-manifest --observe-registry --output .tmp/comfy-registry/report.json
+```
+
+The `sigmax.registry-artifact-report/1` must bind the canonical
+`sigmax.registry-release-manifest/1`, pass member and source hash audits, import from a normalized
+renamed directory, and record
+`publication_performed: false`. Windows and WSL must produce the same archive SHA-256. This
+validation neither replaces the release audit nor authorizes publication.
+
 ### Stage 9 - Test Health, Coverage, and Debt Governance
 
 When source and coverage tooling exist:

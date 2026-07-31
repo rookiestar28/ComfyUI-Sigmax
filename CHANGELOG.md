@@ -14,6 +14,9 @@ tracked independently from the frozen profile-schema version.
   versioned compatibility and migration policy.
 - A canonical non-publishing `sigmax.release-audit/1` covering tracked-file hygiene, separated
   dependency/provenance/license/Registry reviews, and bounded wheel/sdist archive inspection.
+- A deterministic `.comfyignore`-filtered Comfy Registry ZIP validator with an embedded
+  `sigmax.registry-release-manifest/1`, safe member inspection, cross-platform reproducibility,
+  renamed-directory clean import, and optional unauthenticated read-only Registry observation.
 - Side-effect-free `comfyui_sigmax` package shell with intentionally empty node mappings.
 - Python packaging metadata and typed-package marker.
 - Repository-local quality, test, coverage, and wheel validation.

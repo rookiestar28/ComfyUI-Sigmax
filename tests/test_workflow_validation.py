@@ -122,7 +122,7 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
         metadata = extract_workflow_metadata(workflow)
         assert metadata is not None
         assert metadata.package.identifier == "comfyui-sigmax"
-        assert metadata.package.version == "0.1.0.dev0"
+        assert metadata.package.version == "1.0.0"
         assert metadata.host.version == CANONICAL_HOST_VERSION
         expected_nodes = [
             "Sigmax.Krea2SigmaScheduler",
@@ -166,7 +166,7 @@ def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
     assert report.observational is False
     assert report.issues == ()
     projection = report.projection()
-    assert projection["package"] == {"id": "comfyui-sigmax", "version": "0.1.0.dev0"}
+    assert projection["package"] == {"id": "comfyui-sigmax", "version": "1.0.0"}
     assert projection["nodes"] == [
         {"id": "Sigmax.Krea2SigmaScheduler", "version": "1"},
         {"id": "Sigmax.RawWorkflowOutput", "version": "1"},

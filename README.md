@@ -803,11 +803,27 @@ environments, caches, and model files. See the
 [security and release audit](docs/SECURITY_RELEASE_AUDIT.md) for exact archive allow-lists,
 stable findings, and limitations.
 
+### Comfy Registry release artifact
+
+The Registry candidate is a separate deterministic ZIP of Git-indexed files filtered by
+`.comfyignore`; it is not the wheel or sdist. The local validator audits member paths and source
+hashes, checks the embedded `sigmax.registry-release-manifest/1`, performs a clean import from a
+renamed custom-node directory, and optionally makes unauthenticated read-only Registry requests:
+
+```powershell
+python scripts/validate_registry_artifact.py --archive .tmp/comfy-registry/comfyui-sigmax-1.0.0.zip --check-manifest --observe-registry --output .tmp/comfy-registry/report.json
+```
+
+The command never authenticates, uploads, or publishes and always records
+`publication_performed: false`. See the
+[Comfy Registry release artifact specification](docs/COMFY_REGISTRY_RELEASE_ARTIFACT.md).
+
 ## Documentation
 
 - [Architecture](docs/ARCHITECTURE.md)
 - [Stable public contracts and migration policy](docs/STABLE_PUBLIC_CONTRACTS.md)
 - [Security and release audit](docs/SECURITY_RELEASE_AUDIT.md)
+- [Comfy Registry release artifact](docs/COMFY_REGISTRY_RELEASE_ARTIFACT.md)
 - [Model profile schema v1 specification](docs/PROFILE_SPEC.md)
 - [Model profile contribution guide](docs/PROFILE_CONTRIBUTION_GUIDE.md)
 - [Schedule artifact specification](docs/SCHEDULE_ARTIFACT_SPEC.md)

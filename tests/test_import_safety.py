@@ -122,7 +122,7 @@ class ImportSafetyTests(unittest.TestCase):
                 },
                 "torch_call_unchanged": True,
                 "uses_package_mappings": True,
-                "version": "0.1.0.dev0",
+                "version": "1.0.0",
             },
             json.loads(result.stdout),
         )
@@ -146,7 +146,7 @@ class ImportSafetyTests(unittest.TestCase):
             sys.path.insert(0, sys.argv[1])
             import __init__ as bootstrap
 
-            assert bootstrap.__version__ == "0.1.0.dev0"
+            assert bootstrap.__version__ == "1.0.0"
             assert sorted(bootstrap.NODE_CLASS_MAPPINGS) == [
                 "Sigmax.AdvancedFlowMatchScheduler",
                 "Sigmax.Krea2SigmaScheduler",

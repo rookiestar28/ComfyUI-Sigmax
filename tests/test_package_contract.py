@@ -20,7 +20,7 @@ class PackageContractTests(unittest.TestCase):
 
         project = metadata["project"]
         self.assertEqual("comfyui-sigmax", project["name"])
-        self.assertEqual("0.1.0.dev0", project["version"])
+        self.assertEqual("1.0.0", project["version"])
         self.assertEqual(">=3.10", project["requires-python"])
         self.assertEqual([], project["dependencies"])
         self.assertEqual("MIT", project["license"])
@@ -58,6 +58,7 @@ class PackageContractTests(unittest.TestCase):
                 "comfyui_sigmax.nodes",
                 "comfyui_sigmax.performance",
                 "comfyui_sigmax.profiles",
+                "comfyui_sigmax.registry",
                 "comfyui_sigmax.workflows",
             ],
             metadata["tool"]["setuptools"]["packages"],
@@ -72,7 +73,9 @@ class PackageContractTests(unittest.TestCase):
         package_path = REPOSITORY_ROOT / "comfyui_sigmax"
         self.assertTrue((package_path / "__init__.py").is_file())
         self.assertTrue((REPOSITORY_ROOT / "MANIFEST.in").is_file())
+        self.assertTrue((REPOSITORY_ROOT / ".comfyignore").is_file())
         self.assertTrue((REPOSITORY_ROOT / "scripts" / "run_release_audit.py").is_file())
+        self.assertTrue((REPOSITORY_ROOT / "scripts" / "validate_registry_artifact.py").is_file())
         self.assertTrue((package_path / "py.typed").is_file())
         self.assertTrue((package_path / "core" / "__init__.py").is_file())
         self.assertTrue((package_path / "core" / "base_grids.py").is_file())
@@ -100,7 +103,10 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "compatibility" / "__init__.py").is_file())
         self.assertTrue((package_path / "contracts" / "__init__.py").is_file())
         self.assertTrue((package_path / "contracts" / "manifest_v1.json").is_file())
+        self.assertTrue((package_path / "registry" / "__init__.py").is_file())
+        self.assertTrue((package_path / "registry" / "release_manifest_v1.json").is_file())
         self.assertTrue((package_path / "public_contracts.py").is_file())
+        self.assertTrue((package_path / "version.py").is_file())
         self.assertTrue((package_path / "compatibility_matrix.py").is_file())
         self.assertTrue((package_path / "coinstallation" / "__init__.py").is_file())
         self.assertTrue((package_path / "coinstallation_matrix.py").is_file())
@@ -133,7 +139,7 @@ class PackageContractTests(unittest.TestCase):
         package = importlib.import_module("comfyui_sigmax")
         self.addCleanup(sys.modules.pop, "comfyui_sigmax", None)
 
-        self.assertEqual("0.1.0.dev0", package.__version__)
+        self.assertEqual("1.0.0", package.__version__)
         self.assertEqual(
             [
                 "Sigmax.AdvancedFlowMatchScheduler",

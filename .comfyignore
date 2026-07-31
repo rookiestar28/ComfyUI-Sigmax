@@ -1,0 +1,12 @@
+# Registry archives contain the runtime package and essential public metadata only.
+.github/
+docs/
+requirements/
+scripts/
+tests/
+.gitignore
+.pre-commit-config.yaml
+.secrets.baseline
+CHANGELOG.md
+CONTRIBUTING.md
+MANIFEST.in

@@ -18,6 +18,7 @@ PUBLIC_DOCUMENTS = (
     ROOT / "docs" / "ARCHITECTURE.md",
     ROOT / "docs" / "STABLE_PUBLIC_CONTRACTS.md",
     ROOT / "docs" / "SECURITY_RELEASE_AUDIT.md",
+    ROOT / "docs" / "COMFY_REGISTRY_RELEASE_ARTIFACT.md",
     ROOT / "docs" / "PROFILE_SPEC.md",
     ROOT / "docs" / "SCHEDULE_ARTIFACT_SPEC.md",
     ROOT / "docs" / "SCHEDULE_REPORT_SPEC.md",
@@ -69,6 +70,23 @@ def test_public_documentation_exposes_security_release_audit() -> None:
     assert "software-source" in specification
     assert "model-weight" in specification
     assert "| Security and release audit |" in ci_matrix
+
+
+def test_public_documentation_exposes_registry_artifact_boundary() -> None:
+    readme = _read(ROOT / "README.md")
+    contributing = _read(ROOT / "CONTRIBUTING.md")
+    specification = _read(ROOT / "docs" / "COMFY_REGISTRY_RELEASE_ARTIFACT.md")
+    test_sop = _read(ROOT / "tests" / "TEST_SOP.md")
+    ci_matrix = _read(ROOT / "tests" / "CI_TEST_MATRIX.md")
+
+    for content in (readme, specification, test_sop):
+        assert "sigmax.registry-release-manifest/1" in content
+        assert "publication_performed: false" in content
+    assert ".comfyignore" in specification
+    assert "normalized" in specification.lower() and "directory" in specification.lower()
+    assert "scripts/validate_registry_artifact.py" in contributing
+    assert "never" in specification.lower() and "publish" in specification.lower()
+    assert "| Comfy Registry artifact |" in ci_matrix
 
 
 def test_public_documentation_exposes_coinstallation_mutation_boundary() -> None:

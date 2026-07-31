@@ -31,10 +31,11 @@ from comfyui_sigmax.core import (
     validate_sigma_schedule,
 )
 from comfyui_sigmax.nodes.krea2_sigma_scheduler import sigma_output_fingerprint
+from comfyui_sigmax.version import VERSION
 
 ADVANCED_FLOWMATCH_NODE_ID: Final = "Sigmax.AdvancedFlowMatchScheduler"
 ADVANCED_FLOWMATCH_NODE_SCHEMA_ID: Final = "sigmax.advanced-flowmatch-node/1"
-_ENGINE_VERSION: Final = "0.1.0.dev0"
+_ENGINE_VERSION: Final = VERSION
 _SOURCE_ID: Final = "sigmax.advanced-flowmatch-scheduler"
 _BASE_GRID_ID: Final = "sigmax.linear_endpoint"
 _MAX_STEPS: Final = 10_000

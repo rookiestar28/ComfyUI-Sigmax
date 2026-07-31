@@ -28,6 +28,7 @@ Command definitions remain in `tests/TEST_SOP.md`. Real-host lifecycle requireme
 | Environment guardrails | Versioned venv/cache/lock/Unicode/temp/optional diagnostics run before every full gate | M7-06 |
 | Stable public contracts | Source-derived fingerprinted node/schema/reason manifest plus migration policy implemented | M8-01 |
 | Security and release audit | Tracked/dependency/provenance/Registry sections plus wheel/sdist boundary inspection implemented | M8-02 |
+| Comfy Registry artifact | Deterministic Git-indexed ZIP, manifest/source binding, normalized install, and read-only observation implemented | M8-06 |
 | Adapter/integration tests | Implemented | M4-01 through M4-10 |
 | Real ComfyUI H1 | Implemented | M2-05 harness |
 | Real ComfyUI H2 | Turbo and RAW/auto implemented | M2-05; M3-06 |
@@ -74,6 +75,7 @@ Change-aware selection may accelerate `fast`. It must not remove a required `pr-
 | Host API drift | Known-good plus latest-host lanes | Actionable compatibility error; no generic fallback |
 | Package leakage | Build/clean-install inspection | No internal docs, caches, weights, secrets, or private paths |
 | Release archive leakage | Canonical release audit + malicious ZIP/TAR tests | Fresh wheel and sdist semantic inventories |
+| Registry candidate drift | `.comfyignore` ZIP validator + malicious member tests | Windows/WSL byte identity and renamed-directory import |
 | Platform/process failure | Windows/Linux + Unicode path | Port, readiness, shutdown, and cleanup verification |
 
 ## 5. Planned CI Job Matrix
@@ -91,7 +93,7 @@ unreviewed version numbers.
 | `adapter-contract` | When adapter affected | Yes | Yes | Ubuntu + Windows representative | Schema/registration report |
 | `host-known-good` | When host affected | Yes | Yes | Pinned ComfyUI CPU host | Redacted host log + applicable H1/H2/H3 evidence |
 | `host-latest` | No | No | Yes/manual | Latest reviewed ComfyUI | Compatibility report |
-| `package` | Yes | Yes | Yes | Supported Python matrix | Package inventory + clean install |
+| `package` | Yes | Yes | Yes | Supported Python matrix | Wheel/sdist inventory, Registry ZIP, clean installs |
 | `mutation-property` | No | No | Yes/manual | Pure-core environment | Survivors + reproducible seeds |
 | `optional-heavy` | No | No | Manual/release only | Approved GPU/model matrix | H4 record |
 

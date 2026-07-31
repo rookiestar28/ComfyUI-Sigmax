@@ -743,6 +743,13 @@ workflow is executed.
 
 Python 3.10 or newer is required.
 
+Both full-gate wrappers run a versioned environment preflight before validation. It confines
+tool caches and temporary files below `.tmp`, verifies the selected project-local venv, checks
+the pre-commit SQLite manifest read-only, rejects mixed pre-commit executables, and performs a
+non-ASCII file create/read/rename/delete probe. Failures emit stable codes with direct
+remediation; selected `plot` and `reference` extras can be checked with
+`scripts/preflight_check.py --optional-lane <lane>`.
+
 Windows:
 
 ```powershell

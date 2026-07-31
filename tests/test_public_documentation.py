@@ -71,6 +71,22 @@ def test_public_documentation_exposes_performance_budget_boundary() -> None:
     assert "| Performance budgets |" in ci_matrix
 
 
+def test_public_documentation_exposes_environment_guardrails() -> None:
+    readme = _read(ROOT / "README.md")
+    architecture = _read(ROOT / "docs" / "ARCHITECTURE.md")
+    compatibility = _read(ROOT / "docs" / "COMPATIBILITY.md")
+    contributing = _read(ROOT / "CONTRIBUTING.md")
+    test_sop = _read(ROOT / "tests" / "TEST_SOP.md")
+    ci_matrix = _read(ROOT / "tests" / "CI_TEST_MATRIX.md")
+
+    for content in (architecture, compatibility, contributing, test_sop):
+        assert "sigmax.environment-diagnostics/1" in content
+    assert "--optional-lane" in readme
+    assert "PRE_COMMIT_HOME" in test_sop
+    assert "SIGMAX_TEMP_ROOT" in test_sop
+    assert "| Environment guardrails |" in ci_matrix
+
+
 def test_public_documentation_describes_current_maturity_honestly() -> None:
     readme = _read(ROOT / "README.md").lower()
     compatibility = _read(ROOT / "docs" / "COMPATIBILITY.md").lower()

@@ -13,6 +13,8 @@ tracked independently from the frozen profile-schema version.
 - Python packaging metadata and typed-package marker.
 - Repository-local quality, test, coverage, and wheel validation.
 - Cross-platform Windows and Linux/WSL full-gate wrappers.
+- Versioned environment diagnostics for local venv, cache integrity/locks, tool conflicts,
+  Unicode and temp-path operations, and selected optional dependencies.
 - Minimal-permission continuous-integration workflow contract.
 - Public architecture, profile-schema, compatibility, and contribution documentation.
 - An objective model profile contribution guide covering separate source/framework/weight

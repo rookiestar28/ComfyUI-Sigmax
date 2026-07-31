@@ -33,6 +33,7 @@ LANE_STATUS: Final = {
     "coinstallation_mutation": "IMPLEMENTED_SYNTHETIC",
     "comfyui_host_e2e": "IMPLEMENTED_SEPARATE_GATE",
     "core_independence": "IMPLEMENTED",
+    "environment_guardrails": "IMPLEMENTED",
     "framework_parity": "IMPLEMENTED",
     "golden": "IMPLEMENTED",
     "gpu_model_weights": "NOT_IMPLEMENTED",
@@ -41,6 +42,34 @@ LANE_STATUS: Final = {
     "performance_budgets": "IMPLEMENTED",
     "property": "IMPLEMENTED",
 }
+
+
+def _isolated_tool_path(python: str, path_value: str) -> str:
+    """Prefer the selected venv and hide conflicting pre-commit launchers."""
+
+    selected = Path(python).resolve().parent
+    names = (
+        ("pre-commit.exe", "pre-commit.cmd", "pre-commit.bat", "pre-commit")
+        if os.name == "nt"
+        else ("pre-commit",)
+    )
+    retained: list[str] = [str(selected)]
+    seen = {os.path.normcase(str(selected))}
+    for value in path_value.split(os.pathsep):
+        if not value:
+            continue
+        directory = Path(value)
+        try:
+            identity = os.path.normcase(str(directory.resolve()))
+        except OSError:
+            identity = os.path.normcase(str(directory.absolute()))
+        if identity in seen:
+            continue
+        seen.add(identity)
+        if any((directory / name).is_file() for name in names):
+            continue
+        retained.append(value)
+    return os.pathsep.join(retained)
 
 
 def _run(stage: str, arguments: list[str], environment: dict[str, str]) -> None:
@@ -122,8 +151,23 @@ def main() -> int:
     python = sys.executable
     environment = os.environ.copy()
     cache_name = "pre-commit-win" if os.name == "nt" else "pre-commit-linux"
-    environment["PRE_COMMIT_HOME"] = str(REPOSITORY_ROOT / ".tmp" / cache_name)
+    temp_name = "runtime-win" if os.name == "nt" else "runtime-linux"
+    output_root = REPOSITORY_ROOT / ".tmp"
+    cache_root = output_root / cache_name
+    temp_root = output_root / temp_name
+    cache_root.mkdir(parents=True, exist_ok=True)
+    temp_root.mkdir(parents=True, exist_ok=True)
+    environment["PRE_COMMIT_HOME"] = str(cache_root)
+    environment["SIGMAX_TEMP_ROOT"] = str(temp_root)
+    environment["TMPDIR"] = str(temp_root)
+    environment["TMP"] = str(temp_root)
+    environment["TEMP"] = str(temp_root)
+    if os.name != "nt":
+        environment["SIGMAX_PYTEST_CAPTURE_MODE"] = "sys"
+    # CRITICAL: keep gate tooling on the selected venv; mixed pre-commit launchers corrupt caches.
+    environment["PATH"] = _isolated_tool_path(python, environment.get("PATH", ""))
 
+    pytest_capture = ["--capture=sys"] if os.name != "nt" else []
     commands = {
         "preflight": [python, "scripts/preflight_check.py"],
         "detect-secrets": [
@@ -146,12 +190,21 @@ def main() -> int:
         "ruff-lint": [python, "-m", "ruff", "check", "."],
         "mypy": [python, "-m", "mypy", "comfyui_sigmax", "tests", "scripts"],
         "core-independence": [python, "scripts/check_core_independence.py"],
-        "parity-contract": [python, "-m", "pytest", "tests/parity", "-m", "parity"],
-        "pytest": [python, "-m", "pytest"],
+        "parity-contract": [
+            python,
+            "-m",
+            "pytest",
+            *pytest_capture,
+            "tests/parity",
+            "-m",
+            "parity",
+        ],
+        "pytest": [python, "-m", "pytest", *pytest_capture],
         "coverage": [
             python,
             "-m",
             "pytest",
+            *pytest_capture,
             "--cov=comfyui_sigmax",
             "--cov-branch",
         ],
@@ -161,8 +214,6 @@ def main() -> int:
         for stage in STAGES[:-1]:
             _run(stage, commands[stage], environment)
 
-        output_root = REPOSITORY_ROOT / ".tmp"
-        output_root.mkdir(exist_ok=True)
         wheel_directory = Path(tempfile.mkdtemp(prefix="full-gate-wheel-", dir=output_root))
         _run(
             "package",

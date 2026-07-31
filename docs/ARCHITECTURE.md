@@ -104,6 +104,8 @@ comfyui_sigmax/
                 lazy optional headless PNG/SVG report renderer
 
 scripts/
+  environment_diagnostics.py
+                              immutable issue/report contract and bounded OS probes
   preflight_check.py          local environment validation
   check_core_independence.py  isolated pure-layer optional-framework blocker
   parity/                     independent official adapter and report contract
@@ -153,6 +155,12 @@ The dependency-free `host_mutation.py` boundary represents protected host state 
 `sigmax.host-mutation-snapshot/1` values. Its pure evaluator detects registry replacement,
 namespace hijacking, PyTorch/model-patch changes, and model-native/external double-shift
 conditions without patching a live host.
+
+The full-gate entrypoint establishes OS-specific repository-local cache and temp roots, removes
+foreign pre-commit launchers from the child PATH, and runs
+`sigmax.environment-diagnostics/1` before any hook or test. Classification is pure; live probes
+are bounded to `.tmp`, use a read-only cache-database integrity check, verify Unicode
+write/rename/delete behavior, and import no optional module.
 
 The `performance_budgets.py` and `performance_matrix.py` boundaries represent inclusive
 integer-unit limits, repeated observations, and the packaged

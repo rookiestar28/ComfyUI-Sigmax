@@ -95,6 +95,7 @@ work, but do not yet have repository acceptance evidence.
 | Dependency compatibility matrix | Packaged canonical JSON; fixed local runner; no implicit acquisition |
 | Co-installation mutation matrix | Packaged canonical JSON; fixed synthetic operations; no external code |
 | Performance budget matrix | Integer-unit first/repeat limits; Windows/WSL pure lanes plus pinned host startup |
+| Environment diagnostics | Local venv/cache/lock/Unicode/temp/optional checks before Windows/WSL full gates |
 | ComfyUI | Optional host; not imported by the package shell or pure adapter |
 | Node/browser tooling | Not required by the current Python-only foundation |
 | Model weights and GPU runtime | Not downloaded or exercised |
@@ -160,6 +161,16 @@ first/repeat readiness evidence under a 30-second ceiling.
 These limits detect major regressions; they are not cross-machine wall-clock guarantees. GPU,
 model weights, latest-host, and official-container performance are `not_evaluated` and cannot
 borrow a PASS from CPU or synthetic evidence.
+
+## Environment Failure Diagnostics
+
+`sigmax.environment-diagnostics/1` runs before the canonical Windows and WSL gates. It validates
+the selected `.venv`/`.venv-wsl`, repository-local pre-commit cache and temp roots, read-only
+SQLite cache integrity, pre-commit executable consistency, file replace/delete behavior, a
+non-ASCII filename round-trip, and fixed optional-lane availability. Failures use stable issue
+codes and an exact remediation sequence; the diagnostic never repairs or deletes a cache. WSL
+mounted paths that fail anonymous temp-file semantics use an explicit `pytest.capture_sys`
+mitigation, while an unmitigated direct run fails as `temp.incompatible`.
 
 ## Planned Validation Tiers
 

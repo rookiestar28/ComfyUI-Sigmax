@@ -5,7 +5,7 @@ repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 python_path="${repository_root}/.venv-wsl/bin/python"
 
 if [[ ! -x "${python_path}" ]]; then
-  echo "Missing .venv-wsl. Run: python3 -m venv .venv-wsl && .venv-wsl/bin/python -m pip install -e '.[dev]'" >&2
+  echo "[venv.missing] Missing .venv-wsl. Run: python3 -m venv .venv-wsl && .venv-wsl/bin/python -m pip install -e '.[dev]'" >&2
   exit 2
 fi
 

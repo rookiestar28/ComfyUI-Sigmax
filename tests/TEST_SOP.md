@@ -500,6 +500,9 @@ python -m pre_commit run --all-files --show-diff-on-failure
 
 - Include at least one test path containing non-ASCII characters.
 - Record file-lock failures and corrected reruns.
+- The preflight emits stable `venv.*`, `cache.*`, `tooling.*`, `filesystem.*`, `unicode.*`,
+  `temp.*`, and `optional.*` issue codes. Follow the single remediation attached to the first
+  blocking issue; never mix a global `pre-commit` executable with the selected local venv.
 
 ### Linux/WSL
 
@@ -507,6 +510,27 @@ python -m pre_commit run --all-files --show-diff-on-failure
 - Fail clearly when Python or required system libraries are missing.
 - Use a repository-local writable temporary directory when a mounted Windows path causes
   permission problems.
+- The Linux wrapper isolates the selected `.venv-wsl` tool path and exports repository-local
+  cache/temp roots before preflight. A foreign PATH `pre-commit` is diagnosed rather than used.
+
+Both wrappers run `sigmax.environment-diagnostics/1` and set `PRE_COMMIT_HOME`,
+`SIGMAX_TEMP_ROOT`, `TMPDIR`, `TMP`, and `TEMP` below `.tmp`. The preflight performs an owned
+write/read/rename/delete cycle with a non-ASCII filename and a read-only SQLite integrity check
+when the pre-commit database exists. It never deletes a cache automatically.
+
+On a WSL mounted workspace, the same preflight also exercises anonymous temporary-file
+semantics. When the mount cannot sustain pytest's default file-descriptor capture, the Linux
+wrapper records the `pytest.capture_sys` mitigation and runs pytest with `--capture=sys`; an
+unmitigated direct preflight reports `temp.incompatible` instead of allowing a zero-test run.
+
+Fixed optional lanes can be diagnosed without importing their modules:
+
+```powershell
+python scripts/preflight_check.py --optional-lane plot
+python scripts/preflight_check.py --optional-lane reference
+```
+
+Install only the reported reviewed extra in the selected local venv, then rerun preflight.
 
 Do not mix Windows and WSL virtual environments.
 

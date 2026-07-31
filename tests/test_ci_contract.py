@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 import unittest
@@ -12,6 +13,7 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 class CiContractTests(unittest.TestCase):
     def test_orchestration_files_exist(self) -> None:
         for relative_path in (
+            "scripts/environment_diagnostics.py",
             "scripts/preflight_check.py",
             "scripts/run_full_gate.py",
             "scripts/run_krea2_turbo_parity.py",
@@ -25,6 +27,10 @@ class CiContractTests(unittest.TestCase):
                 self.assertTrue((REPOSITORY_ROOT / relative_path).is_file())
 
     def test_preflight_passes_from_project_venv(self) -> None:
+        environment = os.environ.copy()
+        environment["PATH"] = str(Path(sys.executable).resolve().parent)
+        if os.name != "nt":
+            environment["SIGMAX_PYTEST_CAPTURE_MODE"] = "sys"
         result = subprocess.run(
             [
                 sys.executable,
@@ -35,6 +41,7 @@ class CiContractTests(unittest.TestCase):
             check=False,
             capture_output=True,
             text=True,
+            env=environment,
         )
         self.assertEqual(
             0,
@@ -43,6 +50,10 @@ class CiContractTests(unittest.TestCase):
         )
         report = json.loads(result.stdout)
         self.assertEqual("PASS", report["status"])
+        self.assertEqual("PASS", report["diagnostics"]["status"])
+        self.assertEqual("sigmax.environment-diagnostics/1", report["diagnostics"]["schema"])
+        if os.name != "nt":
+            self.assertIn("pytest.capture_sys", report["diagnostics"]["mitigations"])
         self.assertEqual("NOT_APPLICABLE", report["node"])
         self.assertTrue(report["project_local_venv"])
 
@@ -60,6 +71,7 @@ class CiContractTests(unittest.TestCase):
             text=True,
         )
         self.assertEqual(2, result.returncode)
+        self.assertIn("[venv.not_local]", result.stderr)
         self.assertIn("Create it and install '.[dev]' before retrying.", result.stderr)
 
     def test_wrappers_converge_on_common_runner(self) -> None:
@@ -71,6 +83,8 @@ class CiContractTests(unittest.TestCase):
         self.assertIn("scripts/run_full_gate.py", windows)
         self.assertIn(".venv-wsl/bin/python", linux)
         self.assertIn("scripts/run_full_gate.py", linux)
+        self.assertIn("[venv.missing]", windows)
+        self.assertIn("[venv.missing]", linux)
 
     def test_common_runner_declares_required_ordered_stages(self) -> None:
         runner = (REPOSITORY_ROOT / "scripts/run_full_gate.py").read_text(encoding="utf-8")
@@ -120,10 +134,13 @@ class CiContractTests(unittest.TestCase):
         self.assertIn('"comfyui_sigmax/profiles/krea2_raw.py"', runner)
         self.assertIn('"comfyui_sigmax/profiles/krea2_turbo.py"', runner)
         self.assertIn('"core_independence": "IMPLEMENTED"', runner)
+        self.assertIn('"environment_guardrails": "IMPLEMENTED"', runner)
         self.assertIn('"framework_parity": "IMPLEMENTED"', runner)
         self.assertIn('"golden": "IMPLEMENTED"', runner)
         self.assertIn('"native_comfyui_parity": "IMPLEMENTED"', runner)
         self.assertIn('"property": "IMPLEMENTED"', runner)
+        self.assertIn('environment["SIGMAX_TEMP_ROOT"]', runner)
+        self.assertIn('environment["PRE_COMMIT_HOME"]', runner)
 
     def test_workflow_contract(self) -> None:
         workflow = (REPOSITORY_ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")

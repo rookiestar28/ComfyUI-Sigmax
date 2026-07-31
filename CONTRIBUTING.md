@@ -23,6 +23,12 @@ python3 -m venv .venv-wsl
 
 Do not mix global and environment-installed test tools in one validation run.
 
+The full-gate wrappers run `sigmax.environment-diagnostics/1` before hooks or tests. Diagnostics
+use stable issue codes and one-path remediation for local-venv mismatches, pre-commit cache
+corruption/locks, conflicting executables, file operations, non-ASCII paths, repository-local
+temp paths, and selected optional extras. Do not bypass a failure by switching to a global
+Python or `pre-commit`; follow the reported local command and rerun.
+
 ## Development Rules
 
 - Add or update a failing contract test before production behavior.

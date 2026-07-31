@@ -77,6 +77,8 @@ comfyui_sigmax/
     host_baseline.json
                 pinned legacy and Node Definition v2 host schemas
   benchmarks/
+    image_protocol_v1.json
+                canonical fixed-case optional image benchmark and blind-review protocol
     numerical_matrix_v1.json
                 canonical capability-filtered numerical and host evidence matrix
   compatibility/
@@ -93,6 +95,8 @@ comfyui_sigmax/
                 canonical frozen node/schema/reason-code inventory and migration policy
   benchmark_matrix.py
                 strict dependency-free packaged matrix loader and validator
+  image_benchmark.py
+                strict hash-only image protocol, candidate evidence, ballot, and reveal contracts
   compatibility_matrix.py
                 strict role/status/digest-aware compatibility matrix loader
   coinstallation_matrix.py
@@ -120,6 +124,8 @@ scripts/
   validate_schedule_plots.py  isolated optional headless plot validation
   generate_numerical_benchmark_matrix.py
                               deterministic public-evidence matrix generation/check
+  generate_image_benchmark_protocol.py
+                              deterministic fixed-case image protocol generation/check
   generate_dependency_compatibility_matrix.py
                               deterministic compatibility evidence generation/check
   run_dependency_compatibility_lane.py
@@ -204,6 +210,16 @@ every source fixture by exact content identity and retains requested/effective g
 transition/evaluation counts, RNG ownership, runtimes, results, and first/repeat state. It does
 not enter node registration or core schedule math and cannot turn unavailable BF16, quantized,
 GPU, or model-weight evidence into PASS.
+
+The adjacent dependency-free `image_benchmark.py` boundary loads
+`sigmax.image-benchmark-protocol/1`. Its four fixed Turbo/RAW cases bind public-safe prompts,
+seeds, complete settings identities, and accepted M7-02 construction/numerical/receipt evidence.
+The packaged state remains `not_executed` because GPU/model weights are unapproved. Future typed
+candidate evidence is hash-only and must bind complete settings, component/output identities,
+runtimes, and distinct succeeded receipts. Pure builders create an exactly balanced blind A/B
+ballot and a separately disclosed post-vote reveal; ballots expose neither candidate IDs nor the
+seed. All image metrics and review results retain `supplemental_only` authority and cannot change
+profile, schedule, parity, node, or host claims.
 
 The separate dependency-free `compatibility_matrix.py` boundary validates
 `sigmax.dependency-compatibility-matrix/1`. Its role and status contracts keep blocking

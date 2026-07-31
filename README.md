@@ -544,6 +544,31 @@ See the
 [numerical benchmark matrix specification](docs/NUMERICAL_BENCHMARK_MATRIX_SPEC.md) for its
 schema, source binding, evidence hierarchy, and limitations.
 
+### Optional image benchmark protocol
+
+The installed package also includes a dependency-free, unexecuted protocol for future image-level
+comparison:
+
+```python
+from comfyui_sigmax.image_benchmark import load_image_benchmark_protocol
+
+protocol = load_image_benchmark_protocol()
+assert protocol.projection()["authority"]["level"] == "supplemental_only"
+print(protocol.protocol_fingerprint)
+```
+
+`sigmax.image-benchmark-protocol/1` fixes four Turbo/RAW prompts, negative prompts, seeds,
+requested/effective dimensions, steps, CFG values, Euler settings, prompt/settings hashes, and
+accepted M7-02 construction/numerical/receipt identities. It defines two candidate roles plus a
+deterministic balanced blind ballot and post-vote seed reveal.
+
+The packaged state is `not_executed` with reason `gpu_model_weights_not_approved`: no checkpoint,
+component, output image, or metric result is fabricated. A future approved run must supply complete
+checkpoint/text-encoder/VAE/image hashes, succeeded receipts, runtimes, and precision-specific
+evidence. Image metrics and blind preferences remain `supplemental_only` and cannot replace
+mathematical parity. See the
+[optional image benchmark protocol specification](docs/IMAGE_BENCHMARK_PROTOCOL_SPEC.md).
+
 ### Dependency compatibility matrix
 
 The dependency-free compatibility resource separates exact blocking baselines from

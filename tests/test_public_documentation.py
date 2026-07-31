@@ -24,6 +24,7 @@ PUBLIC_DOCUMENTS = (
     ROOT / "docs" / "SCHEDULE_ARTIFACT_SPEC.md",
     ROOT / "docs" / "SCHEDULE_REPORT_SPEC.md",
     ROOT / "docs" / "NUMERICAL_BENCHMARK_MATRIX_SPEC.md",
+    ROOT / "docs" / "IMAGE_BENCHMARK_PROTOCOL_SPEC.md",
     ROOT / "docs" / "DEPENDENCY_COMPATIBILITY_MATRIX_SPEC.md",
     ROOT / "docs" / "COINSTALLATION_MUTATION_MATRIX_SPEC.md",
     ROOT / "docs" / "PERFORMANCE_BUDGET_SPEC.md",
@@ -640,6 +641,26 @@ def test_public_documentation_exposes_numerical_benchmark_matrix_boundary() -> N
     assert "not_evaluated" in specification
     assert "dependency-free" in compatibility
     assert "| Numerical benchmark matrix | Implemented | M7-02 |" in ci_matrix
+
+
+def test_public_documentation_exposes_optional_image_benchmark_boundary() -> None:
+    readme = _read(ROOT / "README.md")
+    architecture = _read(ROOT / "docs" / "ARCHITECTURE.md")
+    compatibility = _read(ROOT / "docs" / "COMPATIBILITY.md")
+    specification = _read(ROOT / "docs" / "IMAGE_BENCHMARK_PROTOCOL_SPEC.md")
+    ci_matrix = _read(ROOT / "tests" / "CI_TEST_MATRIX.md")
+
+    for content in (readme, architecture, specification):
+        assert "sigmax.image-benchmark-protocol/1" in content
+        assert "supplemental_only" in content
+        assert "blind" in content.lower()
+    assert "not_executed" in specification
+    assert "gpu_model_weights_not_approved" in specification
+    assert "mathematical parity" in compatibility.lower()
+    assert (
+        "| Optional image benchmark protocol | Implemented; execution unapproved | M7-03 |"
+        in ci_matrix
+    )
 
 
 def test_public_documentation_exposes_dependency_compatibility_boundary() -> None:

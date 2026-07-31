@@ -22,6 +22,7 @@ Command definitions remain in `tests/TEST_SOP.md`. Real-host lifecycle requireme
 | Framework parity tests | Implemented | M2-03, M3-05 |
 | Native ComfyUI parity tests | Implemented | M2-04 |
 | Numerical benchmark matrix | Implemented | M7-02 |
+| Optional image benchmark protocol | Implemented; execution unapproved | M7-03 |
 | Dependency compatibility matrix | Local/pinned plus release/HEAD latest-host evidence implemented; official container explicitly unavailable/non-blocking | M7-04 |
 | Co-installation mutation matrix | Ten deterministic synthetic first/repeat scenarios implemented; no external pack code executed | M7-08 |
 | Performance budgets | Windows/WSL pure first/repeat limits plus two pinned-host startup observations implemented | M7-05 |

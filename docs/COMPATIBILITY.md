@@ -265,6 +265,9 @@ platform `libm` noise does not alter report bytes.
 - The current `v0_0_2` V3 API is discoverable but experimental; activation is rejected when a
   stable numbered API is required.
 - macOS and native hosted Ubuntu evidence are not yet available.
-- Image-quality comparisons are not correctness evidence and have not begun.
+- A fixed `sigmax.image-benchmark-protocol/1` and balanced blind commit/reveal contract exist, but
+  real-model execution remains unapproved and `not_executed`. Image metrics and blind preferences
+  are supplemental only; they cannot override mathematical parity, schedule, sampler, receipt, or
+  host failures.
 
 For the intended component boundaries, see [Architecture](ARCHITECTURE.md).

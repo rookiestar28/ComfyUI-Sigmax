@@ -9,6 +9,11 @@ tracked independently from the frozen profile-schema version.
 
 ### Added
 
+- A dependency-free `sigmax.image-benchmark-protocol/1` with four fixed Turbo/RAW cases,
+  construction/numerical/receipt and prompt/settings identities, explicit unapproved execution,
+  typed component/output hash evidence, and deterministic balanced blind ballot/reveal contracts.
+  Image metrics and reviewer preferences are permanently `supplemental_only` and cannot replace
+  mathematical parity.
 - A dependency-free `Checkpoint Evidence Inspector` (`Sigmax.CheckpointEvidenceInspector`) for
   ComfyUI-allowlisted local safetensors.
   It reads only the bounded header, validates tensor structure without loading payloads, accessing

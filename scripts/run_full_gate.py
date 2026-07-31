@@ -30,6 +30,7 @@ STAGES: Final = (
 
 LANE_STATUS: Final = {
     "browser_e2e": "NOT_APPLICABLE",
+    "coinstallation_mutation": "IMPLEMENTED_SYNTHETIC",
     "comfyui_host_e2e": "IMPLEMENTED_SEPARATE_GATE",
     "core_independence": "IMPLEMENTED",
     "framework_parity": "IMPLEMENTED",
@@ -64,6 +65,12 @@ def _inspect_wheel(wheel: Path) -> None:
         "comfyui_sigmax/adapters/__init__.py",
         "comfyui_sigmax/adapters/comfyui.py",
         "comfyui_sigmax/adapters/registration.py",
+        "comfyui_sigmax/coinstallation/__init__.py",
+        "comfyui_sigmax/coinstallation/matrix_v1.json",
+        "comfyui_sigmax/coinstallation_matrix.py",
+        "comfyui_sigmax/compatibility/__init__.py",
+        "comfyui_sigmax/compatibility/matrix_v1.json",
+        "comfyui_sigmax/compatibility_matrix.py",
         "comfyui_sigmax/core/__init__.py",
         "comfyui_sigmax/core/artifacts.py",
         "comfyui_sigmax/core/base_grids.py",
@@ -74,6 +81,7 @@ def _inspect_wheel(wheel: Path) -> None:
         "comfyui_sigmax/core/shifts.py",
         "comfyui_sigmax/core/terminal_slicing.py",
         "comfyui_sigmax/core/validation.py",
+        "comfyui_sigmax/host_mutation.py",
         "comfyui_sigmax/nodes/__init__.py",
         "comfyui_sigmax/nodes/krea2_sigma_scheduler.py",
         "comfyui_sigmax/nodes/raw_workflow_output.py",

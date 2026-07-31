@@ -1,0 +1,88 @@
+{
+  "rows": [
+    {
+      "expected_findings": [],
+      "expected_verdict": "allow",
+      "id": "clean-install",
+      "operation": "clean_install",
+      "pack_id": "synthetic.clean"
+    },
+    {
+      "expected_findings": [
+        "construction_shift_repeated",
+        "model_native_external_double_shift"
+      ],
+      "expected_verdict": "reject",
+      "id": "double-shift",
+      "operation": "double_shift",
+      "pack_id": "synthetic.double_shift"
+    },
+    {
+      "expected_findings": [],
+      "expected_verdict": "allow",
+      "id": "idempotent-reload",
+      "operation": "idempotent_reload",
+      "pack_id": "synthetic.reload"
+    },
+    {
+      "expected_findings": [
+        "model_patch_state_changed"
+      ],
+      "expected_verdict": "reject",
+      "id": "model-patch-mutation",
+      "operation": "replace_model_patch",
+      "pack_id": "synthetic.model_patch"
+    },
+    {
+      "expected_findings": [
+        "node_registry_collision"
+      ],
+      "expected_verdict": "reject",
+      "id": "node-id-collision",
+      "operation": "replace_node",
+      "pack_id": "synthetic.node_collision"
+    },
+    {
+      "expected_findings": [
+        "scheduler_registry_overwrite"
+      ],
+      "expected_verdict": "reject",
+      "id": "scheduler-overwrite",
+      "operation": "replace_scheduler",
+      "pack_id": "synthetic.scheduler_overwrite"
+    },
+    {
+      "expected_findings": [
+        "sigmax_namespace_hijack"
+      ],
+      "expected_verdict": "reject",
+      "id": "sigmax-namespace-hijack",
+      "operation": "add_sigmax_node",
+      "pack_id": "synthetic.namespace_hijack"
+    },
+    {
+      "expected_findings": [
+        "torch_call_path_changed"
+      ],
+      "expected_verdict": "reject",
+      "id": "torch-call-replacement",
+      "operation": "replace_torch_call",
+      "pack_id": "synthetic.torch_call"
+    },
+    {
+      "expected_findings": [],
+      "expected_verdict": "allow",
+      "id": "unrelated-node-addition",
+      "operation": "add_unrelated_node",
+      "pack_id": "synthetic.node_addition"
+    },
+    {
+      "expected_findings": [],
+      "expected_verdict": "allow",
+      "id": "unrelated-scheduler-addition",
+      "operation": "add_unrelated_scheduler",
+      "pack_id": "synthetic.scheduler_addition"
+    }
+  ],
+  "schema": "sigmax.synthetic-host-mutation-fixtures/1"
+}

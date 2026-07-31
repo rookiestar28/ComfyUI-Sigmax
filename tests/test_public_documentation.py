@@ -21,6 +21,7 @@ PUBLIC_DOCUMENTS = (
     ROOT / "docs" / "SCHEDULE_REPORT_SPEC.md",
     ROOT / "docs" / "NUMERICAL_BENCHMARK_MATRIX_SPEC.md",
     ROOT / "docs" / "DEPENDENCY_COMPATIBILITY_MATRIX_SPEC.md",
+    ROOT / "docs" / "COINSTALLATION_MUTATION_MATRIX_SPEC.md",
     ROOT / "docs" / "EXECUTION_RECEIPT_SPEC.md",
     ROOT / "docs" / "WORKFLOW_METADATA_SPEC.md",
     ROOT / "docs" / "COMPATIBILITY.md",
@@ -34,6 +35,24 @@ def _read(path: Path) -> str:
 def test_required_public_documents_exist() -> None:
     missing = [path.relative_to(ROOT).as_posix() for path in PUBLIC_DOCUMENTS if not path.is_file()]
     assert not missing, f"Missing public documentation: {missing}"
+
+
+def test_public_documentation_exposes_coinstallation_mutation_boundary() -> None:
+    readme = _read(ROOT / "README.md")
+    architecture = _read(ROOT / "docs" / "ARCHITECTURE.md")
+    compatibility = _read(ROOT / "docs" / "COMPATIBILITY.md")
+    specification = _read(ROOT / "docs" / "COINSTALLATION_MUTATION_MATRIX_SPEC.md")
+    ci_matrix = _read(ROOT / "tests" / "CI_TEST_MATRIX.md")
+    changelog = _read(ROOT / "CHANGELOG.md")
+
+    for content in (readme, architecture, compatibility, specification, changelog):
+        assert "sigmax.host-mutation-snapshot/1" in content
+        assert "double-shift" in content
+    assert "sigmax.co-installation-evaluation/1" in specification
+    assert "sigmax.co-installation-mutation-matrix/1" in readme
+    assert "coinstallation_matrix.py" in architecture
+    assert "no external" in compatibility.lower()
+    assert "| Co-installation mutation matrix |" in ci_matrix
 
 
 def test_public_documentation_describes_current_maturity_honestly() -> None:

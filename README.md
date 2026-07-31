@@ -563,6 +563,33 @@ under the explicit compatibility policy this is non-PASS but non-blocking, and n
 tags, source inspection, nor third-party images may substitute. See the
 [dependency compatibility matrix specification](docs/DEPENDENCY_COMPATIBILITY_MATRIX_SPEC.md).
 
+### Co-installation and host-mutation matrix
+
+The dependency-free co-installation boundary compares immutable semantic snapshots instead of
+patching or retaining live host objects:
+
+```python
+from comfyui_sigmax.coinstallation_matrix import (
+    load_coinstallation_mutation_matrix,
+)
+
+matrix = load_coinstallation_mutation_matrix()
+collision = matrix.require_row("node-id-collision")
+assert collision["observed_verdict"] == "reject"
+```
+
+`sigmax.host-mutation-snapshot/1` and `sigmax.co-installation-evaluation/1` protect existing node
+and scheduler identities, the PyTorch call path, shared model-patch state, and single-owner
+schedule shifting. The packaged `sigmax.co-installation-mutation-matrix/1` runs ten declarative
+synthetic scenarios twice: clean install, idempotent reload, allowed unrelated additions, node
+and namespace collisions, scheduler overwrite, PyTorch/model-patch replacement, and
+model-native/external double-shift.
+
+This evidence makes no named third-party-pack compatibility claim. No external or `reference/`
+code was executed: fixtures select only fixed repository-owned operations, and any future
+named-pack execution requires a separate reviewed plan and approval. See the
+[co-installation mutation matrix specification](docs/COINSTALLATION_MUTATION_MATRIX_SPEC.md).
+
 The first concrete profile is an immutable, evidence-pinned declaration of the official
 Krea 2 Turbo recipe:
 

@@ -93,6 +93,7 @@ work, but do not yet have repository acceptance evidence.
 | Matplotlib | Optional `plot` extra, currently `>=3.10,<3.12`; lazy and outside core |
 | Numerical benchmark matrix | Packaged canonical JSON; dependency-free loader; no model weights |
 | Dependency compatibility matrix | Packaged canonical JSON; fixed local runner; no implicit acquisition |
+| Co-installation mutation matrix | Packaged canonical JSON; fixed synthetic operations; no external code |
 | ComfyUI | Optional host; not imported by the package shell or pure adapter |
 | Node/browser tooling | Not required by the current Python-only foundation |
 | Model weights and GPU runtime | Not downloaded or exercised |
@@ -125,11 +126,26 @@ numbered API `v0_0_2`. These are accepted source-evidence references, not newly 
 lanes.
 
 Python 3.10 reaches upstream end of life in October 2026, so its floor is a dated pre-alpha
-compatibility commitment that must be reviewed before stable release. Current ComfyUI
-release/HEAD rows remain `not_evaluated` pending explicit execution approval. The official
-Comfy Org CI-container row remains `unavailable`: its mutable tag and source were observed, but
-an immutable registry digest could not be obtained. No third-party image substitutes for that
-lane.
+compatibility commitment that must be reviewed before stable release. Official ComfyUI v0.29.2
+and pinned HEAD `5cc026f5…` passed separate non-blocking CPU/no-model H1/H2/H3 first/repeat
+observations. The official Comfy Org CI-container row remains `unavailable`: its mutable tag and
+source were observed, but an immutable registry digest could not be obtained. No third-party
+image substitutes for that lane.
+
+## Co-Installation and Host-Mutation Evidence
+
+The versioned `sigmax.host-mutation-snapshot/1` contract and
+`sigmax.co-installation-mutation-matrix/1` resource contain ten first/repeat synthetic
+observations bound to the exact built-in node catalog and accepted dependency compatibility
+matrix. They allow clean/reload-idempotent behavior and unrelated node or scheduler additions.
+They reject replacement of an existing node or scheduler, an external `Sigmax.` namespace
+registration, a PyTorch call-path change, shared model-patch mutation, and repeated or
+model-native-plus-external double-shift behavior.
+
+The runner applies only fixed declarative repository-owned operations to immutable in-memory
+snapshots. It does not import ComfyUI or Torch, mutate a live host, execute `reference/` or
+third-party code, or claim compatibility with a named node pack. A named-pack observation
+requires a separate reviewed plan and explicit approval.
 
 ## Planned Validation Tiers
 

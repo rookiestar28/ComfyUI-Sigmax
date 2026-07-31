@@ -45,6 +45,10 @@ tracked independently from the frozen profile-schema version.
 - A strict dependency compatibility matrix with repeated Windows/WSL invariant evidence,
   exact pinned Diffusers/ComfyUI/API baselines, latest-host separation, immutable-container
   requirements, and explicit non-PASS external lanes.
+- Immutable `sigmax.host-mutation-snapshot/1` contracts and a strict ten-row synthetic
+  co-installation matrix covering reload idempotence, registry collisions,
+  PyTorch/model-patch changes, and model-native/external double-shift detection without
+  executing third-party code.
 - Versioned workflow metadata with package/node/host requirements, profile and compatibility
   evidence, artifact/receipt references, and non-destructive ComfyUI 0.4/1 graph attachment.
 - Immutable model, profile, sampler, and execution-feature capability declarations with

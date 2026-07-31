@@ -82,10 +82,17 @@ comfyui_sigmax/
   compatibility/
     matrix_v1.json
                 canonical dependency, host, API, and platform compatibility evidence
+  coinstallation/
+    matrix_v1.json
+                canonical synthetic co-installation and protected-mutation evidence
   benchmark_matrix.py
                 strict dependency-free packaged matrix loader and validator
   compatibility_matrix.py
                 strict role/status/digest-aware compatibility matrix loader
+  coinstallation_matrix.py
+                strict source/result/dependency-bound co-installation matrix loader
+  host_mutation.py
+                immutable host snapshots and pure protected-seam evaluator
   plotting.py
                 lazy optional headless PNG/SVG report renderer
 
@@ -103,6 +110,10 @@ scripts/
                               deterministic compatibility evidence generation/check
   run_dependency_compatibility_lane.py
                               fixed non-acquiring Windows/WSL invariant runner
+  run_synthetic_coinstallation_matrix.py
+                              fixed declarative synthetic mutation executor
+  generate_coinstallation_mutation_matrix.py
+                              deterministic co-installation matrix generation/check
   run_full_gate.py            canonical ordered acceptance gate
   OS wrappers                 repo-local environment selection
 
@@ -126,6 +137,11 @@ wire-schema projections. The package exports the validated
 `Sigmax.RawWorkflowOutput`, `Sigmax.ScheduleComparison`, `Sigmax.ScheduleInspector`, and
 `Sigmax.TurboWorkflowOutput` mappings. Importing them does not load Torch or ComfyUI, patch
 PyTorch, import Diffusers, or alter host process state.
+
+The dependency-free `host_mutation.py` boundary represents protected host state as immutable
+`sigmax.host-mutation-snapshot/1` values. Its pure evaluator detects registry replacement,
+namespace hijacking, PyTorch/model-patch changes, and model-native/external double-shift
+conditions without patching a live host.
 
 The dependency-free `core/reports.py` module consumes only validated immutable
 `ScheduleArtifact`, `ExecutionReceipt`, and `PortableExecutionBundle` values. Its canonical

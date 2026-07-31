@@ -5,7 +5,7 @@ versioned Krea 2 Turbo and Krea 2 RAW schedules, explicit model/profile/sampler 
 contracts, stable workflow metadata, inspectors, comparison reports, and reproducible release
 artifacts while keeping the schedule core independent of ComfyUI and Diffusers.
 
-> **Status: stable public-contract baseline.** Eight namespaced nodes are implemented. Turbo and
+> **Status: stable public-contract baseline.** Twelve namespaced nodes are implemented. Turbo and
 > RAW schedule construction, complete golden vectors, authoritative/framework parity, pinned-host
 > import and model-free workflows, and deterministic native-Euler equivalence are validated.
 > Real model weights, GPU/image quality, stochastic/resumable/partial-denoise execution, advanced
@@ -51,6 +51,7 @@ import comfyui_sigmax
 
 assert sorted(comfyui_sigmax.NODE_CLASS_MAPPINGS) == [
     "Sigmax.AdvancedFlowMatchScheduler",
+    "Sigmax.CheckpointEvidenceInspector",
     "Sigmax.Krea2SigmaScheduler",
     "Sigmax.ModelAwareSigmaScheduler",
     "Sigmax.ProfileInspector",
@@ -64,6 +65,7 @@ assert sorted(comfyui_sigmax.NODE_CLASS_MAPPINGS) == [
 ]
 assert comfyui_sigmax.NODE_DISPLAY_NAME_MAPPINGS == {
     "Sigmax.AdvancedFlowMatchScheduler": "Advanced FlowMatch Scheduler",
+    "Sigmax.CheckpointEvidenceInspector": "Checkpoint Evidence Inspector",
     "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler",
     "Sigmax.ModelAwareSigmaScheduler": "Model-Aware Sigma Scheduler",
     "Sigmax.ProfileInspector": "Profile Inspector",
@@ -400,9 +402,8 @@ Definition JSON v2 projections. V3 classes are discovered through `GET_SCHEMA()`
 the current experimental numbered API is rejected when stability is required. This design avoids
 the pinned loader's mutually exclusive `NODE_CLASS_MAPPINGS`/`comfy_entrypoint` branches and is
 independent of the normalized installation-directory name. The built-in catalog now exposes
-`Sigmax.AdvancedFlowMatchScheduler`, `Sigmax.Krea2SigmaScheduler`, and
-`Sigmax.ModelAwareSigmaScheduler`, `Sigmax.ProfileInspector`, and
-`Sigmax.ScheduleComparison`, and `Sigmax.ScheduleInspector`.
+twelve namespaced schedule, inspection, algebra, and workflow nodes, including
+`Sigmax.CheckpointEvidenceInspector`.
 
 The `Krea 2 Sigma Scheduler` requires an explicit `Turbo` or `RAW` choice, width and height,
 steps, strict-official mode, and terminal-inclusive start/end slicing. Strict mode accepts only
@@ -440,6 +441,13 @@ variant. It reports bounded model identity confidence, the connected native samp
 dimensions, computed shift, capability decision, provenance, warnings, and fingerprints as
 deterministic `sigmax.profile-inspector/1` JSON. It uses static bounded MODEL reads and never
 serializes or invokes the foreign model.
+
+`Sigmax.CheckpointEvidenceInspector` reads only the bounded safetensors prefix and JSON header of
+a checkpoint selected from ComfyUI's `checkpoints` or `diffusion_models` folders. Its canonical
+`sigmax.checkpoint-evidence-inspection/1` report contains structural counts, a structure
+fingerprint, confidence, and stable reason codes, but excludes the local path, arbitrary metadata,
+and tensor payload. It uses no accelerator or network, and local metadata, filename, or shared
+Krea tensor structure can only suggest a variant—never confirm one.
 
 `Sigmax.ScheduleInspector` accepts connected `SIGMAS` plus one implemented versioned
 `schedule_info` projection. It bounds and validates the JSON, normalizes direct Krea,
@@ -774,7 +782,7 @@ and planned host/model support.
 ### Stable public contracts
 
 M8-01 freezes the release-facing contract boundary in the packaged
-`sigmax.public-contract-manifest/1`. Its canonical fingerprint covers all eight built-in node
+`sigmax.public-contract-manifest/1`. Its canonical fingerprint covers all twelve built-in node
 IDs and node schemas, the profile/capability schemas, schedule artifact and execution receipt
 schemas, and the stable capability reason-code vocabularies. The source-derived check is:
 

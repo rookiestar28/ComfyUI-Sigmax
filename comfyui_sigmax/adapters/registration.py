@@ -578,6 +578,7 @@ def builtin_node_registry() -> NodeRegistry:
     # Mixed V1/V3 nodes must therefore share this one validated mapping projection.
     from comfyui_sigmax.nodes import (
         AdvancedFlowMatchScheduler,
+        CheckpointEvidenceInspector,
         Krea2SigmaScheduler,
         ModelAwareSigmaScheduler,
         ProfileInspector,
@@ -596,6 +597,11 @@ def builtin_node_registry() -> NodeRegistry:
                 node_id="Sigmax.AdvancedFlowMatchScheduler",
                 display_name="Advanced FlowMatch Scheduler",
                 node_class=AdvancedFlowMatchScheduler,
+            ),
+            discover_legacy_registration(
+                node_id="Sigmax.CheckpointEvidenceInspector",
+                display_name="Checkpoint Evidence Inspector",
+                node_class=CheckpointEvidenceInspector,
             ),
             discover_legacy_registration(
                 node_id="Sigmax.Krea2SigmaScheduler",

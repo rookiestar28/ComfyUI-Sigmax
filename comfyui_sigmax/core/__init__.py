@@ -85,6 +85,14 @@ from comfyui_sigmax.core.request_result import (
     SliceSpec,
     TerminalPolicy,
 )
+from comfyui_sigmax.core.safetensors_header import (
+    SAFETENSORS_HEADER_MAX_BYTES,
+    SafetensorsHeader,
+    SafetensorsHeaderError,
+    SafetensorsHeaderReason,
+    SafetensorsTensorDescriptor,
+    read_safetensors_header,
+)
 from comfyui_sigmax.core.schedule_contracts import (
     ScheduleContractError,
     ScheduleOwnership,
@@ -124,6 +132,7 @@ __all__ = [
     "EXECUTION_RECEIPT_SCHEMA",
     "NUMERICAL_SCHEDULE_SCHEMA",
     "PORTABLE_EXECUTION_BUNDLE_SCHEMA",
+    "SAFETENSORS_HEADER_MAX_BYTES",
     "SCHEDULE_ARTIFACT_ENVELOPE_SCHEMA",
     "SCHEDULE_ARTIFACT_SCHEMA",
     "SCHEDULE_COMPARISON_REPORT_ENVELOPE_SCHEMA",
@@ -154,6 +163,10 @@ __all__ = [
     "PredictionType",
     "ProfileCapabilities",
     "Provenance",
+    "SafetensorsHeader",
+    "SafetensorsHeaderError",
+    "SafetensorsHeaderReason",
+    "SafetensorsTensorDescriptor",
     "SamplerCapabilities",
     "SamplerState",
     "ScheduleArtifact",
@@ -204,6 +217,7 @@ __all__ = [
     "linear_endpoint_grid",
     "no_shift",
     "numerical_fingerprint",
+    "read_safetensors_header",
     "require_compatible",
     "require_single_ownership",
     "serialize_execution_receipt",

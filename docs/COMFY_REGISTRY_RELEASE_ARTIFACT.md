@@ -41,7 +41,7 @@ Version `1.0.0` is the first Registry-ready semantic version. The embedded manif
 
 - the `comfyui-sigmax` package, `rookiestar28` publisher, and `ComfyUI-Sigmax` display identity;
 - Python and ComfyUI compatibility requirements plus license identity;
-- the frozen public-contract fingerprint and all eight built-in node ID/schema pairs;
+- the frozen public-contract fingerprint and all twelve built-in node ID/schema pairs;
 - the four canonical workflow package, node, host, profile, and workflow fingerprints;
 - exact hashes for release-defining source files;
 - the reviewed official `comfy-cli` release and source revision.
@@ -58,7 +58,7 @@ model-weight, cache, environment, and undeclared member paths before extraction.
 
 The normalized installation probe extracts only an already-audited archive into a newly named
 directory. A fresh isolated interpreter imports its root bootstrap and verifies version `1.0.0`,
-the exact eight node IDs, empty runtime dependency metadata, and the absence of eager Torch,
+the exact twelve node IDs, empty runtime dependency metadata, and the absence of eager Torch,
 Diffusers, NumPy, and aiohttp imports.
 
 ## Registry observation and publication boundary

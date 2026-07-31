@@ -463,6 +463,7 @@ def test_builtin_registry_and_package_mappings_expose_only_validated_product_nod
     import comfyui_sigmax
     from comfyui_sigmax.nodes import (
         AdvancedFlowMatchScheduler,
+        CheckpointEvidenceInspector,
         Krea2SigmaScheduler,
         ModelAwareSigmaScheduler,
         ProfileInspector,
@@ -478,6 +479,7 @@ def test_builtin_registry_and_package_mappings_expose_only_validated_product_nod
     registry = builtin_node_registry()
     assert tuple(item.node_id for item in registry.entries) == (
         "Sigmax.AdvancedFlowMatchScheduler",
+        "Sigmax.CheckpointEvidenceInspector",
         "Sigmax.Krea2SigmaScheduler",
         "Sigmax.ModelAwareSigmaScheduler",
         "Sigmax.ProfileInspector",
@@ -491,6 +493,7 @@ def test_builtin_registry_and_package_mappings_expose_only_validated_product_nod
     )
     assert {
         "Sigmax.AdvancedFlowMatchScheduler": AdvancedFlowMatchScheduler,
+        "Sigmax.CheckpointEvidenceInspector": CheckpointEvidenceInspector,
         "Sigmax.Krea2SigmaScheduler": Krea2SigmaScheduler,
         "Sigmax.ModelAwareSigmaScheduler": ModelAwareSigmaScheduler,
         "Sigmax.ProfileInspector": ProfileInspector,
@@ -504,6 +507,7 @@ def test_builtin_registry_and_package_mappings_expose_only_validated_product_nod
     } == comfyui_sigmax.NODE_CLASS_MAPPINGS
     assert comfyui_sigmax.NODE_DISPLAY_NAME_MAPPINGS == {
         "Sigmax.AdvancedFlowMatchScheduler": "Advanced FlowMatch Scheduler",
+        "Sigmax.CheckpointEvidenceInspector": "Checkpoint Evidence Inspector",
         "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler",
         "Sigmax.ModelAwareSigmaScheduler": "Model-Aware Sigma Scheduler",
         "Sigmax.ProfileInspector": "Profile Inspector",

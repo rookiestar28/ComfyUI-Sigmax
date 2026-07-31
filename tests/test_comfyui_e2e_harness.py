@@ -166,6 +166,112 @@ def test_schedule_algebra_h2_prompt_executes_every_operation_and_probe() -> None
     assert prompt["7"]["inputs"]["schedule_report"] == ["6", 0]
 
 
+def test_checkpoint_evidence_h2_fixture_and_prompt_are_bounded(
+    tmp_path: Path,
+) -> None:
+    harness = _harness()
+    run_path = tmp_path / "owned-run"
+    (run_path / "base" / "models" / "checkpoints").mkdir(parents=True)
+
+    staged = harness._stage_checkpoint_evidence_fixture(run_path)
+    raw = staged.read_bytes()
+    header_size = int.from_bytes(raw[:8], "little")
+    header = json.loads(raw[8 : 8 + header_size])
+
+    assert staged.name == "sigmax-m6-08-fixture.safetensors"
+    assert len(raw) == 8 + header_size + 8
+    assert header["__metadata__"] == {"is_distilled": "true"}
+    assert len(header) == 5
+    assert harness.build_checkpoint_evidence_h2_api_prompt() == {
+        "1": {
+            "class_type": "Sigmax.CheckpointEvidenceInspector",
+            "inputs": {"checkpoint": "checkpoints::sigmax-m6-08-fixture.safetensors"},
+        },
+        "2": {
+            "class_type": "SigmaxTest.CheckpointEvidenceProbe",
+            "inputs": {"checkpoint_evidence": ["1", 0]},
+        },
+    }
+
+
+def test_checkpoint_evidence_h2_history_requires_path_free_suggestion_only_report() -> None:
+    harness = _harness()
+    report = {
+        "model_identity": {
+            "confidence": "corroborating",
+            "confirmed_variant": None,
+            "decisive_source": None,
+            "family": "krea2",
+            "reason_codes": [
+                "header.is_distilled.turbo",
+                "tensor.krea2_family",
+                "non_authoritative_variant_suggestion",
+            ],
+            "resolution_status": "suggested",
+            "suggested_variant": "turbo",
+        },
+        "reason_codes": [
+            "header.is_distilled.turbo",
+            "tensor.krea2_family",
+            "non_authoritative_variant_suggestion",
+        ],
+        "schema": "sigmax.checkpoint-evidence-inspection/1",
+        "source": {
+            "display_name": "checkpoints::sigmax-m6-08-fixture.safetensors",
+            "file_bytes": 512,
+            "format": "safetensors",
+            "header_bytes": 496,
+            "payload_bytes_read": 0,
+        },
+        "status": "inspected",
+        "structure": {
+            "data_bytes": 8,
+            "dtype_counts": {"F16": 4},
+            "rank_counts": {"1": 4},
+            "structure_fingerprint": "sha256:" + "a" * 64,
+            "tensor_count": 4,
+        },
+    }
+    encoded = json.dumps(report, sort_keys=True, separators=(",", ":"))
+    prompt = harness.build_checkpoint_evidence_h2_api_prompt()
+    history = {
+        "prompt-checkpoint": {
+            "prompt": [0, "prompt-checkpoint", prompt, {}, ["2"], {}],
+            "outputs": {"2": {"sigmax_checkpoint_evidence": [encoded]}},
+            "status": {"completed": True, "status_str": "success"},
+        }
+    }
+
+    summary = harness.verify_checkpoint_evidence_h2_history(
+        history,
+        prompt_id="prompt-checkpoint",
+    )
+
+    assert summary == {
+        "confidence": "corroborating",
+        "confirmed_variant": None,
+        "payload_bytes_read": 0,
+        "reason_codes": report["reason_codes"],
+        "status": "succeeded",
+        "suggested_variant": "turbo",
+        "tensor_count": 4,
+    }
+
+    tampered = cast(dict[str, Any], copy.deepcopy(history))
+    decoded = json.loads(
+        tampered["prompt-checkpoint"]["outputs"]["2"]["sigmax_checkpoint_evidence"][0]
+    )
+    decoded["model_identity"]["confirmed_variant"] = "turbo"
+    tampered["prompt-checkpoint"]["outputs"]["2"]["sigmax_checkpoint_evidence"] = [
+        json.dumps(decoded, sort_keys=True, separators=(",", ":"))
+    ]
+    with pytest.raises(ScheduleContractError):
+        harness.verify_checkpoint_evidence_h2_history(
+            tampered,
+            prompt_id="prompt-checkpoint",
+        )
+
+
 def _schedule_algebra_history() -> dict[str, Any]:
     source = build_krea2_sigma_schedule(
         variant="Turbo",

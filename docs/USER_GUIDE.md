@@ -46,9 +46,10 @@ equivalent to the validated Registry artifact.
 ## Verify the installation
 
 Check the ComfyUI startup log for an import failure, duplicate ID, or registry-collision message.
-Then search the node menu for the eleven built-in IDs:
+Then search the node menu for the twelve built-in IDs:
 
 - `Sigmax.AdvancedFlowMatchScheduler`
+- `Sigmax.CheckpointEvidenceInspector`
 - `Sigmax.Krea2SigmaScheduler`
 - `Sigmax.ModelAwareSigmaScheduler`
 - `Sigmax.ProfileInspector`
@@ -70,6 +71,7 @@ registration, not model compatibility or image quality.
 | Build an explicit Krea 2 Turbo or RAW schedule | `Sigmax.Krea2SigmaScheduler` | Produces `SIGMAS`; it is not a sampler |
 | Resolve a connected Krea 2 model conservatively | `Sigmax.ModelAwareSigmaScheduler` | Auto rejects family-only RAW/Turbo ambiguity |
 | Construct experimental unit-flow schedules | `Sigmax.AdvancedFlowMatchScheduler` | No generic model-compatibility claim |
+| Inspect local checkpoint evidence | `Sigmax.CheckpointEvidenceInspector` | Header-only; never confirms a variant from weak evidence |
 | Inspect an exact profile | `Sigmax.ProfileInspector` | Read-only |
 | Inspect or compare verified schedules | `Sigmax.ScheduleInspector`, `Sigmax.ScheduleComparison` | Read-only; no conversion or resampling |
 | Alter a verified schedule | `Sigmax.ScheduleSlice`, `Sigmax.ScheduleConcatenate`, `Sigmax.ScheduleResample` | Requires matching `SIGMAS` and `schedule_info`; result evidence is `modified` |
@@ -78,6 +80,19 @@ registration, not model compatibility or image quality.
 Prefer `Sigmax.Krea2SigmaScheduler` when you know the exact variant. Use
 `Sigmax.ModelAwareSigmaScheduler` only when its trusted evidence can resolve the exact variant;
 select Turbo or RAW explicitly when Auto reports ambiguity.
+
+## Inspect local checkpoint evidence
+
+Use `Sigmax.CheckpointEvidenceInspector` to select a `.safetensors` file already registered by
+ComfyUI under `checkpoints` or `diffusion_models`. The node reads the eight-byte length prefix and
+bounded JSON header only; it does not read tensor payload bytes, load weights, use an accelerator,
+or access the network. The canonical `sigmax.checkpoint-evidence-inspection/1` JSON reports file
+and header sizes, tensor/dtype/rank counts, a structure fingerprint, confidence, and stable reason
+codes without exposing the local path or arbitrary metadata values.
+
+Treat `suggested_variant` as a prompt for review, not confirmation. Header flags, filenames, and
+shared Krea tensor structure are weak or family-only evidence, so `confirmed_variant` remains
+empty. Select RAW or Turbo explicitly unless separate trusted or verified evidence resolves it.
 
 ## Krea 2 Turbo example
 
@@ -135,7 +150,7 @@ git fetch --tags
 git switch --detach <reviewed-tag-or-commit>
 ```
 
-Restart ComfyUI and verify all eight IDs and important workflows. Do not use an unreviewed moving
+Restart ComfyUI and verify all twelve IDs and important workflows. Do not use an unreviewed moving
 branch as a production rollback point. To roll back, select the previously recorded tag/commit or
 restore the Manager snapshot, restart, and revalidate. Keep workflow backups until node IDs,
 schemas, schedule fingerprints, and results are confirmed.
@@ -148,7 +163,8 @@ backup location outside `custom_nodes`, restart, and confirm that only Sigmax no
 | Symptom | Check | Resolution |
 | --- | --- | --- |
 | Import failed | Folder nesting and Python floor | Put one package root directly under `custom_nodes`; use ComfyUI's Python 3.10+ environment |
-| Nodes absent | Startup log and disabled state | Restart ComfyUI; enable the node in Manager; confirm all eight IDs |
+| Nodes absent | Startup log and disabled state | Restart ComfyUI; enable the node in Manager; confirm all twelve IDs |
+| Checkpoint inspection rejects a file | Selector, suffix, permissions, and reason codes | Use a listed local `.safetensors` file; do not paste an arbitrary path or bypass a structural rejection |
 | Duplicate/collision error | Multiple Sigmax copies | Keep one reviewed installation; remove or disable stale duplicates, then restart |
 | Auto rejects the model | Evidence resolves only Krea family | Select Turbo or RAW explicitly; do not rely on filename or shared class |
 | Schedule or result looks shifted twice | Model/scheduler ownership | Supply Sigmax sigmas once; remove any second scheduler or model time shift |
@@ -166,7 +182,7 @@ Development builds used package identity `0.1.0.dev0`; version 1.0.0 is the stab
 baseline. Before migration, back up workflows and note their package, node, profile, and host
 versions. Install the reviewed 1.0.0 source, restart, and resave only after validation succeeds.
 
-The eight node IDs remain stable. Workflow package versions change to `1.0.0`, while current node
+The twelve node IDs remain stable. Workflow package versions change to `1.0.0`, while current node
 schema and Krea profile versions remain `1`. A future breaking node ID, schema, artifact, or
 schedule-semantics change requires a new project major, migration note, and compatibility review;
 do not hand-edit fingerprints to bypass that contract.

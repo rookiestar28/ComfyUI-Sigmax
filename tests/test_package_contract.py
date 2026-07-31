@@ -86,11 +86,13 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "core" / "request_result.py").is_file())
         self.assertTrue((package_path / "core" / "reports.py").is_file())
         self.assertTrue((package_path / "core" / "schedule_contracts.py").is_file())
+        self.assertTrue((package_path / "core" / "safetensors_header.py").is_file())
         self.assertTrue((package_path / "core" / "shifts.py").is_file())
         self.assertTrue((package_path / "core" / "terminal_slicing.py").is_file())
         self.assertTrue((package_path / "core" / "validation.py").is_file())
         self.assertTrue((package_path / "core" / "workflow_metadata.py").is_file())
         self.assertTrue((package_path / "profiles" / "__init__.py").is_file())
+        self.assertTrue((package_path / "profiles" / "checkpoint_evidence.py").is_file())
         self.assertTrue((package_path / "profiles" / "krea2_common.py").is_file())
         self.assertTrue((package_path / "profiles" / "krea2_raw.py").is_file())
         self.assertTrue((package_path / "profiles" / "registry.py").is_file())
@@ -116,6 +118,7 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "performance_matrix.py").is_file())
         self.assertTrue((package_path / "nodes" / "__init__.py").is_file())
         self.assertTrue((package_path / "nodes" / "advanced_flowmatch_scheduler.py").is_file())
+        self.assertTrue((package_path / "nodes" / "checkpoint_evidence_inspector.py").is_file())
         self.assertTrue((package_path / "nodes" / "inspectors.py").is_file())
         self.assertTrue((package_path / "nodes" / "krea2_sigma_scheduler.py").is_file())
         self.assertTrue((package_path / "nodes" / "model_aware_sigma_scheduler.py").is_file())
@@ -144,6 +147,7 @@ class PackageContractTests(unittest.TestCase):
         self.assertEqual(
             [
                 "Sigmax.AdvancedFlowMatchScheduler",
+                "Sigmax.CheckpointEvidenceInspector",
                 "Sigmax.Krea2SigmaScheduler",
                 "Sigmax.ModelAwareSigmaScheduler",
                 "Sigmax.ProfileInspector",
@@ -160,6 +164,7 @@ class PackageContractTests(unittest.TestCase):
         self.assertEqual(
             {
                 "Sigmax.AdvancedFlowMatchScheduler": "Advanced FlowMatch Scheduler",
+                "Sigmax.CheckpointEvidenceInspector": "Checkpoint Evidence Inspector",
                 "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler",
                 "Sigmax.ModelAwareSigmaScheduler": "Model-Aware Sigma Scheduler",
                 "Sigmax.ProfileInspector": "Profile Inspector",

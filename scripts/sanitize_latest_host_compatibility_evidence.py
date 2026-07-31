@@ -21,10 +21,12 @@ _EXPECTED_LANES: Final = [
     "H2_TURBO_M2_05",
     "H2_RAW_M3_06",
     "H2_ALGEBRA_M4_09",
+    "H2_CHECKPOINT_EVIDENCE_M6_08",
     "H3_EULER_M5_01",
 ]
 _EXPECTED_TRANSITIONS: Final = [
     "h1",
+    "h2_checkpoint_evidence",
     "h2_raw.krea2-raw-diffusers-portrait-761x1353",
     "h2_raw.krea2-raw-official-landscape-1353x761",
     "h2_raw.krea2-raw-official-square-1024",
@@ -38,6 +40,7 @@ _EXPECTED_TRANSITIONS: Final = [
 ]
 _EXPECTED_NODE_IDS: Final = [
     "Sigmax.AdvancedFlowMatchScheduler",
+    "Sigmax.CheckpointEvidenceInspector",
     "Sigmax.Krea2SigmaScheduler",
     "Sigmax.ModelAwareSigmaScheduler",
     "Sigmax.ProfileInspector",

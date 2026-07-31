@@ -79,6 +79,9 @@ _BUNDLE_KEY: Final = "sigmax_execution_bundle"
 _H3_TRACE_KEY: Final = "sigmax_native_euler_trace"
 _ALGEBRA_OUTPUT_NODE_ID: Final = "7"
 _ALGEBRA_TRACE_KEY: Final = "sigmax_schedule_algebra"
+_CHECKPOINT_OUTPUT_NODE_ID: Final = "2"
+_CHECKPOINT_TRACE_KEY: Final = "sigmax_checkpoint_evidence"
+_CHECKPOINT_FIXTURE_NAME: Final = "sigmax-m6-08-fixture.safetensors"
 _H3_TEST_PACK_NAME: Final = "ComfyUI-Sigmax-H3"
 _H3_TEST_PACK_SOURCE: Final = (
     REPOSITORY_ROOT / "tests" / "fixtures" / "comfyui_h3_nodes" / "__init__.py"
@@ -240,6 +243,21 @@ def build_schedule_algebra_h2_noop_rejection_prompt() -> dict[str, object]:
     resample["inputs"] = inputs
     prompt["5"] = resample
     return prompt
+
+
+def build_checkpoint_evidence_h2_api_prompt() -> dict[str, object]:
+    """Return the header-only checkpoint inspector -> test output graph."""
+
+    return {
+        "1": {
+            "class_type": "Sigmax.CheckpointEvidenceInspector",
+            "inputs": {"checkpoint": f"checkpoints::{_CHECKPOINT_FIXTURE_NAME}"},
+        },
+        _CHECKPOINT_OUTPUT_NODE_ID: {
+            "class_type": "SigmaxTest.CheckpointEvidenceProbe",
+            "inputs": {"checkpoint_evidence": ["1", 0]},
+        },
+    }
 
 
 def build_native_euler_h3_api_prompt() -> dict[str, object]:
@@ -457,6 +475,70 @@ def verify_schedule_algebra_h2_history(
         "operations": ["slice", "concatenate", "resample", "inspect"],
         "status": "succeeded",
         "transitions": 4,
+    }
+
+
+def verify_checkpoint_evidence_h2_history(
+    history: object,
+    *,
+    prompt_id: str,
+) -> dict[str, object]:
+    """Require one completed, path-free, suggestion-only checkpoint inspection."""
+
+    root = _object(history, label="checkpoint prompt history")
+    entry = _object(root.get(prompt_id), label="checkpoint prompt history entry")
+    status = _object(entry.get("status"), label="checkpoint prompt status")
+    if status.get("completed") is not True or status.get("status_str") != "success":
+        raise ScheduleContractError("checkpoint prompt history does not prove completed success")
+    prompt_tuple = _array(entry.get("prompt"), label="checkpoint retained prompt tuple")
+    if len(prompt_tuple) < 3 or prompt_tuple[2] != build_checkpoint_evidence_h2_api_prompt():
+        raise ScheduleContractError("checkpoint prompt history retained a stale API graph")
+    outputs = _object(entry.get("outputs"), label="checkpoint prompt outputs")
+    output = _object(
+        outputs.get(_CHECKPOINT_OUTPUT_NODE_ID),
+        label="checkpoint output-node history",
+    )
+    traces = _array(output.get(_CHECKPOINT_TRACE_KEY), label="checkpoint execution trace")
+    if len(traces) != 1 or not isinstance(traces[0], str) or len(traces[0]) > 100_000:
+        raise ScheduleContractError("checkpoint execution trace is invalid")
+    report = _object(_decode_json(traces[0].encode(), label="checkpoint report"), label="report")
+    canonical = json.dumps(
+        report,
+        allow_nan=False,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    )
+    source = _object(report.get("source"), label="checkpoint report source")
+    structure = _object(report.get("structure"), label="checkpoint report structure")
+    identity = _object(report.get("model_identity"), label="checkpoint report identity")
+    reason_codes = _array(report.get("reason_codes"), label="checkpoint reason codes")
+    if (
+        traces[0] != canonical
+        or report.get("schema") != "sigmax.checkpoint-evidence-inspection/1"
+        or report.get("status") != "inspected"
+        or source.get("display_name") != f"checkpoints::{_CHECKPOINT_FIXTURE_NAME}"
+        or source.get("format") != "safetensors"
+        or source.get("payload_bytes_read") != 0
+        or structure.get("data_bytes") != 8
+        or structure.get("dtype_counts") != {"F16": 4}
+        or structure.get("tensor_count") != 4
+        or identity.get("confidence") != "corroborating"
+        or identity.get("confirmed_variant") is not None
+        or identity.get("resolution_status") != "suggested"
+        or identity.get("suggested_variant") != "turbo"
+        or reason_codes != identity.get("reason_codes")
+        or not all(isinstance(item, str) for item in reason_codes)
+    ):
+        raise ScheduleContractError("checkpoint execution evidence drifted")
+    return {
+        "confidence": identity["confidence"],
+        "confirmed_variant": None,
+        "payload_bytes_read": 0,
+        "reason_codes": reason_codes,
+        "status": "succeeded",
+        "suggested_variant": identity["suggested_variant"],
+        "tensor_count": structure["tensor_count"],
     }
 
 
@@ -1281,6 +1363,34 @@ def _stage_extension(run_path: Path) -> Path:
     return custom_node
 
 
+def _stage_checkpoint_evidence_fixture(run_path: Path) -> Path:
+    """Create one tiny deterministic safetensors file inside the owned host model folder."""
+
+    header: dict[str, object] = {"__metadata__": {"is_distilled": "true"}}
+    names = (
+        "diffusion_model.first.weight",
+        "diffusion_model.blocks.0.attn.wq.weight",
+        "diffusion_model.blocks.0.attn.wk.weight",
+        "diffusion_model.txtfusion.projector.weight",
+    )
+    for index, name in enumerate(names):
+        header[name] = {
+            "data_offsets": [index * 2, (index + 1) * 2],
+            "dtype": "F16",
+            "shape": [1],
+        }
+    encoded = json.dumps(
+        header,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode("utf-8")
+    target = run_path / "base" / "models" / "checkpoints" / _CHECKPOINT_FIXTURE_NAME
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(len(encoded).to_bytes(8, "little") + encoded + bytes(8))
+    return target
+
+
 def _stage_h3_test_pack(run_path: Path) -> Path:
     """Stage the repository-owned release-excluded H3 fixture pack."""
 
@@ -1641,6 +1751,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
     for name in ("base", "input", "output", "temp", "user"):
         (run_path / name).mkdir()
     staged_node = _stage_extension(run_path)
+    _stage_checkpoint_evidence_fixture(run_path)
     _stage_h3_test_pack(run_path)
     import_probe = _run_import_probe(
         host_python=host_python,
@@ -1661,6 +1772,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
             "H2_TURBO_M2_05",
             "H2_RAW_M3_06",
             "H2_ALGEBRA_M4_09",
+            "H2_CHECKPOINT_EVIDENCE_M6_08",
             "H3_EULER_M5_01",
         ],
         "host": {
@@ -1925,6 +2037,28 @@ def run(args: argparse.Namespace) -> dict[str, object]:
             )
             evidence["h2_schedule_algebra_rejections"] = [algebra_rejection]
             attempts["h2_schedule_algebra.noop_resample"] = algebra_rejection_transition
+
+            def submit_checkpoint_evidence(ordinal: int) -> tuple[str, dict[str, object]]:
+                return _submit_successful_prompt(
+                    base_url=base_url,
+                    client_id=f"sigmax-m6-08-checkpoint-evidence-attempt-{ordinal}",
+                    prompt=build_checkpoint_evidence_h2_api_prompt(),
+                    execution_timeout=args.execution_timeout,
+                )
+
+            def verify_checkpoint_evidence(
+                history: object,
+                prompt_id: str,
+            ) -> dict[str, object]:
+                return verify_checkpoint_evidence_h2_history(history, prompt_id=prompt_id)
+
+            checkpoint_summary, checkpoint_transition = execute_verified_host_repeat(
+                lane="H2_CHECKPOINT_EVIDENCE_M6_08",
+                submit=submit_checkpoint_evidence,
+                verify=verify_checkpoint_evidence,
+            )
+            evidence["h2_checkpoint_evidence"] = checkpoint_summary
+            attempts["h2_checkpoint_evidence"] = checkpoint_transition
 
             def submit_h3(ordinal: int) -> tuple[str, dict[str, object]]:
                 return _submit_successful_prompt(

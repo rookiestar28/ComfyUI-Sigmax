@@ -48,7 +48,7 @@ def _load(path: Path, *, attempt: str) -> tuple[dict[str, object], str]:
     transitions = evidence.get("attempt_transitions")
     if (
         not isinstance(transitions, dict)
-        or len(transitions) != 9
+        or len(transitions) != 12
         or not all(
             isinstance(item, dict)
             and item.get("accepted") is True

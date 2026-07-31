@@ -13,6 +13,7 @@ _INITIAL = (0.75, -0.5, 1.25, -1.0)
 _BIASES = (0.0625, -0.125, 0.1875, -0.25)
 _UI_KEY = "sigmax_native_euler_trace"
 _ALGEBRA_UI_KEY = "sigmax_schedule_algebra"
+_CHECKPOINT_UI_KEY = "sigmax_checkpoint_evidence"
 
 
 def _vector(value: torch.Tensor) -> list[float]:
@@ -208,11 +209,48 @@ class ScheduleAlgebraProbe:
         }
 
 
+class CheckpointEvidenceProbe:
+    """Return bounded test-only H2 evidence from the production inspector node."""
+
+    CATEGORY = "SigmaxTest"
+    DESCRIPTION = "Test-only checkpoint evidence H2 execution probe."
+    FUNCTION = "execute"
+    OUTPUT_NODE = True
+    RETURN_TYPES: tuple[()] = ()
+    RETURN_NAMES: tuple[()] = ()
+
+    @classmethod
+    def INPUT_TYPES(cls) -> dict[str, dict[str, tuple[object, ...]]]:
+        return {
+            "required": {
+                "checkpoint_evidence": ("STRING", {"default": "", "multiline": True}),
+            }
+        }
+
+    def execute(self, checkpoint_evidence: object) -> dict[str, object]:
+        if not isinstance(checkpoint_evidence, str) or len(checkpoint_evidence) > 100_000:
+            raise ValueError("H2 checkpoint evidence must be bounded text")
+        report = json.loads(checkpoint_evidence)
+        if (
+            not isinstance(report, dict)
+            or report.get("schema") != "sigmax.checkpoint-evidence-inspection/1"
+            or report.get("status") != "inspected"
+            or report.get("source", {}).get("payload_bytes_read") != 0
+            or report.get("structure", {}).get("tensor_count") != 4
+            or report.get("model_identity", {}).get("confirmed_variant") is not None
+            or report.get("model_identity", {}).get("suggested_variant") != "turbo"
+        ):
+            raise ValueError("H2 checkpoint evidence contract drifted")
+        return {"ui": {_CHECKPOINT_UI_KEY: [checkpoint_evidence]}}
+
+
 NODE_CLASS_MAPPINGS = {
+    "SigmaxTest.CheckpointEvidenceProbe": CheckpointEvidenceProbe,
     "SigmaxTest.NativeEulerProbe": NativeEulerProbe,
     "SigmaxTest.ScheduleAlgebraProbe": ScheduleAlgebraProbe,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
+    "SigmaxTest.CheckpointEvidenceProbe": "Sigmax Test — Checkpoint Evidence Probe",
     "SigmaxTest.NativeEulerProbe": "Sigmax Test — Native Euler Probe",
     "SigmaxTest.ScheduleAlgebraProbe": "Sigmax Test — Schedule Algebra Probe",
 }

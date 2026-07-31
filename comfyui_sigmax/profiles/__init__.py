@@ -1,5 +1,12 @@
 """Evidence-pinned model profiles built on the framework-independent core."""
 
+from comfyui_sigmax.profiles.checkpoint_evidence import (
+    CHECKPOINT_EVIDENCE_INSPECTION_SCHEMA_ID,
+    CHECKPOINT_EVIDENCE_INSPECTION_SCHEMA_VERSION,
+    CHECKPOINT_EVIDENCE_REASON_CODES,
+    CheckpointEvidenceInspection,
+    inspect_local_checkpoint_evidence,
+)
 from comfyui_sigmax.profiles.generic_flowmatch import (
     GENERIC_FLOWMATCH_DYNAMIC_PROFILE,
     GENERIC_FLOWMATCH_FIXED_PROFILE,
@@ -107,6 +114,9 @@ __all__ = [
     "CAPABILITY_RESOLUTION_CORE_REASON_CODES",
     "CAPABILITY_RESOLUTION_SCHEMA_ID",
     "CAPABILITY_RESOLUTION_SCHEMA_VERSION",
+    "CHECKPOINT_EVIDENCE_INSPECTION_SCHEMA_ID",
+    "CHECKPOINT_EVIDENCE_INSPECTION_SCHEMA_VERSION",
+    "CHECKPOINT_EVIDENCE_REASON_CODES",
     "GENERIC_FLOWMATCH_DYNAMIC_PROFILE",
     "GENERIC_FLOWMATCH_FIXED_PROFILE",
     "GENERIC_FLOWMATCH_PROFILE_SCHEMA_ID",
@@ -123,6 +133,7 @@ __all__ = [
     "PROFILE_SCHEMA_VERSION",
     "ArtifactVersionDeclaration",
     "BaseGridDeclaration",
+    "CheckpointEvidenceInspection",
     "ConflictPolicy",
     "DetectionDeclaration",
     "DimensionAlignmentMode",
@@ -181,6 +192,7 @@ __all__ = [
     "generic_flowmatch_profile_fingerprint",
     "generic_flowmatch_profile_projection",
     "generic_flowmatch_profiles",
+    "inspect_local_checkpoint_evidence",
     "model_identity_from_krea2_resolution",
     "profile_schema_fingerprint",
     "profile_schema_projection",

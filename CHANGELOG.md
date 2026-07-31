@@ -9,6 +9,11 @@ tracked independently from the frozen profile-schema version.
 
 ### Added
 
+- A dependency-free `Checkpoint Evidence Inspector` (`Sigmax.CheckpointEvidenceInspector`) for
+  ComfyUI-allowlisted local safetensors.
+  It reads only the bounded header, validates tensor structure without loading payloads, accessing
+  an accelerator, or using the network, and emits canonical confidence/reason-code evidence that
+  never confirms a variant from weak metadata, filename, or family-only structure.
 - Fingerprint-bound `Schedule Slice`, `Schedule Concatenate`, and `Schedule Resample` nodes with
   terminal-inclusive bounds, exact shared-boundary enforcement, explicit normalized-index
   interpolation, strict domain/monotonicity validation, and `modified` output provenance.

@@ -9,6 +9,7 @@ from typing import Any, cast
 
 import pytest
 from comfyui_sigmax.core import CompatibilityReason, ScheduleContractError
+from comfyui_sigmax.profiles import CHECKPOINT_EVIDENCE_REASON_CODES
 from comfyui_sigmax.public_contracts import load_public_contract_manifest
 from scripts import generate_public_contract_manifest as generator
 
@@ -50,6 +51,10 @@ def test_packaged_manifest_freezes_the_complete_m8_01_boundary() -> None:
         {
             "id": "Sigmax.AdvancedFlowMatchScheduler",
             "schema": "sigmax.advanced-flowmatch-node/1",
+        },
+        {
+            "id": "Sigmax.CheckpointEvidenceInspector",
+            "schema": "sigmax.checkpoint-evidence-inspector/1",
         },
         {"id": "Sigmax.Krea2SigmaScheduler", "schema": "sigmax.krea2-sigma-node/1"},
         {
@@ -93,6 +98,7 @@ def test_packaged_manifest_freezes_the_complete_m8_01_boundary() -> None:
         ],
         "profile_capability": [
             "sigmax.capability-resolution/1",
+            "sigmax.checkpoint-evidence-inspection/1",
             "sigmax.generic-flowmatch-profile/1",
             "sigmax.model-profile/1",
         ],
@@ -141,6 +147,7 @@ def test_reason_code_vocabularies_are_complete_and_canonical() -> None:
             "model.variant_mismatch",
         }
     )
+    assert reasons["checkpoint_inspection"] == sorted(CHECKPOINT_EVIDENCE_REASON_CODES)
 
 
 def test_migration_policy_is_explicit_and_versioned() -> None:

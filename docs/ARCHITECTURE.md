@@ -141,6 +141,7 @@ tests/
 
 comfyui_sigmax/nodes/
   advanced_flowmatch_scheduler.py  explicit configurable unit-flow SIGMAS node
+  checkpoint_evidence_inspector.py allowlisted header-only local checkpoint inspection
   inspectors.py  bounded read-only profile and schedule reports
   krea2_sigma_scheduler.py  thin explicit RAW/Turbo SIGMAS product node
   model_aware_sigma_scheduler.py  bounded MODEL probe and exact capability-gated profile node
@@ -150,12 +151,23 @@ comfyui_sigmax/nodes/
 
 The dependency-free `adapters/registration.py` module owns the immutable node catalog and
 wire-schema projections. The package exports the validated
-`Sigmax.AdvancedFlowMatchScheduler`, `Sigmax.Krea2SigmaScheduler`, and
+`Sigmax.AdvancedFlowMatchScheduler`, `Sigmax.CheckpointEvidenceInspector`,
+`Sigmax.Krea2SigmaScheduler`, and
 `Sigmax.ModelAwareSigmaScheduler`, `Sigmax.ProfileInspector`,
 `Sigmax.RawWorkflowOutput`, `Sigmax.ScheduleComparison`, `Sigmax.ScheduleConcatenate`,
 `Sigmax.ScheduleInspector`, `Sigmax.ScheduleResample`, `Sigmax.ScheduleSlice`, and
 `Sigmax.TurboWorkflowOutput` mappings. Importing them does not load Torch or ComfyUI, patch
 PyTorch, import Diffusers, or alter host process state.
+
+The local checkpoint evidence boundary is split across
+`core/safetensors_header.py`, `profiles/checkpoint_evidence.py`, and the thin selector node. The
+core parser reads exactly the safetensors length prefix and bounded JSON header, validates dtype,
+shape, offsets, payload coverage, and canonical structural limits, but never reads tensor payload.
+The profile layer emits path-free `sigmax.checkpoint-evidence-inspection/1` JSON with confidence
+and stable reason codes. The node accepts only `.safetensors` names returned by ComfyUI's
+`checkpoints` or `diffusion_models` registries and resolves them through `folder_paths`; arbitrary
+paths, accelerators, and network access stay outside this boundary. Local metadata, filenames, and
+family-only tensor keys may suggest RAW or Turbo but can never confirm the variant.
 
 The dependency-free `host_mutation.py` boundary represents protected host state as immutable
 `sigmax.host-mutation-snapshot/1` values. Its pure evaluator detects registry replacement,

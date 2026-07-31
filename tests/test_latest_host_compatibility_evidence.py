@@ -50,6 +50,7 @@ def _raw() -> dict[str, object]:
             "h2_raw.raw-invalid-steps": transition,
             "h2_schedule_algebra": transition,
             "h2_schedule_algebra.noop_resample": transition,
+            "h2_checkpoint_evidence": transition,
             "h2_turbo": transition,
             "h3_native_euler": transition,
             "h3_native_euler.partial_denoise": transition,
@@ -64,6 +65,7 @@ def _raw() -> dict[str, object]:
             "diffusers_loaded": False,
             "node_ids": [
                 "Sigmax.AdvancedFlowMatchScheduler",
+                "Sigmax.CheckpointEvidenceInspector",
                 "Sigmax.Krea2SigmaScheduler",
                 "Sigmax.ModelAwareSigmaScheduler",
                 "Sigmax.ProfileInspector",
@@ -83,6 +85,7 @@ def _raw() -> dict[str, object]:
             "H2_TURBO_M2_05",
             "H2_RAW_M3_06",
             "H2_ALGEBRA_M4_09",
+            "H2_CHECKPOINT_EVIDENCE_M6_08",
             "H3_EULER_M5_01",
         ],
         "platform": "windows",

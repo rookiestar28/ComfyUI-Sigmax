@@ -100,6 +100,7 @@ class ImportSafetyTests(unittest.TestCase):
             {
                 "class_mappings": {
                     "Sigmax.AdvancedFlowMatchScheduler": "AdvancedFlowMatchScheduler",
+                    "Sigmax.CheckpointEvidenceInspector": "CheckpointEvidenceInspector",
                     "Sigmax.Krea2SigmaScheduler": "Krea2SigmaScheduler",
                     "Sigmax.ModelAwareSigmaScheduler": "ModelAwareSigmaScheduler",
                     "Sigmax.ProfileInspector": "ProfileInspector",
@@ -115,6 +116,7 @@ class ImportSafetyTests(unittest.TestCase):
                 "diffusers_loaded": False,
                 "display_mappings": {
                     "Sigmax.AdvancedFlowMatchScheduler": "Advanced FlowMatch Scheduler",
+                    "Sigmax.CheckpointEvidenceInspector": "Checkpoint Evidence Inspector",
                     "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler",
                     "Sigmax.ModelAwareSigmaScheduler": "Model-Aware Sigma Scheduler",
                     "Sigmax.ProfileInspector": "Profile Inspector",
@@ -155,6 +157,7 @@ class ImportSafetyTests(unittest.TestCase):
             assert bootstrap.__version__ == "1.0.0"
             assert sorted(bootstrap.NODE_CLASS_MAPPINGS) == [
                 "Sigmax.AdvancedFlowMatchScheduler",
+                "Sigmax.CheckpointEvidenceInspector",
                 "Sigmax.Krea2SigmaScheduler",
                 "Sigmax.ModelAwareSigmaScheduler",
                 "Sigmax.ProfileInspector",
@@ -168,6 +171,7 @@ class ImportSafetyTests(unittest.TestCase):
             ]
             assert bootstrap.NODE_DISPLAY_NAME_MAPPINGS == {
                 "Sigmax.AdvancedFlowMatchScheduler": "Advanced FlowMatch Scheduler",
+                "Sigmax.CheckpointEvidenceInspector": "Checkpoint Evidence Inspector",
                 "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler",
                 "Sigmax.ModelAwareSigmaScheduler": "Model-Aware Sigma Scheduler",
                 "Sigmax.ProfileInspector": "Profile Inspector",
@@ -225,6 +229,7 @@ def test_bootstrap_supports_dynamic_comfyui_custom_node_loader() -> None:
     assert result.returncode == 0, result.stderr
     assert json.loads(result.stdout) == [
         "Sigmax.AdvancedFlowMatchScheduler",
+        "Sigmax.CheckpointEvidenceInspector",
         "Sigmax.Krea2SigmaScheduler",
         "Sigmax.ModelAwareSigmaScheduler",
         "Sigmax.ProfileInspector",

@@ -131,7 +131,7 @@ execute node code, start a host, or establish H1/H2 real-host evidence.
 
 H1 stages the extension into an owned isolated directory and proves:
 
-- all eight node IDs import and appear in live `/object_info`;
+- all twelve node IDs import and appear in live `/object_info`;
 - the live four-workflow schema report passes;
 - importing Sigmax does not replace `torch.nn.Module.__call__`, mutate ComfyUI's scheduler
   registry, or import Diffusers.

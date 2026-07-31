@@ -8,6 +8,12 @@ from comfyui_sigmax.nodes.advanced_flowmatch_scheduler import (
     AdvancedFlowMatchShiftMode,
     build_advanced_flowmatch_schedule,
 )
+from comfyui_sigmax.nodes.checkpoint_evidence_inspector import (
+    CHECKPOINT_EVIDENCE_INSPECTOR_NODE_ID,
+    CHECKPOINT_EVIDENCE_INSPECTOR_SCHEMA_ID,
+    NO_LOCAL_SAFETENSORS_CHOICE,
+    CheckpointEvidenceInspector,
+)
 from comfyui_sigmax.nodes.inspectors import (
     PROFILE_INSPECTOR_NODE_ID,
     PROFILE_INSPECTOR_SCHEMA_ID,
@@ -82,11 +88,14 @@ from comfyui_sigmax.nodes.turbo_workflow_output import (
 __all__ = [
     "ADVANCED_FLOWMATCH_NODE_ID",
     "ADVANCED_FLOWMATCH_NODE_SCHEMA_ID",
+    "CHECKPOINT_EVIDENCE_INSPECTOR_NODE_ID",
+    "CHECKPOINT_EVIDENCE_INSPECTOR_SCHEMA_ID",
     "KREA2_SIGMA_NODE_ID",
     "KREA2_SIGMA_NODE_SCHEMA_ID",
     "MODEL_AWARE_SIGMA_NODE_ID",
     "MODEL_AWARE_SIGMA_NODE_SCHEMA_ID",
     "MODEL_FAMILY_PROBE_SCHEMA_ID",
+    "NO_LOCAL_SAFETENSORS_CHOICE",
     "PROFILE_INSPECTOR_NODE_ID",
     "PROFILE_INSPECTOR_SCHEMA_ID",
     "RAW_WORKFLOW_BUNDLE_UI_KEY",
@@ -108,6 +117,7 @@ __all__ = [
     "AdvancedFlowMatchNodeResult",
     "AdvancedFlowMatchScheduler",
     "AdvancedFlowMatchShiftMode",
+    "CheckpointEvidenceInspector",
     "Krea2SigmaNodeResult",
     "Krea2SigmaScheduler",
     "Krea2SigmaVariant",

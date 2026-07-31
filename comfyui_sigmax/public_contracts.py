@@ -32,7 +32,9 @@ _MANIFEST_FIELDS: Final = frozenset(
 _ENVELOPE_FIELDS: Final = frozenset({"manifest", "manifest_fingerprint", "schema"})
 _NODE_FIELDS: Final = frozenset({"id", "schema"})
 _SCHEMA_GROUPS: Final = frozenset({"construction", "execution", "profile_capability"})
-_REASON_GROUPS: Final = frozenset({"capability_resolution", "compatibility"})
+_REASON_GROUPS: Final = frozenset(
+    {"capability_resolution", "checkpoint_inspection", "compatibility"}
+)
 _MIGRATION_FIELDS: Final = frozenset(
     {
         "breaking_change",
@@ -138,6 +140,10 @@ def source_contract_projection() -> dict[str, object]:
         ADVANCED_FLOWMATCH_NODE_ID,
         ADVANCED_FLOWMATCH_NODE_SCHEMA_ID,
     )
+    from comfyui_sigmax.nodes.checkpoint_evidence_inspector import (
+        CHECKPOINT_EVIDENCE_INSPECTOR_NODE_ID,
+        CHECKPOINT_EVIDENCE_INSPECTOR_SCHEMA_ID,
+    )
     from comfyui_sigmax.nodes.inspectors import (
         PROFILE_INSPECTOR_NODE_ID,
         PROFILE_INSPECTOR_SCHEMA_ID,
@@ -174,6 +180,8 @@ def source_contract_projection() -> dict[str, object]:
         CAPABILITY_RESOLUTION_ADDITIONAL_REASON_CODES,
         CAPABILITY_RESOLUTION_CORE_REASON_CODES,
         CAPABILITY_RESOLUTION_SCHEMA_ID,
+        CHECKPOINT_EVIDENCE_INSPECTION_SCHEMA_ID,
+        CHECKPOINT_EVIDENCE_REASON_CODES,
         GENERIC_FLOWMATCH_PROFILE_SCHEMA_ID,
         PROFILE_SCHEMA_ID,
     )
@@ -181,6 +189,10 @@ def source_contract_projection() -> dict[str, object]:
     nodes = sorted(
         (
             {"id": ADVANCED_FLOWMATCH_NODE_ID, "schema": ADVANCED_FLOWMATCH_NODE_SCHEMA_ID},
+            {
+                "id": CHECKPOINT_EVIDENCE_INSPECTOR_NODE_ID,
+                "schema": CHECKPOINT_EVIDENCE_INSPECTOR_SCHEMA_ID,
+            },
             {"id": KREA2_SIGMA_NODE_ID, "schema": KREA2_SIGMA_NODE_SCHEMA_ID},
             {"id": MODEL_AWARE_SIGMA_NODE_ID, "schema": MODEL_AWARE_SIGMA_NODE_SCHEMA_ID},
             {"id": PROFILE_INSPECTOR_NODE_ID, "schema": PROFILE_INSPECTOR_SCHEMA_ID},
@@ -206,6 +218,7 @@ def source_contract_projection() -> dict[str, object]:
                 CAPABILITY_RESOLUTION_CORE_REASON_CODES
                 | CAPABILITY_RESOLUTION_ADDITIONAL_REASON_CODES
             ),
+            "checkpoint_inspection": sorted(CHECKPOINT_EVIDENCE_REASON_CODES),
             "compatibility": [reason.value for reason in CompatibilityReason],
         },
         "schema": PUBLIC_CONTRACT_MANIFEST_SCHEMA,
@@ -227,6 +240,7 @@ def source_contract_projection() -> dict[str, object]:
             "profile_capability": sorted(
                 {
                     CAPABILITY_RESOLUTION_SCHEMA_ID,
+                    CHECKPOINT_EVIDENCE_INSPECTION_SCHEMA_ID,
                     GENERIC_FLOWMATCH_PROFILE_SCHEMA_ID,
                     PROFILE_SCHEMA_ID,
                 }

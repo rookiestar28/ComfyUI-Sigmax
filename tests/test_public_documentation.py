@@ -123,7 +123,7 @@ def test_public_documentation_exposes_frozen_contract_and_migration_policy() -> 
         assert "sigmax.public-contract-manifest/1" in content
         assert "migration" in content.lower()
     assert "manifest_v1.json" in architecture
-    assert "all eight built-in node" in readme
+    assert "all twelve built-in node" in readme
     assert "Unknown schema identifiers fail" in specification
     assert "| Stable public contracts |" in ci_matrix
 
@@ -217,7 +217,7 @@ def test_public_documentation_describes_current_maturity_honestly() -> None:
     profile_spec = _read(ROOT / "docs" / "PROFILE_SPEC.md").lower()
 
     assert "stable public-contract baseline" in readme
-    assert "eight namespaced nodes" in readme
+    assert "twelve namespaced nodes" in readme
     assert "planned" in architecture and "implemented" in architecture
     assert "frozen" in profile_spec and "sigmax.model-profile/1" in profile_spec
     assert "not yet validated" in compatibility
@@ -450,6 +450,26 @@ def test_public_documentation_bounds_generic_flowmatch_profiles() -> None:
     assert "model-specific" in user_guide.lower()
     assert "profiles/registry.py" in architecture
     assert "cannot replace a built-in" in profile_spec
+
+
+def test_public_documentation_exposes_local_checkpoint_evidence_boundary() -> None:
+    readme = _read(ROOT / "README.md")
+    architecture = _read(ROOT / "docs" / "ARCHITECTURE.md")
+    profile_spec = _read(ROOT / "docs" / "PROFILE_SPEC.md")
+    stable_contracts = _read(ROOT / "docs" / "STABLE_PUBLIC_CONTRACTS.md")
+    user_guide = _read(ROOT / "docs" / "USER_GUIDE.md")
+    compatibility = _read(ROOT / "docs" / "COMPATIBILITY.md")
+    changelog = _read(ROOT / "CHANGELOG.md")
+
+    for content in (readme, architecture, stable_contracts, user_guide, changelog):
+        assert "Sigmax.CheckpointEvidenceInspector" in content
+    for content in (readme, architecture, profile_spec, stable_contracts, compatibility):
+        assert "sigmax.checkpoint-evidence-inspection/1" in content
+    for content in (readme, architecture, profile_spec, user_guide, compatibility):
+        assert "payload" in content.lower()
+        assert "network" in content.lower()
+        assert "confirm" in content.lower()
+    assert "checkpoint_inspection" in stable_contracts
 
 
 def test_public_documentation_exposes_core_independence_boundary() -> None:

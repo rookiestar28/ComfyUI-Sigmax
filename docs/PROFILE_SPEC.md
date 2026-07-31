@@ -362,6 +362,13 @@ that class. Local headers and filenames do not resolve official identity. Confli
 evidence remains unresolved, and strict official mode raises rather than guessing. The
 resolver retains normalized reason codes rather than private paths or arbitrary metadata.
 
+`Sigmax.CheckpointEvidenceInspector` exposes this local suggestion boundary as canonical
+`sigmax.checkpoint-evidence-inspection/1` JSON. It reads only the bounded safetensors header,
+validates tensor descriptors and complete offset coverage without reading payload bytes, and
+reports structural counts, confidence, and stable reason codes. It performs no network or
+accelerator access and never promotes header metadata, filenames, or shared family structure into
+a confirmed variant. Malformed or inaccessible input returns a controlled, path-free rejection.
+
 The exact official single-file identities currently recognized are:
 
 - RAW: `f99bb0ff8e362b77342bc4994e0c50906fe7ef7074864b181b7d48d2fa6d03d7`;

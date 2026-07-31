@@ -25,6 +25,7 @@ python scripts/generate_public_contract_manifest.py --check
 | Node ID | Versioned schema |
 | --- | --- |
 | `Sigmax.AdvancedFlowMatchScheduler` | `sigmax.advanced-flowmatch-node/1` |
+| `Sigmax.CheckpointEvidenceInspector` | `sigmax.checkpoint-evidence-inspector/1` |
 | `Sigmax.Krea2SigmaScheduler` | `sigmax.krea2-sigma-node/1` |
 | `Sigmax.ModelAwareSigmaScheduler` | `sigmax.model-aware-sigma-node/1` |
 | `Sigmax.ProfileInspector` | `sigmax.profile-inspector/1` |
@@ -43,6 +44,7 @@ contract.
 
 Profile and capability:
 
+- `sigmax.checkpoint-evidence-inspection/1`
 - `sigmax.generic-flowmatch-profile/1`
 - `sigmax.model-profile/1`
 - `sigmax.capability-resolution/1`
@@ -62,7 +64,14 @@ Execution evidence:
 The complete reason-code arrays are intentionally machine-readable in the manifest. The
 `compatibility` group is the exact ordered `CompatibilityReason` vocabulary. The
 `capability_resolution` group is the canonical sorted union of `core.<compatibility-code>` and
-the host/model resolution codes. Free-form exception text is never a stable reason code.
+the host/model resolution codes. The `checkpoint_inspection` group freezes the bounded local-file,
+safetensors-header, and suggestion-only identity outcomes emitted by checkpoint inspection.
+Free-form exception text is never a stable reason code.
+
+Checkpoint inspection reads no tensor payload and never accesses an accelerator or network. Its
+path-free report cannot confirm a model variant from local metadata, filename, or family-only
+tensor structure; those signals remain non-authoritative suggestions with explicit confidence and
+reason codes.
 
 Execution receipt failure/interruption reasons are producer-owned bounded identifiers. Sigmax
 does not yet execute a sampler, so it does not claim or freeze a package-owned execution-failure

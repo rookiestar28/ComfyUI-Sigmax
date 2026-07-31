@@ -42,6 +42,7 @@ Issues = "https://github.com/rookiestar28/ComfyUI-Sigmax/issues"
 packages = [
     "comfyui_sigmax",
     "comfyui_sigmax.adapters",
+    "comfyui_sigmax.benchmarks",
     "comfyui_sigmax.core",
     "comfyui_sigmax.nodes",
     "comfyui_sigmax.profiles",
@@ -51,6 +52,7 @@ include-package-data = true
 
 [tool.setuptools.package-data]
 comfyui_sigmax = ["py.typed"]
+"comfyui_sigmax.benchmarks" = ["*.json"]
 "comfyui_sigmax.workflows" = ["*.json"]
 
 [tool.comfy]

@@ -18,6 +18,8 @@ PUBLIC_DOCUMENTS = (
     ROOT / "docs" / "ARCHITECTURE.md",
     ROOT / "docs" / "PROFILE_SPEC.md",
     ROOT / "docs" / "SCHEDULE_ARTIFACT_SPEC.md",
+    ROOT / "docs" / "SCHEDULE_REPORT_SPEC.md",
+    ROOT / "docs" / "NUMERICAL_BENCHMARK_MATRIX_SPEC.md",
     ROOT / "docs" / "EXECUTION_RECEIPT_SPEC.md",
     ROOT / "docs" / "WORKFLOW_METADATA_SPEC.md",
     ROOT / "docs" / "COMPATIBILITY.md",
@@ -408,6 +410,22 @@ def test_public_test_governance_records_activated_native_euler_h3() -> None:
     assert "partial-denoise execution is rejected" in test_sop
     assert "remaining h3 capabilities" in e2e_sop
     assert "| real comfyui h3 |" in ci_matrix
+
+
+def test_public_documentation_exposes_numerical_benchmark_matrix_boundary() -> None:
+    readme = _read(ROOT / "README.md")
+    architecture = _read(ROOT / "docs" / "ARCHITECTURE.md")
+    compatibility = _read(ROOT / "docs" / "COMPATIBILITY.md")
+    specification = _read(ROOT / "docs" / "NUMERICAL_BENCHMARK_MATRIX_SPEC.md")
+    ci_matrix = _read(ROOT / "tests" / "CI_TEST_MATRIX.md")
+
+    for content in (readme, architecture, specification):
+        assert "sigmax.numerical-benchmark-matrix/1" in content
+        assert "23" in content
+    assert "BF16" in readme and "quantized" in readme
+    assert "not_evaluated" in specification
+    assert "dependency-free" in compatibility
+    assert "| Numerical benchmark matrix | Implemented | M7-02 |" in ci_matrix
 
 
 def test_public_documents_do_not_expose_internal_workspace_material() -> None:

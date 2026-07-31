@@ -127,6 +127,7 @@ def test_default_package_does_not_depend_on_parity_frameworks() -> None:
     assert set(metadata["tool"]["setuptools"]["packages"]) == {
         "comfyui_sigmax",
         "comfyui_sigmax.adapters",
+        "comfyui_sigmax.benchmarks",
         "comfyui_sigmax.core",
         "comfyui_sigmax.nodes",
         "comfyui_sigmax.profiles",

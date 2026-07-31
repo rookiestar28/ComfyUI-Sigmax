@@ -76,6 +76,11 @@ comfyui_sigmax/
                 model-free canonical Turbo/RAW graphs and ordered widget contracts
     host_baseline.json
                 pinned legacy and Node Definition v2 host schemas
+  benchmarks/
+    numerical_matrix_v1.json
+                canonical capability-filtered numerical and host evidence matrix
+  benchmark_matrix.py
+                strict dependency-free packaged matrix loader and validator
   plotting.py
                 lazy optional headless PNG/SVG report renderer
 
@@ -87,6 +92,8 @@ scripts/
   run_krea2_raw_parity.py     isolated RAW dynamic-shift and scheduler execution
   run_comfyui_e2e.py          isolated pinned-host H1, Turbo/RAW H2, and native-Euler H3
   validate_schedule_plots.py  isolated optional headless plot validation
+  generate_numerical_benchmark_matrix.py
+                              deterministic public-evidence matrix generation/check
   run_full_gate.py            canonical ordered acceptance gate
   OS wrappers                 repo-local environment selection
 
@@ -121,6 +128,15 @@ The separate top-level `plotting.py` module imports Matplotlib only inside a ren
 never imported by the package bootstrap or pure core. It uses a headless object-oriented canvas
 and returns PNG/SVG bytes without file or network access. Rendered images are presentation
 artifacts and carry no schedule/report identity.
+
+The separate dependency-free `benchmark_matrix.py` boundary loads and validates the packaged
+canonical `sigmax.numerical-benchmark-matrix/1` matrix. Its 23 rows summarize 4 Turbo and 14 RAW
+authoritative schedule-parity cases, four H2 artifact/receipt workflows, and one controlled H3
+native-Euler execution. It binds
+every source fixture by exact content identity and retains requested/effective geometry,
+transition/evaluation counts, RNG ownership, runtimes, results, and first/repeat state. It does
+not enter node registration or core schedule math and cannot turn unavailable BF16, quantized,
+GPU, or model-weight evidence into PASS.
 
 The full gate proves this boundary before the test suite: a clean project-local environment
 must resolve neither ComfyUI nor Diffusers, and a `python -I` subprocess installs explicit

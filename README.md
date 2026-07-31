@@ -504,6 +504,37 @@ The renderer is lazy, headless, and in-memory. Plot bytes are presentation only 
 replace canonical artifacts, receipts, reports, or numerical parity evidence. See the
 [schedule report and plot specification](docs/SCHEDULE_REPORT_SPEC.md).
 
+### Numerical benchmark matrix
+
+The installed package includes a dependency-free canonical summary of the accepted Turbo/RAW
+numerical and host evidence:
+
+```python
+from comfyui_sigmax.benchmark_matrix import load_numerical_benchmark_matrix
+
+matrix = load_numerical_benchmark_matrix()
+assert matrix.projection()["coverage"]["total_verified_results"] == 23
+print(matrix.matrix_fingerprint)
+```
+
+`sigmax.numerical-benchmark-matrix/1` contains four Turbo parity rows, fourteen RAW
+recipe/geometry parity rows, four H2 artifact/receipt workflow rows, and one controlled H3
+native-Euler row. It preserves requested/effective resolutions, transitions/model evaluations,
+RNG ownership, runtime versions, baselines, exact identities, first-run status, and repeat
+stability where applicable.
+
+Only capability-`allow` evidence enters verified results. BF16 and quantized model-weight
+variants are separate `not_evaluated` entries because the optional GPU/model-weight lane is not
+approved; they do not borrow a schedule or synthetic-model PASS. Regeneration is deterministic:
+
+```bash
+python scripts/generate_numerical_benchmark_matrix.py --check
+```
+
+See the
+[numerical benchmark matrix specification](docs/NUMERICAL_BENCHMARK_MATRIX_SPEC.md) for its
+schema, source binding, evidence hierarchy, and limitations.
+
 The first concrete profile is an immutable, evidence-pinned declaration of the official
 Krea 2 Turbo recipe:
 

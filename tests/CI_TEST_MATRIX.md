@@ -21,6 +21,7 @@ Command definitions remain in `tests/TEST_SOP.md`. Real-host lifecycle requireme
 | Krea 2 variant-resolution contracts | Implemented | M3-04 |
 | Framework parity tests | Implemented | M2-03, M3-05 |
 | Native ComfyUI parity tests | Implemented | M2-04 |
+| Numerical benchmark matrix | Implemented | M7-02 |
 | Adapter/integration tests | Implemented | M4-01 through M4-10 |
 | Real ComfyUI H1 | Implemented | M2-05 harness |
 | Real ComfyUI H2 | Turbo and RAW/auto implemented | M2-05; M3-06 |

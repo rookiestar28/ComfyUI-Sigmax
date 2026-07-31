@@ -50,6 +50,7 @@ class PackageContractTests(unittest.TestCase):
             [
                 "comfyui_sigmax",
                 "comfyui_sigmax.adapters",
+                "comfyui_sigmax.benchmarks",
                 "comfyui_sigmax.core",
                 "comfyui_sigmax.nodes",
                 "comfyui_sigmax.profiles",
@@ -102,6 +103,9 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "workflows" / "fixtures.json").is_file())
         self.assertTrue((package_path / "workflows" / "host_baseline.json").is_file())
         self.assertTrue((package_path / "plotting.py").is_file())
+        self.assertTrue((package_path / "benchmark_matrix.py").is_file())
+        self.assertTrue((package_path / "benchmarks" / "__init__.py").is_file())
+        self.assertTrue((package_path / "benchmarks" / "numerical_matrix_v1.json").is_file())
 
         sys.path.insert(0, str(REPOSITORY_ROOT))
         self.addCleanup(sys.path.remove, str(REPOSITORY_ROOT))

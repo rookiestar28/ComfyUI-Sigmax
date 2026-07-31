@@ -89,6 +89,7 @@ work, but do not yet have repository acceptance evidence.
 | Development tools | Version-bounded `dev` extra |
 | Diffusers | Optional `reference` extra, currently `>=0.39,<0.40` |
 | Matplotlib | Optional `plot` extra, currently `>=3.10,<3.12`; lazy and outside core |
+| Numerical benchmark matrix | Packaged canonical JSON; dependency-free loader; no model weights |
 | ComfyUI | Optional host; not imported by the package shell or pure adapter |
 | Node/browser tooling | Not required by the current Python-only foundation |
 | Model weights and GPU runtime | Not downloaded or exercised |

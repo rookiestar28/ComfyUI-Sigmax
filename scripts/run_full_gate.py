@@ -38,6 +38,7 @@ LANE_STATUS: Final = {
     "gpu_model_weights": "NOT_IMPLEMENTED",
     "mutation": "NOT_IMPLEMENTED",
     "native_comfyui_parity": "IMPLEMENTED",
+    "performance_budgets": "IMPLEMENTED",
     "property": "IMPLEMENTED",
 }
 
@@ -85,6 +86,10 @@ def _inspect_wheel(wheel: Path) -> None:
         "comfyui_sigmax/nodes/__init__.py",
         "comfyui_sigmax/nodes/krea2_sigma_scheduler.py",
         "comfyui_sigmax/nodes/raw_workflow_output.py",
+        "comfyui_sigmax/performance/__init__.py",
+        "comfyui_sigmax/performance/matrix_v1.json",
+        "comfyui_sigmax/performance_budgets.py",
+        "comfyui_sigmax/performance_matrix.py",
         "comfyui_sigmax/profiles/__init__.py",
         "comfyui_sigmax/profiles/krea2_common.py",
         "comfyui_sigmax/profiles/krea2_raw.py",

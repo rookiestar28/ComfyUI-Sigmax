@@ -55,6 +55,7 @@ class PackageContractTests(unittest.TestCase):
                 "comfyui_sigmax.compatibility",
                 "comfyui_sigmax.core",
                 "comfyui_sigmax.nodes",
+                "comfyui_sigmax.performance",
                 "comfyui_sigmax.profiles",
                 "comfyui_sigmax.workflows",
             ],
@@ -98,6 +99,9 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "coinstallation" / "__init__.py").is_file())
         self.assertTrue((package_path / "coinstallation_matrix.py").is_file())
         self.assertTrue((package_path / "host_mutation.py").is_file())
+        self.assertTrue((package_path / "performance" / "__init__.py").is_file())
+        self.assertTrue((package_path / "performance_budgets.py").is_file())
+        self.assertTrue((package_path / "performance_matrix.py").is_file())
         self.assertTrue((package_path / "nodes" / "__init__.py").is_file())
         self.assertTrue((package_path / "nodes" / "advanced_flowmatch_scheduler.py").is_file())
         self.assertTrue((package_path / "nodes" / "inspectors.py").is_file())
@@ -115,6 +119,7 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "benchmarks" / "numerical_matrix_v1.json").is_file())
         self.assertTrue((package_path / "compatibility" / "matrix_v1.json").is_file())
         self.assertTrue((package_path / "coinstallation" / "matrix_v1.json").is_file())
+        self.assertTrue((package_path / "performance" / "matrix_v1.json").is_file())
 
         sys.path.insert(0, str(REPOSITORY_ROOT))
         self.addCleanup(sys.path.remove, str(REPOSITORY_ROOT))

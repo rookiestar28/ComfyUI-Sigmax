@@ -47,6 +47,7 @@ packages = [
     "comfyui_sigmax.compatibility",
     "comfyui_sigmax.core",
     "comfyui_sigmax.nodes",
+    "comfyui_sigmax.performance",
     "comfyui_sigmax.profiles",
     "comfyui_sigmax.workflows",
 ]
@@ -57,6 +58,7 @@ comfyui_sigmax = ["py.typed"]
 "comfyui_sigmax.benchmarks" = ["*.json"]
 "comfyui_sigmax.coinstallation" = ["*.json"]
 "comfyui_sigmax.compatibility" = ["*.json"]
+"comfyui_sigmax.performance" = ["*.json"]
 "comfyui_sigmax.workflows" = ["*.json"]
 
 [tool.comfy]

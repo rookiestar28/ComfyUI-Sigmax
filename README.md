@@ -590,6 +590,27 @@ code was executed: fixtures select only fixed repository-owned operations, and a
 named-pack execution requires a separate reviewed plan and approval. See the
 [co-installation mutation matrix specification](docs/COINSTALLATION_MUTATION_MATRIX_SPEC.md).
 
+### Performance budgets
+
+The packaged `sigmax.performance-budget-matrix/1` records integer-unit regression limits and
+first/repeat observations for Turbo/RAW schedule latency and peak allocation, isolated package
+startup, the CPU tensor boundary, and pinned ComfyUI 0.29.0 readiness:
+
+```python
+from comfyui_sigmax.performance_matrix import load_performance_budget_matrix
+
+matrix = load_performance_budget_matrix()
+startup = matrix.require_result("windows.comfyui0290.host.comfyui0290.readiness")
+assert startup["status"] == "passed"
+```
+
+Windows 3.13 and WSL 3.10 execute the same pure workloads. The tensor boundary requires exactly
+one construction, one host round-trip, and zero explicit device transfers. Two fresh pinned
+CPU/no-model ComfyUI starts provide separate readiness evidence. Limits are broad regression
+ceilings, not portable wall-clock promises; GPU, weights, latest-host, and the unavailable
+official container remain `not_evaluated`. See the
+[performance budget specification](docs/PERFORMANCE_BUDGET_SPEC.md).
+
 The first concrete profile is an immutable, evidence-pinned declaration of the official
 Krea 2 Turbo recipe:
 

@@ -24,6 +24,7 @@ Command definitions remain in `tests/TEST_SOP.md`. Real-host lifecycle requireme
 | Numerical benchmark matrix | Implemented | M7-02 |
 | Dependency compatibility matrix | Local/pinned plus release/HEAD latest-host evidence implemented; official container explicitly unavailable/non-blocking | M7-04 |
 | Co-installation mutation matrix | Ten deterministic synthetic first/repeat scenarios implemented; no external pack code executed | M7-08 |
+| Performance budgets | Windows/WSL pure first/repeat limits plus two pinned-host startup observations implemented | M7-05 |
 | Adapter/integration tests | Implemented | M4-01 through M4-10 |
 | Real ComfyUI H1 | Implemented | M2-05 harness |
 | Real ComfyUI H2 | Turbo and RAW/auto implemented | M2-05; M3-06 |

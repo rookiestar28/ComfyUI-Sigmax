@@ -85,6 +85,9 @@ comfyui_sigmax/
   coinstallation/
     matrix_v1.json
                 canonical synthetic co-installation and protected-mutation evidence
+  performance/
+    matrix_v1.json
+                canonical integer-unit performance budgets and observations
   benchmark_matrix.py
                 strict dependency-free packaged matrix loader and validator
   compatibility_matrix.py
@@ -93,6 +96,10 @@ comfyui_sigmax/
                 strict source/result/dependency-bound co-installation matrix loader
   host_mutation.py
                 immutable host snapshots and pure protected-seam evaluator
+  performance_budgets.py
+                immutable budget, observation, and first/repeat evaluation contracts
+  performance_matrix.py
+                strict packaged performance evidence loader
   plotting.py
                 lazy optional headless PNG/SVG report renderer
 
@@ -114,6 +121,10 @@ scripts/
                               fixed declarative synthetic mutation executor
   generate_coinstallation_mutation_matrix.py
                               deterministic co-installation matrix generation/check
+  run_performance_budget_lane.py
+                              Windows/WSL pure latency/allocation/boundary/startup runner
+  generate_performance_budget_matrix.py
+                              deterministic performance matrix generation/check
   run_full_gate.py            canonical ordered acceptance gate
   OS wrappers                 repo-local environment selection
 
@@ -142,6 +153,11 @@ The dependency-free `host_mutation.py` boundary represents protected host state 
 `sigmax.host-mutation-snapshot/1` values. Its pure evaluator detects registry replacement,
 namespace hijacking, PyTorch/model-patch changes, and model-native/external double-shift
 conditions without patching a live host.
+
+The `performance_budgets.py` and `performance_matrix.py` boundaries represent inclusive
+integer-unit limits, repeated observations, and the packaged
+`sigmax.performance-budget-matrix/1` evidence. Measurement is isolated in scripts; importing
+the package does not start timers, allocate benchmark workloads, import Torch, or launch a host.
 
 The dependency-free `core/reports.py` module consumes only validated immutable
 `ScheduleArtifact`, `ExecutionReceipt`, and `PortableExecutionBundle` values. Its canonical

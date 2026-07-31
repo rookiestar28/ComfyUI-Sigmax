@@ -132,6 +132,7 @@ def test_default_package_does_not_depend_on_parity_frameworks() -> None:
         "comfyui_sigmax.compatibility",
         "comfyui_sigmax.core",
         "comfyui_sigmax.nodes",
+        "comfyui_sigmax.performance",
         "comfyui_sigmax.profiles",
         "comfyui_sigmax.workflows",
     }

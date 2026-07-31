@@ -22,6 +22,7 @@ PUBLIC_DOCUMENTS = (
     ROOT / "docs" / "NUMERICAL_BENCHMARK_MATRIX_SPEC.md",
     ROOT / "docs" / "DEPENDENCY_COMPATIBILITY_MATRIX_SPEC.md",
     ROOT / "docs" / "COINSTALLATION_MUTATION_MATRIX_SPEC.md",
+    ROOT / "docs" / "PERFORMANCE_BUDGET_SPEC.md",
     ROOT / "docs" / "EXECUTION_RECEIPT_SPEC.md",
     ROOT / "docs" / "WORKFLOW_METADATA_SPEC.md",
     ROOT / "docs" / "COMPATIBILITY.md",
@@ -53,6 +54,21 @@ def test_public_documentation_exposes_coinstallation_mutation_boundary() -> None
     assert "coinstallation_matrix.py" in architecture
     assert "no external" in compatibility.lower()
     assert "| Co-installation mutation matrix |" in ci_matrix
+
+
+def test_public_documentation_exposes_performance_budget_boundary() -> None:
+    readme = _read(ROOT / "README.md")
+    architecture = _read(ROOT / "docs" / "ARCHITECTURE.md")
+    compatibility = _read(ROOT / "docs" / "COMPATIBILITY.md")
+    specification = _read(ROOT / "docs" / "PERFORMANCE_BUDGET_SPEC.md")
+    ci_matrix = _read(ROOT / "tests" / "CI_TEST_MATRIX.md")
+
+    for content in (readme, architecture, compatibility, specification):
+        assert "sigmax.performance-budget-matrix/1" in content
+    assert "zero explicit device transfers" in readme
+    assert "30-second" in compatibility
+    assert "not_evaluated" in specification
+    assert "| Performance budgets |" in ci_matrix
 
 
 def test_public_documentation_describes_current_maturity_honestly() -> None:

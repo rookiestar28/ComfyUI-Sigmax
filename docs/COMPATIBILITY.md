@@ -94,6 +94,7 @@ work, but do not yet have repository acceptance evidence.
 | Numerical benchmark matrix | Packaged canonical JSON; dependency-free loader; no model weights |
 | Dependency compatibility matrix | Packaged canonical JSON; fixed local runner; no implicit acquisition |
 | Co-installation mutation matrix | Packaged canonical JSON; fixed synthetic operations; no external code |
+| Performance budget matrix | Integer-unit first/repeat limits; Windows/WSL pure lanes plus pinned host startup |
 | ComfyUI | Optional host; not imported by the package shell or pure adapter |
 | Node/browser tooling | Not required by the current Python-only foundation |
 | Model weights and GPU runtime | Not downloaded or exercised |
@@ -146,6 +147,19 @@ The runner applies only fixed declarative repository-owned operations to immutab
 snapshots. It does not import ComfyUI or Torch, mutate a live host, execute `reference/` or
 third-party code, or claim compatibility with a named node pack. A named-pack observation
 requires a separate reviewed plan and explicit approval.
+
+## Performance Evidence
+
+`sigmax.performance-budget-matrix/1` separates normative regression limits from
+machine-specific observations. Windows Python 3.13 and WSL Python 3.10 execute fixed Turbo/RAW
+schedule latency and peak-allocation workloads, isolated package startup, and an instrumented
+CPU tensor boundary. The boundary requires one tensor construction, one host round-trip, and
+zero explicit device transfers. Two fresh pinned ComfyUI 0.29.0 CPU/no-model processes provide
+first/repeat readiness evidence under a 30-second ceiling.
+
+These limits detect major regressions; they are not cross-machine wall-clock guarantees. GPU,
+model weights, latest-host, and official-container performance are `not_evaluated` and cannot
+borrow a PASS from CPU or synthetic evidence.
 
 ## Planned Validation Tiers
 

@@ -49,6 +49,9 @@ tracked independently from the frozen profile-schema version.
   co-installation matrix covering reload idempotence, registry collisions,
   PyTorch/model-patch changes, and model-native/external double-shift detection without
   executing third-party code.
+- Integer-unit `sigmax.performance-budget-matrix/1` evidence for schedule latency/allocation,
+  exact CPU tensor-boundary operations, isolated startup, and repeated pinned ComfyUI readiness,
+  with unsupported GPU/latest/container lanes explicitly unevaluated.
 - Versioned workflow metadata with package/node/host requirements, profile and compatibility
   evidence, artifact/receipt references, and non-destructive ComfyUI 0.4/1 graph attachment.
 - Immutable model, profile, sampler, and execution-feature capability declarations with

@@ -9,7 +9,9 @@ versioned profiles for other flow-matching and diffusion model families.
 > current repository provides a side-effect-free package shell, packaging metadata, quality
 > gates, framework-independent schedule primitives, canonical schedule-artifact
 > serialization, a frozen `ProfileSchemaV1`, and evidence-pinned Krea 2 Turbo and RAW
-> structural profiles. It also
+> structural profiles. Immutable schedule/receipt reports now expose exact typed sigma/delta
+> rows, transforms, effective inputs, fingerprints, execution evidence, and comparison
+> statistics; an explicitly optional headless plotting extra returns PNG/SVG bytes. It also
 > provides typed model/profile/sampler capability preflight and complete independent
 > 4/8/12/16-step Turbo golden vectors plus authoritative parity against pinned Krea code and
 > Diffusers 0.39.0, plus native-ComfyUI Turbo schedule parity. Complete independent RAW
@@ -457,6 +459,50 @@ and symmetric relative differences (`abs(a-b) / max(abs(a), abs(b))`, or zero wh
 zero), plus source transform metadata and aggregate maxima/means. Length or domain mismatch
 returns a deterministic non-comparable `sigmax.schedule-comparison/1` report; it never truncates,
 resamples, or converts a schedule.
+
+### Immutable schedule reports and optional plots
+
+The dependency-free report API consumes the canonical construction artifact and, when available,
+its matching execution receipt or portable bundle. It does not trust loose dictionaries or infer
+execution from construction:
+
+```python
+from comfyui_sigmax.core import (
+    build_schedule_comparison_report,
+    build_schedule_report_from_bundle,
+    deserialize_portable_execution_bundle,
+    serialize_schedule_report,
+)
+
+bundle = deserialize_portable_execution_bundle(bundle_payload)
+report = build_schedule_report_from_bundle(bundle)
+canonical_report = serialize_schedule_report(report)
+comparison = build_schedule_comparison_report(report, other_report)
+```
+
+`sigmax.schedule-report/1` exposes terminal-inclusive typed sigma values, signed
+`next_sigma - sigma` deltas, domain/precision, ordered transforms, effective inputs, artifact and
+receipt fingerprints, and truthful execution status/reason/counts.
+`sigmax.schedule-comparison-report/1` uses exact sigma-index alignment and reports absolute plus
+symmetric-relative statistics. Domain or length mismatch is explicitly non-comparable; reports
+are never truncated, interpolated, resampled, or converted.
+
+Plotting is optional and never enters the default import path:
+
+```bash
+python -m pip install "comfyui-sigmax[plot]"
+```
+
+```python
+from comfyui_sigmax.plotting import render_schedule_plot
+
+png_bytes = render_schedule_plot(report, image_format="png")
+svg_bytes = render_schedule_plot(report, image_format="svg")
+```
+
+The renderer is lazy, headless, and in-memory. Plot bytes are presentation only and do not
+replace canonical artifacts, receipts, reports, or numerical parity evidence. See the
+[schedule report and plot specification](docs/SCHEDULE_REPORT_SPEC.md).
 
 The first concrete profile is an immutable, evidence-pinned declaration of the official
 Krea 2 Turbo recipe:

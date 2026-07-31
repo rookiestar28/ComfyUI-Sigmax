@@ -88,6 +88,7 @@ work, but do not yet have repository acceptance evidence.
 | Runtime Python dependencies | None |
 | Development tools | Version-bounded `dev` extra |
 | Diffusers | Optional `reference` extra, currently `>=0.39,<0.40` |
+| Matplotlib | Optional `plot` extra, currently `>=3.10,<3.12`; lazy and outside core |
 | ComfyUI | Optional host; not imported by the package shell or pure adapter |
 | Node/browser tooling | Not required by the current Python-only foundation |
 | Model weights and GPU runtime | Not downloaded or exercised |
@@ -96,6 +97,11 @@ Diffusers is intended as a pinned parity reference or optional backend. Closed-f
 construction does not require it at runtime. The canonical pure lane requires both ComfyUI and
 Diffusers to be absent, blocks attempted imports, and enumerates every core and profile module
 in Python isolated mode.
+
+Canonical schedule and comparison reports remain standard-library-only. PNG/SVG rendering is a
+separate optional path: Python 3.10 resolves the compatible Matplotlib 3.10 line, while current
+Python 3.11+ environments may use 3.11. Plot output is not required to import Sigmax, build or
+compare reports, execute nodes, or validate artifacts and receipts.
 
 ## Planned Validation Tiers
 

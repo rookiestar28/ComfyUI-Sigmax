@@ -48,6 +48,8 @@ comfyui_sigmax/
                 immutable artifact assembly and strict canonical JSON transport
     execution_receipts.py
                 execution evidence and portable artifact/receipt bundle transport
+    reports.py
+                canonical artifact/receipt schedule and comparison reports
     workflow_metadata.py
                 portable workflow requirements and non-destructive graph attachment
     capabilities.py
@@ -74,6 +76,8 @@ comfyui_sigmax/
                 model-free canonical Turbo/RAW graphs and ordered widget contracts
     host_baseline.json
                 pinned legacy and Node Definition v2 host schemas
+  plotting.py
+                lazy optional headless PNG/SVG report renderer
 
 scripts/
   preflight_check.py          local environment validation
@@ -82,6 +86,7 @@ scripts/
   run_krea2_turbo_parity.py   isolated pinned Diffusers execution
   run_krea2_raw_parity.py     isolated RAW dynamic-shift and scheduler execution
   run_comfyui_e2e.py          isolated pinned-host H1, Turbo/RAW H2, and native-Euler H3
+  validate_schedule_plots.py  isolated optional headless plot validation
   run_full_gate.py            canonical ordered acceptance gate
   OS wrappers                 repo-local environment selection
 
@@ -105,6 +110,17 @@ wire-schema projections. The package exports the validated
 `Sigmax.RawWorkflowOutput`, `Sigmax.ScheduleComparison`, `Sigmax.ScheduleInspector`, and
 `Sigmax.TurboWorkflowOutput` mappings. Importing them does not load Torch or ComfyUI, patch
 PyTorch, import Diffusers, or alter host process state.
+
+The dependency-free `core/reports.py` module consumes only validated immutable
+`ScheduleArtifact`, `ExecutionReceipt`, and `PortableExecutionBundle` values. Its canonical
+schedule and comparison reports retain exact typed sigma values, signed adjacent deltas,
+construction/effective/execution evidence, and deterministic comparison statistics. Domain or
+length mismatch is non-comparable; no alignment conversion occurs.
+
+The separate top-level `plotting.py` module imports Matplotlib only inside a renderer call and is
+never imported by the package bootstrap or pure core. It uses a headless object-oriented canvas
+and returns PNG/SVG bytes without file or network access. Rendered images are presentation
+artifacts and carry no schedule/report identity.
 
 The full gate proves this boundary before the test suite: a clean project-local environment
 must resolve neither ComfyUI nor Diffusers, and a `python -I` subprocess installs explicit

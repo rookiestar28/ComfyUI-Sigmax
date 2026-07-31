@@ -30,6 +30,10 @@ class PackageContractTests(unittest.TestCase):
             project["optional-dependencies"]["reference"],
         )
         self.assertEqual(
+            ["matplotlib>=3.10,<3.12"],
+            project["optional-dependencies"]["plot"],
+        )
+        self.assertEqual(
             "https://github.com/rookiestar28/ComfyUI-Sigmax",
             project["urls"]["Repository"],
         )
@@ -70,6 +74,7 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "core" / "execution_receipts.py").is_file())
         self.assertTrue((package_path / "core" / "fingerprints.py").is_file())
         self.assertTrue((package_path / "core" / "request_result.py").is_file())
+        self.assertTrue((package_path / "core" / "reports.py").is_file())
         self.assertTrue((package_path / "core" / "schedule_contracts.py").is_file())
         self.assertTrue((package_path / "core" / "shifts.py").is_file())
         self.assertTrue((package_path / "core" / "terminal_slicing.py").is_file())
@@ -96,6 +101,7 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "workflows" / "validation.py").is_file())
         self.assertTrue((package_path / "workflows" / "fixtures.json").is_file())
         self.assertTrue((package_path / "workflows" / "host_baseline.json").is_file())
+        self.assertTrue((package_path / "plotting.py").is_file())
 
         sys.path.insert(0, str(REPOSITORY_ROOT))
         self.addCleanup(sys.path.remove, str(REPOSITORY_ROOT))

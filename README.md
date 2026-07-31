@@ -1,38 +1,16 @@
 # ComfyUI-Sigmax
 
-ComfyUI-Sigmax is a planned model-aware sigma schedule and sampler toolkit for ComfyUI. Its
-first validation targets are Krea 2 Turbo and Krea 2 RAW; the longer-term design supports
-versioned profiles for other flow-matching and diffusion model families.
+ComfyUI-Sigmax 1.0.0 is a model-aware sigma schedule toolkit for ComfyUI. It provides verified,
+versioned Krea 2 Turbo and Krea 2 RAW schedules, explicit model/profile/sampler capability
+contracts, stable workflow metadata, inspectors, comparison reports, and reproducible release
+artifacts while keeping the schedule core independent of ComfyUI and Diffusers.
 
-> **Status: pre-alpha foundation.** The first user-facing `Krea 2 Sigma Scheduler` node is
-> implemented as a statically validated legacy/current ComfyUI contract. The
-> current repository provides a side-effect-free package shell, packaging metadata, quality
-> gates, framework-independent schedule primitives, canonical schedule-artifact
-> serialization, a frozen `ProfileSchemaV1`, and evidence-pinned Krea 2 Turbo and RAW
-> structural profiles. Immutable schedule/receipt reports now expose exact typed sigma/delta
-> rows, transforms, effective inputs, fingerprints, execution evidence, and comparison
-> statistics; an explicitly optional headless plotting extra returns PNG/SVG bytes. It also
-> provides typed model/profile/sampler capability preflight and complete independent
-> 4/8/12/16-step Turbo golden vectors plus authoritative parity against pinned Krea code and
-> Diffusers 0.39.0, plus native-ComfyUI Turbo schedule parity. Complete independent RAW
-> 28/52-step golden vectors and executable authoritative/framework parity now cover square,
-> landscape, and portrait geometry. A pure
-> fail-closed resolver distinguishes authoritative/verified variant evidence from visible
-> header and filename suggestions. A dependency-free ComfyUI adapter now normalizes reviewed
-> public `/system_stats`, `/features`, `/object_info`, and Node Definition v2 evidence into
-> immutable model/host/sampler contracts. A pure `sigmax.node-registration/1` catalog also
-> discovers legacy/current and V3 node definitions, validates Node Definition v2 wire schemas,
-> and produces collision-safe namespaced mappings. Its built-in catalog now contains
-> `Sigmax.AdvancedFlowMatchScheduler`, `Sigmax.Krea2SigmaScheduler`, and
-> `Sigmax.ModelAwareSigmaScheduler`, `Sigmax.ProfileInspector`, and
-> `Sigmax.ScheduleComparison`, `Sigmax.ScheduleInspector`, `Sigmax.RawWorkflowOutput`, and
-> `Sigmax.TurboWorkflowOutput`. The repository-owned H1/H2 harness loads this catalog and
-> executes the canonical model-free Turbo and RAW graphs on ComfyUI `0.29.0` revision
-> `e651b7bef55a5376343dcb1c0edb79f0142c985e`. RAW native model-sampling parity, model
-> weights, GPU execution, and image generation remain pending. The
-> complete core and profile
-> layer are dependency-free and have enforced
-> isolation/property/golden/parity contract lanes.
+> **Status: stable public-contract baseline.** Eight namespaced nodes are implemented. Turbo and
+> RAW schedule construction, complete golden vectors, authoritative/framework parity, pinned-host
+> import and model-free workflows, and deterministic native-Euler equivalence are validated.
+> Real model weights, GPU/image quality, stochastic/resumable/partial-denoise execution, advanced
+> workflows, and generic cross-model profiles are not claimed. Start with the
+> [1.0 user guide](docs/USER_GUIDE.md).
 
 ## Why Sigmax
 
@@ -820,6 +798,7 @@ The command never authenticates, uploads, or publishes and always records
 
 ## Documentation
 
+- [1.0 user guide](docs/USER_GUIDE.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Stable public contracts and migration policy](docs/STABLE_PUBLIC_CONTRACTS.md)
 - [Security and release audit](docs/SECURITY_RELEASE_AUDIT.md)

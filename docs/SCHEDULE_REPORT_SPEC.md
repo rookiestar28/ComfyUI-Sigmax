@@ -7,7 +7,7 @@
 - **Comparison projection:** `sigmax.schedule-comparison-report/1`
 - **Comparison envelope:** `sigmax.schedule-comparison-report-envelope/1`
 - **Plot validation:** `sigmax.schedule-plot-validation/1`
-- **Maturity:** implemented and normative for pre-alpha v1; not yet a stable public API
+- **Maturity:** implemented and normative for the stable v1 public-contract baseline
 
 This specification defines read-only views over validated immutable construction artifacts and
 execution receipts. A report cannot create, repair, or upgrade execution evidence. A plot is a

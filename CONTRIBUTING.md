@@ -1,7 +1,7 @@
 # Contributing
 
-ComfyUI-Sigmax is in pre-alpha development. Contributions should preserve the separation
-between model semantics, schedule construction, numerical samplers, and model profiles.
+ComfyUI-Sigmax 1.0.0 has a stable public-contract baseline. Contributions must preserve the
+separation between model semantics, schedule construction, numerical samplers, and model profiles.
 
 ## Environment
 
@@ -29,7 +29,7 @@ corruption/locks, conflicting executables, file operations, non-ASCII paths, rep
 temp paths, and selected optional extras. Do not bypass a failure by switching to a global
 Python or `pre-commit`; follow the reported local command and rerun.
 
-## Development Rules
+## Architecture boundaries
 
 - Add or update a failing contract test before production behavior.
 - Keep pure schedule mathematics independent of ComfyUI and Diffusers where possible.
@@ -40,9 +40,29 @@ Python or `pre-commit`; follow the reported local command and rerun.
 - Cite authoritative sources and numerical tolerances for parity claims.
 - Label non-authoritative behavior as framework-reference, community, or experimental.
 - Keep changes focused and preserve source attribution.
-- Treat identifiers in `sigmax.public-contract-manifest/1` as frozen. Run
-  `python scripts/generate_public_contract_manifest.py --check`; any intentional breaking
-  change requires a new schema major, a project major-version plan, and a migration note.
+
+## Change workflow
+
+1. Define objective acceptance criteria and the affected contract/evidence boundary.
+2. For behavior changes and bug fixes, use `Reproduce -> Pin -> Sweep`: observe the failure, add a
+   focused failing regression, implement the smallest correction, then run dependent and full
+   gates.
+3. Regenerate only artifacts whose declared sources changed; rerun first/repeat compatibility
+   lanes when their invariant contract changes.
+4. Update public documentation, changelog, migration impact, and rollback guidance with the code.
+5. Keep commits scoped and use Conventional Commits.
+
+## Public contract and migration changes
+
+Treat identifiers in `sigmax.public-contract-manifest/1` as frozen. Run:
+
+```powershell
+python scripts/generate_public_contract_manifest.py --check
+```
+
+An intentional breaking node ID, schema, artifact, receipt, reason code, or schedule-semantics
+change requires a new schema/project major as applicable, a reviewed migration plan, compatibility
+evidence, and a user-facing migration note. A profile version bump cannot conceal a wire break.
 
 ## Validation
 
@@ -65,6 +85,8 @@ Run the complete gate before requesting review. A hook that modifies files is no
 review the change and rerun until the repository is clean. The detailed workflow is documented
 in the [test SOP](tests/TEST_SOP.md).
 
+## Release-facing validation
+
 Release-facing changes must also pass the local non-publishing audit with fresh paths:
 
 ```powershell
@@ -85,7 +107,7 @@ publisher ownership.
 Never weaken `MANIFEST.in` or archive deny rules merely to include a local test, planning record,
 reference clone, cache, model file, or private log.
 
-## Pull Requests
+## Review evidence
 
 Describe:
 
@@ -98,6 +120,11 @@ Describe:
 
 Do not describe attractive output alone as schedule correctness. Numerical construction,
 provenance, and reproducibility are required.
+
+Review is incomplete without the observed failing regression when applicable, targeted pass,
+dependent generator/parity/host evidence, complete Windows and WSL gate results, environment and
+interpreter identity, migration/rollback assessment, and known limitations. A retry cannot erase a
+first-attempt P0 regression; record the cause and corrective rerun.
 
 ## Model Profile Contributions
 

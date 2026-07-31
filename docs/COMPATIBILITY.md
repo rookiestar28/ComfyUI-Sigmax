@@ -2,7 +2,7 @@
 
 ## Current Status
 
-ComfyUI-Sigmax is a pre-alpha development foundation. The Krea 2 Turbo structural profile
+ComfyUI-Sigmax 1.0.0 is the stable public-contract baseline. The Krea 2 Turbo structural profile
 and formula-composed schedule builder are implemented, along with `krea2.raw.official`
 geometry, sequence-length, and dynamic-`mu` derivation. A static dependency-free ComfyUI adapter
 normalizes reviewed public host/node schemas and derives model/host/sampler capability evidence.
@@ -127,8 +127,8 @@ baseline remains ComfyUI 0.29.0 revision
 numbered API `v0_0_2`. These are accepted source-evidence references, not newly rerun external
 lanes.
 
-Python 3.10 reaches upstream end of life in October 2026, so its floor is a dated pre-alpha
-compatibility commitment that must be reviewed before stable release. Official ComfyUI v0.29.2
+Python 3.10 reaches upstream end of life in October 2026, so its floor is a dated compatibility
+commitment that must be reviewed at each release. Official ComfyUI v0.29.2
 and pinned HEAD `5cc026f5…` passed separate non-blocking CPU/no-model H1/H2/H3 first/repeat
 observations. The official Comfy Org CI-container row remains `unavailable`: its mutable tag and
 source were observed, but an immutable registry digest could not be obtained. No third-party

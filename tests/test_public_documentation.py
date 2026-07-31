@@ -16,6 +16,7 @@ PUBLIC_DOCUMENTS = (
     ROOT / "CONTRIBUTING.md",
     ROOT / "CHANGELOG.md",
     ROOT / "docs" / "ARCHITECTURE.md",
+    ROOT / "docs" / "USER_GUIDE.md",
     ROOT / "docs" / "STABLE_PUBLIC_CONTRACTS.md",
     ROOT / "docs" / "SECURITY_RELEASE_AUDIT.md",
     ROOT / "docs" / "COMFY_REGISTRY_RELEASE_ARTIFACT.md",
@@ -39,6 +40,62 @@ def _read(path: Path) -> str:
 def test_required_public_documents_exist() -> None:
     missing = [path.relative_to(ROOT).as_posix() for path in PUBLIC_DOCUMENTS if not path.is_file()]
     assert not missing, f"Missing public documentation: {missing}"
+
+
+def test_v1_user_guide_covers_installation_examples_migration_and_support() -> None:
+    readme = _read(ROOT / "README.md")
+    guide = _read(ROOT / "docs" / "USER_GUIDE.md")
+    compatibility = _read(ROOT / "docs" / "COMPATIBILITY.md")
+
+    for heading in (
+        "## Installation",
+        "## Verify the installation",
+        "## Choose a node",
+        "## Krea 2 Turbo example",
+        "## Krea 2 RAW example",
+        "## Workflow metadata",
+        "## Update, upgrade, and rollback",
+        "## Troubleshooting",
+        "## Migrate to 1.0.0",
+        "## Security and known limitations",
+    ):
+        assert heading in guide
+    assert "git clone https://github.com/rookiestar28/ComfyUI-Sigmax comfyui-sigmax" in guide
+    assert "pip install -r" not in guide
+    assert "1.0.0" in guide
+    assert "Sigmax.Krea2SigmaScheduler" in guide
+    assert "Sigmax.ModelAwareSigmaScheduler" in guide
+    assert "Euler + Simple" in guide
+    assert "CFG 1.0" in guide
+    assert "explicit" in guide.lower() and "RAW" in guide
+    assert "https://docs.comfy.org/installation/install_custom_node" in guide
+    assert "USER_GUIDE.md" in readme
+    assert "pre-alpha" not in readme.lower()
+    assert "pre-alpha" not in compatibility.lower()
+
+
+def test_v1_contributor_guide_covers_release_contract_and_evidence() -> None:
+    contributing = _read(ROOT / "CONTRIBUTING.md")
+
+    for heading in (
+        "## Architecture boundaries",
+        "## Change workflow",
+        "## Public contract and migration changes",
+        "## Release-facing validation",
+        "## Review evidence",
+    ):
+        assert heading in contributing
+    for required in (
+        "Reproduce -> Pin -> Sweep",
+        "scripts/validate_registry_artifact.py",
+        "scripts/run_release_audit.py",
+        "docs/PROFILE_CONTRIBUTION_GUIDE.md",
+        "Windows",
+        "WSL",
+        "public-contract",
+    ):
+        assert required in contributing
+    assert "pre-alpha" not in contributing.lower()
 
 
 def test_public_documentation_exposes_frozen_contract_and_migration_policy() -> None:
@@ -144,8 +201,8 @@ def test_public_documentation_describes_current_maturity_honestly() -> None:
     architecture = _read(ROOT / "docs" / "ARCHITECTURE.md").lower()
     profile_spec = _read(ROOT / "docs" / "PROFILE_SPEC.md").lower()
 
-    assert "pre-alpha" in readme
-    assert "first user-facing `krea 2 sigma scheduler` node" in readme
+    assert "stable public-contract baseline" in readme
+    assert "eight namespaced nodes" in readme
     assert "planned" in architecture and "implemented" in architecture
     assert "frozen" in profile_spec and "sigmax.model-profile/1" in profile_spec
     assert "not yet validated" in compatibility

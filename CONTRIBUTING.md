@@ -138,6 +138,11 @@ At minimum, profile review requires:
   license declaration for each resource layer;
 - explicit formulas, domains, ownership, grid/transforms/order, terminal/slicing, geometry,
   recipes, guidance, capabilities, and fail-closed detection;
+
+Schedule-only generic FlowMatch declarations use the separate
+`sigmax.generic-flowmatch-profile/1` contract and never substitute for this concrete-model
+review. A generic declaration must remain explicitly selected, non-official, and outside
+`ProfileRegistry`; onboarding any model still requires the complete evidence above.
 - independent complete float64/float32 goldens, formula tests, pinned parity with dtype/device
   and error bounds, deterministic identities, and reproducible regeneration;
 - a canonical validator-clean workflow plus supported-host evidence whenever node, adapter,

@@ -429,6 +429,25 @@ def test_public_documentation_exposes_namespaced_profile_registry() -> None:
         assert "ProfileRegistry" in content
     assert "builtin_profile_registry" in readme
     assert "REPLACE_EXTERNAL" in profile_spec
+
+
+def test_public_documentation_bounds_generic_flowmatch_profiles() -> None:
+    readme = _read(ROOT / "README.md")
+    architecture = _read(ROOT / "docs" / "ARCHITECTURE.md")
+    profile_spec = _read(ROOT / "docs" / "PROFILE_SPEC.md")
+    stable_contracts = _read(ROOT / "docs" / "STABLE_PUBLIC_CONTRACTS.md")
+    user_guide = _read(ROOT / "docs" / "USER_GUIDE.md")
+    changelog = _read(ROOT / "CHANGELOG.md")
+
+    for content in (readme, architecture, profile_spec, stable_contracts, changelog):
+        assert "sigmax.generic-flowmatch-profile/1" in content
+    for content in (readme, profile_spec, user_guide):
+        assert "flowmatch.generic.fixed" in content
+        assert "flowmatch.generic.dynamic" in content
+        assert "explicit" in content.lower()
+        assert "official" in content.lower()
+    assert "ProfileRegistry" in profile_spec
+    assert "model-specific" in user_guide.lower()
     assert "profiles/registry.py" in architecture
     assert "cannot replace a built-in" in profile_spec
 

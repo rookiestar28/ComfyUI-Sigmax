@@ -7,7 +7,13 @@ tracked independently from the frozen profile-schema version.
 
 ## [Unreleased]
 
-No changes yet.
+### Added
+
+- Dependency-free `sigmax.generic-flowmatch-profile/1` declarations for exact, explicitly
+  selected `flowmatch.generic.fixed` framework-reference and
+  `flowmatch.generic.dynamic` experimental schedule structures. They remain outside the concrete
+  model `ProfileRegistry`, carry no model compatibility or official-recipe claim, and add no
+  runtime dependency.
 
 ## [1.0.0] - 2026-08-01
 

@@ -81,6 +81,7 @@ def test_packaged_manifest_freezes_the_complete_m8_01_boundary() -> None:
         ],
         "profile_capability": [
             "sigmax.capability-resolution/1",
+            "sigmax.generic-flowmatch-profile/1",
             "sigmax.model-profile/1",
         ],
     }

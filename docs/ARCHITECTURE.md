@@ -340,6 +340,15 @@ Inheritance resolves at registration time by comparing every top-level schema fi
 already registered parent. The declared canonical override set must equal the actual
 semantic difference, and inherited external children require `modified` evidence.
 
+The dependency-free `profiles/generic_flowmatch.py` module defines the separate
+`sigmax.generic-flowmatch-profile/1` framework-profile boundary. It publishes exact fixed and
+dynamic declarations, canonical projections, SHA-256 fingerprints, and exact-key lookup without
+changing frozen `ProfileSchemaV1`. The fixed declaration reproduces the pinned Diffusers static
+direct-ratio structure as `framework_reference`; the dynamic declaration records pinned
+resolution-shift parameters but remains `experimental` and requires explicit runtime `mu`.
+Neither declaration contains model identity/weight/guidance claims or enters `ProfileRegistry`,
+so model-aware resolution cannot auto-promote it to an official profile or generic fallback.
+
 The dependency-free `profiles/resolution.py` module composes a registered profile with normalized
 model identity/capabilities, host lifecycle evidence, sampler capabilities, and requested execution
 features. It returns the versioned `sigmax.capability-resolution/1` decision, retains the exact

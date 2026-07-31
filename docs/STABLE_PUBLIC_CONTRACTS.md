@@ -40,6 +40,7 @@ contract.
 
 Profile and capability:
 
+- `sigmax.generic-flowmatch-profile/1`
 - `sigmax.model-profile/1`
 - `sigmax.capability-resolution/1`
 

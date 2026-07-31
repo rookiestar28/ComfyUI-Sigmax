@@ -174,8 +174,11 @@ do not hand-edit fingerprints to bypass that contract.
 - Model weights are not included. Obtain them separately under their own license and access terms.
 - The Registry artifact validator is model-free and non-publishing. Name availability does not
   prove publisher ownership, authenticity, or safety.
-- Sigmax 1.0.0 supports verified Krea 2 Turbo and RAW schedule profiles; it does not silently apply
-  a generic profile to other model families.
+- Sigmax 1.0.0 supports verified Krea 2 Turbo and RAW model profiles. The schedule-only
+  `flowmatch.generic.fixed` (`framework_reference`) and `flowmatch.generic.dynamic`
+  (`experimental`) declarations require explicit selection and are never official model
+  profiles. They do not establish model-specific compatibility, guidance, step recommendations,
+  or quality, and are never silently applied to another model family.
 - The advanced FlowMatch node is experimental. It exposes schedule math, not arbitrary-model
   compatibility.
 - Native deterministic Euler equivalence is proven on the pinned host; stochastic, resumable,

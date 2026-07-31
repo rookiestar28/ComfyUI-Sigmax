@@ -92,6 +92,26 @@ Registry construction performs no file discovery, dynamic import, network access
 download, host inspection, or schedule execution. External document parsing and
 model/host/sampler evidence resolution remain separate future boundaries.
 
+## Generic FlowMatch Framework Profiles
+
+Generic schedule structure cannot truthfully satisfy frozen `sigmax.model-profile/1`: that
+contract requires a concrete model family/variant, model-weight provenance, model capabilities,
+and guidance/step recipes. M6-03 therefore adds the distinct frozen
+`sigmax.generic-flowmatch-profile/1` contract without widening model-profile v1.
+
+Its exact catalog contains:
+
+- `flowmatch.generic.fixed@1`, labeled `framework_reference`, with the pinned Diffusers linear
+  unit-flow grid, explicit static direct ratio `1.0`, and terminal zero;
+- `flowmatch.generic.dynamic@1`, labeled `experimental`, with the pinned Diffusers dynamic
+  exponential structure and resolution endpoints, while requiring runtime `mu` explicitly.
+
+Both declarations use explicit-only selection, deterministic structural fingerprints, and no
+model-weight field. They deliberately omit model guidance and recommended steps, stay outside
+`ProfileRegistry`, and cannot resolve through filename, metadata, model class, tensor structure,
+alias, prefix, or latest-version fallback. They are never `official`; admitting a concrete model
+still requires a complete model profile and the separate onboarding evidence gates.
+
 ## Implemented Core Vocabulary
 
 Exactly one ownership mode is required:

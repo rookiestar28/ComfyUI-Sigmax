@@ -36,6 +36,10 @@ exact-key `ProfileRegistry` and explicit inheritance/conflict policy are impleme
 file or plugin loading. Native or patched schedule-ownership schemas, external document
 parsing and native/patched ownership schemas are not yet implemented.
 
+The separate `sigmax.generic-flowmatch-profile/1` fixed/dynamic declarations describe explicit
+schedule structure only. They are not compatibility rows, do not enter the concrete model
+registry, and cannot promote a model family, host, sampler, or image-quality claim.
+
 The package metadata declares a ComfyUI floor of `0.29.0`. Adapter fixtures and pinned source
 review define the exact static-contract window, while the repository H1/H2 harness defines the
 real-host node/workflow E2E window at `0.29.0` revision

@@ -9,7 +9,9 @@ artifacts while keeping the schedule core independent of ComfyUI and Diffusers.
 > RAW schedule construction, complete golden vectors, authoritative/framework parity, pinned-host
 > import and model-free workflows, and deterministic native-Euler equivalence are validated.
 > Real model weights, GPU/image quality, stochastic/resumable/partial-denoise execution, advanced
-> workflows, and generic cross-model profiles are not claimed. Start with the
+> workflows, and generic cross-model compatibility are not claimed. Explicit schedule-only
+> `flowmatch.generic.fixed` and `flowmatch.generic.dynamic` declarations are available under
+> `sigmax.generic-flowmatch-profile/1`; neither is an official model profile. Start with the
 > [1.0 user guide](docs/USER_GUIDE.md).
 
 ## Why Sigmax
@@ -314,6 +316,14 @@ old fingerprint; an external registration can never replace an official built-in
 Inheritance names an already registered parent and the exact canonical top-level fields that
 changed. The child remains a complete validated schema, and inherited external profiles must
 use `modified` evidence.
+
+Generic FlowMatch schedule structures use the separate frozen
+`sigmax.generic-flowmatch-profile/1` contract. Exact lookup exposes
+`flowmatch.generic.fixed` with `framework_reference` evidence and
+`flowmatch.generic.dynamic` with `experimental` evidence. Both require explicit selection,
+retain framework parameters and deterministic fingerprints, and stay outside
+`ProfileRegistry`; they do not identify a model, supply guidance/step recommendations, or become
+an automatic fallback. The dynamic declaration requires the caller to provide `mu` explicitly.
 
 Registered profiles can be resolved against normalized model, host, and sampler evidence
 without importing ComfyUI or executing sampling:

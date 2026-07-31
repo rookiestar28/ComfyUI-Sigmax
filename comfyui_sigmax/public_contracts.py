@@ -166,6 +166,7 @@ def source_contract_projection() -> dict[str, object]:
         CAPABILITY_RESOLUTION_ADDITIONAL_REASON_CODES,
         CAPABILITY_RESOLUTION_CORE_REASON_CODES,
         CAPABILITY_RESOLUTION_SCHEMA_ID,
+        GENERIC_FLOWMATCH_PROFILE_SCHEMA_ID,
         PROFILE_SCHEMA_ID,
     )
 
@@ -212,7 +213,13 @@ def source_contract_projection() -> dict[str, object]:
                     PORTABLE_EXECUTION_BUNDLE_SCHEMA,
                 }
             ),
-            "profile_capability": sorted({CAPABILITY_RESOLUTION_SCHEMA_ID, PROFILE_SCHEMA_ID}),
+            "profile_capability": sorted(
+                {
+                    CAPABILITY_RESOLUTION_SCHEMA_ID,
+                    GENERIC_FLOWMATCH_PROFILE_SCHEMA_ID,
+                    PROFILE_SCHEMA_ID,
+                }
+            ),
         },
     }
 

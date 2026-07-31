@@ -468,7 +468,10 @@ def test_builtin_registry_and_package_mappings_expose_only_validated_product_nod
         ProfileInspector,
         RawWorkflowOutput,
         ScheduleComparison,
+        ScheduleConcatenate,
         ScheduleInspector,
+        ScheduleResample,
+        ScheduleSlice,
         TurboWorkflowOutput,
     )
 
@@ -480,7 +483,10 @@ def test_builtin_registry_and_package_mappings_expose_only_validated_product_nod
         "Sigmax.ProfileInspector",
         "Sigmax.RawWorkflowOutput",
         "Sigmax.ScheduleComparison",
+        "Sigmax.ScheduleConcatenate",
         "Sigmax.ScheduleInspector",
+        "Sigmax.ScheduleResample",
+        "Sigmax.ScheduleSlice",
         "Sigmax.TurboWorkflowOutput",
     )
     assert {
@@ -490,7 +496,10 @@ def test_builtin_registry_and_package_mappings_expose_only_validated_product_nod
         "Sigmax.ProfileInspector": ProfileInspector,
         "Sigmax.RawWorkflowOutput": RawWorkflowOutput,
         "Sigmax.ScheduleComparison": ScheduleComparison,
+        "Sigmax.ScheduleConcatenate": ScheduleConcatenate,
         "Sigmax.ScheduleInspector": ScheduleInspector,
+        "Sigmax.ScheduleResample": ScheduleResample,
+        "Sigmax.ScheduleSlice": ScheduleSlice,
         "Sigmax.TurboWorkflowOutput": TurboWorkflowOutput,
     } == comfyui_sigmax.NODE_CLASS_MAPPINGS
     assert comfyui_sigmax.NODE_DISPLAY_NAME_MAPPINGS == {
@@ -500,7 +509,10 @@ def test_builtin_registry_and_package_mappings_expose_only_validated_product_nod
         "Sigmax.ProfileInspector": "Profile Inspector",
         "Sigmax.RawWorkflowOutput": "RAW Workflow Output",
         "Sigmax.ScheduleComparison": "Schedule Comparison",
+        "Sigmax.ScheduleConcatenate": "Schedule Concatenate",
         "Sigmax.ScheduleInspector": "Schedule Inspector",
+        "Sigmax.ScheduleResample": "Schedule Resample",
+        "Sigmax.ScheduleSlice": "Schedule Slice",
         "Sigmax.TurboWorkflowOutput": "Turbo Workflow Output",
     }
     assert comfyui_sigmax.NODE_CLASS_MAPPINGS is not builtin_node_registry().class_mappings()

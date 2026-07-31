@@ -583,7 +583,10 @@ def builtin_node_registry() -> NodeRegistry:
         ProfileInspector,
         RawWorkflowOutput,
         ScheduleComparison,
+        ScheduleConcatenate,
         ScheduleInspector,
+        ScheduleResample,
+        ScheduleSlice,
         TurboWorkflowOutput,
     )
 
@@ -620,9 +623,24 @@ def builtin_node_registry() -> NodeRegistry:
                 node_class=ScheduleComparison,
             ),
             discover_legacy_registration(
+                node_id="Sigmax.ScheduleConcatenate",
+                display_name="Schedule Concatenate",
+                node_class=ScheduleConcatenate,
+            ),
+            discover_legacy_registration(
                 node_id="Sigmax.ScheduleInspector",
                 display_name="Schedule Inspector",
                 node_class=ScheduleInspector,
+            ),
+            discover_legacy_registration(
+                node_id="Sigmax.ScheduleResample",
+                display_name="Schedule Resample",
+                node_class=ScheduleResample,
+            ),
+            discover_legacy_registration(
+                node_id="Sigmax.ScheduleSlice",
+                display_name="Schedule Slice",
+                node_class=ScheduleSlice,
             ),
             discover_legacy_registration(
                 node_id="Sigmax.TurboWorkflowOutput",

@@ -46,7 +46,7 @@ equivalent to the validated Registry artifact.
 ## Verify the installation
 
 Check the ComfyUI startup log for an import failure, duplicate ID, or registry-collision message.
-Then search the node menu for the eight built-in IDs:
+Then search the node menu for the eleven built-in IDs:
 
 - `Sigmax.AdvancedFlowMatchScheduler`
 - `Sigmax.Krea2SigmaScheduler`
@@ -54,7 +54,10 @@ Then search the node menu for the eight built-in IDs:
 - `Sigmax.ProfileInspector`
 - `Sigmax.RawWorkflowOutput`
 - `Sigmax.ScheduleComparison`
+- `Sigmax.ScheduleConcatenate`
 - `Sigmax.ScheduleInspector`
+- `Sigmax.ScheduleResample`
+- `Sigmax.ScheduleSlice`
 - `Sigmax.TurboWorkflowOutput`
 
 The installation directory may be renamed; the IDs stay namespaced and stable. Presence proves
@@ -68,7 +71,8 @@ registration, not model compatibility or image quality.
 | Resolve a connected Krea 2 model conservatively | `Sigmax.ModelAwareSigmaScheduler` | Auto rejects family-only RAW/Turbo ambiguity |
 | Construct experimental unit-flow schedules | `Sigmax.AdvancedFlowMatchScheduler` | No generic model-compatibility claim |
 | Inspect an exact profile | `Sigmax.ProfileInspector` | Read-only |
-| Inspect or compare verified schedules | `Sigmax.ScheduleInspector`, `Sigmax.ScheduleComparison` | No conversion or resampling |
+| Inspect or compare verified schedules | `Sigmax.ScheduleInspector`, `Sigmax.ScheduleComparison` | Read-only; no conversion or resampling |
+| Alter a verified schedule | `Sigmax.ScheduleSlice`, `Sigmax.ScheduleConcatenate`, `Sigmax.ScheduleResample` | Requires matching `SIGMAS` and `schedule_info`; result evidence is `modified` |
 | Emit canonical model-free workflow evidence | `Sigmax.TurboWorkflowOutput`, `Sigmax.RawWorkflowOutput` | Does not claim model or sampler execution |
 
 Prefer `Sigmax.Krea2SigmaScheduler` when you know the exact variant. Use

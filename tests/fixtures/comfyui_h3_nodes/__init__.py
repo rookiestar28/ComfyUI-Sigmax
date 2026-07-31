@@ -12,6 +12,7 @@ from comfy.model_sampling import CONST  # type: ignore[import-not-found]
 _INITIAL = (0.75, -0.5, 1.25, -1.0)
 _BIASES = (0.0625, -0.125, 0.1875, -0.25)
 _UI_KEY = "sigmax_native_euler_trace"
+_ALGEBRA_UI_KEY = "sigmax_schedule_algebra"
 
 
 def _vector(value: torch.Tensor) -> list[float]:
@@ -138,5 +139,80 @@ class NativeEulerProbe:
         }
 
 
-NODE_CLASS_MAPPINGS = {"SigmaxTest.NativeEulerProbe": NativeEulerProbe}
-NODE_DISPLAY_NAME_MAPPINGS = {"SigmaxTest.NativeEulerProbe": "Sigmax Test — Native Euler Probe"}
+class ScheduleAlgebraProbe:
+    """Return bounded test-only H2 evidence for an executed algebra schedule."""
+
+    CATEGORY = "SigmaxTest"
+    DESCRIPTION = "Test-only schedule algebra H2 execution probe."
+    FUNCTION = "execute"
+    OUTPUT_NODE = True
+    RETURN_TYPES: tuple[()] = ()
+    RETURN_NAMES: tuple[()] = ()
+
+    @classmethod
+    def INPUT_TYPES(cls) -> dict[str, dict[str, tuple[object, ...]]]:
+        return {
+            "required": {
+                "sigmas": ("SIGMAS",),
+                "schedule_info": ("STRING", {"default": "", "multiline": True}),
+                "schedule_report": ("STRING", {"default": "", "multiline": True}),
+            }
+        }
+
+    def execute(
+        self,
+        sigmas: object,
+        schedule_info: object,
+        schedule_report: object,
+    ) -> dict[str, object]:
+        if not isinstance(sigmas, torch.Tensor) or sigmas.device.type != "cpu":
+            raise ValueError("H2 algebra sigmas must be a CPU tensor")
+        if sigmas.dtype != torch.float32 or sigmas.ndim != 1 or len(sigmas) != 5:
+            raise ValueError("H2 algebra sigmas must contain four transitions")
+        if not isinstance(schedule_info, str) or not isinstance(schedule_report, str):
+            raise ValueError("H2 algebra information and report must be text")
+        info = json.loads(schedule_info)
+        report = json.loads(schedule_report)
+        if (
+            not isinstance(info, dict)
+            or info.get("schema") != "sigmax.schedule-resample-node/1"
+            or info.get("operation") != "resample"
+            or info.get("evidence") != "modified"
+            or info.get("parameters")
+            != {"input_steps": 8, "method": "index_linear_v1", "output_steps": 4}
+        ):
+            raise ValueError("H2 algebra information is not the expected modified resample")
+        if (
+            not isinstance(report, dict)
+            or report.get("source_schema") != "sigmax.schedule-resample-node/1"
+            or report.get("fingerprints", {}).get("verified") is not True
+        ):
+            raise ValueError("H2 algebra inspector report is not verified")
+        evidence = {
+            "schedule_info": info,
+            "schedule_report": report,
+            "sigmas": _vector(sigmas),
+        }
+        return {
+            "ui": {
+                _ALGEBRA_UI_KEY: [
+                    json.dumps(
+                        evidence,
+                        allow_nan=False,
+                        ensure_ascii=False,
+                        separators=(",", ":"),
+                        sort_keys=True,
+                    )
+                ]
+            }
+        }
+
+
+NODE_CLASS_MAPPINGS = {
+    "SigmaxTest.NativeEulerProbe": NativeEulerProbe,
+    "SigmaxTest.ScheduleAlgebraProbe": ScheduleAlgebraProbe,
+}
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "SigmaxTest.NativeEulerProbe": "Sigmax Test — Native Euler Probe",
+    "SigmaxTest.ScheduleAlgebraProbe": "Sigmax Test — Schedule Algebra Probe",
+}

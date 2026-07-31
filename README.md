@@ -56,7 +56,10 @@ assert sorted(comfyui_sigmax.NODE_CLASS_MAPPINGS) == [
     "Sigmax.ProfileInspector",
     "Sigmax.RawWorkflowOutput",
     "Sigmax.ScheduleComparison",
+    "Sigmax.ScheduleConcatenate",
     "Sigmax.ScheduleInspector",
+    "Sigmax.ScheduleResample",
+    "Sigmax.ScheduleSlice",
     "Sigmax.TurboWorkflowOutput",
 ]
 assert comfyui_sigmax.NODE_DISPLAY_NAME_MAPPINGS == {
@@ -66,7 +69,10 @@ assert comfyui_sigmax.NODE_DISPLAY_NAME_MAPPINGS == {
     "Sigmax.ProfileInspector": "Profile Inspector",
     "Sigmax.RawWorkflowOutput": "RAW Workflow Output",
     "Sigmax.ScheduleComparison": "Schedule Comparison",
+    "Sigmax.ScheduleConcatenate": "Schedule Concatenate",
     "Sigmax.ScheduleInspector": "Schedule Inspector",
+    "Sigmax.ScheduleResample": "Schedule Resample",
+    "Sigmax.ScheduleSlice": "Schedule Slice",
     "Sigmax.TurboWorkflowOutput": "Turbo Workflow Output",
 }
 ```
@@ -447,6 +453,13 @@ and symmetric relative differences (`abs(a-b) / max(abs(a), abs(b))`, or zero wh
 zero), plus source transform metadata and aggregate maxima/means. Length or domain mismatch
 returns a deterministic non-comparable `sigmax.schedule-comparison/1` report; it never truncates,
 resamples, or converts a schedule.
+
+`Sigmax.ScheduleSlice`, `Sigmax.ScheduleConcatenate`, and `Sigmax.ScheduleResample` are explicit
+schedule-algebra nodes. Every input pair is fingerprint-verified before use. Slice bounds are
+terminal-inclusive and must change the range; concatenation requires equal domains and one
+exact shared boundary, emitted once; resampling uses the declared `index_linear_v1` method and
+must change the transition count. All three preserve strict monotonicity and endpoint/terminal
+values, emit a new fingerprint, and label their provenance `modified`.
 
 ### Immutable schedule reports and optional plots
 

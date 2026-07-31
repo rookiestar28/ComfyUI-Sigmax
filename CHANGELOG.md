@@ -9,6 +9,9 @@ tracked independently from the frozen profile-schema version.
 
 ### Added
 
+- Fingerprint-bound `Schedule Slice`, `Schedule Concatenate`, and `Schedule Resample` nodes with
+  terminal-inclusive bounds, exact shared-boundary enforcement, explicit normalized-index
+  interpolation, strict domain/monotonicity validation, and `modified` output provenance.
 - Dependency-free `sigmax.generic-flowmatch-profile/1` declarations for exact, explicitly
   selected `flowmatch.generic.fixed` framework-reference and
   `flowmatch.generic.dynamic` experimental schedule structures. They remain outside the concrete

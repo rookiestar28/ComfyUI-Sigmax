@@ -16,7 +16,8 @@ structured `sigmax.krea2-sigma-node/1` schedule information, plus
 `Sigmax.ModelAwareSigmaScheduler`, which requires a Krea 2 MODEL, exposes family-only Auto
 ambiguity, and returns exact-profile capability decisions under
 `sigmax.model-aware-sigma-node/1`; plus the read-only `Sigmax.ProfileInspector` and
-`Sigmax.ScheduleComparison`, and `Sigmax.ScheduleInspector`, which return
+`Sigmax.ScheduleComparison`, `Sigmax.ScheduleConcatenate`, `Sigmax.ScheduleInspector`,
+`Sigmax.ScheduleResample`, and `Sigmax.ScheduleSlice`, which return
 `sigmax.profile-inspector/1`, `sigmax.schedule-comparison/1`, and
 `sigmax.schedule-inspector/1` reports. Separate `Sigmax.RawWorkflowOutput` and
 `Sigmax.TurboWorkflowOutput` nodes publish verified model-free artifact bundles through prompt

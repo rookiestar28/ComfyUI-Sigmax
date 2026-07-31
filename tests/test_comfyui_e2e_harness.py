@@ -5,15 +5,19 @@ from __future__ import annotations
 import copy
 import importlib.util
 import json
+import struct
 from pathlib import Path
 from types import ModuleType
 from typing import Any, cast
 
 import pytest
 from comfyui_sigmax.adapters.registration import builtin_node_registry
-from comfyui_sigmax.core import ScheduleContractError
+from comfyui_sigmax.core import ScheduleContractError, SigmaDomain
 from comfyui_sigmax.nodes.inspectors import build_schedule_inspection
-from comfyui_sigmax.nodes.krea2_sigma_scheduler import build_krea2_sigma_schedule
+from comfyui_sigmax.nodes.krea2_sigma_scheduler import (
+    build_krea2_sigma_schedule,
+    sigma_output_fingerprint,
+)
 from comfyui_sigmax.nodes.raw_workflow_output import build_raw_workflow_output
 from comfyui_sigmax.nodes.turbo_workflow_output import build_turbo_workflow_output
 
@@ -142,6 +146,141 @@ def test_api_prompt_executes_scheduler_inspector_and_output_chain() -> None:
                 "schedule_report": ["2", 0],
             },
         },
+    }
+
+
+def test_schedule_algebra_h2_prompt_executes_every_operation_and_probe() -> None:
+    prompt = _harness().build_schedule_algebra_h2_api_prompt()
+
+    assert [prompt[str(index)]["class_type"] for index in range(1, 8)] == [
+        "Sigmax.Krea2SigmaScheduler",
+        "Sigmax.ScheduleSlice",
+        "Sigmax.ScheduleSlice",
+        "Sigmax.ScheduleConcatenate",
+        "Sigmax.ScheduleResample",
+        "Sigmax.ScheduleInspector",
+        "SigmaxTest.ScheduleAlgebraProbe",
+    ]
+    assert prompt["4"]["inputs"]["sigmas_left"] == ["2", 0]
+    assert prompt["4"]["inputs"]["sigmas_right"] == ["3", 0]
+    assert prompt["7"]["inputs"]["schedule_report"] == ["6", 0]
+
+
+def _schedule_algebra_history() -> dict[str, Any]:
+    source = build_krea2_sigma_schedule(
+        variant="Turbo",
+        steps=8,
+        width=1024,
+        height=1024,
+        strict_official=True,
+        start_step=0,
+        end_step=-1,
+    )
+    values = [
+        struct.unpack(">f", struct.pack(">f", source.sigmas[index]))[0] for index in range(0, 9, 2)
+    ]
+    fingerprint = sigma_output_fingerprint(tuple(values), domain=SigmaDomain.UNIT_FLOW)
+    trace = {
+        "schedule_info": {
+            "evidence": "modified",
+            "fingerprints": {"complete": fingerprint, "output": fingerprint},
+            "operation": "resample",
+            "parameters": {
+                "input_steps": 8,
+                "method": "index_linear_v1",
+                "output_steps": 4,
+            },
+            "schema": "sigmax.schedule-resample-node/1",
+        },
+        "schedule_report": {
+            "fingerprints": {
+                "computed_output": fingerprint,
+                "verified": True,
+            },
+            "source_schema": "sigmax.schedule-resample-node/1",
+        },
+        "sigmas": values,
+    }
+    return {
+        "prompt-algebra": {
+            "outputs": {
+                "7": {
+                    "sigmax_schedule_algebra": [
+                        json.dumps(trace, separators=(",", ":"), sort_keys=True)
+                    ]
+                }
+            },
+            "status": {"completed": True, "status_str": "success"},
+        }
+    }
+
+
+def test_schedule_algebra_h2_history_requires_exact_host_values_and_verified_identity() -> None:
+    harness = _harness()
+    history = _schedule_algebra_history()
+
+    summary = harness.verify_schedule_algebra_h2_history(
+        history,
+        prompt_id="prompt-algebra",
+    )
+
+    assert summary["status"] == "succeeded"
+    assert summary["evidence"] == "modified"
+    assert summary["operations"] == ["slice", "concatenate", "resample", "inspect"]
+
+    tampered = copy.deepcopy(history)
+    encoded = tampered["prompt-algebra"]["outputs"]["7"]["sigmax_schedule_algebra"][0]
+    trace = json.loads(encoded)
+    trace["sigmas"][1] -= 0.01
+    tampered["prompt-algebra"]["outputs"]["7"]["sigmax_schedule_algebra"][0] = json.dumps(trace)
+    with pytest.raises(ScheduleContractError, match="sigma values drifted"):
+        harness.verify_schedule_algebra_h2_history(tampered, prompt_id="prompt-algebra")
+
+
+def test_schedule_algebra_h2_noop_resample_is_a_terminal_runtime_rejection() -> None:
+    harness = _harness()
+    prompt = harness.build_schedule_algebra_h2_noop_rejection_prompt()
+    assert prompt["5"]["inputs"]["output_steps"] == 8
+    history = {
+        "prompt-algebra-noop": {
+            "outputs": {},
+            "prompt": [0, "prompt-algebra-noop", prompt, {}, ["7"], {}],
+            "status": {
+                "completed": False,
+                "messages": [
+                    [
+                        "execution_error",
+                        {
+                            "current_outputs": [],
+                            "exception_message": "resampling must change the transition count\n",
+                            "exception_type": (
+                                "comfyui_sigmax.core.schedule_contracts.ScheduleContractError"
+                            ),
+                            "executed": ["1", "2", "3", "4"],
+                            "node_id": "5",
+                            "node_type": "Sigmax.ScheduleResample",
+                            "prompt_id": "prompt-algebra-noop",
+                        },
+                    ]
+                ],
+                "status_str": "error",
+            },
+        }
+    }
+
+    summary = harness.verify_schedule_algebra_h2_noop_rejection(
+        history,
+        prompt_id="prompt-algebra-noop",
+    )
+
+    assert summary == {
+        "boundary": "runtime_execution",
+        "case_id": "algebra-noop-resample",
+        "exception_type": "comfyui_sigmax.core.schedule_contracts.ScheduleContractError",
+        "partial_output": False,
+        "prompt_created": True,
+        "reason_code": "input.algebra_noop",
+        "status": "error",
     }
 
 

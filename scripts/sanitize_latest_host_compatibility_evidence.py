@@ -20,6 +20,7 @@ _EXPECTED_LANES: Final = [
     "H1",
     "H2_TURBO_M2_05",
     "H2_RAW_M3_06",
+    "H2_ALGEBRA_M4_09",
     "H3_EULER_M5_01",
 ]
 _EXPECTED_TRANSITIONS: Final = [
@@ -29,6 +30,8 @@ _EXPECTED_TRANSITIONS: Final = [
     "h2_raw.krea2-raw-official-square-1024",
     "h2_raw.raw-auto-variant",
     "h2_raw.raw-invalid-steps",
+    "h2_schedule_algebra",
+    "h2_schedule_algebra.noop_resample",
     "h2_turbo",
     "h3_native_euler",
     "h3_native_euler.partial_denoise",
@@ -40,7 +43,10 @@ _EXPECTED_NODE_IDS: Final = [
     "Sigmax.ProfileInspector",
     "Sigmax.RawWorkflowOutput",
     "Sigmax.ScheduleComparison",
+    "Sigmax.ScheduleConcatenate",
     "Sigmax.ScheduleInspector",
+    "Sigmax.ScheduleResample",
+    "Sigmax.ScheduleSlice",
     "Sigmax.TurboWorkflowOutput",
 ]
 _EVIDENCE_FIELDS: Final = {

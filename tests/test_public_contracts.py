@@ -62,7 +62,19 @@ def test_packaged_manifest_freezes_the_complete_m8_01_boundary() -> None:
             "id": "Sigmax.ScheduleComparison",
             "schema": "sigmax.schedule-comparison/1",
         },
+        {
+            "id": "Sigmax.ScheduleConcatenate",
+            "schema": "sigmax.schedule-concatenate-node/1",
+        },
         {"id": "Sigmax.ScheduleInspector", "schema": "sigmax.schedule-inspector/1"},
+        {
+            "id": "Sigmax.ScheduleResample",
+            "schema": "sigmax.schedule-resample-node/1",
+        },
+        {
+            "id": "Sigmax.ScheduleSlice",
+            "schema": "sigmax.schedule-slice-node/1",
+        },
         {
             "id": "Sigmax.TurboWorkflowOutput",
             "schema": "sigmax.turbo-workflow-output/1",

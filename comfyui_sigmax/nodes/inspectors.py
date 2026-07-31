@@ -26,6 +26,13 @@ SCHEDULE_COMPARISON_NODE_ID: Final = "Sigmax.ScheduleComparison"
 SCHEDULE_COMPARISON_SCHEMA_ID: Final = "sigmax.schedule-comparison/1"
 _KREA2_SCHEMA_ID: Final = "sigmax.krea2-sigma-node/1"
 _ADVANCED_SCHEMA_ID: Final = "sigmax.advanced-flowmatch-node/1"
+_ALGEBRA_SCHEMA_IDS: Final = frozenset(
+    {
+        "sigmax.schedule-concatenate-node/1",
+        "sigmax.schedule-resample-node/1",
+        "sigmax.schedule-slice-node/1",
+    }
+)
 _MAX_STEPS: Final = 10_000
 _MAX_DIMENSION: Final = 65_536
 _MAX_JSON_BYTES: Final = 1_048_576
@@ -65,6 +72,22 @@ _ADVANCED_FIELDS: Final = {
     "slicing",
     "terminal",
     "transform_order",
+}
+_ALGEBRA_FIELDS: Final = {
+    "base_grid",
+    "domain",
+    "evidence",
+    "fingerprints",
+    "operation",
+    "parameters",
+    "provenance",
+    "schema",
+    "shift",
+    "slicing",
+    "sources",
+    "terminal",
+    "transform_order",
+    "warnings",
 }
 
 
@@ -327,6 +350,11 @@ def _normalized_source(
     if schema == _ADVANCED_SCHEMA_ID:
         _require_exact_fields(source, _ADVANCED_FIELDS, label="advanced schedule")
         return schema, source, None
+    if schema in _ALGEBRA_SCHEMA_IDS:
+        _require_exact_fields(source, _ALGEBRA_FIELDS, label="schedule algebra information")
+        if source.get("evidence") != "modified":
+            raise ScheduleContractError("schedule algebra evidence must be modified")
+        return schema, source, None
     raise ScheduleContractError("schedule_info schema is unsupported")
 
 
@@ -335,7 +363,7 @@ def _source_domain(
     source_schema: str,
     schedule: dict[str, object],
 ) -> SigmaDomain:
-    if source_schema != _ADVANCED_SCHEMA_ID:
+    if source_schema not in _ALGEBRA_SCHEMA_IDS | {_ADVANCED_SCHEMA_ID}:
         return SigmaDomain.UNIT_FLOW
     domain_value = _object(schedule["domain"], label="domain").get("sigma")
     if not isinstance(domain_value, str):
@@ -376,7 +404,7 @@ def _verified_schedule(
     if advertised != computed:
         raise ScheduleContractError("connected SIGMAS fingerprint does not match schedule_info")
 
-    if source_schema == _ADVANCED_SCHEMA_ID:
+    if source_schema == _ADVANCED_SCHEMA_ID or source_schema in _ALGEBRA_SCHEMA_IDS:
         dimensions: object = None
         profile: object = schedule["provenance"]
     else:

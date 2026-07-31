@@ -105,7 +105,10 @@ class ImportSafetyTests(unittest.TestCase):
                     "Sigmax.ProfileInspector": "ProfileInspector",
                     "Sigmax.RawWorkflowOutput": "RawWorkflowOutput",
                     "Sigmax.ScheduleComparison": "ScheduleComparison",
+                    "Sigmax.ScheduleConcatenate": "ScheduleConcatenate",
                     "Sigmax.ScheduleInspector": "ScheduleInspector",
+                    "Sigmax.ScheduleResample": "ScheduleResample",
+                    "Sigmax.ScheduleSlice": "ScheduleSlice",
                     "Sigmax.TurboWorkflowOutput": "TurboWorkflowOutput",
                 },
                 "comfy_loaded": False,
@@ -117,7 +120,10 @@ class ImportSafetyTests(unittest.TestCase):
                     "Sigmax.ProfileInspector": "Profile Inspector",
                     "Sigmax.RawWorkflowOutput": "RAW Workflow Output",
                     "Sigmax.ScheduleComparison": "Schedule Comparison",
+                    "Sigmax.ScheduleConcatenate": "Schedule Concatenate",
                     "Sigmax.ScheduleInspector": "Schedule Inspector",
+                    "Sigmax.ScheduleResample": "Schedule Resample",
+                    "Sigmax.ScheduleSlice": "Schedule Slice",
                     "Sigmax.TurboWorkflowOutput": "Turbo Workflow Output",
                 },
                 "torch_call_unchanged": True,
@@ -154,7 +160,10 @@ class ImportSafetyTests(unittest.TestCase):
                 "Sigmax.ProfileInspector",
                 "Sigmax.RawWorkflowOutput",
                 "Sigmax.ScheduleComparison",
+                "Sigmax.ScheduleConcatenate",
                 "Sigmax.ScheduleInspector",
+                "Sigmax.ScheduleResample",
+                "Sigmax.ScheduleSlice",
                 "Sigmax.TurboWorkflowOutput",
             ]
             assert bootstrap.NODE_DISPLAY_NAME_MAPPINGS == {
@@ -164,7 +173,10 @@ class ImportSafetyTests(unittest.TestCase):
                 "Sigmax.ProfileInspector": "Profile Inspector",
                 "Sigmax.RawWorkflowOutput": "RAW Workflow Output",
                 "Sigmax.ScheduleComparison": "Schedule Comparison",
+                "Sigmax.ScheduleConcatenate": "Schedule Concatenate",
                 "Sigmax.ScheduleInspector": "Schedule Inspector",
+                "Sigmax.ScheduleResample": "Schedule Resample",
+                "Sigmax.ScheduleSlice": "Schedule Slice",
                 "Sigmax.TurboWorkflowOutput": "Turbo Workflow Output",
             }
             """
@@ -218,7 +230,10 @@ def test_bootstrap_supports_dynamic_comfyui_custom_node_loader() -> None:
         "Sigmax.ProfileInspector",
         "Sigmax.RawWorkflowOutput",
         "Sigmax.ScheduleComparison",
+        "Sigmax.ScheduleConcatenate",
         "Sigmax.ScheduleInspector",
+        "Sigmax.ScheduleResample",
+        "Sigmax.ScheduleSlice",
         "Sigmax.TurboWorkflowOutput",
     ]
 

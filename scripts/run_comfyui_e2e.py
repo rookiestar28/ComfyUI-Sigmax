@@ -40,10 +40,15 @@ from comfyui_sigmax.core import (  # noqa: E402
     NoiseOwnership,
     PortableExecutionBundle,
     ScheduleContractError,
+    SigmaDomain,
     build_execution_receipt,
     canonical_projection_bytes,
     deserialize_portable_execution_bundle,
     evaluate_compatibility,
+)
+from comfyui_sigmax.nodes import (  # noqa: E402
+    build_krea2_sigma_schedule,
+    sigma_output_fingerprint,
 )
 from comfyui_sigmax.profiles import KREA2_TURBO_SCHEMA  # noqa: E402
 from comfyui_sigmax.workflows import (  # noqa: E402
@@ -72,6 +77,8 @@ _OUTPUT_NODE_ID: Final = "3"
 _H3_OUTPUT_NODE_ID: Final = "4"
 _BUNDLE_KEY: Final = "sigmax_execution_bundle"
 _H3_TRACE_KEY: Final = "sigmax_native_euler_trace"
+_ALGEBRA_OUTPUT_NODE_ID: Final = "7"
+_ALGEBRA_TRACE_KEY: Final = "sigmax_schedule_algebra"
 _H3_TEST_PACK_NAME: Final = "ComfyUI-Sigmax-H3"
 _H3_TEST_PACK_SOURCE: Final = (
     REPOSITORY_ROOT / "tests" / "fixtures" / "comfyui_h3_nodes" / "__init__.py"
@@ -166,6 +173,73 @@ def build_turbo_api_prompt() -> dict[str, object]:
             },
         },
     }
+
+
+def build_schedule_algebra_h2_api_prompt() -> dict[str, object]:
+    """Execute slice, exact-boundary concat, resample, and fingerprint inspection."""
+
+    return {
+        "1": build_turbo_api_prompt()["1"],
+        "2": {
+            "class_type": "Sigmax.ScheduleSlice",
+            "inputs": {
+                "sigmas": ["1", 0],
+                "schedule_info": ["1", 1],
+                "start_step": 0,
+                "end_step": 4,
+            },
+        },
+        "3": {
+            "class_type": "Sigmax.ScheduleSlice",
+            "inputs": {
+                "sigmas": ["1", 0],
+                "schedule_info": ["1", 1],
+                "start_step": 4,
+                "end_step": 8,
+            },
+        },
+        "4": {
+            "class_type": "Sigmax.ScheduleConcatenate",
+            "inputs": {
+                "sigmas_left": ["2", 0],
+                "schedule_info_left": ["2", 1],
+                "sigmas_right": ["3", 0],
+                "schedule_info_right": ["3", 1],
+            },
+        },
+        "5": {
+            "class_type": "Sigmax.ScheduleResample",
+            "inputs": {
+                "sigmas": ["4", 0],
+                "schedule_info": ["4", 1],
+                "output_steps": 4,
+            },
+        },
+        "6": {
+            "class_type": "Sigmax.ScheduleInspector",
+            "inputs": {"sigmas": ["5", 0], "schedule_info": ["5", 1]},
+        },
+        _ALGEBRA_OUTPUT_NODE_ID: {
+            "class_type": "SigmaxTest.ScheduleAlgebraProbe",
+            "inputs": {
+                "sigmas": ["5", 0],
+                "schedule_info": ["5", 1],
+                "schedule_report": ["6", 0],
+            },
+        },
+    }
+
+
+def build_schedule_algebra_h2_noop_rejection_prompt() -> dict[str, object]:
+    """Return an algebra graph whose explicit resample is a forbidden no-op."""
+
+    prompt = build_schedule_algebra_h2_api_prompt()
+    resample = _object(prompt["5"], label="algebra resample prompt node")
+    inputs = _object(resample["inputs"], label="algebra resample prompt inputs")
+    inputs["output_steps"] = 8
+    resample["inputs"] = inputs
+    prompt["5"] = resample
+    return prompt
 
 
 def build_native_euler_h3_api_prompt() -> dict[str, object]:
@@ -311,6 +385,125 @@ def verify_turbo_history(
         "schedule_ownership": ownership["schedule"],
         "shift_count": shift_count,
         "status": execution["status"],
+    }
+
+
+def verify_schedule_algebra_h2_history(
+    history: object,
+    *,
+    prompt_id: str,
+) -> dict[str, object]:
+    """Verify host-executed algebra values, modified evidence, and inspector identity."""
+
+    root = _object(history, label="algebra history")
+    entry = _object(root.get(prompt_id), label="algebra prompt history entry")
+    status = _object(entry.get("status"), label="algebra prompt status")
+    if status.get("completed") is not True or status.get("status_str") != "success":
+        raise ScheduleContractError("algebra prompt history does not prove completed success")
+    outputs = _object(entry.get("outputs"), label="algebra prompt outputs")
+    output = _object(
+        outputs.get(_ALGEBRA_OUTPUT_NODE_ID),
+        label="algebra output-node history",
+    )
+    traces = _array(output.get(_ALGEBRA_TRACE_KEY), label="algebra execution trace")
+    if len(traces) != 1 or not isinstance(traces[0], str):
+        raise ScheduleContractError("algebra execution trace is malformed")
+    trace = _object(_decode_json(traces[0].encode(), label="algebra trace"), label="algebra trace")
+    info = _object(trace.get("schedule_info"), label="algebra schedule information")
+    report = _object(trace.get("schedule_report"), label="algebra schedule report")
+    values = _array(trace.get("sigmas"), label="algebra sigmas")
+
+    source = build_krea2_sigma_schedule(
+        variant="Turbo",
+        steps=8,
+        width=1024,
+        height=1024,
+        strict_official=True,
+        start_step=0,
+        end_step=-1,
+    )
+    expected = [
+        struct.unpack(">f", struct.pack(">f", source.sigmas[index]))[0] for index in range(0, 9, 2)
+    ]
+    if values != expected:
+        raise ScheduleContractError(
+            "host algebra sigma values drifted from explicit index resample"
+        )
+    expected_fingerprint = sigma_output_fingerprint(
+        tuple(expected),
+        domain=SigmaDomain.UNIT_FLOW,
+    )
+    fingerprints = _object(info.get("fingerprints"), label="algebra fingerprints")
+    report_fingerprints = _object(
+        report.get("fingerprints"),
+        label="algebra report fingerprints",
+    )
+    if (
+        info.get("schema") != "sigmax.schedule-resample-node/1"
+        or info.get("operation") != "resample"
+        or info.get("evidence") != "modified"
+        or info.get("parameters")
+        != {"input_steps": 8, "method": "index_linear_v1", "output_steps": 4}
+        or fingerprints.get("output") != expected_fingerprint
+        or report.get("source_schema") != "sigmax.schedule-resample-node/1"
+        or report_fingerprints.get("computed_output") != expected_fingerprint
+        or report_fingerprints.get("verified") is not True
+    ):
+        raise ScheduleContractError("host algebra contract or fingerprint verification drifted")
+    return {
+        "evidence": "modified",
+        "method": "index_linear_v1",
+        "numerical_fingerprint": expected_fingerprint,
+        "operations": ["slice", "concatenate", "resample", "inspect"],
+        "status": "succeeded",
+        "transitions": 4,
+    }
+
+
+def verify_schedule_algebra_h2_noop_rejection(
+    history: object,
+    *,
+    prompt_id: str,
+) -> dict[str, object]:
+    """Require terminal runtime rejection for an explicit no-op resample."""
+
+    root = _object(history, label="rejected algebra history")
+    entry = _object(root.get(prompt_id), label="rejected algebra history entry")
+    status = _object(entry.get("status"), label="rejected algebra status")
+    if status.get("completed") is not False or status.get("status_str") != "error":
+        raise ScheduleContractError("rejected algebra history is not a terminal error")
+    prompt_tuple = _array(entry.get("prompt"), label="rejected algebra prompt tuple")
+    if (
+        len(prompt_tuple) < 3
+        or prompt_tuple[2] != build_schedule_algebra_h2_noop_rejection_prompt()
+    ):
+        raise ScheduleContractError("rejected algebra history retained a stale API graph")
+    if _object(entry.get("outputs"), label="rejected algebra outputs"):
+        raise ScheduleContractError("rejected algebra produced partial output")
+    messages = _array(status.get("messages"), label="rejected algebra messages")
+    events = [_array(item, label="rejected algebra event") for item in messages]
+    if not events or events[-1][0] != "execution_error":
+        raise ScheduleContractError("rejected algebra has no terminal execution error")
+    detail = _object(events[-1][1], label="rejected algebra error detail")
+    if (
+        detail.get("prompt_id") != prompt_id
+        or detail.get("node_id") != "5"
+        or detail.get("node_type") != "Sigmax.ScheduleResample"
+        or detail.get("exception_type")
+        != "comfyui_sigmax.core.schedule_contracts.ScheduleContractError"
+        or detail.get("exception_message") != "resampling must change the transition count\n"
+        or not isinstance(detail.get("executed"), list)
+        or not isinstance(detail.get("current_outputs"), list)
+    ):
+        raise ScheduleContractError("rejected algebra error evidence drifted")
+    return {
+        "boundary": "runtime_execution",
+        "case_id": "algebra-noop-resample",
+        "exception_type": detail["exception_type"],
+        "partial_output": False,
+        "prompt_created": True,
+        "reason_code": "input.algebra_noop",
+        "status": status["status_str"],
     }
 
 
@@ -1463,7 +1656,13 @@ def run(args: argparse.Namespace) -> dict[str, object]:
     succeeded = False
     evidence: dict[str, object] = {
         "schema": "sigmax.comfyui-host-e2e-evidence/3",
-        "lanes": ["H1", "H2_TURBO_M2_05", "H2_RAW_M3_06", "H3_EULER_M5_01"],
+        "lanes": [
+            "H1",
+            "H2_TURBO_M2_05",
+            "H2_RAW_M3_06",
+            "H2_ALGEBRA_M4_09",
+            "H3_EULER_M5_01",
+        ],
         "host": {
             "id": "comfyui",
             "version": args.host_version,
@@ -1682,6 +1881,50 @@ def run(args: argparse.Namespace) -> dict[str, object]:
             rejected_results.append(prequeue_rejection)
             attempts["h2_raw.raw-invalid-steps"] = prequeue_transition
             evidence["h2_raw_rejections"] = rejected_results
+
+            def submit_algebra(ordinal: int) -> tuple[str, dict[str, object]]:
+                return _submit_successful_prompt(
+                    base_url=base_url,
+                    client_id=f"sigmax-m4-09-algebra-attempt-{ordinal}",
+                    prompt=build_schedule_algebra_h2_api_prompt(),
+                    execution_timeout=args.execution_timeout,
+                )
+
+            def verify_algebra(history: object, prompt_id: str) -> dict[str, object]:
+                return verify_schedule_algebra_h2_history(history, prompt_id=prompt_id)
+
+            algebra_summary, algebra_transition = execute_verified_host_repeat(
+                lane="H2_ALGEBRA_M4_09",
+                submit=submit_algebra,
+                verify=verify_algebra,
+            )
+            evidence["h2_schedule_algebra"] = algebra_summary
+            attempts["h2_schedule_algebra"] = algebra_transition
+
+            def submit_algebra_rejection(ordinal: int) -> tuple[str, dict[str, object]]:
+                return _submit_rejected_runtime_prompt(
+                    base_url=base_url,
+                    client_id=f"sigmax-m4-09-algebra-noop-attempt-{ordinal}",
+                    prompt=build_schedule_algebra_h2_noop_rejection_prompt(),
+                    execution_timeout=args.execution_timeout,
+                )
+
+            def verify_algebra_rejection(
+                history: object,
+                prompt_id: str,
+            ) -> dict[str, object]:
+                return verify_schedule_algebra_h2_noop_rejection(
+                    history,
+                    prompt_id=prompt_id,
+                )
+
+            algebra_rejection, algebra_rejection_transition = execute_verified_host_repeat(
+                lane="H2_ALGEBRA_M4_09",
+                submit=submit_algebra_rejection,
+                verify=verify_algebra_rejection,
+            )
+            evidence["h2_schedule_algebra_rejections"] = [algebra_rejection]
+            attempts["h2_schedule_algebra.noop_resample"] = algebra_rejection_transition
 
             def submit_h3(ordinal: int) -> tuple[str, dict[str, object]]:
                 return _submit_successful_prompt(

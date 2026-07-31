@@ -158,6 +158,14 @@ def source_contract_projection() -> dict[str, object]:
         RAW_WORKFLOW_OUTPUT_NODE_ID,
         RAW_WORKFLOW_OUTPUT_SCHEMA_ID,
     )
+    from comfyui_sigmax.nodes.schedule_algebra import (
+        SCHEDULE_CONCATENATE_NODE_ID,
+        SCHEDULE_CONCATENATE_SCHEMA_ID,
+        SCHEDULE_RESAMPLE_NODE_ID,
+        SCHEDULE_RESAMPLE_SCHEMA_ID,
+        SCHEDULE_SLICE_NODE_ID,
+        SCHEDULE_SLICE_SCHEMA_ID,
+    )
     from comfyui_sigmax.nodes.turbo_workflow_output import (
         TURBO_WORKFLOW_OUTPUT_NODE_ID,
         TURBO_WORKFLOW_OUTPUT_SCHEMA_ID,
@@ -178,7 +186,10 @@ def source_contract_projection() -> dict[str, object]:
             {"id": PROFILE_INSPECTOR_NODE_ID, "schema": PROFILE_INSPECTOR_SCHEMA_ID},
             {"id": RAW_WORKFLOW_OUTPUT_NODE_ID, "schema": RAW_WORKFLOW_OUTPUT_SCHEMA_ID},
             {"id": SCHEDULE_COMPARISON_NODE_ID, "schema": SCHEDULE_COMPARISON_SCHEMA_ID},
+            {"id": SCHEDULE_CONCATENATE_NODE_ID, "schema": SCHEDULE_CONCATENATE_SCHEMA_ID},
             {"id": SCHEDULE_INSPECTOR_NODE_ID, "schema": SCHEDULE_INSPECTOR_SCHEMA_ID},
+            {"id": SCHEDULE_RESAMPLE_NODE_ID, "schema": SCHEDULE_RESAMPLE_SCHEMA_ID},
+            {"id": SCHEDULE_SLICE_NODE_ID, "schema": SCHEDULE_SLICE_SCHEMA_ID},
             {"id": TURBO_WORKFLOW_OUTPUT_NODE_ID, "schema": TURBO_WORKFLOW_OUTPUT_SCHEMA_ID},
         ),
         key=lambda item: item["id"],

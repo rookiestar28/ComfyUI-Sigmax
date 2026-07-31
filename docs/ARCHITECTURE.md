@@ -152,7 +152,8 @@ The dependency-free `adapters/registration.py` module owns the immutable node ca
 wire-schema projections. The package exports the validated
 `Sigmax.AdvancedFlowMatchScheduler`, `Sigmax.Krea2SigmaScheduler`, and
 `Sigmax.ModelAwareSigmaScheduler`, `Sigmax.ProfileInspector`,
-`Sigmax.RawWorkflowOutput`, `Sigmax.ScheduleComparison`, `Sigmax.ScheduleInspector`, and
+`Sigmax.RawWorkflowOutput`, `Sigmax.ScheduleComparison`, `Sigmax.ScheduleConcatenate`,
+`Sigmax.ScheduleInspector`, `Sigmax.ScheduleResample`, `Sigmax.ScheduleSlice`, and
 `Sigmax.TurboWorkflowOutput` mappings. Importing them does not load Torch or ComfyUI, patch
 PyTorch, import Diffusers, or alter host process state.
 

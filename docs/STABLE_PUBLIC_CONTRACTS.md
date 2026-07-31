@@ -30,7 +30,10 @@ python scripts/generate_public_contract_manifest.py --check
 | `Sigmax.ProfileInspector` | `sigmax.profile-inspector/1` |
 | `Sigmax.RawWorkflowOutput` | `sigmax.raw-workflow-output/1` |
 | `Sigmax.ScheduleComparison` | `sigmax.schedule-comparison/1` |
+| `Sigmax.ScheduleConcatenate` | `sigmax.schedule-concatenate-node/1` |
 | `Sigmax.ScheduleInspector` | `sigmax.schedule-inspector/1` |
+| `Sigmax.ScheduleResample` | `sigmax.schedule-resample-node/1` |
+| `Sigmax.ScheduleSlice` | `sigmax.schedule-slice-node/1` |
 | `Sigmax.TurboWorkflowOutput` | `sigmax.turbo-workflow-output/1` |
 
 The ID and associated schema are one pair. An existing ID cannot be reused for a different

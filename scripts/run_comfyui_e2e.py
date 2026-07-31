@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 import platform
 import re
@@ -53,6 +54,11 @@ from comfyui_sigmax.workflows import (  # noqa: E402
 from comfyui_sigmax.workflows.validation import (  # noqa: E402
     CANONICAL_HOST_REVISION,
     CANONICAL_HOST_VERSION,
+)
+from scripts.conformance.capability_receipt_report import (  # noqa: E402
+    HostAttempt,
+    build_host_attempt_transition,
+    validate_host_attempt_transition,
 )
 from scripts.parity.krea2_native_euler_report import (  # noqa: E402
     SOURCE_BLOBS as NATIVE_EULER_SOURCE_BLOBS,
@@ -312,6 +318,99 @@ def _component_fingerprint(projection: Mapping[str, object]) -> str:
     return "sha256:" + hashlib.sha256(canonical_projection_bytes(dict(projection))).hexdigest()
 
 
+def _typed_host_summary(value: object, *, depth: int = 0) -> object:
+    if depth > 32:
+        raise ScheduleContractError("verified host summary exceeds maximum depth")
+    if isinstance(value, float):
+        if not math.isfinite(value):
+            raise ScheduleContractError("verified host summary float must be finite")
+        normalized = 0.0 if value == 0.0 else value
+        return {
+            "bits": struct.pack(">d", normalized).hex(),
+            "precision": "float64",
+        }
+    if isinstance(value, Mapping):
+        if any(not isinstance(key, str) for key in value):
+            raise ScheduleContractError("verified host summary keys must be strings")
+        return {
+            key: _typed_host_summary(child, depth=depth + 1)
+            for key, child in cast(Mapping[str, object], value).items()
+        }
+    if isinstance(value, (list, tuple)):
+        return [_typed_host_summary(child, depth=depth + 1) for child in value]
+    return value
+
+
+def _verified_host_attempt(
+    summary: object,
+    *,
+    ordinal: int,
+) -> HostAttempt:
+    projection = _object(summary, label="verified host attempt summary")
+    status = projection.get("status")
+    if not isinstance(status, str) or not status:
+        raise ScheduleContractError("verified host attempt status is missing")
+    reason_code = projection.get("reason_code")
+    if reason_code is not None and not isinstance(reason_code, str):
+        raise ScheduleContractError("verified host attempt reason code is invalid")
+    if status in {"error", "failed", "rejected"} and not reason_code:
+        raise ScheduleContractError("verified rejected host attempt lacks a stable reason code")
+    try:
+        return HostAttempt(
+            ordinal=ordinal,
+            verdict="pass",
+            observed_status=status,
+            reason_code=reason_code,
+            result_fingerprint=_component_fingerprint(
+                cast(Mapping[str, object], _typed_host_summary(projection))
+            ),
+        )
+    except (TypeError, ValueError) as exc:
+        raise ScheduleContractError(f"verified host attempt evidence is invalid: {exc}") from exc
+
+
+def build_verified_host_repeat_transition(
+    *,
+    lane: str,
+    first_summary: object,
+    repeat_summary: object,
+) -> dict[str, object]:
+    """Bind two explicit verified submissions; never mask first-attempt drift."""
+
+    try:
+        transition = build_host_attempt_transition(
+            lane=lane,
+            first=_verified_host_attempt(first_summary, ordinal=1),
+            repeat=_verified_host_attempt(repeat_summary, ordinal=2),
+        )
+        validate_host_attempt_transition(transition)
+    except (TypeError, ValueError) as exc:
+        raise ScheduleContractError(f"host repeat transition evidence is invalid: {exc}") from exc
+    if transition["accepted"] is not True:
+        raise ScheduleContractError("host repeat changed or masked the first-attempt result")
+    return transition
+
+
+def execute_verified_host_repeat(
+    *,
+    lane: str,
+    submit: Callable[[int], tuple[str, dict[str, object]]],
+    verify: Callable[[object, str], dict[str, object]],
+) -> tuple[dict[str, object], dict[str, object]]:
+    """Execute two explicit submissions; a failed first attempt is never retried."""
+
+    first_prompt_id, first_history = submit(1)
+    first_summary = verify(first_history, first_prompt_id)
+    repeat_prompt_id, repeat_history = submit(2)
+    repeat_summary = verify(repeat_history, repeat_prompt_id)
+    transition = build_verified_host_repeat_transition(
+        lane=lane,
+        first_summary=first_summary,
+        repeat_summary=repeat_summary,
+    )
+    return first_summary, transition
+
+
 def verify_native_euler_h3_history(
     history: object,
     *,
@@ -487,7 +586,8 @@ def verify_native_euler_h3_partial_rejection(
     ]:
         raise ScheduleContractError("H3 partial rejection event sequence drifted")
     cached = _object(events[1][1], label="H3 partial cached event")
-    if cached.get("prompt_id") != prompt_id or not isinstance(cached.get("nodes"), list):
+    cached_nodes = cached.get("nodes")
+    if cached.get("prompt_id") != prompt_id or not isinstance(cached_nodes, list):
         raise ScheduleContractError("H3 partial cached evidence drifted")
     detail = _object(events[2][1], label="H3 partial error detail")
     if detail.get("prompt_id") != prompt_id:
@@ -503,8 +603,9 @@ def verify_native_euler_h3_partial_rejection(
         != "H3 sigmas must be one float32 eight-transition schedule\n"
     ):
         raise ScheduleContractError("H3 partial rejection exception contract drifted")
-    if detail.get("executed") != ["1"]:
-        raise ScheduleContractError("H3 partial rejection executed-node evidence drifted")
+    executed_nodes = detail.get("executed")
+    if (cached_nodes, executed_nodes) not in (([], ["1"]), (["1"], [])):
+        raise ScheduleContractError("H3 partial rejection scheduler evidence drifted")
     current_outputs = detail.get("current_outputs")
     if (
         not isinstance(current_outputs, list)
@@ -517,6 +618,7 @@ def verify_native_euler_h3_partial_rejection(
         "exception_type": detail["exception_type"],
         "node_id": detail["node_id"],
         "partial_output": False,
+        "reason_code": "execution.partial_denoise_unsupported",
         "receipt_created": False,
         "status": status["status_str"],
     }
@@ -707,12 +809,20 @@ def verify_rejected_history(
         or not isinstance(detail.get("current_outputs"), list)
     ):
         raise ScheduleContractError("rejected prompt error evidence drifted")
+    reason_codes = {
+        "raw-auto-variant": "input.variant_selection_required",
+        "raw-invalid-steps": "input.steps_out_of_range",
+    }
+    reason_code = reason_codes.get(case_id)
+    if reason_code is None:
+        raise ScheduleContractError("rejected prompt case has no stable reason code")
     return {
         "boundary": "runtime_execution",
         "case_id": case_id,
         "exception_type": detail["exception_type"],
         "partial_output": False,
         "prompt_created": True,
+        "reason_code": reason_code,
         "status": status["status_str"],
     }
 
@@ -785,6 +895,7 @@ def verify_prequeue_rejection(
         "node_type": node_error["class_type"],
         "partial_output": False,
         "prompt_created": False,
+        "reason_code": "input.steps_below_minimum",
         "reason_type": reason["type"],
         "status": "rejected",
     }
@@ -1344,7 +1455,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
     shutdown: dict[str, object] = {}
     succeeded = False
     evidence: dict[str, object] = {
-        "schema": "sigmax.comfyui-host-e2e-evidence/2",
+        "schema": "sigmax.comfyui-host-e2e-evidence/3",
         "lanes": ["H1", "H2_TURBO_M2_05", "H2_RAW_M3_06", "H3_EULER_M5_01"],
         "host": {
             "id": "comfyui",
@@ -1356,6 +1467,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         "listen": _LOOPBACK,
         "port": port,
         "import_probe": import_probe,
+        "attempt_transitions": {},
     }
     try:
         # IMPORTANT: Windows-only subprocess constants are absent from Linux type stubs.
@@ -1408,21 +1520,63 @@ def run(args: argparse.Namespace) -> dict[str, object]:
                     + json.dumps(issue_payload, sort_keys=True)
                 )
 
-            evidence["h1"] = {
+            h1_summary = {
                 "expected_node_ids": list(expected_ids),
                 "live_schema_fingerprint": live_report.report_fingerprint,
                 "registered": True,
+                "status": "succeeded",
             }
-            turbo_prompt_id, turbo_history = _submit_successful_prompt(
-                base_url=base_url,
-                client_id="sigmax-m2-05-e2e",
-                prompt=build_turbo_api_prompt(),
-                execution_timeout=args.execution_timeout,
+            evidence["h1"] = h1_summary
+            repeat_object_info = _object(
+                _http_json(f"{base_url}/object_info"),
+                label="repeat live object_info",
             )
-            evidence["h2_turbo"] = verify_turbo_history(
-                turbo_history,
-                prompt_id=turbo_prompt_id,
+            repeat_filtered = {
+                node_id: repeat_object_info[node_id]
+                for node_id in expected_ids
+                if node_id in repeat_object_info
+            }
+            repeat_report = validate_live_workflow_fixtures(
+                object_info=repeat_filtered,
+                host_version=CANONICAL_HOST_VERSION,
+                host_revision=host_revision,
+                lane=WorkflowValidationLane.KNOWN_GOOD,
             )
+            repeat_h1_summary = {
+                "expected_node_ids": list(expected_ids),
+                "live_schema_fingerprint": repeat_report.report_fingerprint,
+                "registered": (
+                    tuple(sorted(repeat_filtered)) == expected_ids
+                    and repeat_report.gate_passed
+                    and not repeat_report.issues
+                ),
+                "status": "succeeded",
+            }
+            attempts = cast(dict[str, object], evidence["attempt_transitions"])
+            attempts["h1"] = build_verified_host_repeat_transition(
+                lane="H1",
+                first_summary=h1_summary,
+                repeat_summary=repeat_h1_summary,
+            )
+
+            def submit_turbo(ordinal: int) -> tuple[str, dict[str, object]]:
+                return _submit_successful_prompt(
+                    base_url=base_url,
+                    client_id=f"sigmax-m2-05-e2e-attempt-{ordinal}",
+                    prompt=build_turbo_api_prompt(),
+                    execution_timeout=args.execution_timeout,
+                )
+
+            def verify_turbo(history: object, prompt_id: str) -> dict[str, object]:
+                return verify_turbo_history(history, prompt_id=prompt_id)
+
+            turbo_summary, turbo_transition = execute_verified_host_repeat(
+                lane="H2_TURBO_M2_05",
+                submit=submit_turbo,
+                verify=verify_turbo,
+            )
+            evidence["h2_turbo"] = turbo_summary
+            attempts["h2_turbo"] = turbo_transition
 
             fixtures = {item.identifier: item for item in load_canonical_workflow_fixtures()}
             raw_results: list[dict[str, object]] = []
@@ -1431,72 +1585,137 @@ def run(args: argparse.Namespace) -> dict[str, object]:
                 if fixture is None:
                     raise ScheduleContractError("RAW host case has no canonical workflow")
                 submitted_workflow = cast(dict[str, object], fixture.workflow)
-                raw_prompt_id, raw_history = _submit_successful_prompt(
-                    base_url=base_url,
-                    client_id=f"sigmax-m3-06-{case_id}",
-                    prompt=build_raw_api_prompt(case_id),
-                    extra_data={"extra_pnginfo": {"workflow": submitted_workflow}},
-                    execution_timeout=args.execution_timeout,
-                )
-                raw_results.append(
-                    verify_raw_history(
-                        raw_history,
-                        prompt_id=raw_prompt_id,
-                        case_id=case_id,
-                        submitted_workflow=submitted_workflow,
+
+                def submit_raw(
+                    ordinal: int,
+                    *,
+                    selected_case: str = case_id,
+                    workflow: dict[str, object] = submitted_workflow,
+                ) -> tuple[str, dict[str, object]]:
+                    return _submit_successful_prompt(
+                        base_url=base_url,
+                        client_id=f"sigmax-m3-06-{selected_case}-attempt-{ordinal}",
+                        prompt=build_raw_api_prompt(selected_case),
+                        extra_data={"extra_pnginfo": {"workflow": workflow}},
+                        execution_timeout=args.execution_timeout,
                     )
+
+                def verify_raw(
+                    history: object,
+                    prompt_id: str,
+                    *,
+                    selected_case: str = case_id,
+                    workflow: dict[str, object] = submitted_workflow,
+                ) -> dict[str, object]:
+                    return verify_raw_history(
+                        history,
+                        prompt_id=prompt_id,
+                        case_id=selected_case,
+                        submitted_workflow=workflow,
+                    )
+
+                raw_summary, raw_transition = execute_verified_host_repeat(
+                    lane="H2_RAW_M3_06",
+                    submit=submit_raw,
+                    verify=verify_raw,
                 )
+                raw_results.append(raw_summary)
+                attempts[f"h2_raw.{case_id}"] = raw_transition
             evidence["h2_raw"] = raw_results
 
-            rejected_prompt_id, rejected_history = _submit_rejected_runtime_prompt(
-                base_url=base_url,
-                client_id="sigmax-m3-06-raw-auto-variant",
-                prompt=_rejected_raw_api_prompt("raw-auto-variant"),
-                execution_timeout=args.execution_timeout,
-            )
-            rejected_results = [
-                verify_rejected_history(
-                    rejected_history,
-                    prompt_id=rejected_prompt_id,
+            def submit_runtime_rejection(ordinal: int) -> tuple[str, dict[str, object]]:
+                return _submit_rejected_runtime_prompt(
+                    base_url=base_url,
+                    client_id=f"sigmax-m3-06-raw-auto-variant-attempt-{ordinal}",
+                    prompt=_rejected_raw_api_prompt("raw-auto-variant"),
+                    execution_timeout=args.execution_timeout,
+                )
+
+            def verify_runtime_rejection(
+                history: object,
+                prompt_id: str,
+            ) -> dict[str, object]:
+                return verify_rejected_history(
+                    history,
+                    prompt_id=prompt_id,
                     case_id="raw-auto-variant",
                     expected_message="variant must be Turbo or RAW",
                 )
-            ]
-            prequeue_response = _submit_rejected_prequeue_prompt(
-                base_url=base_url,
-                client_id="sigmax-m3-06-raw-invalid-steps",
-                prompt=_rejected_raw_api_prompt("raw-invalid-steps"),
+
+            runtime_rejection, runtime_transition = execute_verified_host_repeat(
+                lane="H2_RAW_M3_06",
+                submit=submit_runtime_rejection,
+                verify=verify_runtime_rejection,
             )
-            rejected_results.append(
-                verify_prequeue_rejection(
-                    prequeue_response,
+            rejected_results = [runtime_rejection]
+            attempts["h2_raw.raw-auto-variant"] = runtime_transition
+
+            def submit_prequeue_rejection(ordinal: int) -> tuple[str, dict[str, object]]:
+                response = _submit_rejected_prequeue_prompt(
+                    base_url=base_url,
+                    client_id=f"sigmax-m3-06-raw-invalid-steps-attempt-{ordinal}",
+                    prompt=_rejected_raw_api_prompt("raw-invalid-steps"),
+                )
+                return f"prequeue-attempt-{ordinal}", _object(
+                    response,
+                    label="prequeue rejection response",
+                )
+
+            def verify_prequeue(response: object, _attempt_id: str) -> dict[str, object]:
+                return verify_prequeue_rejection(
+                    response,
                     case_id="raw-invalid-steps",
                 )
+
+            prequeue_rejection, prequeue_transition = execute_verified_host_repeat(
+                lane="H2_RAW_M3_06",
+                submit=submit_prequeue_rejection,
+                verify=verify_prequeue,
             )
+            rejected_results.append(prequeue_rejection)
+            attempts["h2_raw.raw-invalid-steps"] = prequeue_transition
             evidence["h2_raw_rejections"] = rejected_results
 
-            h3_prompt_id, h3_history = _submit_successful_prompt(
-                base_url=base_url,
-                client_id="sigmax-m5-01-native-euler",
-                prompt=build_native_euler_h3_api_prompt(),
-                execution_timeout=args.execution_timeout,
-            )
-            evidence["h3_native_euler"] = verify_native_euler_h3_history(
-                h3_history,
-                prompt_id=h3_prompt_id,
-            )
-            h3_rejected_id, h3_rejected_history = _submit_rejected_runtime_prompt(
-                base_url=base_url,
-                client_id="sigmax-m5-01-native-euler-partial-rejection",
-                prompt=build_native_euler_h3_partial_rejection_prompt(),
-                execution_timeout=args.execution_timeout,
-            )
-            evidence["h3_native_euler_rejections"] = [
-                verify_native_euler_h3_partial_rejection(
-                    h3_rejected_history,
-                    prompt_id=h3_rejected_id,
+            def submit_h3(ordinal: int) -> tuple[str, dict[str, object]]:
+                return _submit_successful_prompt(
+                    base_url=base_url,
+                    client_id=f"sigmax-m5-01-native-euler-attempt-{ordinal}",
+                    prompt=build_native_euler_h3_api_prompt(),
+                    execution_timeout=args.execution_timeout,
                 )
-            ]
+
+            def verify_h3(history: object, prompt_id: str) -> dict[str, object]:
+                return verify_native_euler_h3_history(history, prompt_id=prompt_id)
+
+            h3_summary, h3_transition = execute_verified_host_repeat(
+                lane="H3_EULER_M5_01",
+                submit=submit_h3,
+                verify=verify_h3,
+            )
+            evidence["h3_native_euler"] = h3_summary
+            attempts["h3_native_euler"] = h3_transition
+
+            def submit_h3_rejection(ordinal: int) -> tuple[str, dict[str, object]]:
+                return _submit_rejected_runtime_prompt(
+                    base_url=base_url,
+                    client_id=(f"sigmax-m5-01-native-euler-partial-rejection-attempt-{ordinal}"),
+                    prompt=build_native_euler_h3_partial_rejection_prompt(),
+                    execution_timeout=args.execution_timeout,
+                )
+
+            def verify_h3_rejection(history: object, prompt_id: str) -> dict[str, object]:
+                return verify_native_euler_h3_partial_rejection(
+                    history,
+                    prompt_id=prompt_id,
+                )
+
+            h3_rejection, h3_rejection_transition = execute_verified_host_repeat(
+                lane="H3_EULER_M5_01",
+                submit=submit_h3_rejection,
+                verify=verify_h3_rejection,
+            )
+            evidence["h3_native_euler_rejections"] = [h3_rejection]
+            attempts["h3_native_euler.partial_denoise"] = h3_rejection_transition
             succeeded = True
     finally:
         if process is not None:

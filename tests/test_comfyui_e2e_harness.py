@@ -334,17 +334,172 @@ def test_h3_partial_schedule_is_terminal_rejection_without_receipt() -> None:
         }
     }
 
-    assert _harness().verify_native_euler_h3_partial_rejection(
-        history,
-        prompt_id="prompt-h3-partial",
-    ) == {
+    expected = {
         "case_id": "partial_denoise_execution",
         "exception_type": "ValueError",
         "node_id": "4",
         "partial_output": False,
+        "reason_code": "execution.partial_denoise_unsupported",
         "receipt_created": False,
         "status": "error",
     }
+    assert (
+        _harness().verify_native_euler_h3_partial_rejection(
+            history,
+            prompt_id="prompt-h3-partial",
+        )
+        == expected
+    )
+
+    cached_history = copy.deepcopy(history)
+    cached_entry = cast(dict[str, Any], cached_history["prompt-h3-partial"])
+    cached_status = cast(dict[str, Any], cached_entry["status"])
+    cached_messages = cast(list[Any], cached_status["messages"])
+    cast(dict[str, Any], cached_messages[1][1])["nodes"] = ["1"]
+    cast(dict[str, Any], cached_messages[2][1])["executed"] = []
+    assert (
+        _harness().verify_native_euler_h3_partial_rejection(
+            cached_history,
+            prompt_id="prompt-h3-partial",
+        )
+        == expected
+    )
+
+    for cached_nodes, executed_nodes in (
+        ([], []),
+        (["1"], ["1"]),
+        (["2"], []),
+    ):
+        invalid_history = copy.deepcopy(history)
+        invalid_entry = cast(dict[str, Any], invalid_history["prompt-h3-partial"])
+        invalid_status = cast(dict[str, Any], invalid_entry["status"])
+        invalid_messages = cast(list[Any], invalid_status["messages"])
+        cast(dict[str, Any], invalid_messages[1][1])["nodes"] = cached_nodes
+        cast(dict[str, Any], invalid_messages[2][1])["executed"] = executed_nodes
+        with pytest.raises(ScheduleContractError):
+            _harness().verify_native_euler_h3_partial_rejection(
+                invalid_history,
+                prompt_id="prompt-h3-partial",
+            )
+
+
+def test_host_repeat_transition_retains_attempts_and_stable_rejection_reason() -> None:
+    summary = {
+        "case_id": "partial_denoise_execution",
+        "partial_output": False,
+        "reason_code": "execution.partial_denoise_unsupported",
+        "receipt_created": False,
+        "status": "error",
+    }
+
+    transition = _harness().build_verified_host_repeat_transition(
+        lane="H3_EULER_M5_01",
+        first_summary=summary,
+        repeat_summary=copy.deepcopy(summary),
+    )
+
+    assert transition["accepted"] is True
+    assert transition["transition"] == "pass_to_pass"
+    assert transition["first"]["ordinal"] == 1
+    assert transition["repeat"]["ordinal"] == 2
+    assert transition["first"]["observed_status"] == "error"
+    assert transition["first"]["reason_code"] == "execution.partial_denoise_unsupported"
+    assert transition["first"]["result_fingerprint"] == (transition["repeat"]["result_fingerprint"])
+
+
+def test_host_repeat_transition_types_finite_float_evidence() -> None:
+    summary = {
+        "mu": 1.15,
+        "status": "not_executed",
+    }
+
+    transition = _harness().build_verified_host_repeat_transition(
+        lane="H2_RAW_M3_06",
+        first_summary=summary,
+        repeat_summary=copy.deepcopy(summary),
+    )
+
+    assert transition["accepted"] is True
+    assert transition["first"]["result_fingerprint"] == (transition["repeat"]["result_fingerprint"])
+
+    summary["mu"] = float("nan")
+    with pytest.raises(ScheduleContractError):
+        _harness().build_verified_host_repeat_transition(
+            lane="H2_RAW_M3_06",
+            first_summary=summary,
+            repeat_summary=copy.deepcopy(summary),
+        )
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    ("changed_result", "missing_status", "missing_reason"),
+)
+def test_host_repeat_transition_fails_closed_on_drift_or_incomplete_summary(
+    mutation: str,
+) -> None:
+    first = {
+        "case_id": "partial_denoise_execution",
+        "reason_code": "execution.partial_denoise_unsupported",
+        "status": "error",
+    }
+    repeat = copy.deepcopy(first)
+    if mutation == "changed_result":
+        repeat["case_id"] = "changed"
+    elif mutation == "missing_status":
+        repeat.pop("status")
+    else:
+        repeat.pop("reason_code")
+
+    with pytest.raises(ScheduleContractError):
+        _harness().build_verified_host_repeat_transition(
+            lane="H3_EULER_M5_01",
+            first_summary=first,
+            repeat_summary=repeat,
+        )
+
+
+def test_verified_host_lane_executes_two_explicit_nonretry_attempts() -> None:
+    submissions: list[int] = []
+
+    def submit(ordinal: int) -> tuple[str, dict[str, object]]:
+        submissions.append(ordinal)
+        return f"prompt-{ordinal}", {"ordinal": ordinal}
+
+    def verify(history: object, prompt_id: str) -> dict[str, object]:
+        assert history == {"ordinal": int(prompt_id[-1])}
+        return {"fingerprint": "stable", "status": "succeeded"}
+
+    first, transition = _harness().execute_verified_host_repeat(
+        lane="H2_TURBO_M2_05",
+        submit=submit,
+        verify=verify,
+    )
+
+    assert submissions == [1, 2]
+    assert first == {"fingerprint": "stable", "status": "succeeded"}
+    assert transition["accepted"] is True
+    assert transition["first"]["ordinal"] == 1
+    assert transition["repeat"]["ordinal"] == 2
+
+
+def test_verified_host_lane_does_not_retry_a_failed_first_attempt() -> None:
+    submissions: list[int] = []
+
+    def submit(ordinal: int) -> tuple[str, dict[str, object]]:
+        submissions.append(ordinal)
+        return f"prompt-{ordinal}", {}
+
+    def verify(history: object, prompt_id: str) -> dict[str, object]:
+        raise ScheduleContractError(f"first attempt failed: {prompt_id}")
+
+    with pytest.raises(ScheduleContractError, match="first attempt"):
+        _harness().execute_verified_host_repeat(
+            lane="H3_EULER_M5_01",
+            submit=submit,
+            verify=verify,
+        )
+    assert submissions == [1]
 
 
 @pytest.mark.parametrize(
@@ -613,15 +768,24 @@ def test_raw_history_verifier_rejects_incomplete_or_stale_evidence(mutation: str
 
 
 @pytest.mark.parametrize(
-    ("case_id", "expected_message"),
+    ("case_id", "expected_message", "reason_code"),
     (
-        ("raw-auto-variant", "variant must be Turbo or RAW"),
-        ("raw-invalid-steps", "steps must be an integer between 1 and 10000"),
+        (
+            "raw-auto-variant",
+            "variant must be Turbo or RAW",
+            "input.variant_selection_required",
+        ),
+        (
+            "raw-invalid-steps",
+            "steps must be an integer between 1 and 10000",
+            "input.steps_out_of_range",
+        ),
     ),
 )
 def test_rejected_raw_prompts_require_terminal_error_without_partial_output(
     case_id: str,
     expected_message: str,
+    reason_code: str,
 ) -> None:
     harness = _harness()
     prompt = harness.build_raw_api_prompt("krea2-raw-official-square-1024")
@@ -688,6 +852,7 @@ def test_rejected_raw_prompts_require_terminal_error_without_partial_output(
         "exception_type": ("comfyui_sigmax.core.schedule_contracts.ScheduleContractError"),
         "partial_output": False,
         "prompt_created": True,
+        "reason_code": reason_code,
         "status": "error",
     }
 
@@ -742,6 +907,7 @@ def test_invalid_steps_prequeue_rejection_requires_structured_node_error() -> No
         "node_type": "Sigmax.Krea2SigmaScheduler",
         "partial_output": False,
         "prompt_created": False,
+        "reason_code": "input.steps_below_minimum",
         "reason_type": "value_smaller_than_min",
         "status": "rejected",
     }

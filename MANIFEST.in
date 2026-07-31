@@ -1,0 +1,13 @@
+include LICENSE.TXT
+include NOTICE
+include README.md
+include pyproject.toml
+recursive-include comfyui_sigmax *.py *.json py.typed
+prune .planning
+prune reference
+prune tests
+prune scripts
+prune docs
+global-exclude *.py[cod]
+global-exclude __pycache__
+global-exclude .DS_Store

@@ -65,6 +65,15 @@ Run the complete gate before requesting review. A hook that modifies files is no
 review the change and rerun until the repository is clean. The detailed workflow is documented
 in the [test SOP](tests/TEST_SOP.md).
 
+Release-facing changes must also pass the local non-publishing audit with fresh paths:
+
+```powershell
+python scripts/run_release_audit.py --dist-dir .tmp/release-audit-dist --output .tmp/release-audit.json
+```
+
+Never weaken `MANIFEST.in` or archive deny rules merely to include a local test, planning record,
+reference clone, cache, model file, or private log.
+
 ## Pull Requests
 
 Describe:

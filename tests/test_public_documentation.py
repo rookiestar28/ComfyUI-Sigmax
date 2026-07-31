@@ -17,6 +17,7 @@ PUBLIC_DOCUMENTS = (
     ROOT / "CHANGELOG.md",
     ROOT / "docs" / "ARCHITECTURE.md",
     ROOT / "docs" / "STABLE_PUBLIC_CONTRACTS.md",
+    ROOT / "docs" / "SECURITY_RELEASE_AUDIT.md",
     ROOT / "docs" / "PROFILE_SPEC.md",
     ROOT / "docs" / "SCHEDULE_ARTIFACT_SPEC.md",
     ROOT / "docs" / "SCHEDULE_REPORT_SPEC.md",
@@ -52,6 +53,22 @@ def test_public_documentation_exposes_frozen_contract_and_migration_policy() -> 
     assert "all eight built-in node" in readme
     assert "Unknown schema identifiers fail" in specification
     assert "| Stable public contracts |" in ci_matrix
+
+
+def test_public_documentation_exposes_security_release_audit() -> None:
+    readme = _read(ROOT / "README.md")
+    contributing = _read(ROOT / "CONTRIBUTING.md")
+    specification = _read(ROOT / "docs" / "SECURITY_RELEASE_AUDIT.md")
+    ci_matrix = _read(ROOT / "tests" / "CI_TEST_MATRIX.md")
+
+    for content in (readme, specification):
+        assert "sigmax.release-audit/1" in content
+        assert "never" in content.lower() and "publish" in content.lower()
+    assert "MANIFEST.in" in readme
+    assert "scripts/run_release_audit.py" in contributing
+    assert "software-source" in specification
+    assert "model-weight" in specification
+    assert "| Security and release audit |" in ci_matrix
 
 
 def test_public_documentation_exposes_coinstallation_mutation_boundary() -> None:

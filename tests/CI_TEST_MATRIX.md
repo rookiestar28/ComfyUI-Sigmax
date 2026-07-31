@@ -27,6 +27,7 @@ Command definitions remain in `tests/TEST_SOP.md`. Real-host lifecycle requireme
 | Performance budgets | Windows/WSL pure first/repeat limits plus two pinned-host startup observations implemented | M7-05 |
 | Environment guardrails | Versioned venv/cache/lock/Unicode/temp/optional diagnostics run before every full gate | M7-06 |
 | Stable public contracts | Source-derived fingerprinted node/schema/reason manifest plus migration policy implemented | M8-01 |
+| Security and release audit | Tracked/dependency/provenance/Registry sections plus wheel/sdist boundary inspection implemented | M8-02 |
 | Adapter/integration tests | Implemented | M4-01 through M4-10 |
 | Real ComfyUI H1 | Implemented | M2-05 harness |
 | Real ComfyUI H2 | Turbo and RAW/auto implemented | M2-05; M3-06 |
@@ -72,6 +73,7 @@ Change-aware selection may accelerate `fast`. It must not remove a required `pr-
 | Sampler step drift | Step-level differential/property tests | Fixed seed/state, partial denoise, terminal behavior |
 | Host API drift | Known-good plus latest-host lanes | Actionable compatibility error; no generic fallback |
 | Package leakage | Build/clean-install inspection | No internal docs, caches, weights, secrets, or private paths |
+| Release archive leakage | Canonical release audit + malicious ZIP/TAR tests | Fresh wheel and sdist semantic inventories |
 | Platform/process failure | Windows/Linux + Unicode path | Port, readiness, shutdown, and cleanup verification |
 
 ## 5. Planned CI Job Matrix

@@ -393,6 +393,17 @@ Verify:
 - runtime dependency metadata is empty until an approved runtime dependency is introduced.
 - internal files, model weights, caches, and secrets are excluded.
 
+For release-facing work, also build and inspect both wheel and sdist through the canonical
+non-publishing audit, using fresh repository-local ignored destinations:
+
+```powershell
+python scripts/run_release_audit.py --dist-dir .tmp/release-audit-dist --output .tmp/release-audit.json
+```
+
+The `sigmax.release-audit/1` report must pass its separate tracked-file, dependency,
+provenance/license, Registry metadata, secret-scan, and archive sections. This does not replace
+the wheel clean-install check or authorize publishing.
+
 ### Stage 9 - Test Health, Coverage, and Debt Governance
 
 When source and coverage tooling exist:

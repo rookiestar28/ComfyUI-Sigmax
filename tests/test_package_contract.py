@@ -71,6 +71,8 @@ class PackageContractTests(unittest.TestCase):
     def test_namespace_contract(self) -> None:
         package_path = REPOSITORY_ROOT / "comfyui_sigmax"
         self.assertTrue((package_path / "__init__.py").is_file())
+        self.assertTrue((REPOSITORY_ROOT / "MANIFEST.in").is_file())
+        self.assertTrue((REPOSITORY_ROOT / "scripts" / "run_release_audit.py").is_file())
         self.assertTrue((package_path / "py.typed").is_file())
         self.assertTrue((package_path / "core" / "__init__.py").is_file())
         self.assertTrue((package_path / "core" / "base_grids.py").is_file())

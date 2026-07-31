@@ -787,10 +787,27 @@ explicit compatibility alias. Unknown schemas fail closed. See
 [Stable public contracts](docs/STABLE_PUBLIC_CONTRACTS.md) for the versioned migration policy and
 the exact boundary.
 
+### Security and release audit
+
+The local `sigmax.release-audit/1` runner separately checks tracked-file hygiene, mandatory /
+optional / development / build dependencies, software-source / framework / model-weight
+provenance and licenses, Comfy Registry metadata, and fresh wheel/sdist contents. It never
+publishes. Run it with fresh ignored destinations:
+
+```powershell
+python scripts/run_release_audit.py --dist-dir .tmp/release-audit-dist --output .tmp/release-audit.json
+```
+
+The sdist is governed by `MANIFEST.in` and excludes tests, scripts, references, local planning,
+environments, caches, and model files. See the
+[security and release audit](docs/SECURITY_RELEASE_AUDIT.md) for exact archive allow-lists,
+stable findings, and limitations.
+
 ## Documentation
 
 - [Architecture](docs/ARCHITECTURE.md)
 - [Stable public contracts and migration policy](docs/STABLE_PUBLIC_CONTRACTS.md)
+- [Security and release audit](docs/SECURITY_RELEASE_AUDIT.md)
 - [Model profile schema v1 specification](docs/PROFILE_SPEC.md)
 - [Model profile contribution guide](docs/PROFILE_CONTRIBUTION_GUIDE.md)
 - [Schedule artifact specification](docs/SCHEDULE_ARTIFACT_SPEC.md)

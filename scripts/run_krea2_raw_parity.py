@@ -33,9 +33,11 @@ def _require_distribution_version(distribution: str, expected: str) -> str:
             f"missing parity dependency {distribution}=={expected}; "
             "install requirements/parity-krea2-turbo.txt in an isolated environment"
         ) from error
-    if actual != expected:
+    # IMPORTANT: official CPU wheels use a PEP 440 local suffix; keep report metadata canonical.
+    cpu_build = distribution == "torch" and actual == f"{expected}+cpu"
+    if actual != expected and not cpu_build:
         raise RuntimeError(f"parity dependency {distribution} must be {expected}, found {actual}")
-    return actual
+    return expected
 
 
 def _load_pinned_calculate_shift() -> Callable[..., float]:

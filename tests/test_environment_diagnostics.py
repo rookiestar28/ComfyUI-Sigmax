@@ -373,6 +373,19 @@ def test_mounted_temp_incompatibility_can_be_explicitly_mitigated() -> None:
     assert report.mitigations == ("pytest.capture_sys",)
 
 
+def test_capture_mode_is_not_reported_when_anonymous_temp_is_compatible() -> None:
+    observation = replace(
+        _passing_observation(),
+        platform="linux",
+        anonymous_temp_compatible=True,
+        temp_capture_mitigated=True,
+    )
+
+    report = evaluate_environment(observation)
+    assert report.status == "PASS"
+    assert report.mitigations == ()
+
+
 def test_full_gate_path_keeps_selected_venv_and_removes_foreign_precommit(
     tmp_path: Path,
 ) -> None:

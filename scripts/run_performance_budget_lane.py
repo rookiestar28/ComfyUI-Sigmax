@@ -71,6 +71,18 @@ def _platform() -> str:
     return "unsupported"
 
 
+def select_performance_lane(
+    platform_id: str,
+    python_version: tuple[int, int],
+) -> str | None:
+    """Return only an accepted lane that exactly matches the execution environment."""
+
+    for lane_id, expected in LANES.items():
+        if expected == (platform_id, python_version):
+            return lane_id
+    return None
+
+
 def _source_fingerprints() -> list[dict[str, str]]:
     return [
         {

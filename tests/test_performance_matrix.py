@@ -3,7 +3,6 @@ from __future__ import annotations
 import hashlib
 import importlib.resources
 import json
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -15,6 +14,7 @@ from comfyui_sigmax.performance_matrix import (
     load_performance_budget_matrix,
 )
 from scripts import generate_performance_budget_matrix as generator
+from scripts import run_performance_budget_lane as lane_runner
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -89,13 +89,41 @@ def test_generator_matches_packaged_resource() -> None:
     assert actual == expected
 
 
+@pytest.mark.parametrize(
+    ("platform_id", "python_version", "expected"),
+    [
+        ("windows", (3, 13), "performance-windows-py313"),
+        ("wsl", (3, 10), "performance-wsl-py310"),
+        ("windows", (3, 10), None),
+        ("wsl", (3, 13), None),
+        ("unsupported", (3, 10), None),
+        ("unsupported", (3, 13), None),
+    ],
+)
+def test_performance_lane_selection_requires_an_exact_environment_match(
+    platform_id: str,
+    python_version: tuple[int, int],
+    expected: str | None,
+) -> None:
+    selector = getattr(lane_runner, "select_performance_lane", None)
+    assert callable(selector), "performance lane selector is missing"
+    assert selector(platform_id, python_version) == expected
+
+
 def test_current_platform_performance_lane_remains_within_budget() -> None:
-    lane = "performance-windows-py313" if os.name == "nt" else "performance-wsl-py310"
-    fixture = (
-        "tests/performance/fixtures/windows_py313_v1.json"
-        if os.name == "nt"
-        else "tests/performance/fixtures/wsl_py310_v1.json"
-    )
+    selector = getattr(lane_runner, "select_performance_lane", None)
+    assert callable(selector), "performance lane selector is missing"
+    lane = selector(lane_runner._platform(), sys.version_info[:2])
+    if lane is None:
+        assert (lane_runner._platform(), sys.version_info[:2]) not in {
+            ("windows", (3, 13)),
+            ("wsl", (3, 10)),
+        }
+        return
+    fixture = {
+        "performance-windows-py313": "tests/performance/fixtures/windows_py313_v1.json",
+        "performance-wsl-py310": "tests/performance/fixtures/wsl_py310_v1.json",
+    }[lane]
     completed = subprocess.run(
         [
             sys.executable,

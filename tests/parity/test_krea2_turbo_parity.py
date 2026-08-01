@@ -152,6 +152,20 @@ def test_runner_defers_optional_imports_until_execution() -> None:
     assert top_level_imports.isdisjoint({"diffusers", "numpy", "torch"})
 
 
+@pytest.mark.parametrize(
+    "runner_name",
+    ("scripts.run_krea2_turbo_parity", "scripts.run_krea2_raw_parity"),
+)
+def test_framework_runner_accepts_the_official_cpu_torch_build(
+    monkeypatch: pytest.MonkeyPatch,
+    runner_name: str,
+) -> None:
+    runner = importlib.import_module(runner_name)
+    monkeypatch.setattr(runner.importlib.metadata, "version", lambda _name: "2.9.0+cpu")
+
+    assert runner._require_distribution_version("torch", "2.9.0") == "2.9.0"
+
+
 def test_fixture_schema_sources_versions_and_configuration_are_exact() -> None:
     fixture = _load_fixture()
 

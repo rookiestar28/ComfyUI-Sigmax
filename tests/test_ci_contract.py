@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 import unittest
@@ -52,8 +53,10 @@ class CiContractTests(unittest.TestCase):
         self.assertEqual("PASS", report["status"])
         self.assertEqual("PASS", report["diagnostics"]["status"])
         self.assertEqual("sigmax.environment-diagnostics/1", report["diagnostics"]["schema"])
-        if os.name != "nt":
-            self.assertIn("pytest.capture_sys", report["diagnostics"]["mitigations"])
+        self.assertLessEqual(
+            set(report["diagnostics"]["mitigations"]),
+            {"pytest.capture_sys"},
+        )
         self.assertEqual("NOT_APPLICABLE", report["node"])
         self.assertTrue(report["project_local_venv"])
 
@@ -85,6 +88,28 @@ class CiContractTests(unittest.TestCase):
         self.assertIn("scripts/run_full_gate.py", linux)
         self.assertIn("[venv.missing]", windows)
         self.assertIn("[venv.missing]", linux)
+
+    def test_canonical_text_resources_checkout_with_lf_on_every_platform(self) -> None:
+        resources = (
+            "comfyui_sigmax/benchmarks/numerical_matrix_v1.json",
+            "comfyui_sigmax/performance/matrix_v1.json",
+            "tests/golden/krea2_turbo_v1.json",
+            "tests/parity/fixtures/krea2_turbo_parity_v1.json",
+        )
+        git = shutil.which("git")
+        self.assertIsNotNone(git)
+        completed = subprocess.run(
+            [str(git), "check-attr", "eol", "--", *resources],
+            cwd=REPOSITORY_ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        attributes = {
+            line.split(": ", maxsplit=2)[0]: line.split(": ", maxsplit=2)[2]
+            for line in completed.stdout.splitlines()
+        }
+        self.assertEqual({resource: "lf" for resource in resources}, attributes)
 
     def test_common_runner_declares_required_ordered_stages(self) -> None:
         runner = (REPOSITORY_ROOT / "scripts/run_full_gate.py").read_text(encoding="utf-8")
@@ -184,6 +209,25 @@ class CiContractTests(unittest.TestCase):
         for forbidden in ("npm ", "node ", "playwright", "permissions: write-all"):
             with self.subTest(forbidden=forbidden):
                 self.assertNotIn(forbidden, lowered)
+
+    def test_framework_parity_jobs_install_the_pinned_cpu_torch_wheel(self) -> None:
+        workflow = (REPOSITORY_ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+        turbo = workflow.split("  parity-pinned:", maxsplit=1)[1].split(
+            "  raw-parity-pinned:", maxsplit=1
+        )[0]
+        raw = workflow.split("  raw-parity-pinned:", maxsplit=1)[1].split(
+            "  native-comfyui-parity-pinned:", maxsplit=1
+        )[0]
+
+        for block in (turbo, raw):
+            with self.subTest(job=block.splitlines()[1].strip()):
+                self.assertIn("--no-cache-dir", block)
+                self.assertIn("--index-url https://download.pytorch.org/whl/cpu", block)
+                self.assertIn("torch==2.9.0+cpu", block)
+                self.assertLess(
+                    block.index("torch==2.9.0+cpu"),
+                    block.index("-r requirements/parity-krea2-turbo.txt"),
+                )
 
     def test_matrix_records_framework_and_host_parity_separately(self) -> None:
         matrix = (REPOSITORY_ROOT / "tests/CI_TEST_MATRIX.md").read_text(encoding="utf-8")

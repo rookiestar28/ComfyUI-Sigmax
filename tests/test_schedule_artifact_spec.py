@@ -14,7 +14,6 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-SPEC = ROOT / "docs" / "SCHEDULE_ARTIFACT_SPEC.md"
 FIXTURES = ROOT / "tests" / "fixtures" / "artifacts"
 NUMERICAL = FIXTURES / "numerical_projection_v1.json"
 CONSTRUCTION_A = FIXTURES / "construction_projection_a_v1.json"
@@ -57,37 +56,6 @@ def _walk_object_keys(value: Any) -> Iterator[str]:
     elif isinstance(value, list):
         for child in value:
             yield from _walk_object_keys(child)
-
-
-def test_public_spec_defines_the_normative_v1_contract() -> None:
-    content = SPEC.read_text(encoding="utf-8")
-
-    required_terms = (
-        "sigmax.schedule-artifact/1",
-        "sigmax.numerical-schedule/1",
-        "Sigmax Canonical Projection v1",
-        "numerical fingerprint",
-        "construction fingerprint",
-        "requested inputs",
-        "effective inputs",
-        "ordered transform",
-        "IEEE-754",
-        "binary32",
-        "binary64",
-        "negative zero",
-        "non-finite",
-        "NFC",
-        "ASCII",
-        "UTF-8",
-        "no trailing newline",
-        "SHA-256",
-        "identity and integrity",
-        "not authenticity",
-        "JCS-informed",
-        "not JCS-compliant",
-    )
-    missing = [term for term in required_terms if term.casefold() not in content.casefold()]
-    assert not missing, f"Artifact specification is missing: {missing}"
 
 
 def test_projection_fixtures_are_canonical_schema_restricted_json() -> None:

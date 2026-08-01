@@ -128,9 +128,8 @@ first-attempt P0 regression; record the cause and corrective rerun.
 
 ## Model Profile Contributions
 
-A model profile is accepted as an evidence package, not as a set of preferred values. Follow
-the [model profile contribution guide](docs/PROFILE_CONTRIBUTION_GUIDE.md) and include its
-copyable pull-request checklist.
+A model profile is accepted as an evidence package, not as a set of preferred values. Include
+the following evidence in the pull request.
 
 At minimum, profile review requires:
 

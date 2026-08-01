@@ -144,6 +144,10 @@ def source_contract_projection() -> dict[str, object]:
         CHECKPOINT_EVIDENCE_INSPECTOR_NODE_ID,
         CHECKPOINT_EVIDENCE_INSPECTOR_SCHEMA_ID,
     )
+    from comfyui_sigmax.nodes.flux1_schnell_sigma_scheduler import (
+        FLUX1_SCHNELL_SIGMA_NODE_ID,
+        FLUX1_SCHNELL_SIGMA_NODE_SCHEMA_ID,
+    )
     from comfyui_sigmax.nodes.inspectors import (
         PROFILE_INSPECTOR_NODE_ID,
         PROFILE_INSPECTOR_SCHEMA_ID,
@@ -196,6 +200,10 @@ def source_contract_projection() -> dict[str, object]:
             {
                 "id": CHECKPOINT_EVIDENCE_INSPECTOR_NODE_ID,
                 "schema": CHECKPOINT_EVIDENCE_INSPECTOR_SCHEMA_ID,
+            },
+            {
+                "id": FLUX1_SCHNELL_SIGMA_NODE_ID,
+                "schema": FLUX1_SCHNELL_SIGMA_NODE_SCHEMA_ID,
             },
             {"id": KREA2_SIGMA_NODE_ID, "schema": KREA2_SIGMA_NODE_SCHEMA_ID},
             {"id": MODEL_AWARE_SIGMA_NODE_ID, "schema": MODEL_AWARE_SIGMA_NODE_SCHEMA_ID},

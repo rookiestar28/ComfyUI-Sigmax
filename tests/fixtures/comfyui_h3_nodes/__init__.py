@@ -15,6 +15,7 @@ _UI_KEY = "sigmax_native_euler_trace"
 _ALGEBRA_UI_KEY = "sigmax_schedule_algebra"
 _CHECKPOINT_UI_KEY = "sigmax_checkpoint_evidence"
 _Z_IMAGE_UI_KEY = "sigmax_z_image_schedule"
+_FLUX1_SCHNELL_UI_KEY = "sigmax_flux1_schnell_schedule"
 
 
 def _vector(value: torch.Tensor) -> list[float]:
@@ -297,13 +298,67 @@ class ZImageScheduleProbe:
         }
 
 
+class Flux1SchnellScheduleProbe:
+    """Return model-free H2 evidence for an executed FLUX.1-schnell scheduler."""
+
+    CATEGORY = "SigmaxTest"
+    DESCRIPTION = "Test-only FLUX.1-schnell schedule H2 execution probe."
+    FUNCTION = "execute"
+    OUTPUT_NODE = True
+    RETURN_TYPES: tuple[()] = ()
+    RETURN_NAMES: tuple[()] = ()
+
+    @classmethod
+    def INPUT_TYPES(cls) -> dict[str, dict[str, tuple[object, ...]]]:
+        return {
+            "required": {
+                "sigmas": ("SIGMAS",),
+                "schedule_info": ("STRING", {"default": "", "multiline": True}),
+            }
+        }
+
+    def execute(self, sigmas: object, schedule_info: object) -> dict[str, object]:
+        if not isinstance(sigmas, torch.Tensor) or sigmas.device.type != "cpu":
+            raise ValueError("FLUX.1-schnell H2 sigmas must be a CPU tensor")
+        if sigmas.dtype != torch.float32 or sigmas.ndim != 1 or len(sigmas) != 5:
+            raise ValueError("FLUX.1-schnell H2 sigmas must contain four transitions")
+        if not isinstance(schedule_info, str):
+            raise ValueError("FLUX.1-schnell H2 schedule information must be text")
+        info = json.loads(schedule_info)
+        if (
+            not isinstance(info, dict)
+            or info.get("schema") != "sigmax.flux1-schnell-sigma-node/1"
+            or info.get("profile", {}).get("id") != "flux1.schnell.official"
+            or info.get("profile", {}).get("evidence") != "official"
+            or info.get("slicing", {}).get("output_steps") != 4
+            or info.get("shift") != {"dynamic": False, "kind": "none"}
+        ):
+            raise ValueError("FLUX.1-schnell H2 schedule contract drifted")
+        trace = {"schedule_info": info, "sigmas": _vector(sigmas)}
+        return {
+            "ui": {
+                _FLUX1_SCHNELL_UI_KEY: [
+                    json.dumps(
+                        trace,
+                        allow_nan=False,
+                        ensure_ascii=False,
+                        separators=(",", ":"),
+                        sort_keys=True,
+                    )
+                ]
+            }
+        }
+
+
 NODE_CLASS_MAPPINGS = {
+    "SigmaxTest.Flux1SchnellScheduleProbe": Flux1SchnellScheduleProbe,
     "SigmaxTest.CheckpointEvidenceProbe": CheckpointEvidenceProbe,
     "SigmaxTest.NativeEulerProbe": NativeEulerProbe,
     "SigmaxTest.ScheduleAlgebraProbe": ScheduleAlgebraProbe,
     "SigmaxTest.ZImageScheduleProbe": ZImageScheduleProbe,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
+    "SigmaxTest.Flux1SchnellScheduleProbe": "Sigmax Test — FLUX.1-schnell Schedule Probe",
     "SigmaxTest.CheckpointEvidenceProbe": "Sigmax Test — Checkpoint Evidence Probe",
     "SigmaxTest.NativeEulerProbe": "Sigmax Test — Native Euler Probe",
     "SigmaxTest.ScheduleAlgebraProbe": "Sigmax Test — Schedule Algebra Probe",

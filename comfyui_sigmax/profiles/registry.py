@@ -270,6 +270,7 @@ def builtin_profile_registry() -> ProfileRegistry:
     """Return the deterministic trusted registry shipped with this package."""
 
     # Local import avoids a schema -> profile -> registry import cycle.
+    from comfyui_sigmax.profiles.flux1_schnell import FLUX1_SCHNELL_SCHEMA
     from comfyui_sigmax.profiles.krea2_raw import KREA2_RAW_SCHEMA
     from comfyui_sigmax.profiles.krea2_turbo import KREA2_TURBO_SCHEMA
     from comfyui_sigmax.profiles.z_image import Z_IMAGE_BASE_SCHEMA, Z_IMAGE_TURBO_SCHEMA
@@ -279,6 +280,7 @@ def builtin_profile_registry() -> ProfileRegistry:
         tuple(
             sorted(
                 (
+                    _builtin_entry(FLUX1_SCHNELL_SCHEMA),
                     _builtin_entry(KREA2_RAW_SCHEMA),
                     _builtin_entry(KREA2_TURBO_SCHEMA),
                     _builtin_entry(Z_IMAGE_BASE_SCHEMA),

@@ -218,7 +218,7 @@ def test_public_documentation_describes_current_maturity_honestly() -> None:
     profile_spec = _read(ROOT / "docs" / "PROFILE_SPEC.md").lower()
 
     assert "stable public-contract baseline" in readme
-    assert "thirteen namespaced nodes" in readme
+    assert "fourteen namespaced nodes" in readme
     assert "planned" in architecture and "implemented" in architecture
     assert "frozen" in profile_spec and "sigmax.model-profile/1" in profile_spec
     assert "not yet validated" in compatibility

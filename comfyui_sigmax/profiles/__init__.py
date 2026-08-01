@@ -7,6 +7,13 @@ from comfyui_sigmax.profiles.checkpoint_evidence import (
     CheckpointEvidenceInspection,
     inspect_local_checkpoint_evidence,
 )
+from comfyui_sigmax.profiles.flux1_schnell import (
+    FLUX1_SCHNELL_PROFILE,
+    FLUX1_SCHNELL_SCHEMA,
+    Flux1SchnellEvidenceReference,
+    Flux1SchnellProfile,
+    build_flux1_schnell_schedule,
+)
 from comfyui_sigmax.profiles.generic_flowmatch import (
     GENERIC_FLOWMATCH_DYNAMIC_PROFILE,
     GENERIC_FLOWMATCH_FIXED_PROFILE,
@@ -127,6 +134,8 @@ __all__ = [
     "CHECKPOINT_EVIDENCE_INSPECTION_SCHEMA_ID",
     "CHECKPOINT_EVIDENCE_INSPECTION_SCHEMA_VERSION",
     "CHECKPOINT_EVIDENCE_REASON_CODES",
+    "FLUX1_SCHNELL_PROFILE",
+    "FLUX1_SCHNELL_SCHEMA",
     "GENERIC_FLOWMATCH_DYNAMIC_PROFILE",
     "GENERIC_FLOWMATCH_FIXED_PROFILE",
     "GENERIC_FLOWMATCH_PROFILE_SCHEMA_ID",
@@ -154,6 +163,8 @@ __all__ = [
     "DimensionPolicy",
     "EvidenceReference",
     "ExtrapolationPolicy",
+    "Flux1SchnellEvidenceReference",
+    "Flux1SchnellProfile",
     "FrameworkProvenance",
     "GenericFlowMatchProfileV1",
     "GenericFlowMatchShiftMode",
@@ -200,6 +211,7 @@ __all__ = [
     "ZImageEvidenceReference",
     "ZImageProfile",
     "ZImageVariant",
+    "build_flux1_schnell_schedule",
     "build_krea2_raw_schedule",
     "build_krea2_turbo_schedule",
     "build_z_image_schedule",

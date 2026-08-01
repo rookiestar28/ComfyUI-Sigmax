@@ -84,6 +84,8 @@ _CHECKPOINT_OUTPUT_NODE_ID: Final = "2"
 _CHECKPOINT_TRACE_KEY: Final = "sigmax_checkpoint_evidence"
 _Z_IMAGE_OUTPUT_NODE_ID: Final = "2"
 _Z_IMAGE_TRACE_KEY: Final = "sigmax_z_image_schedule"
+_FLUX1_SCHNELL_OUTPUT_NODE_ID: Final = "2"
+_FLUX1_SCHNELL_TRACE_KEY: Final = "sigmax_flux1_schnell_schedule"
 _CHECKPOINT_FIXTURE_NAME: Final = "sigmax-m6-08-fixture.safetensors"
 _H3_TEST_PACK_NAME: Final = "ComfyUI-Sigmax-H3"
 _H3_TEST_PACK_SOURCE: Final = (
@@ -250,6 +252,67 @@ def verify_z_image_h2_history(
         "profile_id": expected_profile,
         "ratio": expected_ratio,
         "requested_transitions": expected_steps,
+        "status": "succeeded",
+    }
+
+
+def build_flux1_schnell_h2_api_prompt() -> dict[str, object]:
+    """Return the official four-step FLUX.1-schnell scheduler -> probe graph."""
+
+    return {
+        "1": {
+            "class_type": "Sigmax.Flux1SchnellSigmaScheduler",
+            "inputs": {
+                "end_step": -1,
+                "start_step": 0,
+                "steps": 4,
+                "strict_official": True,
+            },
+        },
+        _FLUX1_SCHNELL_OUTPUT_NODE_ID: {
+            "class_type": "SigmaxTest.Flux1SchnellScheduleProbe",
+            "inputs": {"schedule_info": ["1", 1], "sigmas": ["1", 0]},
+        },
+    }
+
+
+def verify_flux1_schnell_h2_history(history: object, *, prompt_id: str) -> dict[str, object]:
+    """Verify the host returned the exact unshifted four-step schedule."""
+
+    root = _object(history, label="FLUX.1-schnell history")
+    entry = _object(root.get(prompt_id), label="FLUX.1-schnell history entry")
+    status = _object(entry.get("status"), label="FLUX.1-schnell prompt status")
+    if status.get("completed") is not True or status.get("status_str") != "success":
+        raise ScheduleContractError("FLUX.1-schnell prompt history does not prove success")
+    outputs = _object(entry.get("outputs"), label="FLUX.1-schnell prompt outputs")
+    output = _object(
+        outputs.get(_FLUX1_SCHNELL_OUTPUT_NODE_ID), label="FLUX.1-schnell probe output"
+    )
+    traces = _array(output.get(_FLUX1_SCHNELL_TRACE_KEY), label="FLUX.1-schnell probe trace")
+    if len(traces) != 1 or not isinstance(traces[0], str):
+        raise ScheduleContractError("FLUX.1-schnell probe trace is malformed")
+    trace = _object(json.loads(traces[0]), label="FLUX.1-schnell decoded trace")
+    info = _object(trace.get("schedule_info"), label="FLUX.1-schnell schedule information")
+    sigmas = _array(trace.get("sigmas"), label="FLUX.1-schnell sigma vector")
+    if (
+        info.get("schema") != "sigmax.flux1-schnell-sigma-node/1"
+        or _object(info.get("profile"), label="FLUX.1-schnell profile").get("id")
+        != "flux1.schnell.official"
+        or _object(info.get("profile"), label="FLUX.1-schnell profile").get("evidence")
+        != "official"
+        or _object(info.get("shift"), label="FLUX.1-schnell shift")
+        != {"dynamic": False, "kind": "none"}
+        or _object(info.get("guidance"), label="FLUX.1-schnell guidance")
+        != {"host_cfg": 1.0, "model_guidance": 0.0}
+        or sigmas != [1.0, 0.75, 0.5, 0.25, 0.0]
+    ):
+        raise ScheduleContractError("FLUX.1-schnell H2 execution evidence drifted")
+    return {
+        "numerical_fingerprint": _object(
+            info.get("fingerprints"), label="FLUX.1-schnell fingerprints"
+        ).get("complete"),
+        "profile_id": "flux1.schnell.official",
+        "requested_transitions": 4,
         "status": "succeeded",
     }
 
@@ -1850,6 +1913,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
             "H2_ALGEBRA_M4_09",
             "H2_CHECKPOINT_EVIDENCE_M6_08",
             "H2_Z_IMAGE_M6_04",
+            "H2_FLUX1_SCHNELL_M6_05",
             "H3_EULER_M5_01",
         ],
         "host": {
@@ -2061,6 +2125,31 @@ def run(args: argparse.Namespace) -> dict[str, object]:
                 z_image_results.append(z_summary)
                 attempts[f"h2_z_image.{case_id}"] = z_transition
             evidence["h2_z_image"] = z_image_results
+
+            flux_fixture = fixtures.get("flux1-schnell-official-4")
+            if flux_fixture is None:
+                raise ScheduleContractError("FLUX.1-schnell host case has no canonical workflow")
+            flux_workflow = cast(dict[str, object], flux_fixture.workflow)
+
+            def submit_flux1_schnell(ordinal: int) -> tuple[str, dict[str, object]]:
+                return _submit_successful_prompt(
+                    base_url=base_url,
+                    client_id=f"sigmax-m6-05-flux1-schnell-attempt-{ordinal}",
+                    prompt=build_flux1_schnell_h2_api_prompt(),
+                    extra_data={"extra_pnginfo": {"workflow": flux_workflow}},
+                    execution_timeout=args.execution_timeout,
+                )
+
+            def verify_flux1_schnell(history: object, prompt_id: str) -> dict[str, object]:
+                return verify_flux1_schnell_h2_history(history, prompt_id=prompt_id)
+
+            flux_summary, flux_transition = execute_verified_host_repeat(
+                lane="H2_FLUX1_SCHNELL_M6_05",
+                submit=submit_flux1_schnell,
+                verify=verify_flux1_schnell,
+            )
+            evidence["h2_flux1_schnell"] = flux_summary
+            attempts["h2_flux1_schnell.flux1-schnell-official-4"] = flux_transition
 
             def submit_runtime_rejection(ordinal: int) -> tuple[str, dict[str, object]]:
                 return _submit_rejected_runtime_prompt(

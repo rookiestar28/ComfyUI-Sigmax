@@ -93,6 +93,7 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "core" / "workflow_metadata.py").is_file())
         self.assertTrue((package_path / "profiles" / "__init__.py").is_file())
         self.assertTrue((package_path / "profiles" / "checkpoint_evidence.py").is_file())
+        self.assertTrue((package_path / "profiles" / "flux1_schnell.py").is_file())
         self.assertTrue((package_path / "profiles" / "krea2_common.py").is_file())
         self.assertTrue((package_path / "profiles" / "krea2_raw.py").is_file())
         self.assertTrue((package_path / "profiles" / "registry.py").is_file())
@@ -120,6 +121,7 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "nodes" / "__init__.py").is_file())
         self.assertTrue((package_path / "nodes" / "advanced_flowmatch_scheduler.py").is_file())
         self.assertTrue((package_path / "nodes" / "checkpoint_evidence_inspector.py").is_file())
+        self.assertTrue((package_path / "nodes" / "flux1_schnell_sigma_scheduler.py").is_file())
         self.assertTrue((package_path / "nodes" / "inspectors.py").is_file())
         self.assertTrue((package_path / "nodes" / "krea2_sigma_scheduler.py").is_file())
         self.assertTrue((package_path / "nodes" / "model_aware_sigma_scheduler.py").is_file())
@@ -152,6 +154,7 @@ class PackageContractTests(unittest.TestCase):
             [
                 "Sigmax.AdvancedFlowMatchScheduler",
                 "Sigmax.CheckpointEvidenceInspector",
+                "Sigmax.Flux1SchnellSigmaScheduler",
                 "Sigmax.Krea2SigmaScheduler",
                 "Sigmax.ModelAwareSigmaScheduler",
                 "Sigmax.ProfileInspector",
@@ -170,6 +173,7 @@ class PackageContractTests(unittest.TestCase):
             {
                 "Sigmax.AdvancedFlowMatchScheduler": "Advanced FlowMatch Scheduler",
                 "Sigmax.CheckpointEvidenceInspector": "Checkpoint Evidence Inspector",
+                "Sigmax.Flux1SchnellSigmaScheduler": "FLUX.1-schnell Sigma Scheduler",
                 "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler",
                 "Sigmax.ModelAwareSigmaScheduler": "Model-Aware Sigma Scheduler",
                 "Sigmax.ProfileInspector": "Profile Inspector",

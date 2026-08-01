@@ -101,6 +101,7 @@ class ImportSafetyTests(unittest.TestCase):
                 "class_mappings": {
                     "Sigmax.AdvancedFlowMatchScheduler": "AdvancedFlowMatchScheduler",
                     "Sigmax.CheckpointEvidenceInspector": "CheckpointEvidenceInspector",
+                    "Sigmax.Flux1SchnellSigmaScheduler": "Flux1SchnellSigmaScheduler",
                     "Sigmax.Krea2SigmaScheduler": "Krea2SigmaScheduler",
                     "Sigmax.ModelAwareSigmaScheduler": "ModelAwareSigmaScheduler",
                     "Sigmax.ProfileInspector": "ProfileInspector",
@@ -118,6 +119,7 @@ class ImportSafetyTests(unittest.TestCase):
                 "display_mappings": {
                     "Sigmax.AdvancedFlowMatchScheduler": "Advanced FlowMatch Scheduler",
                     "Sigmax.CheckpointEvidenceInspector": "Checkpoint Evidence Inspector",
+                    "Sigmax.Flux1SchnellSigmaScheduler": "FLUX.1-schnell Sigma Scheduler",
                     "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler",
                     "Sigmax.ModelAwareSigmaScheduler": "Model-Aware Sigma Scheduler",
                     "Sigmax.ProfileInspector": "Profile Inspector",
@@ -160,6 +162,7 @@ class ImportSafetyTests(unittest.TestCase):
             assert sorted(bootstrap.NODE_CLASS_MAPPINGS) == [
                 "Sigmax.AdvancedFlowMatchScheduler",
                 "Sigmax.CheckpointEvidenceInspector",
+                "Sigmax.Flux1SchnellSigmaScheduler",
                 "Sigmax.Krea2SigmaScheduler",
                 "Sigmax.ModelAwareSigmaScheduler",
                 "Sigmax.ProfileInspector",
@@ -175,6 +178,7 @@ class ImportSafetyTests(unittest.TestCase):
             assert bootstrap.NODE_DISPLAY_NAME_MAPPINGS == {
                 "Sigmax.AdvancedFlowMatchScheduler": "Advanced FlowMatch Scheduler",
                 "Sigmax.CheckpointEvidenceInspector": "Checkpoint Evidence Inspector",
+                "Sigmax.Flux1SchnellSigmaScheduler": "FLUX.1-schnell Sigma Scheduler",
                 "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler",
                 "Sigmax.ModelAwareSigmaScheduler": "Model-Aware Sigma Scheduler",
                 "Sigmax.ProfileInspector": "Profile Inspector",
@@ -234,6 +238,7 @@ def test_bootstrap_supports_dynamic_comfyui_custom_node_loader() -> None:
     assert json.loads(result.stdout) == [
         "Sigmax.AdvancedFlowMatchScheduler",
         "Sigmax.CheckpointEvidenceInspector",
+        "Sigmax.Flux1SchnellSigmaScheduler",
         "Sigmax.Krea2SigmaScheduler",
         "Sigmax.ModelAwareSigmaScheduler",
         "Sigmax.ProfileInspector",

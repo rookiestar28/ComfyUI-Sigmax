@@ -327,6 +327,59 @@ def test_z_image_h2_prompt_and_history_are_variant_bound(variant: str, steps: in
     assert summary["status"] == "succeeded"
 
 
+def test_flux1_schnell_h2_prompt_and_history_pin_unshifted_four_step_recipe() -> None:
+    harness = _harness()
+    prompt = harness.build_flux1_schnell_h2_api_prompt()
+    assert prompt["1"] == {
+        "class_type": "Sigmax.Flux1SchnellSigmaScheduler",
+        "inputs": {
+            "end_step": -1,
+            "start_step": 0,
+            "steps": 4,
+            "strict_official": True,
+        },
+    }
+    info = {
+        "fingerprints": {"complete": "sha256:" + "a" * 64, "output": "sha256:" + "b" * 64},
+        "guidance": {"host_cfg": 1.0, "model_guidance": 0.0},
+        "profile": {
+            "evidence": "official",
+            "id": "flux1.schnell.official",
+            "recipe": "flux1.schnell.official",
+            "variant": "schnell",
+            "version": "1",
+        },
+        "schema": "sigmax.flux1-schnell-sigma-node/1",
+        "shift": {"dynamic": False, "kind": "none"},
+        "slicing": {
+            "available_steps": 4,
+            "end_step": 4,
+            "output_steps": 4,
+            "start_step": 0,
+        },
+        "strict_official": True,
+        "warnings": [],
+    }
+    trace = json.dumps(
+        {"schedule_info": info, "sigmas": [1.0, 0.75, 0.5, 0.25, 0.0]},
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    history = {
+        "prompt-flux": {
+            "outputs": {"2": {"sigmax_flux1_schnell_schedule": [trace]}},
+            "status": {"completed": True, "status_str": "success"},
+        }
+    }
+    summary = harness.verify_flux1_schnell_h2_history(history, prompt_id="prompt-flux")
+    assert summary == {
+        "numerical_fingerprint": "sha256:" + "a" * 64,
+        "profile_id": "flux1.schnell.official",
+        "requested_transitions": 4,
+        "status": "succeeded",
+    }
+
+
 def _schedule_algebra_history() -> dict[str, Any]:
     source = build_krea2_sigma_schedule(
         variant="Turbo",

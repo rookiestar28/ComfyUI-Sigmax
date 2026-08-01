@@ -6,6 +6,156 @@
         "id": "comfyui",
         "version": "0.29.0"
       },
+      "id": "flux1-schnell-official-4",
+      "node_contracts": [
+        {
+          "node_id": 1,
+          "node_type": "Sigmax.Flux1SchnellSigmaScheduler",
+          "widget_slots": [
+            {
+              "name": "steps",
+              "type": "INT"
+            },
+            {
+              "name": "strict_official",
+              "type": "BOOLEAN"
+            },
+            {
+              "name": "start_step",
+              "type": "INT"
+            },
+            {
+              "name": "end_step",
+              "type": "INT"
+            }
+          ]
+        }
+      ],
+      "nodes": [
+        {
+          "id": "Sigmax.Flux1SchnellSigmaScheduler",
+          "version": "1"
+        }
+      ],
+      "package": {
+        "id": "comfyui-sigmax",
+        "version": "1.0.0"
+      },
+      "profile": {
+        "id": "flux1.schnell.official",
+        "version": "1"
+      },
+      "variant": "FLUX.1-schnell",
+      "workflow": {
+        "version": 0.4,
+        "last_node_id": 1,
+        "last_link_id": 0,
+        "nodes": [
+          {
+            "id": 1,
+            "type": "Sigmax.Flux1SchnellSigmaScheduler",
+            "pos": [
+              40,
+              80
+            ],
+            "size": [
+              340,
+              190
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "outputs": [
+              {
+                "name": "sigmas",
+                "type": "SIGMAS",
+                "links": null,
+                "slot_index": 0
+              },
+              {
+                "name": "schedule_info",
+                "type": "STRING",
+                "links": null,
+                "slot_index": 1
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "Sigmax.Flux1SchnellSigmaScheduler",
+              "cnr_id": "comfyui-sigmax"
+            },
+            "widgets_values": [
+              4,
+              true,
+              0,
+              -1
+            ]
+          }
+        ],
+        "links": [],
+        "extra": {
+          "comfyui_sigmax": {
+            "metadata": {
+              "artifact": {
+                "construction_fingerprint": "sha256:2d7180d04d8c8d6eb98736b53fc674ded7d13289f22154ca601993565b4f9325",
+                "construction_schema": "sigmax.schedule-artifact/1",
+                "numerical_fingerprint": "sha256:958cbb51e05aa008f8786fbd363b6542afab2056e304b7a5655ad54384d62beb",
+                "receipt_schema": "sigmax.execution-receipt-envelope/1"
+              },
+              "compatibility": {
+                "considered": [
+                  "model_identity",
+                  "prediction_type",
+                  "sigma_domain",
+                  "schedule_ownership",
+                  "terminal_sigma",
+                  "execution_behavior",
+                  "noise_ownership",
+                  "sampler_state",
+                  "partial_denoise",
+                  "per_token_timesteps",
+                  "reference_sampler"
+                ],
+                "level": "allow",
+                "reasons": [
+                  "compatible"
+                ]
+              },
+              "profile": {
+                "id": "flux1.schnell.official",
+                "version": "1"
+              },
+              "receipts": [],
+              "requirements": {
+                "host": {
+                  "api_version": "legacy_v1",
+                  "id": "comfyui",
+                  "version": "0.29.0"
+                },
+                "nodes": [
+                  {
+                    "id": "Sigmax.Flux1SchnellSigmaScheduler",
+                    "version": "1"
+                  }
+                ],
+                "package": {
+                  "id": "comfyui-sigmax",
+                  "version": "1.0.0"
+                }
+              },
+              "schema": "sigmax.workflow-metadata/1"
+            },
+            "metadata_fingerprint": "sha256:5f706c7f98161f0e47d5bd8b1eed4c6a4d8751edfded8527f8e09fcc061696a0",
+            "schema": "sigmax.workflow-metadata-envelope/1"
+          }
+        }
+      }
+    },
+    {
+      "host": {
+        "api_version": "legacy_v1",
+        "id": "comfyui",
+        "version": "0.29.0"
+      },
       "id": "krea2-raw-diffusers-portrait-761x1353",
       "node_contracts": [
         {

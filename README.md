@@ -1,13 +1,13 @@
 # ComfyUI-Sigmax
 
 ComfyUI-Sigmax 1.0.0 is a model-aware sigma schedule toolkit for ComfyUI. It provides verified,
-versioned Krea 2 Turbo, Krea 2 RAW, Z-Image Base, and Z-Image Turbo schedules,
+versioned Krea 2 Turbo, Krea 2 RAW, Z-Image Base/Turbo, and FLUX.1-schnell schedules,
 explicit model/profile/sampler capability
 contracts, stable workflow metadata, inspectors, comparison reports, and reproducible release
 artifacts while keeping the schedule core independent of ComfyUI and Diffusers.
 
-> **Status: stable public-contract baseline.** Thirteen namespaced nodes are implemented. Krea 2
-> and Z-Image schedule construction, complete golden vectors, authoritative/framework evidence,
+> **Status: stable public-contract baseline.** Fourteen namespaced nodes are implemented. Krea 2,
+> Z-Image, and FLUX.1-schnell schedule construction, complete golden vectors, authoritative/framework evidence,
 > pinned-host
 > import and model-free workflows, and deterministic native-Euler equivalence are validated.
 > Real model weights, GPU/image quality, stochastic/resumable/partial-denoise execution, advanced
@@ -54,6 +54,7 @@ import comfyui_sigmax
 assert sorted(comfyui_sigmax.NODE_CLASS_MAPPINGS) == [
     "Sigmax.AdvancedFlowMatchScheduler",
     "Sigmax.CheckpointEvidenceInspector",
+    "Sigmax.Flux1SchnellSigmaScheduler",
     "Sigmax.Krea2SigmaScheduler",
     "Sigmax.ModelAwareSigmaScheduler",
     "Sigmax.ProfileInspector",
@@ -69,6 +70,7 @@ assert sorted(comfyui_sigmax.NODE_CLASS_MAPPINGS) == [
 assert comfyui_sigmax.NODE_DISPLAY_NAME_MAPPINGS == {
     "Sigmax.AdvancedFlowMatchScheduler": "Advanced FlowMatch Scheduler",
     "Sigmax.CheckpointEvidenceInspector": "Checkpoint Evidence Inspector",
+    "Sigmax.Flux1SchnellSigmaScheduler": "FLUX.1-schnell Sigma Scheduler",
     "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler",
     "Sigmax.ModelAwareSigmaScheduler": "Model-Aware Sigma Scheduler",
     "Sigmax.ProfileInspector": "Profile Inspector",
@@ -148,6 +150,21 @@ licenses, and locators live in the immutable profile declarations and golden met
 discrepancy remains explicit: the pinned ComfyUI implementation applies ratio `3.0` to the shared
 Z-Image model class, while the official Base scheduler config specifies `6.0`; Sigmax therefore
 does not label ComfyUI's Base ratio as publisher-official behavior.
+
+### FLUX.1-schnell evidence boundary
+
+`Sigmax.Flux1SchnellSigmaScheduler` implements the publisher's distilled 1--4-step recipe
+(default 4) as the exact unshifted unit-flow vector `1 - i / N` with one terminal zero. The
+profile disables dynamic shifting and guidance embedding; the publisher convention is guidance
+`0.0`, while ComfyUI's BasicGuider/CFG host convention is `1.0`. Explicit selection is required.
+
+The contract simultaneously pins the official [BFL GitHub source](https://github.com/black-forest-labs/flux),
+[Hugging Face model repository](https://huggingface.co/black-forest-labs/FLUX.1-schnell),
+[BFL technical launch article](https://bfl.ai/blog/24-08-01-bfl), and
+[ComfyUI implementation](https://github.com/Comfy-Org/ComfyUI). The publisher Hub repository is
+gated: anonymous verification covered its official model card and revision, but not the BF16 LFS
+digest or raw config bodies. Exact weight provenance therefore pins the official ComfyUI FP8
+checkpoint separately and does not claim byte identity with publisher BF16 weights.
 
 Validated external `ScheduleResult` values can now be built into immutable
 `ScheduleArtifact` objects and transported as strict canonical UTF-8 JSON:

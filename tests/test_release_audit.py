@@ -79,6 +79,7 @@ def test_builtin_provenance_layers_and_licenses_are_distinct() -> None:
     assert result["status"] == "PASS"
     rows = cast(list[dict[str, Any]], result["profiles"])
     assert [row["profile_key"] for row in rows] == [
+        "flux1.schnell.official@1",
         "krea2.raw.official@1",
         "krea2.turbo.official@1",
         "z_image.base.official@1",
@@ -96,11 +97,19 @@ def test_builtin_provenance_layers_and_licenses_are_distinct() -> None:
                 "GPL-3.0-only",
                 "LicenseRef-Krea-2-Community",
             }
-        else:
+        elif row["profile_key"].startswith("z_image."):
             expected_weights = 3 if ".base." in row["profile_key"] else 4
             assert row["resource_counts"] == {
                 "frameworks": 1,
                 "model_weights": expected_weights,
+                "software_sources": 1,
+            }
+            assert set(row["license_identifiers"]) == {"Apache-2.0", "GPL-3.0-only"}
+        else:
+            assert row["profile_key"] == "flux1.schnell.official@1"
+            assert row["resource_counts"] == {
+                "frameworks": 1,
+                "model_weights": 1,
                 "software_sources": 1,
             }
             assert set(row["license_identifiers"]) == {"Apache-2.0", "GPL-3.0-only"}

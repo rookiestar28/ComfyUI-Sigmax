@@ -478,6 +478,16 @@ Base, so that Base behavior remains an explicit framework discrepancy instead of
 to official evidence. Variant selection is explicit-only and no Krea constants or dimension
 shift enter this profile.
 
+The additive FLUX.1-schnell boundary lives in `profiles/flux1_schnell.py` and the thin
+`nodes/flux1_schnell_sigma_scheduler.py` adapter. Its immutable profile simultaneously pins the
+official BFL GitHub implementation, official Hugging Face repository, official BFL technical
+article, and reviewed ComfyUI implementation. The schedule is a terminal-free reciprocal-step
+grid with no time shift and one appended zero; strict official execution permits 1--4 steps and
+defaults to 4. Publisher model guidance is `0.0`, while ComfyUI BasicGuider/CFG uses host value
+`1.0`. The gated publisher Hub prevents anonymous retrieval of the BF16 LFS digest and raw
+configs, so the exact weight declaration separately pins the official ComfyUI FP8 checkpoint and
+does not claim byte identity with the publisher file.
+
 ## Planned Layered Design
 
 ```text
@@ -507,7 +517,7 @@ This layer must not require ComfyUI or Diffusers for closed-form schedule formul
 
 ### Profile resolver and registry
 
-Dedicated Krea 2 Turbo/RAW and Z-Image Base/Turbo profiles carry model identity, variant,
+Dedicated Krea 2 Turbo/RAW, Z-Image Base/Turbo, and FLUX.1-schnell profiles carry model identity, variant,
 evidence level, sigma domain,
 base-grid construction, shift parameterization, terminal policy, sampler compatibility, and
 provenance. The implemented Krea-specific evidence resolver exposes status, confidence,

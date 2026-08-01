@@ -197,7 +197,13 @@ class WorkflowFixture:
 
     def __post_init__(self) -> None:
         _text(self.identifier, label="workflow fixture identifier")
-        if self.variant not in {"RAW", "Turbo", "Z-Image Base", "Z-Image Turbo"}:
+        if self.variant not in {
+            "FLUX.1-schnell",
+            "RAW",
+            "Turbo",
+            "Z-Image Base",
+            "Z-Image Turbo",
+        }:
             raise ScheduleContractError("workflow fixture variant is unsupported")
         if not isinstance(self.package, WorkflowRequirement):
             raise ScheduleContractError("workflow fixture package is invalid")
@@ -452,6 +458,7 @@ def load_canonical_workflow_fixtures() -> tuple[WorkflowFixture, ...]:
         )
     result = tuple(sorted(fixtures, key=lambda item: item.identifier))
     if tuple(item.identifier for item in result) != (
+        "flux1-schnell-official-4",
         "krea2-raw-diffusers-portrait-761x1353",
         "krea2-raw-official-landscape-1353x761",
         "krea2-raw-official-square-1024",

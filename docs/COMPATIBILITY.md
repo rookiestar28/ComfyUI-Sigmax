@@ -17,6 +17,8 @@ constructs Turbo or RAW sigmas and returns
 structured `sigmax.krea2-sigma-node/1` schedule information;
 `Sigmax.ZImageSigmaScheduler`, which requires explicit Base/Turbo selection and returns
 four-source-pinned fixed-ratio schedules under `sigmax.z-image-sigma-node/1`; plus
+`Sigmax.Flux1SchnellSigmaScheduler`, which returns the four-source-pinned unshifted 1--4-step
+FLUX.1-schnell schedule under `sigmax.flux1-schnell-sigma-node/1`; plus
 `Sigmax.ModelAwareSigmaScheduler`, which requires a Krea 2 MODEL, exposes family-only Auto
 ambiguity, and returns exact-profile capability decisions under
 `sigmax.model-aware-sigma-node/1`; plus the read-only `Sigmax.ProfileInspector` and
@@ -82,6 +84,9 @@ structured prequeue HTTP 400 rejection without a prompt ID.
 The `H2_Z_IMAGE_M6_04` lane separately executes Base 50 and Turbo 8 schedule nodes twice. It
 proves the official fixed ratios (`6.0` and `3.0`), explicit variants, complete monotonic vectors,
 and stable result fingerprints without downloading model weights.
+The `H2_FLUX1_SCHNELL_M6_05` lane executes the official four-step FLUX.1-schnell node twice and
+proves the exact `[1, 0.75, 0.5, 0.25, 0]` vector, no shift, model guidance `0.0`, host CFG `1.0`,
+and stable result fingerprints without downloading model weights.
 
 ## Validated Foundation Environments
 
@@ -92,7 +97,7 @@ The current package, quality gates, tests, and wheel inventory have been validat
 | Windows | 3.13 | Core independence, deterministic property, Turbo/RAW golden and parity contracts, package, quality, unit, coverage, and wheel gates |
 | WSL2/Linux path | 3.10 | Core independence, deterministic property, Turbo/RAW golden and parity contracts, package, quality, unit, coverage, and wheel gates |
 | Hosted Linux parity lanes | 3.13 | Exact Diffusers 0.39.0, NumPy 2.3.4, and Torch 2.9.0 Turbo/RAW report regeneration |
-| Pinned ComfyUI host | 3.13 | H1 import/schema safety and H2 model-free Krea 2/Z-Image workflow execution on ComfyUI 0.29.0 revision `e651b7b…` |
+| Pinned ComfyUI host | 3.13 | H1 import/schema safety and H2 model-free Krea 2/Z-Image/FLUX.1-schnell workflow execution on ComfyUI 0.29.0 revision `e651b7b…` |
 | Latest ComfyUI release observation | 3.13 | Non-blocking H1/H2/H3 first/repeat execution on official v0.29.2 revision `32212244…`, Torch 2.13.0+CPU, no model weights |
 | Latest ComfyUI HEAD observation | 3.13 | Non-blocking H1/H2/H3 first/repeat execution on pinned HEAD `5cc026f5…`, Torch 2.13.0+CPU, no model weights |
 

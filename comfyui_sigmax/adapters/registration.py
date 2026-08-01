@@ -579,6 +579,7 @@ def builtin_node_registry() -> NodeRegistry:
     from comfyui_sigmax.nodes import (
         AdvancedFlowMatchScheduler,
         CheckpointEvidenceInspector,
+        Flux1SchnellSigmaScheduler,
         Krea2SigmaScheduler,
         ModelAwareSigmaScheduler,
         ProfileInspector,
@@ -603,6 +604,11 @@ def builtin_node_registry() -> NodeRegistry:
                 node_id="Sigmax.CheckpointEvidenceInspector",
                 display_name="Checkpoint Evidence Inspector",
                 node_class=CheckpointEvidenceInspector,
+            ),
+            discover_legacy_registration(
+                node_id="Sigmax.Flux1SchnellSigmaScheduler",
+                display_name="FLUX.1-schnell Sigma Scheduler",
+                node_class=Flux1SchnellSigmaScheduler,
             ),
             discover_legacy_registration(
                 node_id="Sigmax.Krea2SigmaScheduler",

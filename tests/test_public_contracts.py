@@ -56,6 +56,10 @@ def test_packaged_manifest_freezes_the_complete_m8_01_boundary() -> None:
             "id": "Sigmax.CheckpointEvidenceInspector",
             "schema": "sigmax.checkpoint-evidence-inspector/1",
         },
+        {
+            "id": "Sigmax.Flux1SchnellSigmaScheduler",
+            "schema": "sigmax.flux1-schnell-sigma-node/1",
+        },
         {"id": "Sigmax.Krea2SigmaScheduler", "schema": "sigmax.krea2-sigma-node/1"},
         {
             "id": "Sigmax.ModelAwareSigmaScheduler",

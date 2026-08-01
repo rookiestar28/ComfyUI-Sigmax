@@ -321,7 +321,7 @@ Store temporary E2E artifacts under ignored paths such as:
 .tmp/e2e/
 ```
 
-The command log must retain:
+The retained redacted verification report must include:
 
 - exact command;
 - start/end time;
@@ -352,12 +352,12 @@ On failure:
 1. preserve the minimal redacted failure artifact;
 2. stop the host;
 3. verify the temporary directory is inside the repository before cleanup;
-4. retain the failed command-log entry;
+4. retain the failed verification output;
 5. diagnose and rerun the smallest failing lane;
 6. rerun downstream lanes after correction;
 7. do not mark E2E passed if host shutdown or bounded cleanup fails.
 
-For a host-visible bugfix, the implementation record must show:
+For a host-visible bugfix, the public PR, issue, or change description must show:
 
 - pre-fix host failure;
 - post-fix targeted assertion;

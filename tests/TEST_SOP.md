@@ -41,7 +41,6 @@ Before running acceptance validation, read:
 2. `tests/E2E_TESTING_NOTICE.md`
 3. `tests/E2E_TESTING_SOP.md`
 4. `tests/CI_TEST_MATRIX.md`
-5. The active roadmap item and its `.planning/` plan
 
 ## 4. Acceptance Rule
 
@@ -52,8 +51,8 @@ Non-documentation work is accepted only when:
 - required parity and host E2E lanes pass;
 - critical no-skip seams execute without skips;
 - CI and local commands exercise the same underlying stage definitions;
-- results are recorded in a dated command log;
-- the implementation record maps evidence to each acceptance criterion.
+- CI and local verification output is retained for the reviewed change;
+- the public PR, issue, or change description maps evidence to each acceptance criterion.
 
 Do not treat a missing, skipped, or unavailable gate as a pass.
 
@@ -75,8 +74,8 @@ Documentation-only validation must still check:
 - referenced paths and names;
 - stale project-specific terms;
 - Markdown whitespace and fence balance;
-- roadmap acceptance requirements;
-- consistency among `AGENTS.md`, `ROADMAP.md`, and test SOPs.
+- documented acceptance requirements;
+- consistency among public contributor documentation and test SOPs;
 - consistency with `tests/CI_TEST_MATRIX.md`.
 
 ## 6. Documentation Baseline Checks
@@ -92,8 +91,8 @@ Before Git exists, use a lightweight repository scan:
 
 ```powershell
 $files = @(
-  "AGENTS.md",
-  "ROADMAP.md",
+  "README.md",
+  "CONTRIBUTING.md",
   "tests/TEST_SOP.md",
   "tests/E2E_TESTING_NOTICE.md",
   "tests/E2E_TESTING_SOP.md",
@@ -559,9 +558,8 @@ Do not mix Windows and WSL virtual environments.
 
 ## 14. Evidence and Traceability
 
-Accepted non-documentation work requires a repository-local command log under `.planning/`.
-
-Each relevant entry records:
+Accepted non-documentation work requires retained CI output or an attached redacted verification
+report. The public PR, issue, or change description must identify:
 
 - date and timezone;
 - workspace and branch/baseline;
@@ -573,7 +571,7 @@ Each relevant entry records:
 - PASS, FAIL, SKIPPED, or NOT_APPLICABLE;
 - reason and replacement evidence for any non-applicable lane.
 
-The implementation record must link every acceptance requirement to command-log evidence.
+The public change description must link every acceptance requirement to verification evidence.
 
 ## 15. Failure Policy
 
@@ -583,8 +581,8 @@ If a required stage fails:
 2. diagnose and fix the root cause;
 3. rerun the targeted stage;
 4. rerun downstream dependent stages;
-5. update the command log and implementation record;
-6. do not mark the roadmap item complete until all required evidence passes.
+5. update the retained verification report and public change description;
+6. do not declare the change complete until all required evidence passes.
 
 After three materially different failed attempts at the same blocker, stop, document the
 attempts, and request direction.

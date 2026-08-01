@@ -31,6 +31,10 @@ PUBLIC_DOCUMENTS = (
     ROOT / "docs" / "EXECUTION_RECEIPT_SPEC.md",
     ROOT / "docs" / "WORKFLOW_METADATA_SPEC.md",
     ROOT / "docs" / "COMPATIBILITY.md",
+    ROOT / "tests" / "TEST_SOP.md",
+    ROOT / "tests" / "E2E_TESTING_NOTICE.md",
+    ROOT / "tests" / "E2E_TESTING_SOP.md",
+    ROOT / "tests" / "CI_TEST_MATRIX.md",
 )
 
 

@@ -910,8 +910,6 @@ The command never authenticates, uploads, or publishes and always records
 - [Compatibility](docs/COMPATIBILITY.md)
 - [Contributing](CONTRIBUTING.md)
 - [Changelog](CHANGELOG.md)
-- [Repository identity](docs/REPOSITORY_IDENTITY.md)
-- [Base import and attribution manifest](docs/BASE_IMPORT_MANIFEST.md)
 
 ## License and Attribution
 

@@ -1,45 +1,21 @@
 {
-  "schema": "sigmax.workflow-fixture-bundle/1",
   "fixtures": [
     {
-      "id": "krea2-raw-diffusers-portrait-761x1353",
-      "variant": "RAW",
-      "package": {
-        "id": "comfyui-sigmax",
-        "version": "1.0.0"
-      },
-      "nodes": [
-        {
-          "id": "Sigmax.Krea2SigmaScheduler",
-          "version": "1"
-        },
-        {
-          "id": "Sigmax.RawWorkflowOutput",
-          "version": "1"
-        },
-        {
-          "id": "Sigmax.ScheduleInspector",
-          "version": "1"
-        }
-      ],
       "host": {
+        "api_version": "legacy_v1",
         "id": "comfyui",
-        "version": "0.29.0",
-        "api_version": "legacy_v1"
+        "version": "0.29.0"
       },
-      "profile": {
-        "id": "krea2.raw.official",
-        "version": "1"
-      },
+      "id": "krea2-raw-diffusers-portrait-761x1353",
       "node_contracts": [
         {
           "node_id": 1,
           "node_type": "Sigmax.Krea2SigmaScheduler",
           "widget_slots": [
             {
+              "fixed": "RAW",
               "name": "variant",
-              "type": "COMBO",
-              "fixed": "RAW"
+              "type": "COMBO"
             },
             {
               "name": "steps",
@@ -78,184 +54,31 @@
           "widget_slots": []
         }
       ],
+      "nodes": [
+        {
+          "id": "Sigmax.Krea2SigmaScheduler",
+          "version": "1"
+        },
+        {
+          "id": "Sigmax.RawWorkflowOutput",
+          "version": "1"
+        },
+        {
+          "id": "Sigmax.ScheduleInspector",
+          "version": "1"
+        }
+      ],
+      "package": {
+        "id": "comfyui-sigmax",
+        "version": "1.0.0"
+      },
+      "profile": {
+        "id": "krea2.raw.official",
+        "version": "1"
+      },
+      "variant": "RAW",
       "workflow": {
-        "last_node_id": 3,
-        "last_link_id": 5,
-        "nodes": [
-          {
-            "id": 1,
-            "type": "Sigmax.Krea2SigmaScheduler",
-            "pos": [
-              40,
-              80
-            ],
-            "size": [
-              340,
-              230
-            ],
-            "flags": {},
-            "order": 0,
-            "mode": 0,
-            "outputs": [
-              {
-                "name": "sigmas",
-                "type": "SIGMAS",
-                "links": [
-                  1,
-                  3
-                ],
-                "slot_index": 0
-              },
-              {
-                "name": "schedule_info",
-                "type": "STRING",
-                "links": [
-                  2,
-                  4
-                ],
-                "slot_index": 1
-              }
-            ],
-            "properties": {
-              "Node name for S&R": "Sigmax.Krea2SigmaScheduler",
-              "cnr_id": "comfyui-sigmax"
-            },
-            "widgets_values": [
-              "RAW",
-              28,
-              761,
-              1353,
-              false,
-              0,
-              -1
-            ]
-          },
-          {
-            "id": 2,
-            "type": "Sigmax.ScheduleInspector",
-            "pos": [
-              460,
-              80
-            ],
-            "size": [
-              300,
-              120
-            ],
-            "flags": {},
-            "order": 1,
-            "mode": 0,
-            "inputs": [
-              {
-                "name": "sigmas",
-                "type": "SIGMAS",
-                "link": 1
-              },
-              {
-                "name": "schedule_info",
-                "type": "STRING",
-                "link": 2
-              }
-            ],
-            "outputs": [
-              {
-                "name": "schedule_report",
-                "type": "STRING",
-                "links": [
-                  5
-                ],
-                "slot_index": 0
-              }
-            ],
-            "properties": {
-              "Node name for S&R": "Sigmax.ScheduleInspector",
-              "cnr_id": "comfyui-sigmax"
-            },
-            "widgets_values": []
-          },
-          {
-            "id": 3,
-            "type": "Sigmax.RawWorkflowOutput",
-            "pos": [
-              820,
-              80
-            ],
-            "size": [
-              330,
-              150
-            ],
-            "flags": {},
-            "order": 2,
-            "mode": 0,
-            "inputs": [
-              {
-                "name": "sigmas",
-                "type": "SIGMAS",
-                "link": 3
-              },
-              {
-                "name": "schedule_info",
-                "type": "STRING",
-                "link": 4
-              },
-              {
-                "name": "schedule_report",
-                "type": "STRING",
-                "link": 5
-              }
-            ],
-            "outputs": [],
-            "properties": {
-              "Node name for S&R": "Sigmax.RawWorkflowOutput",
-              "cnr_id": "comfyui-sigmax"
-            },
-            "widgets_values": []
-          }
-        ],
-        "links": [
-          [
-            1,
-            1,
-            0,
-            2,
-            0,
-            "SIGMAS"
-          ],
-          [
-            2,
-            1,
-            1,
-            2,
-            1,
-            "STRING"
-          ],
-          [
-            3,
-            1,
-            0,
-            3,
-            0,
-            "SIGMAS"
-          ],
-          [
-            4,
-            1,
-            1,
-            3,
-            1,
-            "STRING"
-          ],
-          [
-            5,
-            2,
-            0,
-            3,
-            2,
-            "STRING"
-          ]
-        ],
-        "groups": [],
         "config": {},
-        "version": 0.4,
         "extra": {
           "comfyui_sigmax": {
             "metadata": {
@@ -324,222 +147,13 @@
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-          "metadata_fingerprint": "sha256:f090c369062263b111b7f9c33e579d99447eb7a3ef6316fbce280c080fb6639f",
+            "metadata_fingerprint": "sha256:f090c369062263b111b7f9c33e579d99447eb7a3ef6316fbce280c080fb6639f",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
-        }
-      }
-    },
-    {
-      "id": "krea2-raw-official-landscape-1353x761",
-      "variant": "RAW",
-      "package": {
-        "id": "comfyui-sigmax",
-        "version": "1.0.0"
-      },
-      "nodes": [
-        {
-          "id": "Sigmax.Krea2SigmaScheduler",
-          "version": "1"
         },
-        {
-          "id": "Sigmax.RawWorkflowOutput",
-          "version": "1"
-        },
-        {
-          "id": "Sigmax.ScheduleInspector",
-          "version": "1"
-        }
-      ],
-      "host": {
-        "id": "comfyui",
-        "version": "0.29.0",
-        "api_version": "legacy_v1"
-      },
-      "profile": {
-        "id": "krea2.raw.official",
-        "version": "1"
-      },
-      "node_contracts": [
-        {
-          "node_id": 1,
-          "node_type": "Sigmax.Krea2SigmaScheduler",
-          "widget_slots": [
-            {
-              "name": "variant",
-              "type": "COMBO",
-              "fixed": "RAW"
-            },
-            {
-              "name": "steps",
-              "type": "INT"
-            },
-            {
-              "name": "width",
-              "type": "INT"
-            },
-            {
-              "name": "height",
-              "type": "INT"
-            },
-            {
-              "name": "strict_official",
-              "type": "BOOLEAN"
-            },
-            {
-              "name": "start_step",
-              "type": "INT"
-            },
-            {
-              "name": "end_step",
-              "type": "INT"
-            }
-          ]
-        },
-        {
-          "node_id": 2,
-          "node_type": "Sigmax.ScheduleInspector",
-          "widget_slots": []
-        },
-        {
-          "node_id": 3,
-          "node_type": "Sigmax.RawWorkflowOutput",
-          "widget_slots": []
-        }
-      ],
-      "workflow": {
-        "last_node_id": 3,
+        "groups": [],
         "last_link_id": 5,
-        "nodes": [
-          {
-            "id": 1,
-            "type": "Sigmax.Krea2SigmaScheduler",
-            "pos": [
-              40,
-              80
-            ],
-            "size": [
-              340,
-              230
-            ],
-            "flags": {},
-            "order": 0,
-            "mode": 0,
-            "outputs": [
-              {
-                "name": "sigmas",
-                "type": "SIGMAS",
-                "links": [
-                  1,
-                  3
-                ],
-                "slot_index": 0
-              },
-              {
-                "name": "schedule_info",
-                "type": "STRING",
-                "links": [
-                  2,
-                  4
-                ],
-                "slot_index": 1
-              }
-            ],
-            "properties": {
-              "Node name for S&R": "Sigmax.Krea2SigmaScheduler",
-              "cnr_id": "comfyui-sigmax"
-            },
-            "widgets_values": [
-              "RAW",
-              52,
-              1353,
-              761,
-              true,
-              0,
-              -1
-            ]
-          },
-          {
-            "id": 2,
-            "type": "Sigmax.ScheduleInspector",
-            "pos": [
-              460,
-              80
-            ],
-            "size": [
-              300,
-              120
-            ],
-            "flags": {},
-            "order": 1,
-            "mode": 0,
-            "inputs": [
-              {
-                "name": "sigmas",
-                "type": "SIGMAS",
-                "link": 1
-              },
-              {
-                "name": "schedule_info",
-                "type": "STRING",
-                "link": 2
-              }
-            ],
-            "outputs": [
-              {
-                "name": "schedule_report",
-                "type": "STRING",
-                "links": [
-                  5
-                ],
-                "slot_index": 0
-              }
-            ],
-            "properties": {
-              "Node name for S&R": "Sigmax.ScheduleInspector",
-              "cnr_id": "comfyui-sigmax"
-            },
-            "widgets_values": []
-          },
-          {
-            "id": 3,
-            "type": "Sigmax.RawWorkflowOutput",
-            "pos": [
-              820,
-              80
-            ],
-            "size": [
-              330,
-              150
-            ],
-            "flags": {},
-            "order": 2,
-            "mode": 0,
-            "inputs": [
-              {
-                "name": "sigmas",
-                "type": "SIGMAS",
-                "link": 3
-              },
-              {
-                "name": "schedule_info",
-                "type": "STRING",
-                "link": 4
-              },
-              {
-                "name": "schedule_report",
-                "type": "STRING",
-                "link": 5
-              }
-            ],
-            "outputs": [],
-            "properties": {
-              "Node name for S&R": "Sigmax.RawWorkflowOutput",
-              "cnr_id": "comfyui-sigmax"
-            },
-            "widgets_values": []
-          }
-        ],
+        "last_node_id": 3,
         "links": [
           [
             1,
@@ -582,9 +196,218 @@
             "STRING"
           ]
         ],
-        "groups": [],
+        "nodes": [
+          {
+            "flags": {},
+            "id": 1,
+            "mode": 0,
+            "order": 0,
+            "outputs": [
+              {
+                "links": [
+                  1,
+                  3
+                ],
+                "name": "sigmas",
+                "slot_index": 0,
+                "type": "SIGMAS"
+              },
+              {
+                "links": [
+                  2,
+                  4
+                ],
+                "name": "schedule_info",
+                "slot_index": 1,
+                "type": "STRING"
+              }
+            ],
+            "pos": [
+              40,
+              80
+            ],
+            "properties": {
+              "Node name for S&R": "Sigmax.Krea2SigmaScheduler",
+              "cnr_id": "comfyui-sigmax"
+            },
+            "size": [
+              340,
+              230
+            ],
+            "type": "Sigmax.Krea2SigmaScheduler",
+            "widgets_values": [
+              "RAW",
+              28,
+              761,
+              1353,
+              false,
+              0,
+              -1
+            ]
+          },
+          {
+            "flags": {},
+            "id": 2,
+            "inputs": [
+              {
+                "link": 1,
+                "name": "sigmas",
+                "type": "SIGMAS"
+              },
+              {
+                "link": 2,
+                "name": "schedule_info",
+                "type": "STRING"
+              }
+            ],
+            "mode": 0,
+            "order": 1,
+            "outputs": [
+              {
+                "links": [
+                  5
+                ],
+                "name": "schedule_report",
+                "slot_index": 0,
+                "type": "STRING"
+              }
+            ],
+            "pos": [
+              460,
+              80
+            ],
+            "properties": {
+              "Node name for S&R": "Sigmax.ScheduleInspector",
+              "cnr_id": "comfyui-sigmax"
+            },
+            "size": [
+              300,
+              120
+            ],
+            "type": "Sigmax.ScheduleInspector",
+            "widgets_values": []
+          },
+          {
+            "flags": {},
+            "id": 3,
+            "inputs": [
+              {
+                "link": 3,
+                "name": "sigmas",
+                "type": "SIGMAS"
+              },
+              {
+                "link": 4,
+                "name": "schedule_info",
+                "type": "STRING"
+              },
+              {
+                "link": 5,
+                "name": "schedule_report",
+                "type": "STRING"
+              }
+            ],
+            "mode": 0,
+            "order": 2,
+            "outputs": [],
+            "pos": [
+              820,
+              80
+            ],
+            "properties": {
+              "Node name for S&R": "Sigmax.RawWorkflowOutput",
+              "cnr_id": "comfyui-sigmax"
+            },
+            "size": [
+              330,
+              150
+            ],
+            "type": "Sigmax.RawWorkflowOutput",
+            "widgets_values": []
+          }
+        ],
+        "version": 0.4
+      }
+    },
+    {
+      "host": {
+        "api_version": "legacy_v1",
+        "id": "comfyui",
+        "version": "0.29.0"
+      },
+      "id": "krea2-raw-official-landscape-1353x761",
+      "node_contracts": [
+        {
+          "node_id": 1,
+          "node_type": "Sigmax.Krea2SigmaScheduler",
+          "widget_slots": [
+            {
+              "fixed": "RAW",
+              "name": "variant",
+              "type": "COMBO"
+            },
+            {
+              "name": "steps",
+              "type": "INT"
+            },
+            {
+              "name": "width",
+              "type": "INT"
+            },
+            {
+              "name": "height",
+              "type": "INT"
+            },
+            {
+              "name": "strict_official",
+              "type": "BOOLEAN"
+            },
+            {
+              "name": "start_step",
+              "type": "INT"
+            },
+            {
+              "name": "end_step",
+              "type": "INT"
+            }
+          ]
+        },
+        {
+          "node_id": 2,
+          "node_type": "Sigmax.ScheduleInspector",
+          "widget_slots": []
+        },
+        {
+          "node_id": 3,
+          "node_type": "Sigmax.RawWorkflowOutput",
+          "widget_slots": []
+        }
+      ],
+      "nodes": [
+        {
+          "id": "Sigmax.Krea2SigmaScheduler",
+          "version": "1"
+        },
+        {
+          "id": "Sigmax.RawWorkflowOutput",
+          "version": "1"
+        },
+        {
+          "id": "Sigmax.ScheduleInspector",
+          "version": "1"
+        }
+      ],
+      "package": {
+        "id": "comfyui-sigmax",
+        "version": "1.0.0"
+      },
+      "profile": {
+        "id": "krea2.raw.official",
+        "version": "1"
+      },
+      "variant": "RAW",
+      "workflow": {
         "config": {},
-        "version": 0.4,
         "extra": {
           "comfyui_sigmax": {
             "metadata": {
@@ -653,222 +476,13 @@
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-          "metadata_fingerprint": "sha256:b7b596c468357c78a8470a8d61505c2cd049fd517351dca9585fb48ad3d04944",
+            "metadata_fingerprint": "sha256:b7b596c468357c78a8470a8d61505c2cd049fd517351dca9585fb48ad3d04944",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
-        }
-      }
-    },
-    {
-      "id": "krea2-raw-official-square-1024",
-      "variant": "RAW",
-      "package": {
-        "id": "comfyui-sigmax",
-        "version": "1.0.0"
-      },
-      "nodes": [
-        {
-          "id": "Sigmax.Krea2SigmaScheduler",
-          "version": "1"
         },
-        {
-          "id": "Sigmax.RawWorkflowOutput",
-          "version": "1"
-        },
-        {
-          "id": "Sigmax.ScheduleInspector",
-          "version": "1"
-        }
-      ],
-      "host": {
-        "id": "comfyui",
-        "version": "0.29.0",
-        "api_version": "legacy_v1"
-      },
-      "profile": {
-        "id": "krea2.raw.official",
-        "version": "1"
-      },
-      "node_contracts": [
-        {
-          "node_id": 1,
-          "node_type": "Sigmax.Krea2SigmaScheduler",
-          "widget_slots": [
-            {
-              "name": "variant",
-              "type": "COMBO",
-              "fixed": "RAW"
-            },
-            {
-              "name": "steps",
-              "type": "INT"
-            },
-            {
-              "name": "width",
-              "type": "INT"
-            },
-            {
-              "name": "height",
-              "type": "INT"
-            },
-            {
-              "name": "strict_official",
-              "type": "BOOLEAN"
-            },
-            {
-              "name": "start_step",
-              "type": "INT"
-            },
-            {
-              "name": "end_step",
-              "type": "INT"
-            }
-          ]
-        },
-        {
-          "node_id": 2,
-          "node_type": "Sigmax.ScheduleInspector",
-          "widget_slots": []
-        },
-        {
-          "node_id": 3,
-          "node_type": "Sigmax.RawWorkflowOutput",
-          "widget_slots": []
-        }
-      ],
-      "workflow": {
-        "last_node_id": 3,
+        "groups": [],
         "last_link_id": 5,
-        "nodes": [
-          {
-            "id": 1,
-            "type": "Sigmax.Krea2SigmaScheduler",
-            "pos": [
-              40,
-              80
-            ],
-            "size": [
-              340,
-              230
-            ],
-            "flags": {},
-            "order": 0,
-            "mode": 0,
-            "outputs": [
-              {
-                "name": "sigmas",
-                "type": "SIGMAS",
-                "links": [
-                  1,
-                  3
-                ],
-                "slot_index": 0
-              },
-              {
-                "name": "schedule_info",
-                "type": "STRING",
-                "links": [
-                  2,
-                  4
-                ],
-                "slot_index": 1
-              }
-            ],
-            "properties": {
-              "Node name for S&R": "Sigmax.Krea2SigmaScheduler",
-              "cnr_id": "comfyui-sigmax"
-            },
-            "widgets_values": [
-              "RAW",
-              52,
-              1024,
-              1024,
-              true,
-              0,
-              -1
-            ]
-          },
-          {
-            "id": 2,
-            "type": "Sigmax.ScheduleInspector",
-            "pos": [
-              460,
-              80
-            ],
-            "size": [
-              300,
-              120
-            ],
-            "flags": {},
-            "order": 1,
-            "mode": 0,
-            "inputs": [
-              {
-                "name": "sigmas",
-                "type": "SIGMAS",
-                "link": 1
-              },
-              {
-                "name": "schedule_info",
-                "type": "STRING",
-                "link": 2
-              }
-            ],
-            "outputs": [
-              {
-                "name": "schedule_report",
-                "type": "STRING",
-                "links": [
-                  5
-                ],
-                "slot_index": 0
-              }
-            ],
-            "properties": {
-              "Node name for S&R": "Sigmax.ScheduleInspector",
-              "cnr_id": "comfyui-sigmax"
-            },
-            "widgets_values": []
-          },
-          {
-            "id": 3,
-            "type": "Sigmax.RawWorkflowOutput",
-            "pos": [
-              820,
-              80
-            ],
-            "size": [
-              330,
-              150
-            ],
-            "flags": {},
-            "order": 2,
-            "mode": 0,
-            "inputs": [
-              {
-                "name": "sigmas",
-                "type": "SIGMAS",
-                "link": 3
-              },
-              {
-                "name": "schedule_info",
-                "type": "STRING",
-                "link": 4
-              },
-              {
-                "name": "schedule_report",
-                "type": "STRING",
-                "link": 5
-              }
-            ],
-            "outputs": [],
-            "properties": {
-              "Node name for S&R": "Sigmax.RawWorkflowOutput",
-              "cnr_id": "comfyui-sigmax"
-            },
-            "widgets_values": []
-          }
-        ],
+        "last_node_id": 3,
         "links": [
           [
             1,
@@ -911,9 +525,218 @@
             "STRING"
           ]
         ],
-        "groups": [],
+        "nodes": [
+          {
+            "flags": {},
+            "id": 1,
+            "mode": 0,
+            "order": 0,
+            "outputs": [
+              {
+                "links": [
+                  1,
+                  3
+                ],
+                "name": "sigmas",
+                "slot_index": 0,
+                "type": "SIGMAS"
+              },
+              {
+                "links": [
+                  2,
+                  4
+                ],
+                "name": "schedule_info",
+                "slot_index": 1,
+                "type": "STRING"
+              }
+            ],
+            "pos": [
+              40,
+              80
+            ],
+            "properties": {
+              "Node name for S&R": "Sigmax.Krea2SigmaScheduler",
+              "cnr_id": "comfyui-sigmax"
+            },
+            "size": [
+              340,
+              230
+            ],
+            "type": "Sigmax.Krea2SigmaScheduler",
+            "widgets_values": [
+              "RAW",
+              52,
+              1353,
+              761,
+              true,
+              0,
+              -1
+            ]
+          },
+          {
+            "flags": {},
+            "id": 2,
+            "inputs": [
+              {
+                "link": 1,
+                "name": "sigmas",
+                "type": "SIGMAS"
+              },
+              {
+                "link": 2,
+                "name": "schedule_info",
+                "type": "STRING"
+              }
+            ],
+            "mode": 0,
+            "order": 1,
+            "outputs": [
+              {
+                "links": [
+                  5
+                ],
+                "name": "schedule_report",
+                "slot_index": 0,
+                "type": "STRING"
+              }
+            ],
+            "pos": [
+              460,
+              80
+            ],
+            "properties": {
+              "Node name for S&R": "Sigmax.ScheduleInspector",
+              "cnr_id": "comfyui-sigmax"
+            },
+            "size": [
+              300,
+              120
+            ],
+            "type": "Sigmax.ScheduleInspector",
+            "widgets_values": []
+          },
+          {
+            "flags": {},
+            "id": 3,
+            "inputs": [
+              {
+                "link": 3,
+                "name": "sigmas",
+                "type": "SIGMAS"
+              },
+              {
+                "link": 4,
+                "name": "schedule_info",
+                "type": "STRING"
+              },
+              {
+                "link": 5,
+                "name": "schedule_report",
+                "type": "STRING"
+              }
+            ],
+            "mode": 0,
+            "order": 2,
+            "outputs": [],
+            "pos": [
+              820,
+              80
+            ],
+            "properties": {
+              "Node name for S&R": "Sigmax.RawWorkflowOutput",
+              "cnr_id": "comfyui-sigmax"
+            },
+            "size": [
+              330,
+              150
+            ],
+            "type": "Sigmax.RawWorkflowOutput",
+            "widgets_values": []
+          }
+        ],
+        "version": 0.4
+      }
+    },
+    {
+      "host": {
+        "api_version": "legacy_v1",
+        "id": "comfyui",
+        "version": "0.29.0"
+      },
+      "id": "krea2-raw-official-square-1024",
+      "node_contracts": [
+        {
+          "node_id": 1,
+          "node_type": "Sigmax.Krea2SigmaScheduler",
+          "widget_slots": [
+            {
+              "fixed": "RAW",
+              "name": "variant",
+              "type": "COMBO"
+            },
+            {
+              "name": "steps",
+              "type": "INT"
+            },
+            {
+              "name": "width",
+              "type": "INT"
+            },
+            {
+              "name": "height",
+              "type": "INT"
+            },
+            {
+              "name": "strict_official",
+              "type": "BOOLEAN"
+            },
+            {
+              "name": "start_step",
+              "type": "INT"
+            },
+            {
+              "name": "end_step",
+              "type": "INT"
+            }
+          ]
+        },
+        {
+          "node_id": 2,
+          "node_type": "Sigmax.ScheduleInspector",
+          "widget_slots": []
+        },
+        {
+          "node_id": 3,
+          "node_type": "Sigmax.RawWorkflowOutput",
+          "widget_slots": []
+        }
+      ],
+      "nodes": [
+        {
+          "id": "Sigmax.Krea2SigmaScheduler",
+          "version": "1"
+        },
+        {
+          "id": "Sigmax.RawWorkflowOutput",
+          "version": "1"
+        },
+        {
+          "id": "Sigmax.ScheduleInspector",
+          "version": "1"
+        }
+      ],
+      "package": {
+        "id": "comfyui-sigmax",
+        "version": "1.0.0"
+      },
+      "profile": {
+        "id": "krea2.raw.official",
+        "version": "1"
+      },
+      "variant": "RAW",
+      "workflow": {
         "config": {},
-        "version": 0.4,
         "extra": {
           "comfyui_sigmax": {
             "metadata": {
@@ -982,222 +805,13 @@
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-          "metadata_fingerprint": "sha256:6a2a4753b659c1ff1c7d3beeba39199ee9fca228af4bf4dd817651ee0145e3be",
+            "metadata_fingerprint": "sha256:6a2a4753b659c1ff1c7d3beeba39199ee9fca228af4bf4dd817651ee0145e3be",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
-        }
-      }
-    },
-    {
-      "id": "krea2-turbo-1024",
-      "variant": "Turbo",
-      "package": {
-        "id": "comfyui-sigmax",
-        "version": "1.0.0"
-      },
-      "nodes": [
-        {
-          "id": "Sigmax.Krea2SigmaScheduler",
-          "version": "1"
         },
-        {
-          "id": "Sigmax.ScheduleInspector",
-          "version": "1"
-        },
-        {
-          "id": "Sigmax.TurboWorkflowOutput",
-          "version": "1"
-        }
-      ],
-      "host": {
-        "id": "comfyui",
-        "version": "0.29.0",
-        "api_version": "legacy_v1"
-      },
-      "profile": {
-        "id": "krea2.turbo.official",
-        "version": "1"
-      },
-      "node_contracts": [
-        {
-          "node_id": 1,
-          "node_type": "Sigmax.Krea2SigmaScheduler",
-          "widget_slots": [
-            {
-              "name": "variant",
-              "type": "COMBO",
-              "fixed": "Turbo"
-            },
-            {
-              "name": "steps",
-              "type": "INT"
-            },
-            {
-              "name": "width",
-              "type": "INT"
-            },
-            {
-              "name": "height",
-              "type": "INT"
-            },
-            {
-              "name": "strict_official",
-              "type": "BOOLEAN"
-            },
-            {
-              "name": "start_step",
-              "type": "INT"
-            },
-            {
-              "name": "end_step",
-              "type": "INT"
-            }
-          ]
-        },
-        {
-          "node_id": 2,
-          "node_type": "Sigmax.ScheduleInspector",
-          "widget_slots": []
-        },
-        {
-          "node_id": 3,
-          "node_type": "Sigmax.TurboWorkflowOutput",
-          "widget_slots": []
-        }
-      ],
-      "workflow": {
-        "last_node_id": 3,
+        "groups": [],
         "last_link_id": 5,
-        "nodes": [
-          {
-            "id": 1,
-            "type": "Sigmax.Krea2SigmaScheduler",
-            "pos": [
-              40,
-              80
-            ],
-            "size": [
-              340,
-              230
-            ],
-            "flags": {},
-            "order": 0,
-            "mode": 0,
-            "outputs": [
-              {
-                "name": "sigmas",
-                "type": "SIGMAS",
-                "links": [
-                  1,
-                  3
-                ],
-                "slot_index": 0
-              },
-              {
-                "name": "schedule_info",
-                "type": "STRING",
-                "links": [
-                  2,
-                  4
-                ],
-                "slot_index": 1
-              }
-            ],
-            "properties": {
-              "Node name for S&R": "Sigmax.Krea2SigmaScheduler",
-              "cnr_id": "comfyui-sigmax"
-            },
-            "widgets_values": [
-              "Turbo",
-              8,
-              1024,
-              1024,
-              true,
-              0,
-              -1
-            ]
-          },
-          {
-            "id": 2,
-            "type": "Sigmax.ScheduleInspector",
-            "pos": [
-              460,
-              80
-            ],
-            "size": [
-              300,
-              120
-            ],
-            "flags": {},
-            "order": 1,
-            "mode": 0,
-            "inputs": [
-              {
-                "name": "sigmas",
-                "type": "SIGMAS",
-                "link": 1
-              },
-              {
-                "name": "schedule_info",
-                "type": "STRING",
-                "link": 2
-              }
-            ],
-            "outputs": [
-              {
-                "name": "schedule_report",
-                "type": "STRING",
-                "links": [
-                  5
-                ],
-                "slot_index": 0
-              }
-            ],
-            "properties": {
-              "Node name for S&R": "Sigmax.ScheduleInspector",
-              "cnr_id": "comfyui-sigmax"
-            },
-            "widgets_values": []
-          },
-          {
-            "id": 3,
-            "type": "Sigmax.TurboWorkflowOutput",
-            "pos": [
-              820,
-              80
-            ],
-            "size": [
-              330,
-              150
-            ],
-            "flags": {},
-            "order": 2,
-            "mode": 0,
-            "inputs": [
-              {
-                "name": "sigmas",
-                "type": "SIGMAS",
-                "link": 3
-              },
-              {
-                "name": "schedule_info",
-                "type": "STRING",
-                "link": 4
-              },
-              {
-                "name": "schedule_report",
-                "type": "STRING",
-                "link": 5
-              }
-            ],
-            "outputs": [],
-            "properties": {
-              "Node name for S&R": "Sigmax.TurboWorkflowOutput",
-              "cnr_id": "comfyui-sigmax"
-            },
-            "widgets_values": []
-          }
-        ],
+        "last_node_id": 3,
         "links": [
           [
             1,
@@ -1240,7 +854,217 @@
             "STRING"
           ]
         ],
-        "groups": [],
+        "nodes": [
+          {
+            "flags": {},
+            "id": 1,
+            "mode": 0,
+            "order": 0,
+            "outputs": [
+              {
+                "links": [
+                  1,
+                  3
+                ],
+                "name": "sigmas",
+                "slot_index": 0,
+                "type": "SIGMAS"
+              },
+              {
+                "links": [
+                  2,
+                  4
+                ],
+                "name": "schedule_info",
+                "slot_index": 1,
+                "type": "STRING"
+              }
+            ],
+            "pos": [
+              40,
+              80
+            ],
+            "properties": {
+              "Node name for S&R": "Sigmax.Krea2SigmaScheduler",
+              "cnr_id": "comfyui-sigmax"
+            },
+            "size": [
+              340,
+              230
+            ],
+            "type": "Sigmax.Krea2SigmaScheduler",
+            "widgets_values": [
+              "RAW",
+              52,
+              1024,
+              1024,
+              true,
+              0,
+              -1
+            ]
+          },
+          {
+            "flags": {},
+            "id": 2,
+            "inputs": [
+              {
+                "link": 1,
+                "name": "sigmas",
+                "type": "SIGMAS"
+              },
+              {
+                "link": 2,
+                "name": "schedule_info",
+                "type": "STRING"
+              }
+            ],
+            "mode": 0,
+            "order": 1,
+            "outputs": [
+              {
+                "links": [
+                  5
+                ],
+                "name": "schedule_report",
+                "slot_index": 0,
+                "type": "STRING"
+              }
+            ],
+            "pos": [
+              460,
+              80
+            ],
+            "properties": {
+              "Node name for S&R": "Sigmax.ScheduleInspector",
+              "cnr_id": "comfyui-sigmax"
+            },
+            "size": [
+              300,
+              120
+            ],
+            "type": "Sigmax.ScheduleInspector",
+            "widgets_values": []
+          },
+          {
+            "flags": {},
+            "id": 3,
+            "inputs": [
+              {
+                "link": 3,
+                "name": "sigmas",
+                "type": "SIGMAS"
+              },
+              {
+                "link": 4,
+                "name": "schedule_info",
+                "type": "STRING"
+              },
+              {
+                "link": 5,
+                "name": "schedule_report",
+                "type": "STRING"
+              }
+            ],
+            "mode": 0,
+            "order": 2,
+            "outputs": [],
+            "pos": [
+              820,
+              80
+            ],
+            "properties": {
+              "Node name for S&R": "Sigmax.RawWorkflowOutput",
+              "cnr_id": "comfyui-sigmax"
+            },
+            "size": [
+              330,
+              150
+            ],
+            "type": "Sigmax.RawWorkflowOutput",
+            "widgets_values": []
+          }
+        ],
+        "version": 0.4
+      }
+    },
+    {
+      "host": {
+        "api_version": "legacy_v1",
+        "id": "comfyui",
+        "version": "0.29.0"
+      },
+      "id": "krea2-turbo-1024",
+      "node_contracts": [
+        {
+          "node_id": 1,
+          "node_type": "Sigmax.Krea2SigmaScheduler",
+          "widget_slots": [
+            {
+              "fixed": "Turbo",
+              "name": "variant",
+              "type": "COMBO"
+            },
+            {
+              "name": "steps",
+              "type": "INT"
+            },
+            {
+              "name": "width",
+              "type": "INT"
+            },
+            {
+              "name": "height",
+              "type": "INT"
+            },
+            {
+              "name": "strict_official",
+              "type": "BOOLEAN"
+            },
+            {
+              "name": "start_step",
+              "type": "INT"
+            },
+            {
+              "name": "end_step",
+              "type": "INT"
+            }
+          ]
+        },
+        {
+          "node_id": 2,
+          "node_type": "Sigmax.ScheduleInspector",
+          "widget_slots": []
+        },
+        {
+          "node_id": 3,
+          "node_type": "Sigmax.TurboWorkflowOutput",
+          "widget_slots": []
+        }
+      ],
+      "nodes": [
+        {
+          "id": "Sigmax.Krea2SigmaScheduler",
+          "version": "1"
+        },
+        {
+          "id": "Sigmax.ScheduleInspector",
+          "version": "1"
+        },
+        {
+          "id": "Sigmax.TurboWorkflowOutput",
+          "version": "1"
+        }
+      ],
+      "package": {
+        "id": "comfyui-sigmax",
+        "version": "1.0.0"
+      },
+      "profile": {
+        "id": "krea2.turbo.official",
+        "version": "1"
+      },
+      "variant": "Turbo",
+      "workflow": {
         "config": {},
         "extra": {
           "comfyui_sigmax": {
@@ -1310,12 +1134,500 @@
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-          "metadata_fingerprint": "sha256:9c1f879564ca591387b595da2ba52332aa1906ec8ed709fefd6bb03b6fc03e29",
+            "metadata_fingerprint": "sha256:9c1f879564ca591387b595da2ba52332aa1906ec8ed709fefd6bb03b6fc03e29",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         },
+        "groups": [],
+        "last_link_id": 5,
+        "last_node_id": 3,
+        "links": [
+          [
+            1,
+            1,
+            0,
+            2,
+            0,
+            "SIGMAS"
+          ],
+          [
+            2,
+            1,
+            1,
+            2,
+            1,
+            "STRING"
+          ],
+          [
+            3,
+            1,
+            0,
+            3,
+            0,
+            "SIGMAS"
+          ],
+          [
+            4,
+            1,
+            1,
+            3,
+            1,
+            "STRING"
+          ],
+          [
+            5,
+            2,
+            0,
+            3,
+            2,
+            "STRING"
+          ]
+        ],
+        "nodes": [
+          {
+            "flags": {},
+            "id": 1,
+            "mode": 0,
+            "order": 0,
+            "outputs": [
+              {
+                "links": [
+                  1,
+                  3
+                ],
+                "name": "sigmas",
+                "slot_index": 0,
+                "type": "SIGMAS"
+              },
+              {
+                "links": [
+                  2,
+                  4
+                ],
+                "name": "schedule_info",
+                "slot_index": 1,
+                "type": "STRING"
+              }
+            ],
+            "pos": [
+              40,
+              80
+            ],
+            "properties": {
+              "Node name for S&R": "Sigmax.Krea2SigmaScheduler",
+              "cnr_id": "comfyui-sigmax"
+            },
+            "size": [
+              340,
+              230
+            ],
+            "type": "Sigmax.Krea2SigmaScheduler",
+            "widgets_values": [
+              "Turbo",
+              8,
+              1024,
+              1024,
+              true,
+              0,
+              -1
+            ]
+          },
+          {
+            "flags": {},
+            "id": 2,
+            "inputs": [
+              {
+                "link": 1,
+                "name": "sigmas",
+                "type": "SIGMAS"
+              },
+              {
+                "link": 2,
+                "name": "schedule_info",
+                "type": "STRING"
+              }
+            ],
+            "mode": 0,
+            "order": 1,
+            "outputs": [
+              {
+                "links": [
+                  5
+                ],
+                "name": "schedule_report",
+                "slot_index": 0,
+                "type": "STRING"
+              }
+            ],
+            "pos": [
+              460,
+              80
+            ],
+            "properties": {
+              "Node name for S&R": "Sigmax.ScheduleInspector",
+              "cnr_id": "comfyui-sigmax"
+            },
+            "size": [
+              300,
+              120
+            ],
+            "type": "Sigmax.ScheduleInspector",
+            "widgets_values": []
+          },
+          {
+            "flags": {},
+            "id": 3,
+            "inputs": [
+              {
+                "link": 3,
+                "name": "sigmas",
+                "type": "SIGMAS"
+              },
+              {
+                "link": 4,
+                "name": "schedule_info",
+                "type": "STRING"
+              },
+              {
+                "link": 5,
+                "name": "schedule_report",
+                "type": "STRING"
+              }
+            ],
+            "mode": 0,
+            "order": 2,
+            "outputs": [],
+            "pos": [
+              820,
+              80
+            ],
+            "properties": {
+              "Node name for S&R": "Sigmax.TurboWorkflowOutput",
+              "cnr_id": "comfyui-sigmax"
+            },
+            "size": [
+              330,
+              150
+            ],
+            "type": "Sigmax.TurboWorkflowOutput",
+            "widgets_values": []
+          }
+        ],
         "version": 0.4
       }
+    },
+    {
+      "host": {
+        "api_version": "legacy_v1",
+        "id": "comfyui",
+        "version": "0.29.0"
+      },
+      "id": "z-image-base-official-50",
+      "node_contracts": [
+        {
+          "node_id": 1,
+          "node_type": "Sigmax.ZImageSigmaScheduler",
+          "widget_slots": [
+            {
+              "fixed": "Base",
+              "name": "variant",
+              "type": "COMBO"
+            },
+            {
+              "name": "steps",
+              "type": "INT"
+            },
+            {
+              "name": "strict_official",
+              "type": "BOOLEAN"
+            },
+            {
+              "name": "start_step",
+              "type": "INT"
+            },
+            {
+              "name": "end_step",
+              "type": "INT"
+            }
+          ]
+        }
+      ],
+      "nodes": [
+        {
+          "id": "Sigmax.ZImageSigmaScheduler",
+          "version": "1"
+        }
+      ],
+      "package": {
+        "id": "comfyui-sigmax",
+        "version": "1.0.0"
+      },
+      "profile": {
+        "id": "z_image.base.official",
+        "version": "1"
+      },
+      "variant": "Z-Image Base",
+      "workflow": {
+        "version": 0.4,
+        "last_node_id": 1,
+        "last_link_id": 0,
+        "nodes": [
+          {
+            "id": 1,
+            "type": "Sigmax.ZImageSigmaScheduler",
+            "pos": [
+              40,
+              80
+            ],
+            "size": [
+              340,
+              210
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "outputs": [
+              {
+                "name": "sigmas",
+                "type": "SIGMAS",
+                "links": null,
+                "slot_index": 0
+              },
+              {
+                "name": "schedule_info",
+                "type": "STRING",
+                "links": null,
+                "slot_index": 1
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "Sigmax.ZImageSigmaScheduler",
+              "cnr_id": "comfyui-sigmax"
+            },
+            "widgets_values": [
+              "Base",
+              50,
+              true,
+              0,
+              -1
+            ]
+          }
+        ],
+        "links": [],
+        "extra": {
+          "comfyui_sigmax": {
+            "metadata": {
+              "artifact": {
+                "construction_fingerprint": "sha256:640cc75cf0d8c3cf556abed3129ec1087d8a081bc08fb10ac58ea4006e183231",
+                "construction_schema": "sigmax.schedule-artifact/1",
+                "numerical_fingerprint": "sha256:9fda2fba7c87d0182786ccf4c5dc1fb236bbfe592a35d2b173f21447abc38729",
+                "receipt_schema": "sigmax.execution-receipt-envelope/1"
+              },
+              "compatibility": {
+                "considered": [
+                  "model_identity",
+                  "prediction_type",
+                  "sigma_domain",
+                  "schedule_ownership",
+                  "terminal_sigma",
+                  "execution_behavior",
+                  "noise_ownership",
+                  "sampler_state",
+                  "partial_denoise",
+                  "per_token_timesteps",
+                  "reference_sampler"
+                ],
+                "level": "allow",
+                "reasons": [
+                  "compatible"
+                ]
+              },
+              "profile": {
+                "id": "z_image.base.official",
+                "version": "1"
+              },
+              "receipts": [],
+              "requirements": {
+                "host": {
+                  "api_version": "legacy_v1",
+                  "id": "comfyui",
+                  "version": "0.29.0"
+                },
+                "nodes": [
+                  {
+                    "id": "Sigmax.ZImageSigmaScheduler",
+                    "version": "1"
+                  }
+                ],
+                "package": {
+                  "id": "comfyui-sigmax",
+                  "version": "1.0.0"
+                }
+              },
+              "schema": "sigmax.workflow-metadata/1"
+            },
+            "metadata_fingerprint": "sha256:0959b7a5f759706ca6e76c2f0938e338d44492a2233d1a0415011e4868acd6b2",
+            "schema": "sigmax.workflow-metadata-envelope/1"
+          }
+        }
+      }
+    },
+    {
+      "host": {
+        "api_version": "legacy_v1",
+        "id": "comfyui",
+        "version": "0.29.0"
+      },
+      "id": "z-image-turbo-official-8",
+      "node_contracts": [
+        {
+          "node_id": 1,
+          "node_type": "Sigmax.ZImageSigmaScheduler",
+          "widget_slots": [
+            {
+              "fixed": "Turbo",
+              "name": "variant",
+              "type": "COMBO"
+            },
+            {
+              "name": "steps",
+              "type": "INT"
+            },
+            {
+              "name": "strict_official",
+              "type": "BOOLEAN"
+            },
+            {
+              "name": "start_step",
+              "type": "INT"
+            },
+            {
+              "name": "end_step",
+              "type": "INT"
+            }
+          ]
+        }
+      ],
+      "nodes": [
+        {
+          "id": "Sigmax.ZImageSigmaScheduler",
+          "version": "1"
+        }
+      ],
+      "package": {
+        "id": "comfyui-sigmax",
+        "version": "1.0.0"
+      },
+      "profile": {
+        "id": "z_image.turbo.official",
+        "version": "1"
+      },
+      "variant": "Z-Image Turbo",
+      "workflow": {
+        "version": 0.4,
+        "last_node_id": 1,
+        "last_link_id": 0,
+        "nodes": [
+          {
+            "id": 1,
+            "type": "Sigmax.ZImageSigmaScheduler",
+            "pos": [
+              40,
+              80
+            ],
+            "size": [
+              340,
+              210
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "outputs": [
+              {
+                "name": "sigmas",
+                "type": "SIGMAS",
+                "links": null,
+                "slot_index": 0
+              },
+              {
+                "name": "schedule_info",
+                "type": "STRING",
+                "links": null,
+                "slot_index": 1
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "Sigmax.ZImageSigmaScheduler",
+              "cnr_id": "comfyui-sigmax"
+            },
+            "widgets_values": [
+              "Turbo",
+              8,
+              true,
+              0,
+              -1
+            ]
+          }
+        ],
+        "links": [],
+        "extra": {
+          "comfyui_sigmax": {
+            "metadata": {
+              "artifact": {
+                "construction_fingerprint": "sha256:709d27531a99f722e0ec1a020850b38e25e97fa013f6bffa6dac480f909c7551",
+                "construction_schema": "sigmax.schedule-artifact/1",
+                "numerical_fingerprint": "sha256:a8a2d4dc7ff9001bdf7ef8fe931ebe1c7116a2da3d9d12f56da4ce7b65e68835",
+                "receipt_schema": "sigmax.execution-receipt-envelope/1"
+              },
+              "compatibility": {
+                "considered": [
+                  "model_identity",
+                  "prediction_type",
+                  "sigma_domain",
+                  "schedule_ownership",
+                  "terminal_sigma",
+                  "execution_behavior",
+                  "noise_ownership",
+                  "sampler_state",
+                  "partial_denoise",
+                  "per_token_timesteps",
+                  "reference_sampler"
+                ],
+                "level": "allow",
+                "reasons": [
+                  "compatible"
+                ]
+              },
+              "profile": {
+                "id": "z_image.turbo.official",
+                "version": "1"
+              },
+              "receipts": [],
+              "requirements": {
+                "host": {
+                  "api_version": "legacy_v1",
+                  "id": "comfyui",
+                  "version": "0.29.0"
+                },
+                "nodes": [
+                  {
+                    "id": "Sigmax.ZImageSigmaScheduler",
+                    "version": "1"
+                  }
+                ],
+                "package": {
+                  "id": "comfyui-sigmax",
+                  "version": "1.0.0"
+                }
+              },
+              "schema": "sigmax.workflow-metadata/1"
+            },
+            "metadata_fingerprint": "sha256:5d4f796e2cb2462804badaaf9f5cedb07bc2aa095ff20c60b3478d62730954b2",
+            "schema": "sigmax.workflow-metadata-envelope/1"
+          }
+        }
+      }
     }
-  ]
+  ],
+  "schema": "sigmax.workflow-fixture-bundle/1"
 }

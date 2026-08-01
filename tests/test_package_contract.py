@@ -99,6 +99,7 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "profiles" / "resolution.py").is_file())
         self.assertTrue((package_path / "profiles" / "schema_v1.py").is_file())
         self.assertTrue((package_path / "profiles" / "krea2_turbo.py").is_file())
+        self.assertTrue((package_path / "profiles" / "z_image.py").is_file())
         self.assertTrue((package_path / "adapters" / "__init__.py").is_file())
         self.assertTrue((package_path / "adapters" / "comfyui.py").is_file())
         self.assertTrue((package_path / "adapters" / "registration.py").is_file())
@@ -125,6 +126,7 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "nodes" / "raw_workflow_output.py").is_file())
         self.assertTrue((package_path / "nodes" / "schedule_algebra.py").is_file())
         self.assertTrue((package_path / "nodes" / "turbo_workflow_output.py").is_file())
+        self.assertTrue((package_path / "nodes" / "z_image_sigma_scheduler.py").is_file())
         self.assertTrue((package_path / "workflows" / "__init__.py").is_file())
         self.assertTrue((package_path / "workflows" / "validation.py").is_file())
         self.assertTrue((package_path / "workflows" / "fixtures.json").is_file())
@@ -160,6 +162,7 @@ class PackageContractTests(unittest.TestCase):
                 "Sigmax.ScheduleResample",
                 "Sigmax.ScheduleSlice",
                 "Sigmax.TurboWorkflowOutput",
+                "Sigmax.ZImageSigmaScheduler",
             ],
             sorted(package.NODE_CLASS_MAPPINGS),
         )
@@ -177,6 +180,7 @@ class PackageContractTests(unittest.TestCase):
                 "Sigmax.ScheduleResample": "Schedule Resample",
                 "Sigmax.ScheduleSlice": "Schedule Slice",
                 "Sigmax.TurboWorkflowOutput": "Turbo Workflow Output",
+                "Sigmax.ZImageSigmaScheduler": "Z-Image Sigma Scheduler",
             },
             package.NODE_DISPLAY_NAME_MAPPINGS,
         )

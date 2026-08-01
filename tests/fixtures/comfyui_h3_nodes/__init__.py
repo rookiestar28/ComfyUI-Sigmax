@@ -14,6 +14,7 @@ _BIASES = (0.0625, -0.125, 0.1875, -0.25)
 _UI_KEY = "sigmax_native_euler_trace"
 _ALGEBRA_UI_KEY = "sigmax_schedule_algebra"
 _CHECKPOINT_UI_KEY = "sigmax_checkpoint_evidence"
+_Z_IMAGE_UI_KEY = "sigmax_z_image_schedule"
 
 
 def _vector(value: torch.Tensor) -> list[float]:
@@ -244,13 +245,67 @@ class CheckpointEvidenceProbe:
         return {"ui": {_CHECKPOINT_UI_KEY: [checkpoint_evidence]}}
 
 
+class ZImageScheduleProbe:
+    """Return model-free H2 evidence for one executed Z-Image scheduler node."""
+
+    CATEGORY = "SigmaxTest"
+    DESCRIPTION = "Test-only Z-Image schedule H2 execution probe."
+    FUNCTION = "execute"
+    OUTPUT_NODE = True
+    RETURN_TYPES: tuple[()] = ()
+    RETURN_NAMES: tuple[()] = ()
+
+    @classmethod
+    def INPUT_TYPES(cls) -> dict[str, dict[str, tuple[object, ...]]]:
+        return {
+            "required": {
+                "sigmas": ("SIGMAS",),
+                "schedule_info": ("STRING", {"default": "", "multiline": True}),
+            }
+        }
+
+    def execute(self, sigmas: object, schedule_info: object) -> dict[str, object]:
+        if not isinstance(sigmas, torch.Tensor) or sigmas.device.type != "cpu":
+            raise ValueError("Z-Image H2 sigmas must be a CPU tensor")
+        if sigmas.dtype != torch.float32 or sigmas.ndim != 1:
+            raise ValueError("Z-Image H2 sigmas must be a float32 vector")
+        if not isinstance(schedule_info, str):
+            raise ValueError("Z-Image H2 schedule information must be text")
+        info = json.loads(schedule_info)
+        steps = len(sigmas) - 1
+        if (
+            not isinstance(info, dict)
+            or info.get("schema") != "sigmax.z-image-sigma-node/1"
+            or info.get("profile", {}).get("evidence") != "official"
+            or info.get("slicing", {}).get("output_steps") != steps
+            or info.get("shift", {}).get("dynamic") is not False
+        ):
+            raise ValueError("Z-Image H2 schedule contract drifted")
+        trace = {"schedule_info": info, "sigmas": _vector(sigmas)}
+        return {
+            "ui": {
+                _Z_IMAGE_UI_KEY: [
+                    json.dumps(
+                        trace,
+                        allow_nan=False,
+                        ensure_ascii=False,
+                        separators=(",", ":"),
+                        sort_keys=True,
+                    )
+                ]
+            }
+        }
+
+
 NODE_CLASS_MAPPINGS = {
     "SigmaxTest.CheckpointEvidenceProbe": CheckpointEvidenceProbe,
     "SigmaxTest.NativeEulerProbe": NativeEulerProbe,
     "SigmaxTest.ScheduleAlgebraProbe": ScheduleAlgebraProbe,
+    "SigmaxTest.ZImageScheduleProbe": ZImageScheduleProbe,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "SigmaxTest.CheckpointEvidenceProbe": "Sigmax Test — Checkpoint Evidence Probe",
     "SigmaxTest.NativeEulerProbe": "Sigmax Test — Native Euler Probe",
     "SigmaxTest.ScheduleAlgebraProbe": "Sigmax Test — Schedule Algebra Probe",
+    "SigmaxTest.ZImageScheduleProbe": "Sigmax Test — Z-Image Schedule Probe",
 }

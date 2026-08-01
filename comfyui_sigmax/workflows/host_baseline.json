@@ -1,195 +1,8 @@
 {
-  "schema": "sigmax.workflow-host-baseline/1",
   "host": {
     "id": "comfyui",
-    "version": "0.29.0",
-    "revision": "e651b7bef55a5376343dcb1c0edb79f0142c985e"
-  },
-  "object_info": {
-    "Sigmax.Krea2SigmaScheduler": {
-      "input": {
-        "required": {
-          "variant": [
-            [
-              "Turbo",
-              "RAW"
-            ]
-          ],
-          "steps": [
-            "INT",
-            {
-              "default": 8,
-              "min": 1,
-              "max": 10000,
-              "step": 1
-            }
-          ],
-          "width": [
-            "INT",
-            {
-              "default": 1024,
-              "min": 16,
-              "max": 65536,
-              "step": 16
-            }
-          ],
-          "height": [
-            "INT",
-            {
-              "default": 1024,
-              "min": 16,
-              "max": 65536,
-              "step": 16
-            }
-          ],
-          "strict_official": [
-            "BOOLEAN",
-            {
-              "default": true
-            }
-          ],
-          "start_step": [
-            "INT",
-            {
-              "default": 0,
-              "min": 0,
-              "max": 9999,
-              "step": 1
-            }
-          ],
-          "end_step": [
-            "INT",
-            {
-              "default": -1,
-              "min": -1,
-              "max": 10000,
-              "step": 1
-            }
-          ]
-        }
-      },
-      "output": [
-        "SIGMAS",
-        "STRING"
-      ],
-      "output_is_list": [
-        false,
-        false
-      ],
-      "output_name": [
-        "sigmas",
-        "schedule_info"
-      ],
-      "name": "Sigmax.Krea2SigmaScheduler",
-      "display_name": "Krea 2 Sigma Scheduler",
-      "description": "Builds an explicit Krea 2 RAW or Turbo sigma schedule without patching model sampling.",
-      "python_module": "comfyui_sigmax.nodes",
-      "category": "Sigmax/scheduling",
-      "output_node": false,
-      "deprecated": false,
-      "experimental": false
-    },
-    "Sigmax.RawWorkflowOutput": {
-      "category": "Sigmax/workflows",
-      "deprecated": false,
-      "description": "Verifies a complete named Krea 2 RAW schedule and publishes a model-free artifact bundle with a not-executed sampler receipt.",
-      "display_name": "RAW Workflow Output",
-      "experimental": false,
-      "input": {
-        "required": {
-          "schedule_info": [
-            "STRING",
-            {
-              "default": "",
-              "multiline": true
-            }
-          ],
-          "schedule_report": [
-            "STRING",
-            {
-              "default": "",
-              "multiline": true
-            }
-          ],
-          "sigmas": [
-            "SIGMAS"
-          ]
-        }
-      },
-      "name": "Sigmax.RawWorkflowOutput",
-      "output": [],
-      "output_is_list": [],
-      "output_name": [],
-      "output_node": true,
-      "python_module": "comfyui_sigmax.nodes"
-    },
-    "Sigmax.ScheduleInspector": {
-      "input": {
-        "required": {
-          "sigmas": [
-            "SIGMAS"
-          ],
-          "schedule_info": [
-            "STRING",
-            {
-              "default": "",
-              "multiline": true
-            }
-          ]
-        }
-      },
-      "output": [
-        "STRING"
-      ],
-      "output_is_list": [
-        false
-      ],
-      "output_name": [
-        "schedule_report"
-      ],
-      "name": "Sigmax.ScheduleInspector",
-      "display_name": "Schedule Inspector",
-      "description": "Verifies connected SIGMAS against bounded versioned Sigmax schedule information.",
-      "python_module": "comfyui_sigmax.nodes",
-      "category": "Sigmax/inspection",
-      "output_node": false,
-      "deprecated": false,
-      "experimental": false
-    },
-    "Sigmax.TurboWorkflowOutput": {
-      "input": {
-        "required": {
-          "schedule_info": [
-            "STRING",
-            {
-              "default": "",
-              "multiline": true
-            }
-          ],
-          "schedule_report": [
-            "STRING",
-            {
-              "default": "",
-              "multiline": true
-            }
-          ],
-          "sigmas": [
-            "SIGMAS"
-          ]
-        }
-      },
-      "output": [],
-      "output_is_list": [],
-      "output_name": [],
-      "name": "Sigmax.TurboWorkflowOutput",
-      "display_name": "Turbo Workflow Output",
-      "description": "Verifies the strict eight-step Turbo schedule and publishes a model-free artifact bundle with a not-executed sampler receipt.",
-      "python_module": "comfyui_sigmax.nodes",
-      "category": "Sigmax/workflows",
-      "output_node": true,
-      "deprecated": false,
-      "experimental": false
-    }
+    "revision": "e651b7bef55a5376343dcb1c0edb79f0142c985e",
+    "version": "0.29.0"
   },
   "node_definition_v2": {
     "Sigmax.Krea2SigmaScheduler": {
@@ -259,6 +72,11 @@
     },
     "Sigmax.RawWorkflowOutput": {
       "inputs": {
+        "sigmas": {
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "isOptional": false
+        },
         "schedule_info": {
           "name": "schedule_info",
           "type": "STRING",
@@ -267,11 +85,6 @@
         "schedule_report": {
           "name": "schedule_report",
           "type": "STRING",
-          "isOptional": false
-        },
-        "sigmas": {
-          "name": "sigmas",
-          "type": "SIGMAS",
           "isOptional": false
         }
       },
@@ -317,6 +130,11 @@
     },
     "Sigmax.TurboWorkflowOutput": {
       "inputs": {
+        "sigmas": {
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "isOptional": false
+        },
         "schedule_info": {
           "name": "schedule_info",
           "type": "STRING",
@@ -325,11 +143,6 @@
         "schedule_report": {
           "name": "schedule_report",
           "type": "STRING",
-          "isOptional": false
-        },
-        "sigmas": {
-          "name": "sigmas",
-          "type": "SIGMAS",
           "isOptional": false
         }
       },
@@ -342,6 +155,311 @@
       "python_module": "comfyui_sigmax.nodes",
       "deprecated": false,
       "experimental": false
+    },
+    "Sigmax.ZImageSigmaScheduler": {
+      "inputs": {
+        "variant": {
+          "name": "variant",
+          "type": "COMBO",
+          "isOptional": false,
+          "options": [
+            "Base",
+            "Turbo"
+          ]
+        },
+        "steps": {
+          "name": "steps",
+          "type": "INT",
+          "isOptional": false
+        },
+        "strict_official": {
+          "name": "strict_official",
+          "type": "BOOLEAN",
+          "isOptional": false
+        },
+        "start_step": {
+          "name": "start_step",
+          "type": "INT",
+          "isOptional": false
+        },
+        "end_step": {
+          "name": "end_step",
+          "type": "INT",
+          "isOptional": false
+        }
+      },
+      "outputs": [
+        {
+          "index": 0,
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "is_list": false
+        },
+        {
+          "index": 1,
+          "name": "schedule_info",
+          "type": "STRING",
+          "is_list": false
+        }
+      ],
+      "name": "Sigmax.ZImageSigmaScheduler",
+      "display_name": "Z-Image Sigma Scheduler",
+      "description": "Builds a pinned Z-Image Base or Turbo sigma schedule without model patching.",
+      "category": "Sigmax/scheduling",
+      "output_node": false,
+      "python_module": "comfyui_sigmax.nodes",
+      "deprecated": false,
+      "experimental": false
     }
-  }
+  },
+  "object_info": {
+    "Sigmax.Krea2SigmaScheduler": {
+      "category": "Sigmax/scheduling",
+      "deprecated": false,
+      "description": "Builds an explicit Krea 2 RAW or Turbo sigma schedule without patching model sampling.",
+      "display_name": "Krea 2 Sigma Scheduler",
+      "experimental": false,
+      "input": {
+        "required": {
+          "variant": [
+            [
+              "Turbo",
+              "RAW"
+            ]
+          ],
+          "steps": [
+            "INT",
+            {
+              "default": 8,
+              "max": 10000,
+              "min": 1,
+              "step": 1
+            }
+          ],
+          "width": [
+            "INT",
+            {
+              "default": 1024,
+              "max": 65536,
+              "min": 16,
+              "step": 16
+            }
+          ],
+          "height": [
+            "INT",
+            {
+              "default": 1024,
+              "max": 65536,
+              "min": 16,
+              "step": 16
+            }
+          ],
+          "strict_official": [
+            "BOOLEAN",
+            {
+              "default": true
+            }
+          ],
+          "start_step": [
+            "INT",
+            {
+              "default": 0,
+              "max": 9999,
+              "min": 0,
+              "step": 1
+            }
+          ],
+          "end_step": [
+            "INT",
+            {
+              "default": -1,
+              "max": 10000,
+              "min": -1,
+              "step": 1
+            }
+          ]
+        }
+      },
+      "name": "Sigmax.Krea2SigmaScheduler",
+      "output": [
+        "SIGMAS",
+        "STRING"
+      ],
+      "output_is_list": [
+        false,
+        false
+      ],
+      "output_name": [
+        "sigmas",
+        "schedule_info"
+      ],
+      "output_node": false,
+      "python_module": "comfyui_sigmax.nodes"
+    },
+    "Sigmax.RawWorkflowOutput": {
+      "category": "Sigmax/workflows",
+      "deprecated": false,
+      "description": "Verifies a complete named Krea 2 RAW schedule and publishes a model-free artifact bundle with a not-executed sampler receipt.",
+      "display_name": "RAW Workflow Output",
+      "experimental": false,
+      "input": {
+        "required": {
+          "sigmas": [
+            "SIGMAS"
+          ],
+          "schedule_info": [
+            "STRING",
+            {
+              "default": "",
+              "multiline": true
+            }
+          ],
+          "schedule_report": [
+            "STRING",
+            {
+              "default": "",
+              "multiline": true
+            }
+          ]
+        }
+      },
+      "name": "Sigmax.RawWorkflowOutput",
+      "output": [],
+      "output_is_list": [],
+      "output_name": [],
+      "output_node": true,
+      "python_module": "comfyui_sigmax.nodes"
+    },
+    "Sigmax.ScheduleInspector": {
+      "category": "Sigmax/inspection",
+      "deprecated": false,
+      "description": "Verifies connected SIGMAS against bounded versioned Sigmax schedule information.",
+      "display_name": "Schedule Inspector",
+      "experimental": false,
+      "input": {
+        "required": {
+          "sigmas": [
+            "SIGMAS"
+          ],
+          "schedule_info": [
+            "STRING",
+            {
+              "default": "",
+              "multiline": true
+            }
+          ]
+        }
+      },
+      "name": "Sigmax.ScheduleInspector",
+      "output": [
+        "STRING"
+      ],
+      "output_is_list": [
+        false
+      ],
+      "output_name": [
+        "schedule_report"
+      ],
+      "output_node": false,
+      "python_module": "comfyui_sigmax.nodes"
+    },
+    "Sigmax.TurboWorkflowOutput": {
+      "category": "Sigmax/workflows",
+      "deprecated": false,
+      "description": "Verifies the strict eight-step Turbo schedule and publishes a model-free artifact bundle with a not-executed sampler receipt.",
+      "display_name": "Turbo Workflow Output",
+      "experimental": false,
+      "input": {
+        "required": {
+          "sigmas": [
+            "SIGMAS"
+          ],
+          "schedule_info": [
+            "STRING",
+            {
+              "default": "",
+              "multiline": true
+            }
+          ],
+          "schedule_report": [
+            "STRING",
+            {
+              "default": "",
+              "multiline": true
+            }
+          ]
+        }
+      },
+      "name": "Sigmax.TurboWorkflowOutput",
+      "output": [],
+      "output_is_list": [],
+      "output_name": [],
+      "output_node": true,
+      "python_module": "comfyui_sigmax.nodes"
+    },
+    "Sigmax.ZImageSigmaScheduler": {
+      "category": "Sigmax/scheduling",
+      "deprecated": false,
+      "description": "Builds a pinned Z-Image Base or Turbo sigma schedule without model patching.",
+      "display_name": "Z-Image Sigma Scheduler",
+      "experimental": false,
+      "input": {
+        "required": {
+          "variant": [
+            [
+              "Base",
+              "Turbo"
+            ]
+          ],
+          "steps": [
+            "INT",
+            {
+              "default": 50,
+              "max": 10000,
+              "min": 1,
+              "step": 1
+            }
+          ],
+          "strict_official": [
+            "BOOLEAN",
+            {
+              "default": true
+            }
+          ],
+          "start_step": [
+            "INT",
+            {
+              "default": 0,
+              "max": 9999,
+              "min": 0
+            }
+          ],
+          "end_step": [
+            "INT",
+            {
+              "default": -1,
+              "max": 10000,
+              "min": -1
+            }
+          ]
+        }
+      },
+      "name": "Sigmax.ZImageSigmaScheduler",
+      "output": [
+        "SIGMAS",
+        "STRING"
+      ],
+      "output_is_list": [
+        false,
+        false
+      ],
+      "output_name": [
+        "sigmas",
+        "schedule_info"
+      ],
+      "output_node": false,
+      "python_module": "comfyui_sigmax.nodes"
+    }
+  },
+  "schema": "sigmax.workflow-host-baseline/1"
 }

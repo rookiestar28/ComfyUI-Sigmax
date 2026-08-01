@@ -197,7 +197,7 @@ class WorkflowFixture:
 
     def __post_init__(self) -> None:
         _text(self.identifier, label="workflow fixture identifier")
-        if self.variant not in {"RAW", "Turbo"}:
+        if self.variant not in {"RAW", "Turbo", "Z-Image Base", "Z-Image Turbo"}:
             raise ScheduleContractError("workflow fixture variant is unsupported")
         if not isinstance(self.package, WorkflowRequirement):
             raise ScheduleContractError("workflow fixture package is invalid")
@@ -456,6 +456,8 @@ def load_canonical_workflow_fixtures() -> tuple[WorkflowFixture, ...]:
         "krea2-raw-official-landscape-1353x761",
         "krea2-raw-official-square-1024",
         "krea2-turbo-1024",
+        "z-image-base-official-50",
+        "z-image-turbo-official-8",
     ):
         raise ScheduleContractError("workflow fixture inventory is not canonical")
     return result

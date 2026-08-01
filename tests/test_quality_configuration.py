@@ -121,7 +121,7 @@ class QualityConfigurationTests(unittest.TestCase):
                         "filename": "comfyui_sigmax/workflows/host_baseline.json",
                         "hashed_secret": expected_hash,
                         "is_verified": False,
-                        "line_number": 6,
+                        "line_number": 4,
                     }
                 ],
                 "comfyui_sigmax/workflows/validation.py": [

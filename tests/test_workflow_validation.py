@@ -78,8 +78,17 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
         "krea2-raw-official-landscape-1353x761",
         "krea2-raw-official-square-1024",
         "krea2-turbo-1024",
+        "z-image-base-official-50",
+        "z-image-turbo-official-8",
     )
-    assert tuple(item.variant for item in fixtures) == ("RAW", "RAW", "RAW", "Turbo")
+    assert tuple(item.variant for item in fixtures) == (
+        "RAW",
+        "RAW",
+        "RAW",
+        "Turbo",
+        "Z-Image Base",
+        "Z-Image Turbo",
+    )
     assert fixtures[0].workflow is not fixtures[1].workflow
 
     expected_scheduler_widgets = {
@@ -111,30 +120,43 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
             -1,
         ],
         "krea2-turbo-1024": ["Turbo", 8, 1024, 1024, True, 0, -1],
+        "z-image-base-official-50": ["Base", 50, True, 0, -1],
+        "z-image-turbo-official-8": ["Turbo", 8, True, 0, -1],
     }
     for fixture in fixtures:
         workflow = fixture.workflow
         assert workflow["version"] == 0.4
-        assert workflow["last_node_id"] == 3
-        assert workflow["last_link_id"] == 5
-        assert len(cast(list[object], workflow["nodes"])) == 3
-        assert len(cast(list[object], workflow["links"])) == 5
+        is_z_image = fixture.variant.startswith("Z-Image")
+        assert workflow["last_node_id"] == (1 if is_z_image else 3)
+        assert workflow["last_link_id"] == (0 if is_z_image else 5)
+        assert len(cast(list[object], workflow["nodes"])) == (1 if is_z_image else 3)
+        assert len(cast(list[object], workflow["links"])) == (0 if is_z_image else 5)
         metadata = extract_workflow_metadata(workflow)
         assert metadata is not None
         assert metadata.package.identifier == "comfyui-sigmax"
         assert metadata.package.version == "1.0.0"
         assert metadata.host.version == CANONICAL_HOST_VERSION
-        expected_nodes = [
-            "Sigmax.Krea2SigmaScheduler",
-            "Sigmax.ScheduleInspector",
-        ]
-        expected_nodes.append(
-            "Sigmax.RawWorkflowOutput" if fixture.variant == "RAW" else "Sigmax.TurboWorkflowOutput"
+        expected_nodes = (
+            ["Sigmax.ZImageSigmaScheduler"]
+            if is_z_image
+            else [
+                "Sigmax.Krea2SigmaScheduler",
+                "Sigmax.ScheduleInspector",
+                (
+                    "Sigmax.RawWorkflowOutput"
+                    if fixture.variant == "RAW"
+                    else "Sigmax.TurboWorkflowOutput"
+                ),
+            ]
         )
         assert tuple(item.identifier for item in metadata.nodes) == tuple(sorted(expected_nodes))
-        assert metadata.profile.identifier == (
-            "krea2.raw.official" if fixture.variant == "RAW" else "krea2.turbo.official"
-        )
+        expected_profile = {
+            "RAW": "krea2.raw.official",
+            "Turbo": "krea2.turbo.official",
+            "Z-Image Base": "z_image.base.official",
+            "Z-Image Turbo": "z_image.turbo.official",
+        }
+        assert metadata.profile.identifier == expected_profile[fixture.variant]
         scheduler = _node(cast(dict[str, object], workflow), 1)
         assert scheduler["widgets_values"] == expected_scheduler_widgets[fixture.identifier]
         assert cast(dict[str, object], scheduler["properties"])["cnr_id"] == "comfyui-sigmax"
@@ -155,12 +177,13 @@ def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
         "Sigmax.RawWorkflowOutput",
         "Sigmax.ScheduleInspector",
         "Sigmax.TurboWorkflowOutput",
+        "Sigmax.ZImageSigmaScheduler",
     )
     assert report.scan_mode is WorkflowScanMode.PINNED_STATIC
     assert report.lane is WorkflowValidationLane.KNOWN_GOOD
     assert report.host_version == CANONICAL_HOST_VERSION
     assert report.host_revision == CANONICAL_HOST_REVISION
-    assert report.workflow_count == 4
+    assert report.workflow_count == 6
     assert report.compatible is True
     assert report.gate_passed is True
     assert report.observational is False
@@ -172,6 +195,7 @@ def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
         {"id": "Sigmax.RawWorkflowOutput", "version": "1"},
         {"id": "Sigmax.ScheduleInspector", "version": "1"},
         {"id": "Sigmax.TurboWorkflowOutput", "version": "1"},
+        {"id": "Sigmax.ZImageSigmaScheduler", "version": "1"},
     ]
 
 

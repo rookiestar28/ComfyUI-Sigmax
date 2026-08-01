@@ -84,6 +84,10 @@ def test_packaged_manifest_freezes_the_complete_m8_01_boundary() -> None:
             "id": "Sigmax.TurboWorkflowOutput",
             "schema": "sigmax.turbo-workflow-output/1",
         },
+        {
+            "id": "Sigmax.ZImageSigmaScheduler",
+            "schema": "sigmax.z-image-sigma-node/1",
+        },
     ]
     assert projection["schemas"] == {
         "construction": [

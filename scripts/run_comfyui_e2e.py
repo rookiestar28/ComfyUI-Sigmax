@@ -19,6 +19,7 @@ import time
 import uuid
 from collections.abc import Callable, Mapping, Sequence
 from contextlib import suppress
+from itertools import pairwise
 from pathlib import Path
 from typing import Any, Final, cast
 from urllib.error import HTTPError, URLError
@@ -81,6 +82,8 @@ _ALGEBRA_OUTPUT_NODE_ID: Final = "7"
 _ALGEBRA_TRACE_KEY: Final = "sigmax_schedule_algebra"
 _CHECKPOINT_OUTPUT_NODE_ID: Final = "2"
 _CHECKPOINT_TRACE_KEY: Final = "sigmax_checkpoint_evidence"
+_Z_IMAGE_OUTPUT_NODE_ID: Final = "2"
+_Z_IMAGE_TRACE_KEY: Final = "sigmax_z_image_schedule"
 _CHECKPOINT_FIXTURE_NAME: Final = "sigmax-m6-08-fixture.safetensors"
 _H3_TEST_PACK_NAME: Final = "ComfyUI-Sigmax-H3"
 _H3_TEST_PACK_SOURCE: Final = (
@@ -175,6 +178,79 @@ def build_turbo_api_prompt() -> dict[str, object]:
                 "schedule_report": ["2", 0],
             },
         },
+    }
+
+
+def build_z_image_h2_api_prompt(variant: str) -> dict[str, object]:
+    """Return a model-free Z-Image scheduler -> test probe graph."""
+
+    if variant not in {"Base", "Turbo"}:
+        raise ScheduleContractError("Z-Image H2 variant must be Base or Turbo")
+    steps = 50 if variant == "Base" else 8
+    return {
+        "1": {
+            "class_type": "Sigmax.ZImageSigmaScheduler",
+            "inputs": {
+                "end_step": -1,
+                "start_step": 0,
+                "steps": steps,
+                "strict_official": True,
+                "variant": variant,
+            },
+        },
+        _Z_IMAGE_OUTPUT_NODE_ID: {
+            "class_type": "SigmaxTest.ZImageScheduleProbe",
+            "inputs": {"schedule_info": ["1", 1], "sigmas": ["1", 0]},
+        },
+    }
+
+
+def verify_z_image_h2_history(
+    history: object, *, prompt_id: str, variant: str
+) -> dict[str, object]:
+    """Verify completed Z-Image schedule execution and exact variant semantics."""
+
+    if variant not in {"Base", "Turbo"}:
+        raise ScheduleContractError("Z-Image H2 variant must be Base or Turbo")
+    root = _object(history, label="Z-Image history")
+    entry = _object(root.get(prompt_id), label="Z-Image history entry")
+    status = _object(entry.get("status"), label="Z-Image prompt status")
+    if status.get("completed") is not True or status.get("status_str") != "success":
+        raise ScheduleContractError("Z-Image prompt history does not prove success")
+    outputs = _object(entry.get("outputs"), label="Z-Image prompt outputs")
+    output = _object(outputs.get(_Z_IMAGE_OUTPUT_NODE_ID), label="Z-Image probe output")
+    traces = _array(output.get(_Z_IMAGE_TRACE_KEY), label="Z-Image probe trace")
+    if len(traces) != 1 or not isinstance(traces[0], str):
+        raise ScheduleContractError("Z-Image probe trace is malformed")
+    trace = _object(json.loads(traces[0]), label="Z-Image decoded trace")
+    info = _object(trace.get("schedule_info"), label="Z-Image schedule information")
+    sigmas = _array(trace.get("sigmas"), label="Z-Image sigma vector")
+    expected_steps = 50 if variant == "Base" else 8
+    expected_ratio = 6.0 if variant == "Base" else 3.0
+    expected_profile = f"z_image.{variant.casefold()}.official"
+    if (
+        info.get("schema") != "sigmax.z-image-sigma-node/1"
+        or _object(info.get("profile"), label="Z-Image profile").get("id") != expected_profile
+        or _object(info.get("profile"), label="Z-Image profile").get("evidence") != "official"
+        or _object(info.get("shift"), label="Z-Image shift")
+        != {"dynamic": False, "kind": "fixed_direct_ratio", "ratio": expected_ratio}
+        or _object(info.get("slicing"), label="Z-Image slicing").get("output_steps")
+        != expected_steps
+        or len(sigmas) != expected_steps + 1
+        or sigmas[0] != 1.0
+        or sigmas[-1] != 0.0
+        or any(not isinstance(value, (int, float)) or isinstance(value, bool) for value in sigmas)
+        or any(float(left) <= float(right) for left, right in pairwise(sigmas))
+    ):
+        raise ScheduleContractError("Z-Image H2 execution evidence drifted")
+    return {
+        "numerical_fingerprint": _object(
+            info.get("fingerprints"), label="Z-Image fingerprints"
+        ).get("complete"),
+        "profile_id": expected_profile,
+        "ratio": expected_ratio,
+        "requested_transitions": expected_steps,
+        "status": "succeeded",
     }
 
 
@@ -1773,6 +1849,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
             "H2_RAW_M3_06",
             "H2_ALGEBRA_M4_09",
             "H2_CHECKPOINT_EVIDENCE_M6_08",
+            "H2_Z_IMAGE_M6_04",
             "H3_EULER_M5_01",
         ],
         "host": {
@@ -1940,6 +2017,50 @@ def run(args: argparse.Namespace) -> dict[str, object]:
                 raw_results.append(raw_summary)
                 attempts[f"h2_raw.{case_id}"] = raw_transition
             evidence["h2_raw"] = raw_results
+
+            z_image_results: list[dict[str, object]] = []
+            for variant, case_id in (
+                ("Base", "z-image-base-official-50"),
+                ("Turbo", "z-image-turbo-official-8"),
+            ):
+                fixture = fixtures.get(case_id)
+                if fixture is None:
+                    raise ScheduleContractError("Z-Image host case has no canonical workflow")
+                submitted_workflow = cast(dict[str, object], fixture.workflow)
+
+                def submit_z_image(
+                    ordinal: int,
+                    *,
+                    selected_variant: str = variant,
+                    selected_case: str = case_id,
+                    workflow: dict[str, object] = submitted_workflow,
+                ) -> tuple[str, dict[str, object]]:
+                    return _submit_successful_prompt(
+                        base_url=base_url,
+                        client_id=f"sigmax-m6-04-{selected_case}-attempt-{ordinal}",
+                        prompt=build_z_image_h2_api_prompt(selected_variant),
+                        extra_data={"extra_pnginfo": {"workflow": workflow}},
+                        execution_timeout=args.execution_timeout,
+                    )
+
+                def verify_z_image(
+                    history: object,
+                    prompt_id: str,
+                    *,
+                    selected_variant: str = variant,
+                ) -> dict[str, object]:
+                    return verify_z_image_h2_history(
+                        history, prompt_id=prompt_id, variant=selected_variant
+                    )
+
+                z_summary, z_transition = execute_verified_host_repeat(
+                    lane="H2_Z_IMAGE_M6_04",
+                    submit=submit_z_image,
+                    verify=verify_z_image,
+                )
+                z_image_results.append(z_summary)
+                attempts[f"h2_z_image.{case_id}"] = z_transition
+            evidence["h2_z_image"] = z_image_results
 
             def submit_runtime_rejection(ordinal: int) -> tuple[str, dict[str, object]]:
                 return _submit_rejected_runtime_prompt(

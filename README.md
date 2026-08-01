@@ -1,15 +1,17 @@
 # ComfyUI-Sigmax
 
 ComfyUI-Sigmax 1.0.0 is a model-aware sigma schedule toolkit for ComfyUI. It provides verified,
-versioned Krea 2 Turbo and Krea 2 RAW schedules, explicit model/profile/sampler capability
+versioned Krea 2 Turbo, Krea 2 RAW, Z-Image Base, and Z-Image Turbo schedules,
+explicit model/profile/sampler capability
 contracts, stable workflow metadata, inspectors, comparison reports, and reproducible release
 artifacts while keeping the schedule core independent of ComfyUI and Diffusers.
 
-> **Status: stable public-contract baseline.** Twelve namespaced nodes are implemented. Turbo and
-> RAW schedule construction, complete golden vectors, authoritative/framework parity, pinned-host
+> **Status: stable public-contract baseline.** Thirteen namespaced nodes are implemented. Krea 2
+> and Z-Image schedule construction, complete golden vectors, authoritative/framework evidence,
+> pinned-host
 > import and model-free workflows, and deterministic native-Euler equivalence are validated.
 > Real model weights, GPU/image quality, stochastic/resumable/partial-denoise execution, advanced
-> workflows, and generic cross-model compatibility are not claimed. Explicit schedule-only
+> workflows, and broad generic cross-model compatibility are not claimed. Explicit schedule-only
 > `flowmatch.generic.fixed` and `flowmatch.generic.dynamic` declarations are available under
 > `sigmax.generic-flowmatch-profile/1`; neither is an official model profile. Start with the
 > [1.0 user guide](docs/USER_GUIDE.md).
@@ -62,6 +64,7 @@ assert sorted(comfyui_sigmax.NODE_CLASS_MAPPINGS) == [
     "Sigmax.ScheduleResample",
     "Sigmax.ScheduleSlice",
     "Sigmax.TurboWorkflowOutput",
+    "Sigmax.ZImageSigmaScheduler",
 ]
 assert comfyui_sigmax.NODE_DISPLAY_NAME_MAPPINGS == {
     "Sigmax.AdvancedFlowMatchScheduler": "Advanced FlowMatch Scheduler",
@@ -76,6 +79,7 @@ assert comfyui_sigmax.NODE_DISPLAY_NAME_MAPPINGS == {
     "Sigmax.ScheduleResample": "Schedule Resample",
     "Sigmax.ScheduleSlice": "Schedule Slice",
     "Sigmax.TurboWorkflowOutput": "Turbo Workflow Output",
+    "Sigmax.ZImageSigmaScheduler": "Z-Image Sigma Scheduler",
 }
 ```
 
@@ -125,6 +129,25 @@ Complete external schedules can be validated for finite values, domain bounds, e
 transition count, strict decrease, and terminal-zero policy. The core also provides typed
 IEEE-754 float tokens, bounded NFC canonical projections, and separate numerical and
 construction SHA-256 fingerprints that reproduce the published artifact fixtures.
+
+### Z-Image evidence boundary
+
+`Sigmax.ZImageSigmaScheduler` requires an explicit `Base` or `Turbo` choice and never infers the
+variant from a filename or weak metadata. Both released profiles use a terminal-free reciprocal
+FlowMatch grid, a fixed direct-ratio shift, and one appended zero. The pinned publisher settings
+are ratio `6.0` with 28--50 steps (default 50) for Base, and ratio `3.0` with exactly 8 model
+evaluations for strict Turbo. Released scheduler configs disable dynamic shifting.
+
+Every core claim is cross-checked against all four required evidence lanes: the official
+[GitHub source](https://github.com/Tongyi-MAI/Z-Image), official
+[Hugging Face Base](https://huggingface.co/Tongyi-MAI/Z-Image) and
+[Turbo](https://huggingface.co/Tongyi-MAI/Z-Image-Turbo) repositories, the official
+[technical site/report](https://tongyi-mai.github.io/Z-Image-blog/), and the
+[ComfyUI implementation](https://github.com/Comfy-Org/ComfyUI). Exact revisions, file hashes,
+licenses, and locators live in the immutable profile declarations and golden metadata. A material
+discrepancy remains explicit: the pinned ComfyUI implementation applies ratio `3.0` to the shared
+Z-Image model class, while the official Base scheduler config specifies `6.0`; Sigmax therefore
+does not label ComfyUI's Base ratio as publisher-official behavior.
 
 Validated external `ScheduleResult` values can now be built into immutable
 `ScheduleArtifact` objects and transported as strict canonical UTF-8 JSON:
@@ -193,7 +216,7 @@ conflicting or malformed existing metadata. It does not validate the surrounding
 live-host compatibility.
 
 The adjacent workflow validator supplies that static schema boundary for the packaged canonical
-Turbo and RAW fixtures:
+Turbo, RAW, and Z-Image fixtures:
 
 ```python
 from comfyui_sigmax.workflows import (
@@ -230,6 +253,8 @@ graphs:
 - `krea2-raw-official-square-1024`;
 - `krea2-raw-official-landscape-1353x761`;
 - `krea2-raw-diffusers-portrait-761x1353`.
+- `z-image-base-official-50`;
+- `z-image-turbo-official-8`.
 
 Each RAW graph ends at `Sigmax.RawWorkflowOutput`. Completed prompt history must preserve the
 submitted workflow metadata and return the expected requested/effective geometry, sequence

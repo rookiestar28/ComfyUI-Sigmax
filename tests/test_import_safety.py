@@ -111,6 +111,7 @@ class ImportSafetyTests(unittest.TestCase):
                     "Sigmax.ScheduleResample": "ScheduleResample",
                     "Sigmax.ScheduleSlice": "ScheduleSlice",
                     "Sigmax.TurboWorkflowOutput": "TurboWorkflowOutput",
+                    "Sigmax.ZImageSigmaScheduler": "ZImageSigmaScheduler",
                 },
                 "comfy_loaded": False,
                 "diffusers_loaded": False,
@@ -127,6 +128,7 @@ class ImportSafetyTests(unittest.TestCase):
                     "Sigmax.ScheduleResample": "Schedule Resample",
                     "Sigmax.ScheduleSlice": "Schedule Slice",
                     "Sigmax.TurboWorkflowOutput": "Turbo Workflow Output",
+                    "Sigmax.ZImageSigmaScheduler": "Z-Image Sigma Scheduler",
                 },
                 "torch_call_unchanged": True,
                 "uses_package_mappings": True,
@@ -168,6 +170,7 @@ class ImportSafetyTests(unittest.TestCase):
                 "Sigmax.ScheduleResample",
                 "Sigmax.ScheduleSlice",
                 "Sigmax.TurboWorkflowOutput",
+                "Sigmax.ZImageSigmaScheduler",
             ]
             assert bootstrap.NODE_DISPLAY_NAME_MAPPINGS == {
                 "Sigmax.AdvancedFlowMatchScheduler": "Advanced FlowMatch Scheduler",
@@ -182,6 +185,7 @@ class ImportSafetyTests(unittest.TestCase):
                 "Sigmax.ScheduleResample": "Schedule Resample",
                 "Sigmax.ScheduleSlice": "Schedule Slice",
                 "Sigmax.TurboWorkflowOutput": "Turbo Workflow Output",
+                "Sigmax.ZImageSigmaScheduler": "Z-Image Sigma Scheduler",
             }
             """
         )
@@ -240,6 +244,7 @@ def test_bootstrap_supports_dynamic_comfyui_custom_node_loader() -> None:
         "Sigmax.ScheduleResample",
         "Sigmax.ScheduleSlice",
         "Sigmax.TurboWorkflowOutput",
+        "Sigmax.ZImageSigmaScheduler",
     ]
 
 

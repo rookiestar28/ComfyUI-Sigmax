@@ -14,7 +14,9 @@ collisions. Its built-in catalog contains the statically validated legacy/curren
 path-free `sigmax.checkpoint-evidence-inspection/1` JSON after a bounded safetensors header-only
 read; `Sigmax.Krea2SigmaScheduler`, which explicitly
 constructs Turbo or RAW sigmas and returns
-structured `sigmax.krea2-sigma-node/1` schedule information, plus
+structured `sigmax.krea2-sigma-node/1` schedule information;
+`Sigmax.ZImageSigmaScheduler`, which requires explicit Base/Turbo selection and returns
+four-source-pinned fixed-ratio schedules under `sigmax.z-image-sigma-node/1`; plus
 `Sigmax.ModelAwareSigmaScheduler`, which requires a Krea 2 MODEL, exposes family-only Auto
 ambiguity, and returns exact-profile capability decisions under
 `sigmax.model-aware-sigma-node/1`; plus the read-only `Sigmax.ProfileInspector` and
@@ -29,12 +31,15 @@ native-Euler sampler steps are validated there through complete eight-step laten
 independent flow-equation recomputation, exact execution counts, deterministic reruns, and an
 artifact-linked success receipt. RAW native model execution, real Krea model weights, GPU
 execution, image generation, stochastic/resumable semantics, partial-denoise execution, and
-advanced workflows are **not yet validated**. Complete Turbo golden vectors, authoritative
+advanced workflows are **not yet validated**. Complete Krea 2 and Z-Image golden vectors,
+authoritative
 framework parity, and native ComfyUI schedule parity are validated at 4, 8, 12, and 16 steps.
 RAW authoritative and framework schedule parity is validated across 14 complete 28/52-step
 geometry cases.
 The dependency-free `ProfileSchemaV1` contract is frozen for these validated external-sigma
-profiles, including separate source/framework/weight license provenance. The immutable
+profiles, including separate source/framework/weight license provenance. Z-Image core claims
+also require simultaneous official GitHub, Hugging Face, official technical-site/report, and
+ComfyUI evidence. The immutable
 exact-key `ProfileRegistry` and explicit inheritance/conflict policy are implemented without
 file or plugin loading. Native or patched schedule-ownership schemas, external document
 parsing and native/patched ownership schemas are not yet implemented.
@@ -63,7 +68,8 @@ and `1`. It preserves unrelated graph and `extra` data and verifies the embedded
 envelope. Metadata parsing alone does not validate node/link/widget compatibility; the pinned
 H2 lane separately proves metadata reload for every published RAW workflow.
 
-The separate `comfyui_sigmax.workflows` validator now checks canonical model-free Turbo/RAW
+The separate `comfyui_sigmax.workflows` validator now checks canonical model-free Turbo/RAW and
+Z-Image
 fixtures against the pinned 0.29.0 legacy/v2 schema baseline or caller-observed live
 `/object_info`. It reports stable issue kinds, package/node/host versions, and strict
 known-good versus observational latest-host results. Its optional HTTP loader is
@@ -73,6 +79,9 @@ and portrait RAW graphs to completed history on the pinned host, verifies workfl
 reload and canonical bundles, and proves two fail-closed boundaries: an ambiguous variant
 produces a terminal runtime rejection with no partial output, while invalid steps produce a
 structured prequeue HTTP 400 rejection without a prompt ID.
+The `H2_Z_IMAGE_M6_04` lane separately executes Base 50 and Turbo 8 schedule nodes twice. It
+proves the official fixed ratios (`6.0` and `3.0`), explicit variants, complete monotonic vectors,
+and stable result fingerprints without downloading model weights.
 
 ## Validated Foundation Environments
 
@@ -83,7 +92,7 @@ The current package, quality gates, tests, and wheel inventory have been validat
 | Windows | 3.13 | Core independence, deterministic property, Turbo/RAW golden and parity contracts, package, quality, unit, coverage, and wheel gates |
 | WSL2/Linux path | 3.10 | Core independence, deterministic property, Turbo/RAW golden and parity contracts, package, quality, unit, coverage, and wheel gates |
 | Hosted Linux parity lanes | 3.13 | Exact Diffusers 0.39.0, NumPy 2.3.4, and Torch 2.9.0 Turbo/RAW report regeneration |
-| Pinned ComfyUI host | 3.13 | H1 import/schema safety and H2 model-free Turbo/RAW workflow execution on ComfyUI 0.29.0 revision `e651b7b…` |
+| Pinned ComfyUI host | 3.13 | H1 import/schema safety and H2 model-free Krea 2/Z-Image workflow execution on ComfyUI 0.29.0 revision `e651b7b…` |
 | Latest ComfyUI release observation | 3.13 | Non-blocking H1/H2/H3 first/repeat execution on official v0.29.2 revision `32212244…`, Torch 2.13.0+CPU, no model weights |
 | Latest ComfyUI HEAD observation | 3.13 | Non-blocking H1/H2/H3 first/repeat execution on pinned HEAD `5cc026f5…`, Torch 2.13.0+CPU, no model weights |
 

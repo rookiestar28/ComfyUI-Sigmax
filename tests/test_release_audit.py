@@ -81,18 +81,29 @@ def test_builtin_provenance_layers_and_licenses_are_distinct() -> None:
     assert [row["profile_key"] for row in rows] == [
         "krea2.raw.official@1",
         "krea2.turbo.official@1",
+        "z_image.base.official@1",
+        "z_image.turbo.official@1",
     ]
     for row in rows:
-        assert row["resource_counts"] == {
-            "frameworks": 2,
-            "model_weights": 1,
-            "software_sources": 1,
-        }
-        assert set(row["license_identifiers"]) == {
-            "Apache-2.0",
-            "GPL-3.0-only",
-            "LicenseRef-Krea-2-Community",
-        }
+        if row["profile_key"].startswith("krea2."):
+            assert row["resource_counts"] == {
+                "frameworks": 2,
+                "model_weights": 1,
+                "software_sources": 1,
+            }
+            assert set(row["license_identifiers"]) == {
+                "Apache-2.0",
+                "GPL-3.0-only",
+                "LicenseRef-Krea-2-Community",
+            }
+        else:
+            expected_weights = 3 if ".base." in row["profile_key"] else 4
+            assert row["resource_counts"] == {
+                "frameworks": 1,
+                "model_weights": expected_weights,
+                "software_sources": 1,
+            }
+            assert set(row["license_identifiers"]) == {"Apache-2.0", "GPL-3.0-only"}
 
 
 def test_provenance_audit_rejects_missing_or_conflated_layers() -> None:

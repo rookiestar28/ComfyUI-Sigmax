@@ -474,6 +474,7 @@ def test_builtin_registry_and_package_mappings_expose_only_validated_product_nod
         ScheduleResample,
         ScheduleSlice,
         TurboWorkflowOutput,
+        ZImageSigmaScheduler,
     )
 
     registry = builtin_node_registry()
@@ -490,6 +491,7 @@ def test_builtin_registry_and_package_mappings_expose_only_validated_product_nod
         "Sigmax.ScheduleResample",
         "Sigmax.ScheduleSlice",
         "Sigmax.TurboWorkflowOutput",
+        "Sigmax.ZImageSigmaScheduler",
     )
     assert {
         "Sigmax.AdvancedFlowMatchScheduler": AdvancedFlowMatchScheduler,
@@ -504,6 +506,7 @@ def test_builtin_registry_and_package_mappings_expose_only_validated_product_nod
         "Sigmax.ScheduleResample": ScheduleResample,
         "Sigmax.ScheduleSlice": ScheduleSlice,
         "Sigmax.TurboWorkflowOutput": TurboWorkflowOutput,
+        "Sigmax.ZImageSigmaScheduler": ZImageSigmaScheduler,
     } == comfyui_sigmax.NODE_CLASS_MAPPINGS
     assert comfyui_sigmax.NODE_DISPLAY_NAME_MAPPINGS == {
         "Sigmax.AdvancedFlowMatchScheduler": "Advanced FlowMatch Scheduler",
@@ -518,6 +521,7 @@ def test_builtin_registry_and_package_mappings_expose_only_validated_product_nod
         "Sigmax.ScheduleResample": "Schedule Resample",
         "Sigmax.ScheduleSlice": "Schedule Slice",
         "Sigmax.TurboWorkflowOutput": "Turbo Workflow Output",
+        "Sigmax.ZImageSigmaScheduler": "Z-Image Sigma Scheduler",
     }
     assert comfyui_sigmax.NODE_CLASS_MAPPINGS is not builtin_node_registry().class_mappings()
 

@@ -272,6 +272,61 @@ def test_checkpoint_evidence_h2_history_requires_path_free_suggestion_only_repor
         )
 
 
+@pytest.mark.parametrize(("variant", "steps"), (("Base", 50), ("Turbo", 8)))
+def test_z_image_h2_prompt_and_history_are_variant_bound(variant: str, steps: int) -> None:
+    harness = _harness()
+    prompt = harness.build_z_image_h2_api_prompt(variant)
+    assert prompt["1"] == {
+        "class_type": "Sigmax.ZImageSigmaScheduler",
+        "inputs": {
+            "end_step": -1,
+            "start_step": 0,
+            "steps": steps,
+            "strict_official": True,
+            "variant": variant,
+        },
+    }
+    info = {
+        "fingerprints": {"complete": "sha256:" + "a" * 64, "output": "sha256:" + "b" * 64},
+        "profile": {
+            "evidence": "official",
+            "id": f"z_image.{variant.casefold()}.official",
+            "recipe": f"z_image.{variant.casefold()}.official",
+            "variant": variant.casefold(),
+            "version": "1",
+        },
+        "schema": "sigmax.z-image-sigma-node/1",
+        "shift": {
+            "dynamic": False,
+            "kind": "fixed_direct_ratio",
+            "ratio": 6.0 if variant == "Base" else 3.0,
+        },
+        "slicing": {
+            "available_steps": steps,
+            "end_step": steps,
+            "output_steps": steps,
+            "start_step": 0,
+        },
+        "strict_official": True,
+        "warnings": [],
+    }
+    sigmas = [1.0 - index / steps for index in range(steps)] + [0.0]
+    trace = json.dumps(
+        {"schedule_info": info, "sigmas": sigmas}, sort_keys=True, separators=(",", ":")
+    )
+    history = {
+        "prompt-z": {
+            "outputs": {"2": {"sigmax_z_image_schedule": [trace]}},
+            "status": {"completed": True, "status_str": "success"},
+        }
+    }
+    summary = harness.verify_z_image_h2_history(history, prompt_id="prompt-z", variant=variant)
+    assert summary["profile_id"] == f"z_image.{variant.casefold()}.official"
+    assert summary["ratio"] == (6.0 if variant == "Base" else 3.0)
+    assert summary["requested_transitions"] == steps
+    assert summary["status"] == "succeeded"
+
+
 def _schedule_algebra_history() -> dict[str, Any]:
     source = build_krea2_sigma_schedule(
         variant="Turbo",

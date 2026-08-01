@@ -31,6 +31,19 @@ def krea_reciprocal_step_grid(
     return tuple((count - index) / count for index in range(count))
 
 
+def flowmatch_reciprocal_step_grid(
+    steps: int,
+    *,
+    domain: SigmaDomain = SigmaDomain.UNIT_FLOW,
+) -> tuple[float, ...]:
+    """Build a neutral terminal-free FlowMatch grid from one through one-over-steps."""
+
+    count = _require_integer_count(steps, minimum=1, label="steps")
+    if domain is not SigmaDomain.UNIT_FLOW:
+        raise ScheduleContractError("FlowMatch reciprocal-step grid requires the UNIT_FLOW domain")
+    return tuple((count - index) / count for index in range(count))
+
+
 def linear_endpoint_grid(
     *,
     points: int,

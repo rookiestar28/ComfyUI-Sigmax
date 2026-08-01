@@ -13,6 +13,7 @@ from comfyui_sigmax.core.artifacts import (
     serialize_schedule_artifact,
 )
 from comfyui_sigmax.core.base_grids import (
+    flowmatch_reciprocal_step_grid,
     krea_reciprocal_step_grid,
     linear_endpoint_grid,
 )
@@ -213,6 +214,7 @@ __all__ = [
     "exponential_mu_shift",
     "extract_workflow_metadata",
     "float_to_ieee_hex",
+    "flowmatch_reciprocal_step_grid",
     "krea_reciprocal_step_grid",
     "linear_endpoint_grid",
     "no_shift",

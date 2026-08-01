@@ -467,6 +467,17 @@ SHA-256 evidence. Local header and filename signals remain suggestions, while te
 the shared ComfyUI model class remain family-only. Conflicting resolving evidence is never
 hidden by precedence, and strict official mode fails closed.
 
+The additive Z-Image boundary lives in `profiles/z_image.py` and the thin
+`nodes/z_image_sigma_scheduler.py` adapter. Each Base/Turbo profile simultaneously pins the
+publisher GitHub source, its exact Hugging Face repository revision and weight hashes, the
+official technical site/report, and the reviewed ComfyUI implementation. Construction reuses a
+neutral reciprocal FlowMatch grid, fixed direct-ratio shift, and appended terminal zero. Base
+uses publisher ratio `6.0` for 28--50 steps; strict Turbo uses ratio `3.0` for eight model
+evaluations. The pinned ComfyUI shared model class applies ratio `3.0` without distinguishing
+Base, so that Base behavior remains an explicit framework discrepancy instead of being promoted
+to official evidence. Variant selection is explicit-only and no Krea constants or dimension
+shift enter this profile.
+
 ## Planned Layered Design
 
 ```text
@@ -496,7 +507,8 @@ This layer must not require ComfyUI or Diffusers for closed-form schedule formul
 
 ### Profile resolver and registry
 
-Dedicated Turbo and RAW profiles carry model identity, variant, evidence level, sigma domain,
+Dedicated Krea 2 Turbo/RAW and Z-Image Base/Turbo profiles carry model identity, variant,
+evidence level, sigma domain,
 base-grid construction, shift parameterization, terminal policy, sampler compatibility, and
 provenance. The implemented Krea-specific evidence resolver exposes status, confidence,
 decisive source, normalized evidence, and warnings. The generic `ProfileSchemaV1` contract is

@@ -589,6 +589,7 @@ def builtin_node_registry() -> NodeRegistry:
         ScheduleResample,
         ScheduleSlice,
         TurboWorkflowOutput,
+        ZImageSigmaScheduler,
     )
 
     return NodeRegistry.empty().register_many(
@@ -652,6 +653,11 @@ def builtin_node_registry() -> NodeRegistry:
                 node_id="Sigmax.TurboWorkflowOutput",
                 display_name="Turbo Workflow Output",
                 node_class=TurboWorkflowOutput,
+            ),
+            discover_legacy_registration(
+                node_id="Sigmax.ZImageSigmaScheduler",
+                display_name="Z-Image Sigma Scheduler",
+                node_class=ZImageSigmaScheduler,
             ),
         )
     )

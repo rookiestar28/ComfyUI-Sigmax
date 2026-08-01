@@ -98,6 +98,13 @@ def test_windows_and_wsl_executed_the_same_invariant_contract() -> None:
     assert windows["mandatory_dependencies"] == wsl["mandatory_dependencies"] == 0
 
 
+def test_lane_selection_excludes_post_generation_matrix_validation() -> None:
+    """Lane receipts must be refreshable independently after contract changes."""
+
+    assert "tests/test_compatibility_matrix.py" not in runner.TEST_SELECTION
+    assert "tests/test_compatibility_matrix.py" in runner.SOURCE_PATHS
+
+
 def test_generator_matches_the_packaged_resource() -> None:
     expected = generator._canonical(generator.build_envelope()) + b"\n"
     actual = (

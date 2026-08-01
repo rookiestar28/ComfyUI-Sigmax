@@ -108,6 +108,16 @@ from comfyui_sigmax.profiles.schema_v1 import (
     profile_schema_fingerprint,
     profile_schema_projection,
 )
+from comfyui_sigmax.profiles.z_image import (
+    Z_IMAGE_BASE_PROFILE,
+    Z_IMAGE_BASE_SCHEMA,
+    Z_IMAGE_TURBO_PROFILE,
+    Z_IMAGE_TURBO_SCHEMA,
+    ZImageEvidenceReference,
+    ZImageProfile,
+    ZImageVariant,
+    build_z_image_schedule,
+)
 
 __all__ = [
     "CAPABILITY_RESOLUTION_ADDITIONAL_REASON_CODES",
@@ -131,6 +141,10 @@ __all__ = [
     "KREA2_TURBO_SCHEMA",
     "PROFILE_SCHEMA_ID",
     "PROFILE_SCHEMA_VERSION",
+    "Z_IMAGE_BASE_PROFILE",
+    "Z_IMAGE_BASE_SCHEMA",
+    "Z_IMAGE_TURBO_PROFILE",
+    "Z_IMAGE_TURBO_SCHEMA",
     "ArtifactVersionDeclaration",
     "BaseGridDeclaration",
     "CheckpointEvidenceInspection",
@@ -183,8 +197,12 @@ __all__ = [
     "StepRangeDeclaration",
     "TerminalDeclaration",
     "TransformDeclaration",
+    "ZImageEvidenceReference",
+    "ZImageProfile",
+    "ZImageVariant",
     "build_krea2_raw_schedule",
     "build_krea2_turbo_schedule",
+    "build_z_image_schedule",
     "builtin_profile_registry",
     "calculate_krea2_raw_mu",
     "collect_krea2_variant_evidence",

@@ -84,6 +84,15 @@ from comfyui_sigmax.nodes.turbo_workflow_output import (
     TurboWorkflowOutputResult,
     build_turbo_workflow_output,
 )
+from comfyui_sigmax.nodes.z_image_sigma_scheduler import (
+    Z_IMAGE_SIGMA_NODE_ID,
+    Z_IMAGE_SIGMA_NODE_SCHEMA_ID,
+    ZImageSigmaNodeResult,
+    ZImageSigmaScheduler,
+    ZImageSigmaVariant,
+    bind_z_image_sigma_output_info,
+    build_z_image_sigma_schedule,
+)
 
 __all__ = [
     "ADVANCED_FLOWMATCH_NODE_ID",
@@ -114,6 +123,8 @@ __all__ = [
     "TURBO_WORKFLOW_BUNDLE_UI_KEY",
     "TURBO_WORKFLOW_OUTPUT_NODE_ID",
     "TURBO_WORKFLOW_OUTPUT_SCHEMA_ID",
+    "Z_IMAGE_SIGMA_NODE_ID",
+    "Z_IMAGE_SIGMA_NODE_SCHEMA_ID",
     "AdvancedFlowMatchNodeResult",
     "AdvancedFlowMatchScheduler",
     "AdvancedFlowMatchShiftMode",
@@ -140,7 +151,11 @@ __all__ = [
     "ScheduleSlice",
     "TurboWorkflowOutput",
     "TurboWorkflowOutputResult",
+    "ZImageSigmaNodeResult",
+    "ZImageSigmaScheduler",
+    "ZImageSigmaVariant",
     "bind_krea2_sigma_output_info",
+    "bind_z_image_sigma_output_info",
     "build_advanced_flowmatch_schedule",
     "build_krea2_sigma_schedule",
     "build_model_aware_sigma_schedule",
@@ -152,6 +167,7 @@ __all__ = [
     "build_schedule_resample",
     "build_schedule_slice",
     "build_turbo_workflow_output",
+    "build_z_image_sigma_schedule",
     "probe_model_family",
     "sigma_output_fingerprint",
 ]

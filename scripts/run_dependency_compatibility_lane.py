@@ -50,7 +50,6 @@ TEST_SELECTION: Final = (
     "tests/test_artifact_serialization.py",
     "tests/test_benchmark_matrix.py",
     "tests/test_capabilities.py",
-    "tests/test_compatibility_matrix.py",
     "tests/test_execution_receipts.py",
     "tests/test_package_contract.py",
     "tests/test_workflow_validation.py",

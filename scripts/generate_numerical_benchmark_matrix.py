@@ -295,6 +295,10 @@ def _workflow_rows(
     raw_cases = cast(list[dict[str, Any]], raw_parity["cases"])
     rows: list[dict[str, object]] = []
     for fixture in workflows["fixtures"]:
+        lane = lanes.get(f"h2.{fixture['id']}")
+        # A packaged workflow enters the verified matrix only after a real-host attempt exists.
+        if lane is None:
+            continue
         scheduler = next(
             node
             for node in fixture["workflow"]["nodes"]
@@ -306,7 +310,6 @@ def _workflow_rows(
         metadata = fixture["workflow"]["extra"]["comfyui_sigmax"]["metadata"]
         artifact = metadata["artifact"]
         receipt = metadata["receipts"][0]
-        lane = lanes[f"h2.{fixture['id']}"]
         if variant == "RAW":
             parity_case = next(
                 case

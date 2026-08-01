@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -510,12 +511,14 @@ def test_report_serialization_is_stable_across_hash_seeds() -> None:
         build_schedule_report(expected_artifact, receipt=_receipt(expected_artifact))
     )
     for seed in ("1", "917"):
+        environment = os.environ.copy()
+        environment["PYTHONHASHSEED"] = seed
         completed = subprocess.run(
             [sys.executable, "-I", "-c", script, str(ROOT)],
             check=True,
             capture_output=True,
             cwd=ROOT,
-            env={"PYTHONHASHSEED": seed},
+            env=environment,
         )
         assert completed.stdout == expected
 

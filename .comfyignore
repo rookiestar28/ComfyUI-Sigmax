@@ -5,6 +5,7 @@ requirements/
 scripts/
 tests/
 .gitignore
+.gitattributes
 .pre-commit-config.yaml
 .secrets.baseline
 CHANGELOG.md

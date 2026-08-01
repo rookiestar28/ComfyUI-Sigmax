@@ -229,6 +229,17 @@ class CiContractTests(unittest.TestCase):
                     block.index("-r requirements/parity-krea2-turbo.txt"),
                 )
 
+    def test_hash_seed_subprocesses_preserve_the_required_os_environment(self) -> None:
+        for relative_path in (
+            "tests/test_execution_receipts.py",
+            "tests/test_schedule_reports.py",
+            "tests/test_workflow_metadata.py",
+        ):
+            source = (REPOSITORY_ROOT / relative_path).read_text(encoding="utf-8")
+            with self.subTest(path=relative_path):
+                self.assertNotIn('env={"PYTHONHASHSEED": seed}', source)
+                self.assertIn('environment["PYTHONHASHSEED"] = seed', source)
+
     def test_matrix_records_framework_and_host_parity_separately(self) -> None:
         matrix = (REPOSITORY_ROOT / "tests/CI_TEST_MATRIX.md").read_text(encoding="utf-8")
         normalized_matrix = " ".join(matrix.split())

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import subprocess
 import sys
 from dataclasses import FrozenInstanceError, replace
@@ -473,12 +474,14 @@ payload = bytes.fromhex(sys.argv[1])
 sys.stdout.write(serialize_workflow_metadata(deserialize_workflow_metadata(payload)).hex())
 """
     for seed in ("1", "917"):
+        environment = os.environ.copy()
+        environment["PYTHONHASHSEED"] = seed
         completed = subprocess.run(
             [sys.executable, "-I", "-c", code, payload.hex()],
             check=True,
             capture_output=True,
             text=True,
-            env={"PYTHONHASHSEED": seed},
+            env=environment,
         )
         assert bytes.fromhex(completed.stdout) == payload
 

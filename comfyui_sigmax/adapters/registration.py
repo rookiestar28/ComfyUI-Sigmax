@@ -580,6 +580,7 @@ def builtin_node_registry() -> NodeRegistry:
         AdvancedFlowMatchScheduler,
         CheckpointEvidenceInspector,
         Flux1SchnellSigmaScheduler,
+        Krea2ConditioningRebalance,
         Krea2SigmaScheduler,
         ModelAwareSigmaScheduler,
         ProfileInspector,
@@ -609,6 +610,11 @@ def builtin_node_registry() -> NodeRegistry:
                 node_id="Sigmax.Flux1SchnellSigmaScheduler",
                 display_name="FLUX.1-schnell Sigma Scheduler",
                 node_class=Flux1SchnellSigmaScheduler,
+            ),
+            discover_legacy_registration(
+                node_id="Sigmax.Krea2ConditioningRebalance",
+                display_name="Krea 2 Conditioning Rebalance",
+                node_class=Krea2ConditioningRebalance,
             ),
             discover_legacy_registration(
                 node_id="Sigmax.Krea2SigmaScheduler",

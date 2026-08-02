@@ -45,6 +45,7 @@ packages = [
     "comfyui_sigmax.benchmarks",
     "comfyui_sigmax.coinstallation",
     "comfyui_sigmax.compatibility",
+    "comfyui_sigmax.conditioning",
     "comfyui_sigmax.contracts",
     "comfyui_sigmax.core",
     "comfyui_sigmax.nodes",

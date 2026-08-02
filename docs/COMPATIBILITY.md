@@ -26,6 +26,11 @@ validated baseline.
 | Z-Image Turbo | Fixed-ratio external sigma schedule, 8-step official recipe | Select `Turbo` explicitly |
 | FLUX.1-schnell | Unshifted external sigma schedule, 1-4 steps | Use the dedicated FLUX.1-schnell node |
 
+The experimental `Sigmax.Krea2ConditioningRebalance` node accepts explicit RAW or Turbo
+`CONDITIONING` tensors with shape `(batch, sequence, 30720)`. It preserves standard ComfyUI
+metadata and performs no scheduler or model mutation. Its profiles are community-derived and
+experimental; this boundary does not claim prompt adherence or image-quality improvement.
+
 The generic advanced FlowMatch node constructs explicit schedule math only. It is experimental
 and does not establish compatibility with an arbitrary model.
 

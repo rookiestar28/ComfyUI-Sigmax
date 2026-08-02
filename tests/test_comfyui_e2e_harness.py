@@ -96,6 +96,7 @@ def test_harness_defaults_to_pinned_known_good_validation() -> None:
     harness = _harness()
     arguments = harness._parser().parse_args([])
 
+    assert arguments.conditioning_only is False
     assert arguments.host_version == "0.29.0"
     assert arguments.validation_lane == "known_good"
 
@@ -113,6 +114,13 @@ def test_harness_latest_host_mode_requires_explicit_version_and_lane() -> None:
 
     assert arguments.host_version == "0.29.2"
     assert arguments.validation_lane == "latest_host"
+
+
+def test_harness_exposes_a_separate_m4_12_conditioning_lane() -> None:
+    harness = _harness()
+    arguments = harness._parser().parse_args(["--conditioning-only"])
+
+    assert arguments.conditioning_only is True
 
 
 def test_harness_stages_frontend_extension_with_custom_node(tmp_path: Path) -> None:
@@ -397,6 +405,75 @@ def test_krea2_lora_experimental_h2_prompt_and_history_prove_mu_control(
     assert summary["mu"] == mu
     assert summary["requested_transitions"] == 12
     assert summary["status"] == "succeeded"
+
+
+@pytest.mark.parametrize("variant", ["RAW", "Turbo"])
+def test_krea2_conditioning_h2_prompt_and_history_prove_long_metadata_path(
+    variant: str,
+) -> None:
+    harness = _harness()
+    prompt = harness.build_krea2_conditioning_h2_api_prompt(variant)
+    assert prompt == {
+        "1": {
+            "class_type": "SigmaxTest.Krea2ConditioningSource",
+            "inputs": {"sequence_length": 97, "variant": variant},
+        },
+        "2": {
+            "class_type": "Sigmax.Krea2ConditioningRebalance",
+            "inputs": {
+                "conditioning": ["1", 0],
+                "profile": "Subtle Experimental",
+                "strength": 0.5,
+                "variant": variant,
+            },
+        },
+        "3": {
+            "class_type": "SigmaxTest.Krea2ConditioningProbe",
+            "inputs": {
+                "conditioning": ["2", 0],
+                "modifier_info": ["2", 1],
+                "variant": variant,
+            },
+        },
+    }
+    trace = {
+        "metadata_keys": [
+            "area",
+            "attention_mask",
+            "pooled_output",
+            "reference_latents",
+            "source_marker",
+        ],
+        "report_fingerprint": "sha256:" + "a" * 64,
+        "rms": 1.25,
+        "shape": [1, 97, 30720],
+        "variant": variant,
+    }
+    history = {
+        "prompt-conditioning": {
+            "outputs": {
+                "3": {
+                    "sigmax_krea2_conditioning": [
+                        json.dumps(trace, separators=(",", ":"), sort_keys=True)
+                    ]
+                }
+            },
+            "status": {"completed": True, "status_str": "success"},
+        }
+    }
+    summary = harness.verify_krea2_conditioning_h2_history(
+        history,
+        prompt_id="prompt-conditioning",
+        variant=variant,
+    )
+    assert summary == {
+        "metadata_keys": trace["metadata_keys"],
+        "report_fingerprint": trace["report_fingerprint"],
+        "rms": 1.25,
+        "shape": [1, 97, 30720],
+        "status": "succeeded",
+        "variant": variant,
+    }
 
 
 def test_flux1_schnell_h2_prompt_and_history_pin_unshifted_four_step_recipe() -> None:

@@ -9,6 +9,8 @@ inspecting and editing schedules.
 - Explicit model and variant selection with no silent generic fallback.
 - Verified Krea 2, Z-Image, and FLUX.1-schnell schedule recipes.
 - Schedule slicing, concatenation, resampling, inspection, and comparison.
+- Experimental Krea 2 `CONDITIONING` tap rebalancing for explicitly selected RAW or Turbo
+  workflows, with fixed RMS preservation and no scheduler/model patching.
 - Checkpoint header inspection without loading model weights.
 - Versioned schedule information and fingerprints for reproducible workflows.
 - No mandatory third-party runtime dependencies beyond the libraries provided by ComfyUI.
@@ -42,7 +44,7 @@ development or parity dependencies into ComfyUI just to use the nodes.
 
 ## Use in ComfyUI
 
-Search the node menu for `Sigmax`. The package registers 14 namespaced nodes.
+Search the node menu for `Sigmax`. The package registers 15 namespaced nodes.
 
 ### Build a model schedule
 
@@ -68,6 +70,12 @@ For normal use:
 `Sigmax.ModelAwareSigmaScheduler` can inspect a connected Krea 2 model, but shared filenames and
 model structure may identify only the family. If `Auto` reports ambiguity, select `Turbo` or
 `RAW` explicitly.
+
+For an experimental conditioning path, connect a Krea 2 `CONDITIONING` output to
+`Sigmax.Krea2ConditioningRebalance`, select `RAW` or `Turbo`, and choose a versioned profile.
+The node changes only the primary conditioning tensor, preserves the standard metadata envelope,
+and emits bounded `modifier_info`. It does not change sigmas, patch the model, or establish a
+prompt-adherence or image-quality claim. `Disabled` or strength `0` is an exact identity path.
 
 For a RAW checkpoint with a compatible RAW-to-Turbo model-difference LoRA, choose
 `LoRA Experimental (RAW mu)` or `LoRA Experimental (Turbo mu)` and set the desired steps. The

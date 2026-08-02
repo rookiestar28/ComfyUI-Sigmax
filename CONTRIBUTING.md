@@ -5,7 +5,10 @@ separation between model semantics, schedule construction, numerical samplers, a
 
 ## Environment
 
-Use a repository-local environment. The project supports Python 3.10 or newer.
+Use a repository-local environment. The project supports Python 3.10 or newer. Node.js 18 or
+newer is also required for contributors because the default full gate validates the scoped
+ComfyUI frontend policy; hosted CI uses Node.js 20. No npm install or Playwright dependency is
+required for that policy gate.
 
 Windows:
 
@@ -39,6 +42,9 @@ Python or `pre-commit`; follow the reported local command and rerun.
 - Do not expose controls that have no executed effect.
 - Cite authoritative sources and numerical tolerances for parity claims.
 - Label non-authoritative behavior as framework-reference, community, or experimental.
+- Keep the Krea 2 conditioning rebalance isolated to its `CONDITIONING` adapter; do not turn
+  diagnostics into default runtime telemetry or imply prompt-adherence improvement without the
+  separately deferred image-evaluation protocol.
 - Keep changes focused and preserve source attribution.
 
 ## Change workflow
@@ -67,7 +73,8 @@ evidence, and a user-facing migration note. A profile version bump cannot concea
 ## Validation
 
 The canonical acceptance commands run secret scanning, all pre-commit hooks, static checks,
-unit tests with coverage, and an isolated wheel inventory.
+core-independence and frontend-policy checks, unit tests with coverage, and an isolated wheel
+inventory.
 
 Windows:
 

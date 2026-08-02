@@ -53,6 +53,7 @@ class PackageContractTests(unittest.TestCase):
                 "comfyui_sigmax.benchmarks",
                 "comfyui_sigmax.coinstallation",
                 "comfyui_sigmax.compatibility",
+                "comfyui_sigmax.conditioning",
                 "comfyui_sigmax.contracts",
                 "comfyui_sigmax.core",
                 "comfyui_sigmax.nodes",
@@ -105,6 +106,7 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "adapters" / "comfyui.py").is_file())
         self.assertTrue((package_path / "adapters" / "registration.py").is_file())
         self.assertTrue((package_path / "compatibility" / "__init__.py").is_file())
+        self.assertTrue((package_path / "conditioning" / "__init__.py").is_file())
         self.assertTrue((package_path / "contracts" / "__init__.py").is_file())
         self.assertTrue((package_path / "contracts" / "manifest_v1.json").is_file())
         self.assertTrue((package_path / "registry" / "__init__.py").is_file())
@@ -155,6 +157,7 @@ class PackageContractTests(unittest.TestCase):
                 "Sigmax.AdvancedFlowMatchScheduler",
                 "Sigmax.CheckpointEvidenceInspector",
                 "Sigmax.Flux1SchnellSigmaScheduler",
+                "Sigmax.Krea2ConditioningRebalance",
                 "Sigmax.Krea2SigmaScheduler",
                 "Sigmax.ModelAwareSigmaScheduler",
                 "Sigmax.ProfileInspector",
@@ -174,6 +177,7 @@ class PackageContractTests(unittest.TestCase):
                 "Sigmax.AdvancedFlowMatchScheduler": "Advanced FlowMatch Scheduler",
                 "Sigmax.CheckpointEvidenceInspector": "Checkpoint Evidence Inspector",
                 "Sigmax.Flux1SchnellSigmaScheduler": "FLUX.1-schnell Sigma Scheduler",
+                "Sigmax.Krea2ConditioningRebalance": "Krea 2 Conditioning Rebalance",
                 "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler",
                 "Sigmax.ModelAwareSigmaScheduler": "Model-Aware Sigma Scheduler",
                 "Sigmax.ProfileInspector": "Profile Inspector",

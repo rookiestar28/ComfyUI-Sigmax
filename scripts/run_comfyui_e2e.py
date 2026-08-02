@@ -88,6 +88,8 @@ _FLUX1_SCHNELL_OUTPUT_NODE_ID: Final = "2"
 _FLUX1_SCHNELL_TRACE_KEY: Final = "sigmax_flux1_schnell_schedule"
 _KREA2_LORA_OUTPUT_NODE_ID: Final = "2"
 _KREA2_LORA_TRACE_KEY: Final = "sigmax_krea2_lora_experimental"
+_KREA2_CONDITIONING_OUTPUT_NODE_ID: Final = "3"
+_KREA2_CONDITIONING_TRACE_KEY: Final = "sigmax_krea2_conditioning"
 _CHECKPOINT_FIXTURE_NAME: Final = "sigmax-m6-08-fixture.safetensors"
 _H3_TEST_PACK_NAME: Final = "ComfyUI-Sigmax-H3"
 _H3_TEST_PACK_SOURCE: Final = (
@@ -281,6 +283,88 @@ def verify_krea2_lora_experimental_h2_history(
         "profile_id": "krea2.raw-turbo-lora.experimental",
         "requested_transitions": 12,
         "status": "succeeded",
+    }
+
+
+def build_krea2_conditioning_h2_api_prompt(variant: str) -> dict[str, object]:
+    """Return a model-free long-sequence source -> rebalance -> probe graph."""
+
+    if variant not in {"RAW", "Turbo"}:
+        raise ScheduleContractError("conditioning H2 variant must be RAW or Turbo")
+    return {
+        "1": {
+            "class_type": "SigmaxTest.Krea2ConditioningSource",
+            "inputs": {"sequence_length": 97, "variant": variant},
+        },
+        "2": {
+            "class_type": "Sigmax.Krea2ConditioningRebalance",
+            "inputs": {
+                "conditioning": ["1", 0],
+                "profile": "Subtle Experimental",
+                "strength": 0.5,
+                "variant": variant,
+            },
+        },
+        _KREA2_CONDITIONING_OUTPUT_NODE_ID: {
+            "class_type": "SigmaxTest.Krea2ConditioningProbe",
+            "inputs": {
+                "conditioning": ["2", 0],
+                "modifier_info": ["2", 1],
+                "variant": variant,
+            },
+        },
+    }
+
+
+def verify_krea2_conditioning_h2_history(
+    history: object,
+    *,
+    prompt_id: str,
+    variant: str,
+) -> dict[str, object]:
+    """Verify model-free RAW/Turbo conditioning execution and metadata preservation."""
+
+    if variant not in {"RAW", "Turbo"}:
+        raise ScheduleContractError("conditioning H2 variant must be RAW or Turbo")
+    root = _object(history, label="conditioning H2 history")
+    entry = _object(root.get(prompt_id), label="conditioning H2 history entry")
+    status = _object(entry.get("status"), label="conditioning H2 prompt status")
+    if status.get("completed") is not True or status.get("status_str") != "success":
+        raise ScheduleContractError("conditioning H2 prompt did not prove success")
+    outputs = _object(entry.get("outputs"), label="conditioning H2 outputs")
+    output = _object(
+        outputs.get(_KREA2_CONDITIONING_OUTPUT_NODE_ID),
+        label="conditioning H2 probe output",
+    )
+    traces = _array(
+        output.get(_KREA2_CONDITIONING_TRACE_KEY),
+        label="conditioning H2 trace",
+    )
+    if len(traces) != 1 or not isinstance(traces[0], str):
+        raise ScheduleContractError("conditioning H2 trace is malformed")
+    trace = _object(json.loads(traces[0]), label="conditioning H2 decoded trace")
+    shape = trace.get("shape")
+    metadata_keys = trace.get("metadata_keys")
+    rms = trace.get("rms")
+    if (
+        trace.get("variant") != variant
+        or shape != [1, 97, 30720]
+        or metadata_keys
+        != ["area", "attention_mask", "pooled_output", "reference_latents", "source_marker"]
+        or not isinstance(rms, (int, float))
+        or isinstance(rms, bool)
+        or not math.isfinite(float(rms))
+        or float(rms) <= 0.0
+        or not isinstance(trace.get("report_fingerprint"), str)
+    ):
+        raise ScheduleContractError("conditioning H2 execution evidence drifted")
+    return {
+        "metadata_keys": metadata_keys,
+        "report_fingerprint": trace["report_fingerprint"],
+        "rms": float(rms),
+        "shape": shape,
+        "status": "succeeded",
+        "variant": variant,
     }
 
 
@@ -1959,6 +2043,197 @@ def _write_evidence(path: Path | None, evidence: Mapping[str, object]) -> None:
     )
 
 
+def run_conditioning(args: argparse.Namespace) -> dict[str, object]:
+    """Execute the isolated M4-12 H1 plus model-free RAW/Turbo H2 lane."""
+
+    started = time.time()
+    comfyui_root = Path(args.comfyui_root).resolve()
+    host_python = Path(args.host_python).resolve()
+    if not (comfyui_root / "main.py").is_file():
+        raise ScheduleContractError("COMFYUI_ROOT does not contain main.py")
+    if not host_python.is_file():
+        raise ScheduleContractError("SIGMAX_COMFYUI_PYTHON is not a file")
+    host_revision = _git_revision(comfyui_root)
+    if host_revision != args.expected_revision:
+        raise ScheduleContractError(
+            "selected ComfyUI revision does not match the exact expected revision"
+        )
+    validation_lane = WorkflowValidationLane(args.validation_lane)
+    if validation_lane is WorkflowValidationLane.KNOWN_GOOD and (
+        args.host_version != CANONICAL_HOST_VERSION or host_revision != CANONICAL_HOST_REVISION
+    ):
+        raise ScheduleContractError(
+            "known-good validation requires the canonical pinned host identity"
+        )
+
+    owned_root = Path(args.temp_root).resolve()
+    run_path = require_owned_run_path(
+        repository_root=REPOSITORY_ROOT,
+        owned_root=owned_root,
+        candidate=owned_root / f"conditioning-run-{uuid.uuid4().hex}",
+    )
+    run_path.mkdir(parents=True)
+    for name in ("base", "input", "output", "temp", "user"):
+        (run_path / name).mkdir()
+    staged_node = _stage_extension(run_path)
+    _stage_h3_test_pack(run_path)
+    import_probe = _run_import_probe(
+        host_python=host_python,
+        comfyui_root=comfyui_root,
+        staged_node=staged_node,
+    )
+
+    port = _select_free_port()
+    base_url = f"http://{_LOOPBACK}:{port}"
+    log_path = run_path / "comfyui.log"
+    process: subprocess.Popen[bytes] | None = None
+    shutdown: dict[str, object] = {}
+    succeeded = False
+    evidence: dict[str, object] = {
+        "schema": "sigmax.krea2-conditioning-host-e2e/1",
+        "lanes": ["H1", "H2_KREA2_CONDITIONING_M4_12"],
+        "host": {
+            "id": "comfyui",
+            "version": args.host_version,
+            "revision": host_revision,
+        },
+        "sigmax_revision": _git_revision(REPOSITORY_ROOT),
+        "platform": platform.system().casefold(),
+        "listen": _LOOPBACK,
+        "port": port,
+        "import_probe": import_probe,
+        "attempt_transitions": {},
+    }
+    try:
+        creationflags = (
+            cast(int, getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)) if os.name == "nt" else 0
+        )
+        with log_path.open("wb") as log:
+            process = subprocess.Popen(  # noqa: S603
+                _host_command(
+                    host_python=host_python,
+                    comfyui_root=comfyui_root,
+                    run_path=run_path,
+                    port=port,
+                ),
+                cwd=run_path,
+                stdout=log,
+                stderr=subprocess.STDOUT,
+                creationflags=creationflags,
+                start_new_session=os.name == "posix",
+            )
+            object_info = _readiness(
+                base_url=base_url,
+                process=process,
+                deadline=time.monotonic() + args.readiness_timeout,
+            )
+            public_ids = tuple(builtin_node_registry().class_mappings())
+            filtered = {
+                node_id: object_info[node_id] for node_id in public_ids if node_id in object_info
+            }
+            test_ids = {
+                "SigmaxTest.Krea2ConditioningSource",
+                "SigmaxTest.Krea2ConditioningProbe",
+            }
+            if tuple(sorted(filtered)) != public_ids or not test_ids <= set(object_info):
+                raise ScheduleContractError("conditioning H1 is missing a required node ID")
+            live_report = validate_live_workflow_fixtures(
+                object_info=filtered,
+                host_version=args.host_version,
+                host_revision=host_revision,
+                lane=validation_lane,
+            )
+            if not live_report.gate_passed or live_report.issues:
+                raise ScheduleContractError("conditioning H1 live schema validation failed")
+            h1_summary = {
+                "expected_node_ids": list(public_ids),
+                "live_schema_fingerprint": live_report.report_fingerprint,
+                "registered": True,
+                "status": "succeeded",
+            }
+            repeat_info = _object(
+                _http_json(f"{base_url}/object_info"),
+                label="repeat conditioning live object_info",
+            )
+            repeat_filtered = {
+                node_id: repeat_info[node_id] for node_id in public_ids if node_id in repeat_info
+            }
+            repeat_report = validate_live_workflow_fixtures(
+                object_info=repeat_filtered,
+                host_version=args.host_version,
+                host_revision=host_revision,
+                lane=validation_lane,
+            )
+            repeat_h1_summary = {
+                "expected_node_ids": list(public_ids),
+                "live_schema_fingerprint": repeat_report.report_fingerprint,
+                "registered": (
+                    tuple(sorted(repeat_filtered)) == public_ids
+                    and repeat_report.gate_passed
+                    and not repeat_report.issues
+                ),
+                "status": "succeeded",
+            }
+            attempts = cast(dict[str, object], evidence["attempt_transitions"])
+            attempts["h1"] = build_verified_host_repeat_transition(
+                lane="H1",
+                first_summary=h1_summary,
+                repeat_summary=repeat_h1_summary,
+            )
+            conditioning_results: list[dict[str, object]] = []
+            for variant in ("RAW", "Turbo"):
+
+                def submit_conditioning(
+                    ordinal: int,
+                    *,
+                    selected_variant: str = variant,
+                ) -> tuple[str, dict[str, object]]:
+                    return _submit_successful_prompt(
+                        base_url=base_url,
+                        client_id=f"sigmax-m4-12-conditioning-{selected_variant.casefold()}-{ordinal}",
+                        prompt=build_krea2_conditioning_h2_api_prompt(selected_variant),
+                        execution_timeout=args.execution_timeout,
+                    )
+
+                def verify_conditioning(
+                    history: object,
+                    prompt_id: str,
+                    *,
+                    selected_variant: str = variant,
+                ) -> dict[str, object]:
+                    return verify_krea2_conditioning_h2_history(
+                        history,
+                        prompt_id=prompt_id,
+                        variant=selected_variant,
+                    )
+
+                summary, transition = execute_verified_host_repeat(
+                    lane="H2_KREA2_CONDITIONING_M4_12",
+                    submit=submit_conditioning,
+                    verify=verify_conditioning,
+                )
+                conditioning_results.append(summary)
+                attempts[f"h2_krea2_conditioning.{variant.casefold()}"] = transition
+            evidence["h2_krea2_conditioning"] = conditioning_results
+            succeeded = True
+    finally:
+        if process is not None:
+            shutdown = _terminate_owned_process(process, base_url=base_url)
+        _wait_for_port_release(port)
+        evidence["shutdown"] = shutdown
+        evidence["duration_seconds"] = round(time.time() - started, 3)
+        if log_path.exists():
+            evidence["host_log_tail"] = redact_text(
+                log_path.read_text(encoding="utf-8", errors="replace"),
+                sensitive_paths=(REPOSITORY_ROOT, comfyui_root, run_path, host_python),
+            )[-8_000:]
+        evidence["cleanup"] = "removed" if succeeded else "retained_failure_artifacts"
+        _write_evidence(Path(args.evidence_file) if args.evidence_file else None, evidence)
+        if succeeded:
+            shutil.rmtree(run_path)
+    return evidence
+
+
 def run(args: argparse.Namespace) -> dict[str, object]:
     """Execute isolated H1, activated H2 workflows, and M5-01 H3."""
 
@@ -2476,6 +2751,11 @@ def run(args: argparse.Namespace) -> dict[str, object]:
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--conditioning-only",
+        action="store_true",
+        help="run only the M4-12 conditioning H1/H2 lane",
+    )
     parser.add_argument("--comfyui-root", default=os.environ.get("COMFYUI_ROOT"))
     parser.add_argument("--host-python", default=os.environ.get("SIGMAX_COMFYUI_PYTHON"))
     parser.add_argument(
@@ -2509,7 +2789,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if not args.host_python:
         parser.error("SIGMAX_COMFYUI_PYTHON or --host-python is required")
     try:
-        evidence = run(args)
+        evidence = run_conditioning(args) if args.conditioning_only else run(args)
     except Exception as exc:
         print(
             redact_text(

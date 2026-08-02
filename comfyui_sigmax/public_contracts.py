@@ -31,7 +31,9 @@ _MANIFEST_FIELDS: Final = frozenset(
 )
 _ENVELOPE_FIELDS: Final = frozenset({"manifest", "manifest_fingerprint", "schema"})
 _NODE_FIELDS: Final = frozenset({"id", "schema"})
-_SCHEMA_GROUPS: Final = frozenset({"construction", "execution", "profile_capability"})
+_SCHEMA_GROUPS: Final = frozenset(
+    {"conditioning", "construction", "execution", "profile_capability"}
+)
 _REASON_GROUPS: Final = frozenset(
     {"capability_resolution", "checkpoint_inspection", "compatibility"}
 )
@@ -127,6 +129,10 @@ def source_contract_projection() -> dict[str, object]:
     """Build the reviewed M8-01 boundary from its owning public declarations."""
 
     from comfyui_sigmax.adapters.registration import builtin_node_registry
+    from comfyui_sigmax.conditioning import (
+        CONDITIONING_MODIFIER_REPORT_SCHEMA_ID,
+        KREA2_CONDITIONING_PROFILE_SCHEMA_ID,
+    )
     from comfyui_sigmax.core import (
         EXECUTION_RECEIPT_ENVELOPE_SCHEMA,
         EXECUTION_RECEIPT_SCHEMA,
@@ -155,6 +161,10 @@ def source_contract_projection() -> dict[str, object]:
         SCHEDULE_COMPARISON_SCHEMA_ID,
         SCHEDULE_INSPECTOR_NODE_ID,
         SCHEDULE_INSPECTOR_SCHEMA_ID,
+    )
+    from comfyui_sigmax.nodes.krea2_conditioning_rebalance import (
+        KREA2_CONDITIONING_NODE_ID,
+        KREA2_CONDITIONING_NODE_SCHEMA_ID,
     )
     from comfyui_sigmax.nodes.krea2_sigma_scheduler import (
         KREA2_SIGMA_NODE_ID,
@@ -205,6 +215,10 @@ def source_contract_projection() -> dict[str, object]:
                 "id": FLUX1_SCHNELL_SIGMA_NODE_ID,
                 "schema": FLUX1_SCHNELL_SIGMA_NODE_SCHEMA_ID,
             },
+            {
+                "id": KREA2_CONDITIONING_NODE_ID,
+                "schema": KREA2_CONDITIONING_NODE_SCHEMA_ID,
+            },
             {"id": KREA2_SIGMA_NODE_ID, "schema": KREA2_SIGMA_NODE_SCHEMA_ID},
             {"id": MODEL_AWARE_SIGMA_NODE_ID, "schema": MODEL_AWARE_SIGMA_NODE_SCHEMA_ID},
             {"id": PROFILE_INSPECTOR_NODE_ID, "schema": PROFILE_INSPECTOR_SCHEMA_ID},
@@ -236,6 +250,12 @@ def source_contract_projection() -> dict[str, object]:
         },
         "schema": PUBLIC_CONTRACT_MANIFEST_SCHEMA,
         "schemas": {
+            "conditioning": sorted(
+                {
+                    CONDITIONING_MODIFIER_REPORT_SCHEMA_ID,
+                    KREA2_CONDITIONING_PROFILE_SCHEMA_ID,
+                }
+            ),
             "construction": sorted(
                 {
                     NUMERICAL_SCHEDULE_SCHEMA,

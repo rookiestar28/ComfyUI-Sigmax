@@ -18,3 +18,19 @@ Historical source and attribution repository:
 The complete MIT license text is preserved in LICENSE.TXT. The imported source is retained as
 a migration baseline and is not represented as Krea 2-aware, production-ready, or endorsed by
 the original author.
+
+Conditioning concept attribution:
+
+    comfyui-krea2-conditioning
+    Copyright (c) 2025 huwhitememes and contributors
+    Apache License 2.0
+    https://github.com/huwhitememes/comfyui-krea2-conditioning
+    reviewed source revision 729cda4fade982988a375b01928f515458407a5c
+
+ComfyUI-Sigmax independently reimplements the bounded tap-reweighting and RMS-preservation
+concept from the reviewed source specification. No source code, tests, package hooks, or runtime
+dependency from that repository is included. The TextEncoder and Enhancer references used for
+interoperability and diagnostic concepts are MIT-licensed projects reviewed as read-only context:
+
+    https://github.com/huwhitememes/ComfyUI-Krea2TextEncoder
+    https://github.com/huwhitememes/ComfyUI-Krea2T-Enhancer

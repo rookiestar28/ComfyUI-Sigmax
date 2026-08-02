@@ -60,6 +60,10 @@ def test_packaged_manifest_freezes_the_complete_m8_01_boundary() -> None:
             "id": "Sigmax.Flux1SchnellSigmaScheduler",
             "schema": "sigmax.flux1-schnell-sigma-node/1",
         },
+        {
+            "id": "Sigmax.Krea2ConditioningRebalance",
+            "schema": "sigmax.krea2-conditioning-node/1",
+        },
         {"id": "Sigmax.Krea2SigmaScheduler", "schema": "sigmax.krea2-sigma-node/1"},
         {
             "id": "Sigmax.ModelAwareSigmaScheduler",
@@ -94,6 +98,10 @@ def test_packaged_manifest_freezes_the_complete_m8_01_boundary() -> None:
         },
     ]
     assert projection["schemas"] == {
+        "conditioning": [
+            "sigmax.conditioning-modifier/1",
+            "sigmax.krea2-conditioning-profile/1",
+        ],
         "construction": [
             "sigmax.numerical-schedule/1",
             "sigmax.schedule-artifact-envelope/1",

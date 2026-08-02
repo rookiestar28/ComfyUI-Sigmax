@@ -155,6 +155,8 @@ def main(arguments: Sequence[str] | None = None) -> int:
     baseline = cast(dict[str, Any], json.loads(parsed.host_baseline.read_text(encoding="utf-8")))
     registry = builtin_node_registry()
     required_ids = {
+        "Sigmax.Krea2ConditioningRebalance",
+        "Sigmax.Flux1SchnellSigmaScheduler",
         "Sigmax.Krea2SigmaScheduler",
         "Sigmax.RawWorkflowOutput",
         "Sigmax.ScheduleInspector",

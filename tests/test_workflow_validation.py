@@ -182,6 +182,7 @@ def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
     assert baseline.host_revision == CANONICAL_HOST_REVISION
     assert tuple(baseline.object_info) == (
         "Sigmax.Flux1SchnellSigmaScheduler",
+        "Sigmax.Krea2ConditioningRebalance",
         "Sigmax.Krea2SigmaScheduler",
         "Sigmax.RawWorkflowOutput",
         "Sigmax.ScheduleInspector",
@@ -206,6 +207,30 @@ def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
         {"id": "Sigmax.ScheduleInspector", "version": "1"},
         {"id": "Sigmax.TurboWorkflowOutput", "version": "1"},
         {"id": "Sigmax.ZImageSigmaScheduler", "version": "1"},
+    ]
+
+
+def test_pinned_baseline_exposes_the_experimental_conditioning_schema() -> None:
+    baseline = load_pinned_host_baseline()
+    legacy = cast(dict[str, object], baseline.object_info["Sigmax.Krea2ConditioningRebalance"])
+    legacy_input = cast(dict[str, object], legacy["input"])
+    legacy_inputs = cast(dict[str, object], legacy_input["required"])
+    assert tuple(legacy_inputs) == (
+        "conditioning",
+        "variant",
+        "profile",
+        "strength",
+    )
+    assert legacy_inputs["conditioning"] == ["CONDITIONING"]
+    assert legacy_inputs["variant"] == [["RAW", "Turbo"]]
+    assert legacy_inputs["profile"] == [["Disabled", "Subtle Experimental", "Classic Experimental"]]
+    assert legacy["experimental"] is True
+
+    v2 = baseline.node_definition_v2["Sigmax.Krea2ConditioningRebalance"]
+    assert cast(dict[str, object], v2)["name"] == "Sigmax.Krea2ConditioningRebalance"
+    assert cast(dict[str, object], v2)["outputs"] == [
+        {"index": 0, "name": "conditioning", "type": "CONDITIONING", "is_list": False},
+        {"index": 1, "name": "modifier_info", "type": "STRING", "is_list": False},
     ]
 
 

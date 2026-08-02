@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 from typing import Any
 
 import torch  # type: ignore[import-not-found]
@@ -17,6 +18,8 @@ _CHECKPOINT_UI_KEY = "sigmax_checkpoint_evidence"
 _Z_IMAGE_UI_KEY = "sigmax_z_image_schedule"
 _FLUX1_SCHNELL_UI_KEY = "sigmax_flux1_schnell_schedule"
 _KREA2_LORA_UI_KEY = "sigmax_krea2_lora_experimental"
+_KREA2_CONDITIONING_UI_KEY = "sigmax_krea2_conditioning"
+_KREA2_CONDITIONING_FEATURES = 12 * 2560
 
 
 def _vector(value: torch.Tensor) -> list[float]:
@@ -404,10 +407,134 @@ class Krea2LoraExperimentalProbe:
         }
 
 
+class Krea2ConditioningSource:
+    """Build deterministic CPU conditioning for the M4-12 host lane only."""
+
+    CATEGORY = "SigmaxTest"
+    DESCRIPTION = "Test-only long/multimodal-shaped Krea 2 conditioning source."
+    FUNCTION = "execute"
+    RETURN_TYPES = ("CONDITIONING",)
+    RETURN_NAMES = ("conditioning",)
+
+    @classmethod
+    def INPUT_TYPES(cls) -> dict[str, dict[str, tuple[object, ...]]]:
+        return {
+            "required": {
+                "variant": (["RAW", "Turbo"],),
+                "sequence_length": ("INT", {"default": 97, "min": 1, "max": 128}),
+            }
+        }
+
+    def execute(self, variant: object, sequence_length: object) -> tuple[list[list[object]]]:
+        if variant not in {"RAW", "Turbo"}:
+            raise ValueError("M4-12 source variant must be explicit")
+        if not isinstance(sequence_length, int) or isinstance(sequence_length, bool):
+            raise ValueError("M4-12 source sequence length must be an integer")
+        if not 1 <= sequence_length <= 128:
+            raise ValueError("M4-12 source sequence length is out of bounds")
+        total = sequence_length * _KREA2_CONDITIONING_FEATURES
+        tensor = (torch.arange(total, dtype=torch.float32) % 257).reshape(
+            1, sequence_length, _KREA2_CONDITIONING_FEATURES
+        )
+        tensor = (tensor - 128.0) / 64.0
+        metadata = {
+            "attention_mask": torch.ones((1, sequence_length), dtype=torch.bool),
+            "area": (0, 0, 64, 64),
+            "pooled_output": {"source": "m4-12-test", "variant": variant},
+            "reference_latents": {"source": "m4-12-test"},
+            "source_marker": "krea2-conditioning-h2-v1",
+        }
+        return ([[tensor, metadata]],)
+
+
+class Krea2ConditioningProbe:
+    """Verify model-free M4-12 conditioning output and report contracts."""
+
+    CATEGORY = "SigmaxTest"
+    DESCRIPTION = "Test-only Krea 2 conditioning H2 probe."
+    FUNCTION = "execute"
+    OUTPUT_NODE = True
+    RETURN_TYPES: tuple[()] = ()
+    RETURN_NAMES: tuple[()] = ()
+
+    @classmethod
+    def INPUT_TYPES(cls) -> dict[str, dict[str, tuple[object, ...]]]:
+        return {
+            "required": {
+                "conditioning": ("CONDITIONING",),
+                "modifier_info": ("STRING", {"default": "", "multiline": True}),
+                "variant": (["RAW", "Turbo"],),
+            }
+        }
+
+    def execute(
+        self,
+        conditioning: object,
+        modifier_info: object,
+        variant: object,
+    ) -> dict[str, object]:
+        if variant not in {"RAW", "Turbo"}:
+            raise ValueError("M4-12 probe variant must be explicit")
+        if not isinstance(conditioning, list) or len(conditioning) != 1:
+            raise ValueError("M4-12 probe requires one conditioning entry")
+        entry = conditioning[0]
+        if not isinstance(entry, (list, tuple)) or len(entry) != 2:
+            raise ValueError("M4-12 probe conditioning pair is malformed")
+        tensor, metadata = entry
+        if not isinstance(tensor, torch.Tensor) or tensor.device.type != "cpu":
+            raise ValueError("M4-12 probe requires a CPU tensor")
+        if tensor.dtype != torch.float32 or tensor.ndim != 3 or tensor.shape[-1] != 30720:
+            raise ValueError("M4-12 probe tensor shape or dtype drifted")
+        if (
+            not isinstance(metadata, dict)
+            or metadata.get("source_marker") != "krea2-conditioning-h2-v1"
+        ):
+            raise ValueError("M4-12 conditioning metadata was not preserved")
+        if not isinstance(modifier_info, str) or len(modifier_info) > 65_536:
+            raise ValueError("M4-12 modifier report is malformed")
+        report = json.loads(modifier_info)
+        if (
+            not isinstance(report, dict)
+            or report.get("schema") != "sigmax.conditioning-modifier/1"
+            or report.get("algorithm") != "sigmax.krea2-tap-rms-rebalance/1"
+            or report.get("schedule_affected") is not False
+            or report.get("evidence") != "experimental"
+            or report.get("variant") != {"evidence": "user_selected", "value": variant}
+            or report.get("input", {}).get("shape") != list(tensor.shape)
+            or report.get("input", {}).get("shapes") != [list(tensor.shape)]
+        ):
+            raise ValueError("M4-12 conditioning report contract drifted")
+        rms = float(torch.sqrt(torch.mean(tensor.float() * tensor.float())).item())
+        if not math.isfinite(rms) or rms <= 0.0:
+            raise ValueError("M4-12 conditioning output RMS is invalid")
+        trace = {
+            "metadata_keys": sorted(metadata),
+            "report_fingerprint": report.get("fingerprint"),
+            "rms": rms,
+            "shape": list(tensor.shape),
+            "variant": variant,
+        }
+        return {
+            "ui": {
+                _KREA2_CONDITIONING_UI_KEY: [
+                    json.dumps(
+                        trace,
+                        allow_nan=False,
+                        ensure_ascii=False,
+                        separators=(",", ":"),
+                        sort_keys=True,
+                    )
+                ]
+            }
+        }
+
+
 NODE_CLASS_MAPPINGS = {
     "SigmaxTest.Flux1SchnellScheduleProbe": Flux1SchnellScheduleProbe,
     "SigmaxTest.CheckpointEvidenceProbe": CheckpointEvidenceProbe,
     "SigmaxTest.Krea2LoraExperimentalProbe": Krea2LoraExperimentalProbe,
+    "SigmaxTest.Krea2ConditioningProbe": Krea2ConditioningProbe,
+    "SigmaxTest.Krea2ConditioningSource": Krea2ConditioningSource,
     "SigmaxTest.NativeEulerProbe": NativeEulerProbe,
     "SigmaxTest.ScheduleAlgebraProbe": ScheduleAlgebraProbe,
     "SigmaxTest.ZImageScheduleProbe": ZImageScheduleProbe,
@@ -416,6 +543,8 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "SigmaxTest.Flux1SchnellScheduleProbe": "Sigmax Test — FLUX.1-schnell Schedule Probe",
     "SigmaxTest.CheckpointEvidenceProbe": "Sigmax Test — Checkpoint Evidence Probe",
     "SigmaxTest.Krea2LoraExperimentalProbe": "Sigmax Test — Krea 2 LoRA Experimental Probe",
+    "SigmaxTest.Krea2ConditioningProbe": "Sigmax Test — Krea 2 Conditioning Probe",
+    "SigmaxTest.Krea2ConditioningSource": "Sigmax Test — Krea 2 Conditioning Source",
     "SigmaxTest.NativeEulerProbe": "Sigmax Test — Native Euler Probe",
     "SigmaxTest.ScheduleAlgebraProbe": "Sigmax Test — Schedule Algebra Probe",
     "SigmaxTest.ZImageScheduleProbe": "Sigmax Test — Z-Image Schedule Probe",

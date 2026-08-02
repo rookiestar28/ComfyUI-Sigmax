@@ -9,6 +9,26 @@ tracked independently from the frozen profile-schema version.
 
 ### Added
 
+- An experimental `Sigmax.Krea2ConditioningRebalance` node for explicit RAW/Turbo
+  `(batch, sequence, 30720)` conditioning tensors. It applies versioned community-derived tap
+  reweighting with fixed per-sample RMS restoration, preserves conditioning metadata, and emits
+  bounded provenance/fingerprint information. This does not claim prompt-adherence or image-
+  quality improvement.
+- Verified Z-Image Base and Turbo profiles plus `Sigmax.ZImageSigmaScheduler`. The profiles use
+  explicit variants, fixed direct-ratio shifts, complete independent float64/float32 goldens,
+  four-source evidence, canonical workflow fixtures, and pinned-host validation without adding a
+  mandatory runtime dependency.
+- A verified FLUX.1-schnell profile plus `Sigmax.Flux1SchnellSigmaScheduler` for the publisher's
+  explicit one-to-four-step unshifted schedule, with independent goldens, four-source evidence,
+  canonical workflow execution, and Windows/WSL gate evidence.
+- An explicit `krea2.raw-turbo-lora.experimental` profile with separate RAW-derived and fixed
+  Turbo `mu` modes, arbitrary bounded steps, independent goldens, and pinned-host workflows. It
+  remains an experimental schedule for a compatible RAW-to-Turbo model-difference LoRA and does
+  not load the LoRA or claim an official step count.
+- A scoped ComfyUI frontend extension for `Sigmax.Krea2SigmaScheduler` that forces
+  `strict_official=false` and disables that widget while either experimental LoRA variant is
+  selected. Its deterministic policy and JavaScript syntax run in the default full gate with
+  Node.js 18 or newer.
 - A dependency-free `sigmax.image-benchmark-protocol/1` with four fixed Turbo/RAW cases,
   construction/numerical/receipt and prompt/settings identities, explicit unapproved execution,
   typed component/output hash evidence, and deterministic balanced blind ballot/reveal contracts.
@@ -27,6 +47,20 @@ tracked independently from the frozen profile-schema version.
   `flowmatch.generic.dynamic` experimental schedule structures. They remain outside the concrete
   model `ProfileRegistry`, carry no model compatibility or official-recipe claim, and add no
   runtime dependency.
+
+### Changed
+
+- Reduced the public documentation surface to the concise product README, compatibility guide,
+  contribution guide, changelog, and test-governance documents. Detailed architecture, schema,
+  evidence, and release contracts continue to be enforced by source, generated manifests, tests,
+  and local governance instead of duplicated public specification files.
+- The canonical full gate now runs the frontend policy after core-independence checks and before
+  parity and pytest stages. Hosted CI provisions Node.js 20 for this Node.js 18+ gate.
+
+### Fixed
+
+- Stabilized Windows and Linux/WSL foundation gates around Comfy Registry artifacts, subprocess
+  environment inheritance, local tool isolation, and current post-release contract inventories.
 
 ## [1.0.0] - 2026-08-01
 

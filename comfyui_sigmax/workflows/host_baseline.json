@@ -51,6 +51,61 @@
       "deprecated": false,
       "experimental": false
     },
+    "Sigmax.Krea2ConditioningRebalance": {
+      "inputs": {
+        "conditioning": {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "isOptional": false
+        },
+        "variant": {
+          "name": "variant",
+          "type": "COMBO",
+          "isOptional": false,
+          "options": [
+            "RAW",
+            "Turbo"
+          ]
+        },
+        "profile": {
+          "name": "profile",
+          "type": "COMBO",
+          "isOptional": false,
+          "options": [
+            "Disabled",
+            "Subtle Experimental",
+            "Classic Experimental"
+          ]
+        },
+        "strength": {
+          "name": "strength",
+          "type": "FLOAT",
+          "isOptional": false
+        }
+      },
+      "outputs": [
+        {
+          "index": 0,
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "is_list": false
+        },
+        {
+          "index": 1,
+          "name": "modifier_info",
+          "type": "STRING",
+          "is_list": false
+        }
+      ],
+      "name": "Sigmax.Krea2ConditioningRebalance",
+      "display_name": "Krea 2 Conditioning Rebalance",
+      "description": "Experimental Krea 2 RAW/Turbo conditioning tap rebalance with fixed RMS preservation. Does not patch the model or scheduler and does not claim prompt-adherence improvement.",
+      "category": "Sigmax/conditioning",
+      "output_node": false,
+      "python_module": "comfyui_sigmax.nodes",
+      "deprecated": false,
+      "experimental": true
+    },
     "Sigmax.Krea2SigmaScheduler": {
       "inputs": {
         "variant": {
@@ -314,6 +369,57 @@
       "output_name": [
         "sigmas",
         "schedule_info"
+      ],
+      "output_node": false,
+      "python_module": "comfyui_sigmax.nodes"
+    },
+    "Sigmax.Krea2ConditioningRebalance": {
+      "category": "Sigmax/conditioning",
+      "deprecated": false,
+      "description": "Experimental Krea 2 RAW/Turbo conditioning tap rebalance with fixed RMS preservation. Does not patch the model or scheduler and does not claim prompt-adherence improvement.",
+      "display_name": "Krea 2 Conditioning Rebalance",
+      "experimental": true,
+      "input": {
+        "required": {
+          "conditioning": [
+            "CONDITIONING"
+          ],
+          "variant": [
+            [
+              "RAW",
+              "Turbo"
+            ]
+          ],
+          "profile": [
+            [
+              "Disabled",
+              "Subtle Experimental",
+              "Classic Experimental"
+            ]
+          ],
+          "strength": [
+            "FLOAT",
+            {
+              "default": 0.5,
+              "max": 1.0,
+              "min": 0.0,
+              "step": 0.05
+            }
+          ]
+        }
+      },
+      "name": "Sigmax.Krea2ConditioningRebalance",
+      "output": [
+        "CONDITIONING",
+        "STRING"
+      ],
+      "output_is_list": [
+        false,
+        false
+      ],
+      "output_name": [
+        "conditioning",
+        "modifier_info"
       ],
       "output_node": false,
       "python_module": "comfyui_sigmax.nodes"

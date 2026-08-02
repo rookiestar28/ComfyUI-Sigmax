@@ -39,6 +39,11 @@ from comfyui_sigmax.nodes.inspectors import (
     build_schedule_comparison,
     build_schedule_inspection,
 )
+from comfyui_sigmax.nodes.krea2_conditioning_rebalance import (
+    KREA2_CONDITIONING_NODE_ID,
+    KREA2_CONDITIONING_NODE_SCHEMA_ID,
+    Krea2ConditioningRebalance,
+)
 from comfyui_sigmax.nodes.krea2_sigma_scheduler import (
     KREA2_SIGMA_NODE_ID,
     KREA2_SIGMA_NODE_SCHEMA_ID,
@@ -109,6 +114,8 @@ __all__ = [
     "CHECKPOINT_EVIDENCE_INSPECTOR_SCHEMA_ID",
     "FLUX1_SCHNELL_SIGMA_NODE_ID",
     "FLUX1_SCHNELL_SIGMA_NODE_SCHEMA_ID",
+    "KREA2_CONDITIONING_NODE_ID",
+    "KREA2_CONDITIONING_NODE_SCHEMA_ID",
     "KREA2_SIGMA_NODE_ID",
     "KREA2_SIGMA_NODE_SCHEMA_ID",
     "MODEL_AWARE_SIGMA_NODE_ID",
@@ -141,6 +148,7 @@ __all__ = [
     "CheckpointEvidenceInspector",
     "Flux1SchnellSigmaNodeResult",
     "Flux1SchnellSigmaScheduler",
+    "Krea2ConditioningRebalance",
     "Krea2SigmaNodeResult",
     "Krea2SigmaScheduler",
     "Krea2SigmaVariant",

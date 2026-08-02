@@ -70,6 +70,10 @@ def test_packaged_manifest_freezes_the_complete_m8_01_boundary() -> None:
             "schema": "sigmax.model-aware-sigma-node/1",
         },
         {"id": "Sigmax.ProfileInspector", "schema": "sigmax.profile-inspector/1"},
+        {
+            "id": "Sigmax.QwenImageSigmaScheduler",
+            "schema": "sigmax.qwen-image-sigma-node/1",
+        },
         {"id": "Sigmax.RawWorkflowOutput", "schema": "sigmax.raw-workflow-output/1"},
         {
             "id": "Sigmax.ScheduleComparison",

@@ -584,6 +584,7 @@ def builtin_node_registry() -> NodeRegistry:
         Krea2SigmaScheduler,
         ModelAwareSigmaScheduler,
         ProfileInspector,
+        QwenImageSigmaScheduler,
         RawWorkflowOutput,
         ScheduleComparison,
         ScheduleConcatenate,
@@ -620,6 +621,11 @@ def builtin_node_registry() -> NodeRegistry:
                 node_id="Sigmax.Krea2SigmaScheduler",
                 display_name="Krea 2 Sigma Scheduler",
                 node_class=Krea2SigmaScheduler,
+            ),
+            discover_legacy_registration(
+                node_id="Sigmax.QwenImageSigmaScheduler",
+                display_name="Qwen Image Sigma Scheduler",
+                node_class=QwenImageSigmaScheduler,
             ),
             discover_legacy_registration(
                 node_id="Sigmax.ModelAwareSigmaScheduler",

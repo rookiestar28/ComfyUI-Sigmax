@@ -13,6 +13,8 @@ from comfyui_sigmax.profiles import (
     KREA2_LORA_EXPERIMENTAL_SCHEMA,
     KREA2_RAW_SCHEMA,
     KREA2_TURBO_SCHEMA,
+    QWEN_IMAGE_COMFY_FIXED_SCHEMA,
+    QWEN_IMAGE_DIFFUSERS_DYNAMIC_SCHEMA,
     Z_IMAGE_BASE_SCHEMA,
     Z_IMAGE_TURBO_SCHEMA,
     ConflictPolicy,
@@ -122,6 +124,8 @@ def test_builtin_registry_is_deterministic_exact_and_immutable() -> None:
         ProfileKey.from_schema(KREA2_LORA_EXPERIMENTAL_SCHEMA),
         ProfileKey.from_schema(KREA2_RAW_SCHEMA),
         ProfileKey.from_schema(KREA2_TURBO_SCHEMA),
+        ProfileKey.from_schema(QWEN_IMAGE_COMFY_FIXED_SCHEMA),
+        ProfileKey.from_schema(QWEN_IMAGE_DIFFUSERS_DYNAMIC_SCHEMA),
         ProfileKey.from_schema(Z_IMAGE_BASE_SCHEMA),
         ProfileKey.from_schema(Z_IMAGE_TURBO_SCHEMA),
     )
@@ -154,8 +158,8 @@ def test_external_registration_returns_a_new_canonical_snapshot() -> None:
     entry = updated.resolve(ProfileKey.from_schema(schema))
 
     assert updated is not registry
-    assert len(registry.entries) == 6
-    assert len(updated.entries) == 7
+    assert len(registry.entries) == 8
+    assert len(updated.entries) == 9
     assert entry.origin is ProfileOrigin.EXTERNAL
     assert entry.schema is schema
     assert entry.inheritance == _turbo_inheritance()

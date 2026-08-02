@@ -79,6 +79,7 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
         "krea2-raw-official-landscape-1353x761",
         "krea2-raw-official-square-1024",
         "krea2-turbo-1024",
+        "qwen-image-comfy-fixed-official-50",
         "z-image-base-official-50",
         "z-image-turbo-official-8",
     )
@@ -88,6 +89,7 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
         "RAW",
         "RAW",
         "Turbo",
+        "Qwen Image",
         "Z-Image Base",
         "Z-Image Turbo",
     )
@@ -123,13 +125,17 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
             -1,
         ],
         "krea2-turbo-1024": ["Turbo", 8, 1024, 1024, True, 0, -1],
+        "qwen-image-comfy-fixed-official-50": ["Comfy Fixed", 50, 0, True, 0, -1],
         "z-image-base-official-50": ["Base", 50, True, 0, -1],
         "z-image-turbo-official-8": ["Turbo", 8, True, 0, -1],
     }
     for fixture in fixtures:
         workflow = fixture.workflow
         assert workflow["version"] == 0.4
-        is_sigma_only = fixture.variant.startswith("Z-Image") or fixture.variant == "FLUX.1-schnell"
+        is_sigma_only = fixture.variant.startswith("Z-Image") or fixture.variant in {
+            "FLUX.1-schnell",
+            "Qwen Image",
+        }
         assert workflow["last_node_id"] == (1 if is_sigma_only else 3)
         assert workflow["last_link_id"] == (0 if is_sigma_only else 5)
         assert len(cast(list[object], workflow["nodes"])) == (1 if is_sigma_only else 3)
@@ -143,7 +149,11 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
             (
                 ["Sigmax.Flux1SchnellSigmaScheduler"]
                 if fixture.variant == "FLUX.1-schnell"
-                else ["Sigmax.ZImageSigmaScheduler"]
+                else (
+                    ["Sigmax.QwenImageSigmaScheduler"]
+                    if fixture.variant == "Qwen Image"
+                    else ["Sigmax.ZImageSigmaScheduler"]
+                )
             )
             if is_sigma_only
             else [
@@ -161,6 +171,7 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
             "FLUX.1-schnell": "flux1.schnell.official",
             "RAW": "krea2.raw.official",
             "Turbo": "krea2.turbo.official",
+            "Qwen Image": "qwen_image.comfy-fixed.official",
             "Z-Image Base": "z_image.base.official",
             "Z-Image Turbo": "z_image.turbo.official",
         }
@@ -184,6 +195,7 @@ def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
         "Sigmax.Flux1SchnellSigmaScheduler",
         "Sigmax.Krea2ConditioningRebalance",
         "Sigmax.Krea2SigmaScheduler",
+        "Sigmax.QwenImageSigmaScheduler",
         "Sigmax.RawWorkflowOutput",
         "Sigmax.ScheduleInspector",
         "Sigmax.TurboWorkflowOutput",
@@ -193,7 +205,7 @@ def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
     assert report.lane is WorkflowValidationLane.KNOWN_GOOD
     assert report.host_version == CANONICAL_HOST_VERSION
     assert report.host_revision == CANONICAL_HOST_REVISION
-    assert report.workflow_count == 7
+    assert report.workflow_count == 8
     assert report.compatible is True
     assert report.gate_passed is True
     assert report.observational is False
@@ -203,6 +215,7 @@ def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
     assert projection["nodes"] == [
         {"id": "Sigmax.Flux1SchnellSigmaScheduler", "version": "1"},
         {"id": "Sigmax.Krea2SigmaScheduler", "version": "1"},
+        {"id": "Sigmax.QwenImageSigmaScheduler", "version": "1"},
         {"id": "Sigmax.RawWorkflowOutput", "version": "1"},
         {"id": "Sigmax.ScheduleInspector", "version": "1"},
         {"id": "Sigmax.TurboWorkflowOutput", "version": "1"},

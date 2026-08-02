@@ -25,6 +25,7 @@ validated baseline.
 | Z-Image Base | Fixed-ratio external sigma schedule, 28-50 steps | Select `Base` explicitly |
 | Z-Image Turbo | Fixed-ratio external sigma schedule, 8-step official recipe | Select `Turbo` explicitly |
 | FLUX.1-schnell | Unshifted external sigma schedule, 1-4 steps | Use the dedicated FLUX.1-schnell node |
+| Original Qwen Image | ComfyUI fixed `1.15` shift, or Diffusers dynamic shift with explicit `image_seq_len`; original T2I only | Use `Sigmax.QwenImageSigmaScheduler`; select the mode explicitly |
 
 The experimental `Sigmax.Krea2ConditioningRebalance` node accepts explicit RAW or Turbo
 `CONDITIONING` tensors with shape `(batch, sequence, 30720)`. It preserves standard ComfyUI
@@ -44,6 +45,8 @@ and does not establish compatibility with an arbitrary model.
   filename or structural evidence.
 - Slicing, concatenating, or resampling a schedule changes its evidence status to modified.
 - Model weights must be obtained separately under their own licenses and access terms.
+- Qwen Image dynamic mode requires an explicit packed image sequence length; it never falls back
+  to the fixed mode when that input is absent.
 
 ## Not currently claimed
 

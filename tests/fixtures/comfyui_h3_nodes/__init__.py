@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import math
+from itertools import pairwise
 from typing import Any
 
 import torch  # type: ignore[import-not-found]
@@ -17,6 +18,7 @@ _ALGEBRA_UI_KEY = "sigmax_schedule_algebra"
 _CHECKPOINT_UI_KEY = "sigmax_checkpoint_evidence"
 _Z_IMAGE_UI_KEY = "sigmax_z_image_schedule"
 _FLUX1_SCHNELL_UI_KEY = "sigmax_flux1_schnell_schedule"
+_QWEN_IMAGE_UI_KEY = "sigmax_qwen_image_schedule"
 _KREA2_LORA_UI_KEY = "sigmax_krea2_lora_experimental"
 _KREA2_CONDITIONING_UI_KEY = "sigmax_krea2_conditioning"
 _KREA2_CONDITIONING_FEATURES = 12 * 2560
@@ -354,6 +356,69 @@ class Flux1SchnellScheduleProbe:
         }
 
 
+class QwenImageScheduleProbe:
+    """Return model-free H2 evidence for one original Qwen Image schedule."""
+
+    CATEGORY = "SigmaxTest"
+    DESCRIPTION = "Test-only original Qwen Image schedule H2 execution probe."
+    FUNCTION = "execute"
+    OUTPUT_NODE = True
+    RETURN_TYPES: tuple[()] = ()
+    RETURN_NAMES: tuple[()] = ()
+
+    @classmethod
+    def INPUT_TYPES(cls) -> dict[str, dict[str, tuple[object, ...]]]:
+        return {
+            "required": {
+                "sigmas": ("SIGMAS",),
+                "schedule_info": ("STRING", {"default": "", "multiline": True}),
+            }
+        }
+
+    def execute(self, sigmas: object, schedule_info: object) -> dict[str, object]:
+        if not isinstance(sigmas, torch.Tensor) or sigmas.device.type != "cpu":
+            raise ValueError("Qwen Image H2 sigmas must be a CPU tensor")
+        if sigmas.dtype != torch.float32 or sigmas.ndim != 1 or len(sigmas) != 51:
+            raise ValueError("Qwen Image H2 sigmas must contain fifty transitions")
+        if not isinstance(schedule_info, str):
+            raise ValueError("Qwen Image H2 schedule information must be text")
+        info = json.loads(schedule_info)
+        if not isinstance(info, dict):
+            raise ValueError("Qwen Image H2 schedule information must be an object")
+        profile = info.get("profile", {})
+        shift = info.get("shift", {})
+        if (
+            info.get("schema") != "sigmax.qwen-image-sigma-node/1"
+            or not isinstance(profile, dict)
+            or profile.get("evidence") not in {"official", "framework_reference"}
+            or profile.get("id")
+            not in {
+                "qwen_image.comfy-fixed.official",
+                "qwen_image.diffusers-dynamic.framework-reference",
+            }
+            or not isinstance(shift, dict)
+            or info.get("slicing", {}).get("output_steps") != 50
+            or float(sigmas[0]) != 1.0
+            or float(sigmas[-1]) != 0.0
+            or any(float(left) <= float(right) for left, right in pairwise(sigmas))
+        ):
+            raise ValueError("Qwen Image H2 schedule contract drifted")
+        trace = {"schedule_info": info, "sigmas": _vector(sigmas)}
+        return {
+            "ui": {
+                _QWEN_IMAGE_UI_KEY: [
+                    json.dumps(
+                        trace,
+                        allow_nan=False,
+                        ensure_ascii=False,
+                        separators=(",", ":"),
+                        sort_keys=True,
+                    )
+                ]
+            }
+        }
+
+
 class Krea2LoraExperimentalProbe:
     """Return model-free H2 evidence for one experimental Krea 2 LoRA schedule."""
 
@@ -531,6 +596,7 @@ class Krea2ConditioningProbe:
 
 NODE_CLASS_MAPPINGS = {
     "SigmaxTest.Flux1SchnellScheduleProbe": Flux1SchnellScheduleProbe,
+    "SigmaxTest.QwenImageScheduleProbe": QwenImageScheduleProbe,
     "SigmaxTest.CheckpointEvidenceProbe": CheckpointEvidenceProbe,
     "SigmaxTest.Krea2LoraExperimentalProbe": Krea2LoraExperimentalProbe,
     "SigmaxTest.Krea2ConditioningProbe": Krea2ConditioningProbe,
@@ -541,6 +607,7 @@ NODE_CLASS_MAPPINGS = {
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "SigmaxTest.Flux1SchnellScheduleProbe": "Sigmax Test — FLUX.1-schnell Schedule Probe",
+    "SigmaxTest.QwenImageScheduleProbe": "Sigmax Test — Qwen Image Schedule Probe",
     "SigmaxTest.CheckpointEvidenceProbe": "Sigmax Test — Checkpoint Evidence Probe",
     "SigmaxTest.Krea2LoraExperimentalProbe": "Sigmax Test — Krea 2 LoRA Experimental Probe",
     "SigmaxTest.Krea2ConditioningProbe": "Sigmax Test — Krea 2 Conditioning Probe",

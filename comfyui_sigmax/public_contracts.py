@@ -174,6 +174,10 @@ def source_contract_projection() -> dict[str, object]:
         MODEL_AWARE_SIGMA_NODE_ID,
         MODEL_AWARE_SIGMA_NODE_SCHEMA_ID,
     )
+    from comfyui_sigmax.nodes.qwen_image_sigma_scheduler import (
+        QWEN_IMAGE_SIGMA_NODE_ID,
+        QWEN_IMAGE_SIGMA_NODE_SCHEMA_ID,
+    )
     from comfyui_sigmax.nodes.raw_workflow_output import (
         RAW_WORKFLOW_OUTPUT_NODE_ID,
         RAW_WORKFLOW_OUTPUT_SCHEMA_ID,
@@ -220,6 +224,7 @@ def source_contract_projection() -> dict[str, object]:
                 "schema": KREA2_CONDITIONING_NODE_SCHEMA_ID,
             },
             {"id": KREA2_SIGMA_NODE_ID, "schema": KREA2_SIGMA_NODE_SCHEMA_ID},
+            {"id": QWEN_IMAGE_SIGMA_NODE_ID, "schema": QWEN_IMAGE_SIGMA_NODE_SCHEMA_ID},
             {"id": MODEL_AWARE_SIGMA_NODE_ID, "schema": MODEL_AWARE_SIGMA_NODE_SCHEMA_ID},
             {"id": PROFILE_INSPECTOR_NODE_ID, "schema": PROFILE_INSPECTOR_SCHEMA_ID},
             {"id": RAW_WORKFLOW_OUTPUT_NODE_ID, "schema": RAW_WORKFLOW_OUTPUT_SCHEMA_ID},

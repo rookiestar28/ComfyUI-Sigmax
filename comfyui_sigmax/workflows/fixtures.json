@@ -1777,6 +1777,166 @@
           }
         }
       }
+    },
+    {
+      "host": {
+        "api_version": "legacy_v1",
+        "id": "comfyui",
+        "version": "0.29.0"
+      },
+      "id": "qwen-image-comfy-fixed-official-50",
+      "node_contracts": [
+        {
+          "node_id": 1,
+          "node_type": "Sigmax.QwenImageSigmaScheduler",
+          "widget_slots": [
+            {
+              "name": "mode",
+              "type": "COMBO"
+            },
+            {
+              "name": "steps",
+              "type": "INT"
+            },
+            {
+              "name": "image_seq_len",
+              "type": "INT"
+            },
+            {
+              "name": "strict_official",
+              "type": "BOOLEAN"
+            },
+            {
+              "name": "start_step",
+              "type": "INT"
+            },
+            {
+              "name": "end_step",
+              "type": "INT"
+            }
+          ]
+        }
+      ],
+      "nodes": [
+        {
+          "id": "Sigmax.QwenImageSigmaScheduler",
+          "version": "1"
+        }
+      ],
+      "package": {
+        "id": "comfyui-sigmax",
+        "version": "1.0.0"
+      },
+      "profile": {
+        "id": "qwen_image.comfy-fixed.official",
+        "version": "1"
+      },
+      "variant": "Qwen Image",
+      "workflow": {
+        "version": 0.4,
+        "last_node_id": 1,
+        "last_link_id": 0,
+        "nodes": [
+          {
+            "id": 1,
+            "type": "Sigmax.QwenImageSigmaScheduler",
+            "pos": [
+              40,
+              80
+            ],
+            "size": [
+              380,
+              250
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "outputs": [
+              {
+                "name": "sigmas",
+                "type": "SIGMAS",
+                "links": null,
+                "slot_index": 0
+              },
+              {
+                "name": "schedule_info",
+                "type": "STRING",
+                "links": null,
+                "slot_index": 1
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "Sigmax.QwenImageSigmaScheduler",
+              "cnr_id": "comfyui-sigmax"
+            },
+            "widgets_values": [
+              "Comfy Fixed",
+              50,
+              0,
+              true,
+              0,
+              -1
+            ]
+          }
+        ],
+        "links": [],
+        "extra": {
+          "comfyui_sigmax": {
+            "metadata": {
+              "artifact": {
+                "construction_fingerprint": "sha256:2d7180d04d8c8d6eb98736b53fc674ded7d13289f22154ca601993565b4f9325",
+                "construction_schema": "sigmax.schedule-artifact/1",
+                "numerical_fingerprint": "sha256:958cbb51e05aa008f8786fbd363b6542afab2056e304b7a5655ad54384d62beb",
+                "receipt_schema": "sigmax.execution-receipt-envelope/1"
+              },
+              "compatibility": {
+                "considered": [
+                  "model_identity",
+                  "prediction_type",
+                  "sigma_domain",
+                  "schedule_ownership",
+                  "terminal_sigma",
+                  "execution_behavior",
+                  "noise_ownership",
+                  "sampler_state",
+                  "partial_denoise",
+                  "per_token_timesteps",
+                  "reference_sampler"
+                ],
+                "level": "allow",
+                "reasons": [
+                  "compatible"
+                ]
+              },
+              "profile": {
+                "id": "qwen_image.comfy-fixed.official",
+                "version": "1"
+              },
+              "receipts": [],
+              "requirements": {
+                "host": {
+                  "api_version": "legacy_v1",
+                  "id": "comfyui",
+                  "version": "0.29.0"
+                },
+                "nodes": [
+                  {
+                    "id": "Sigmax.QwenImageSigmaScheduler",
+                    "version": "1"
+                  }
+                ],
+                "package": {
+                  "id": "comfyui-sigmax",
+                  "version": "1.0.0"
+                }
+              },
+              "schema": "sigmax.workflow-metadata/1"
+            },
+            "metadata_fingerprint": "sha256:24aa9bf32150125c017ebbc89d020894041ac33cd717c359710412c618286e76",
+            "schema": "sigmax.workflow-metadata-envelope/1"
+          }
+        }
+      }
     }
   ],
   "schema": "sigmax.workflow-fixture-bundle/1"

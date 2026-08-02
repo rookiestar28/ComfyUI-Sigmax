@@ -86,6 +86,8 @@ _Z_IMAGE_OUTPUT_NODE_ID: Final = "2"
 _Z_IMAGE_TRACE_KEY: Final = "sigmax_z_image_schedule"
 _FLUX1_SCHNELL_OUTPUT_NODE_ID: Final = "2"
 _FLUX1_SCHNELL_TRACE_KEY: Final = "sigmax_flux1_schnell_schedule"
+_QWEN_IMAGE_OUTPUT_NODE_ID: Final = "2"
+_QWEN_IMAGE_TRACE_KEY: Final = "sigmax_qwen_image_schedule"
 _KREA2_LORA_OUTPUT_NODE_ID: Final = "2"
 _KREA2_LORA_TRACE_KEY: Final = "sigmax_krea2_lora_experimental"
 _KREA2_CONDITIONING_OUTPUT_NODE_ID: Final = "3"
@@ -498,6 +500,95 @@ def verify_flux1_schnell_h2_history(history: object, *, prompt_id: str) -> dict[
         ).get("complete"),
         "profile_id": "flux1.schnell.official",
         "requested_transitions": 4,
+        "status": "succeeded",
+    }
+
+
+def build_qwen_image_h2_api_prompt(mode: str) -> dict[str, object]:
+    """Return one model-free original-Qwen scheduler -> probe graph."""
+
+    if mode not in {"Comfy Fixed", "Diffusers Dynamic"}:
+        raise ScheduleContractError("Qwen Image H2 mode is unsupported")
+    return {
+        "1": {
+            "class_type": "Sigmax.QwenImageSigmaScheduler",
+            "inputs": {
+                "end_step": -1,
+                "image_seq_len": 0 if mode == "Comfy Fixed" else 1024,
+                "mode": mode,
+                "start_step": 0,
+                "steps": 50,
+                "strict_official": True,
+            },
+        },
+        _QWEN_IMAGE_OUTPUT_NODE_ID: {
+            "class_type": "SigmaxTest.QwenImageScheduleProbe",
+            "inputs": {"schedule_info": ["1", 1], "sigmas": ["1", 0]},
+        },
+    }
+
+
+def verify_qwen_image_h2_history(
+    history: object, *, prompt_id: str, mode: str
+) -> dict[str, object]:
+    """Verify one original-Qwen fixed or dynamic schedule execution."""
+
+    if mode not in {"Comfy Fixed", "Diffusers Dynamic"}:
+        raise ScheduleContractError("Qwen Image H2 mode is unsupported")
+    root = _object(history, label="Qwen Image history")
+    entry = _object(root.get(prompt_id), label="Qwen Image history entry")
+    status = _object(entry.get("status"), label="Qwen Image prompt status")
+    if status.get("completed") is not True or status.get("status_str") != "success":
+        raise ScheduleContractError("Qwen Image prompt history does not prove success")
+    outputs = _object(entry.get("outputs"), label="Qwen Image prompt outputs")
+    output = _object(outputs.get(_QWEN_IMAGE_OUTPUT_NODE_ID), label="Qwen Image probe output")
+    traces = _array(output.get(_QWEN_IMAGE_TRACE_KEY), label="Qwen Image probe trace")
+    if len(traces) != 1 or not isinstance(traces[0], str):
+        raise ScheduleContractError("Qwen Image probe trace is malformed")
+    trace = _object(json.loads(traces[0]), label="Qwen Image decoded trace")
+    info = _object(trace.get("schedule_info"), label="Qwen Image schedule information")
+    sigmas = _array(trace.get("sigmas"), label="Qwen Image sigma vector")
+    profile_id = (
+        "qwen_image.comfy-fixed.official"
+        if mode == "Comfy Fixed"
+        else "qwen_image.diffusers-dynamic.framework-reference"
+    )
+    expected_shift: dict[str, object]
+    if mode == "Comfy Fixed":
+        expected_shift = {"dynamic": False, "kind": "fixed_direct_ratio", "ratio": 1.15}
+    else:
+        expected_shift = {
+            "base_image_seq_len": 256,
+            "base_shift": 0.5,
+            "dynamic": True,
+            "image_seq_len": 1024,
+            "kind": "exponential_mu",
+            "max_image_seq_len": 4096,
+            "max_shift": 1.15,
+            "mu": 0.63,
+        }
+    if (
+        info.get("schema") != "sigmax.qwen-image-sigma-node/1"
+        or _object(info.get("profile"), label="Qwen Image profile").get("id") != profile_id
+        or _object(info.get("profile"), label="Qwen Image profile").get("evidence")
+        != "framework_reference"
+        or _object(info.get("shift"), label="Qwen Image shift") != expected_shift
+        or _object(info.get("slicing"), label="Qwen Image slicing").get("output_steps") != 50
+        or len(sigmas) != 51
+        or sigmas[0] != 1.0
+        or sigmas[-1] != 0.0
+        or any(not isinstance(value, (int, float)) or isinstance(value, bool) for value in sigmas)
+        or any(float(left) <= float(right) for left, right in pairwise(sigmas))
+    ):
+        raise ScheduleContractError("Qwen Image H2 execution evidence drifted")
+    return {
+        "image_seq_len": 0 if mode == "Comfy Fixed" else 1024,
+        "mode": mode,
+        "numerical_fingerprint": _object(
+            info.get("fingerprints"), label="Qwen Image fingerprints"
+        ).get("complete"),
+        "profile_id": profile_id,
+        "requested_transitions": 50,
         "status": "succeeded",
     }
 
@@ -2292,6 +2383,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
             "H2_CHECKPOINT_EVIDENCE_M6_08",
             "H2_Z_IMAGE_M6_04",
             "H2_FLUX1_SCHNELL_M6_05",
+            "H2_QWEN_IMAGE_M6_05",
             "H3_EULER_M5_01",
         ],
         "host": {
@@ -2570,6 +2662,45 @@ def run(args: argparse.Namespace) -> dict[str, object]:
             )
             evidence["h2_flux1_schnell"] = flux_summary
             attempts["h2_flux1_schnell.flux1-schnell-official-4"] = flux_transition
+
+            qwen_results: list[dict[str, object]] = []
+            for mode in ("Comfy Fixed", "Diffusers Dynamic"):
+
+                def submit_qwen(
+                    ordinal: int,
+                    *,
+                    selected_mode: str = mode,
+                ) -> tuple[str, dict[str, object]]:
+                    return _submit_successful_prompt(
+                        base_url=base_url,
+                        client_id=(
+                            f"sigmax-m6-05-qwen-image-"
+                            f"{selected_mode.casefold().replace(' ', '-')}-attempt-{ordinal}"
+                        ),
+                        prompt=build_qwen_image_h2_api_prompt(selected_mode),
+                        execution_timeout=args.execution_timeout,
+                    )
+
+                def verify_qwen(
+                    history: object,
+                    prompt_id: str,
+                    *,
+                    selected_mode: str = mode,
+                ) -> dict[str, object]:
+                    return verify_qwen_image_h2_history(
+                        history,
+                        prompt_id=prompt_id,
+                        mode=selected_mode,
+                    )
+
+                qwen_summary, qwen_transition = execute_verified_host_repeat(
+                    lane="H2_QWEN_IMAGE_M6_05",
+                    submit=submit_qwen,
+                    verify=verify_qwen,
+                )
+                qwen_results.append(qwen_summary)
+                attempts[f"h2_qwen_image.{mode.casefold().replace(' ', '-')}"] = qwen_transition
+            evidence["h2_qwen_image"] = qwen_results
 
             def submit_runtime_rejection(ordinal: int) -> tuple[str, dict[str, object]]:
                 return _submit_rejected_runtime_prompt(

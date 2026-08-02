@@ -83,6 +83,8 @@ def test_builtin_provenance_layers_and_licenses_are_distinct() -> None:
         "krea2.raw-turbo-lora.experimental@1",
         "krea2.raw.official@1",
         "krea2.turbo.official@1",
+        "qwen_image.comfy-fixed.official@1",
+        "qwen_image.diffusers-dynamic.framework-reference@1",
         "z_image.base.official@1",
         "z_image.turbo.official@1",
     ]
@@ -103,6 +105,13 @@ def test_builtin_provenance_layers_and_licenses_are_distinct() -> None:
             assert row["resource_counts"] == {
                 "frameworks": 1,
                 "model_weights": expected_weights,
+                "software_sources": 1,
+            }
+            assert set(row["license_identifiers"]) == {"Apache-2.0", "GPL-3.0-only"}
+        elif row["profile_key"].startswith("qwen_image."):
+            assert row["resource_counts"] == {
+                "frameworks": 2,
+                "model_weights": 1,
                 "software_sources": 1,
             }
             assert set(row["license_identifiers"]) == {"Apache-2.0", "GPL-3.0-only"}

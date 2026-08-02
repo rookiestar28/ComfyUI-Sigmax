@@ -91,9 +91,9 @@ def test_readme_is_limited_to_product_installation_and_use() -> None:
 
 def test_readme_matches_the_registered_node_surface() -> None:
     readme = _read(README)
-    assert len(NODE_CLASS_MAPPINGS) == 15
+    assert len(NODE_CLASS_MAPPINGS) == 16
     assert NODE_CLASS_MAPPINGS.keys() == NODE_DISPLAY_NAME_MAPPINGS.keys()
-    assert "registers 15 namespaced nodes" in readme
+    assert "registers 16 namespaced nodes" in readme
     for node_id in (
         "Sigmax.Krea2SigmaScheduler",
         "Sigmax.ZImageSigmaScheduler",
@@ -102,6 +102,7 @@ def test_readme_matches_the_registered_node_surface() -> None:
         "Sigmax.AdvancedFlowMatchScheduler",
         "Sigmax.CheckpointEvidenceInspector",
         "Sigmax.Krea2ConditioningRebalance",
+        "Sigmax.QwenImageSigmaScheduler",
         "Sigmax.ProfileInspector",
         "Sigmax.ScheduleInspector",
         "Sigmax.ScheduleComparison",
@@ -120,6 +121,7 @@ def test_readme_records_the_reviewed_user_recipes_and_safety_boundaries() -> Non
         "`Base`, 28-50 steps, default 50, CFG 4.0",
         "`Turbo`, 8 steps, CFG 1.0",
         "1-4 steps, default 4, CFG 1.0",
+        "`Comfy Fixed`, 50 steps, or `Diffusers Dynamic` with explicit `image_seq_len`",
     ):
         assert recipe in readme
     assert "Do not pass the result through another scheduler" in readme
@@ -138,6 +140,7 @@ def test_compatibility_is_user_facing_and_fail_closed() -> None:
         "Windows and Linux/WSL",
         "Real-model GPU execution or image-quality parity",
         "Automatic compatibility with unlisted model families",
+        "Original Qwen Image",
         "unvalidated",
     ):
         assert required in compatibility

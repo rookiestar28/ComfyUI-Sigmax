@@ -38,8 +38,8 @@ def test_source_manifest_binds_frozen_registry_package_node_and_workflow_identit
         "requires_python": ">=3.10",
         "version": "1.0.0",
     }
-    assert len(manifest["nodes"]) == 19
-    assert len(manifest["workflows"]) == 12
+    assert len(manifest["nodes"]) == 20
+    assert len(manifest["workflows"]) == 14
     assert all(
         row["package"] == {"id": "comfyui-sigmax", "version": "1.0.0"}
         for row in manifest["workflows"]

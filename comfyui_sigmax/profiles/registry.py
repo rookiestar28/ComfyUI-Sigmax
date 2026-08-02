@@ -272,6 +272,10 @@ def builtin_profile_registry() -> ProfileRegistry:
     # Local import avoids a schema -> profile -> registry import cycle.
     from comfyui_sigmax.profiles.aura_flow import AURAFLOW_V02_SCHEMA
     from comfyui_sigmax.profiles.flux1_schnell import FLUX1_SCHNELL_SCHEMA
+    from comfyui_sigmax.profiles.hunyuan_image21 import (
+        HUNYUAN_IMAGE21_BASE_SCHEMA,
+        HUNYUAN_IMAGE21_DISTILLED_SCHEMA,
+    )
     from comfyui_sigmax.profiles.krea2_lora_experimental import KREA2_LORA_EXPERIMENTAL_SCHEMA
     from comfyui_sigmax.profiles.krea2_raw import KREA2_RAW_SCHEMA
     from comfyui_sigmax.profiles.krea2_turbo import KREA2_TURBO_SCHEMA
@@ -297,6 +301,8 @@ def builtin_profile_registry() -> ProfileRegistry:
                     _builtin_entry(KREA2_RAW_SCHEMA),
                     _builtin_entry(KREA2_TURBO_SCHEMA),
                     _builtin_entry(LUMINA2_SCHEMA),
+                    _builtin_entry(HUNYUAN_IMAGE21_BASE_SCHEMA),
+                    _builtin_entry(HUNYUAN_IMAGE21_DISTILLED_SCHEMA),
                     _builtin_entry(QWEN_IMAGE_COMFY_FIXED_SCHEMA),
                     _builtin_entry(QWEN_IMAGE_DIFFUSERS_DYNAMIC_SCHEMA),
                     _builtin_entry(SD3_COMFY_DIFFUSERS_SCHEMA),

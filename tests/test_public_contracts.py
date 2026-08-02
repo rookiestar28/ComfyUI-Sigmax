@@ -65,6 +65,10 @@ def test_packaged_manifest_freezes_the_complete_m8_01_boundary() -> None:
             "schema": "sigmax.flux1-schnell-sigma-node/1",
         },
         {
+            "id": "Sigmax.HunyuanImage21SigmaScheduler",
+            "schema": "sigmax.hunyuan-image-2-1-sigma-node/1",
+        },
+        {
             "id": "Sigmax.Krea2ConditioningRebalance",
             "schema": "sigmax.krea2-conditioning-node/1",
         },

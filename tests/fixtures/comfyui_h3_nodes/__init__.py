@@ -22,6 +22,7 @@ _QWEN_IMAGE_UI_KEY = "sigmax_qwen_image_schedule"
 _SD3_UI_KEY = "sigmax_sd3_schedule"
 _AURAFLOW_UI_KEY = "sigmax_auraflow_schedule"
 _LUMINA2_UI_KEY = "sigmax_lumina2_schedule"
+_HUNYUAN_IMAGE21_UI_KEY = "sigmax_hunyuan_image21_schedule"
 _KREA2_LORA_UI_KEY = "sigmax_krea2_lora_experimental"
 _KREA2_CONDITIONING_UI_KEY = "sigmax_krea2_conditioning"
 _KREA2_CONDITIONING_FEATURES = 12 * 2560
@@ -612,6 +613,77 @@ class Lumina2ScheduleProbe:
         }
 
 
+class HunyuanImage21ScheduleProbe:
+    """Return model-free H2 evidence for one HunyuanImage 2.1 variant."""
+
+    CATEGORY = "SigmaxTest"
+    DESCRIPTION = "Test-only HunyuanImage 2.1 schedule H2 execution probe."
+    FUNCTION = "execute"
+    OUTPUT_NODE = True
+    RETURN_TYPES: tuple[()] = ()
+    RETURN_NAMES: tuple[()] = ()
+
+    @classmethod
+    def INPUT_TYPES(cls) -> dict[str, dict[str, tuple[object, ...]]]:
+        return {
+            "required": {
+                "sigmas": ("SIGMAS",),
+                "schedule_info": ("STRING", {"default": "", "multiline": True}),
+            }
+        }
+
+    def execute(self, sigmas: object, schedule_info: object) -> dict[str, object]:
+        if not isinstance(sigmas, torch.Tensor) or sigmas.device.type != "cpu":
+            raise ValueError("HunyuanImage 2.1 H2 sigmas must be a CPU tensor")
+        if not isinstance(schedule_info, str):
+            raise ValueError("HunyuanImage 2.1 H2 schedule information must be text")
+        info = json.loads(schedule_info)
+        if not isinstance(info, dict):
+            raise ValueError("HunyuanImage 2.1 H2 schedule information must be an object")
+        profile = info.get("profile", {})
+        if not isinstance(profile, dict):
+            raise ValueError("HunyuanImage 2.1 H2 profile is malformed")
+        variant = profile.get("variant")
+        expected = (
+            {
+                "2.1": ("hunyuan-image-2-1.base.official", 5.0, 50),
+                "2.1-distilled": ("hunyuan-image-2-1.distilled.official", 4.0, 8),
+            }.get(variant)
+            if isinstance(variant, str)
+            else None
+        )
+        if (
+            sigmas.dtype != torch.float32
+            or sigmas.ndim != 1
+            or expected is None
+            or len(sigmas) != expected[2] + 1
+            or info.get("schema") != "sigmax.hunyuan-image-2-1-sigma-node/1"
+            or profile.get("id") != expected[0]
+            or profile.get("evidence") != "official"
+            or info.get("shift")
+            != {"kind": "direct_ratio", "multiplier": 1.0, "ratio": expected[1]}
+            or info.get("slicing", {}).get("output_steps") != expected[2]
+            or float(sigmas[0]) != 1.0
+            or float(sigmas[-1]) != 0.0
+            or any(float(left) <= float(right) for left, right in pairwise(sigmas))
+        ):
+            raise ValueError("HunyuanImage 2.1 H2 schedule contract drifted")
+        trace = {"schedule_info": info, "sigmas": _vector(sigmas)}
+        return {
+            "ui": {
+                _HUNYUAN_IMAGE21_UI_KEY: [
+                    json.dumps(
+                        trace,
+                        allow_nan=False,
+                        ensure_ascii=False,
+                        separators=(",", ":"),
+                        sort_keys=True,
+                    )
+                ]
+            }
+        }
+
+
 class Krea2LoraExperimentalProbe:
     """Return model-free H2 evidence for one experimental Krea 2 LoRA schedule."""
 
@@ -793,6 +865,7 @@ NODE_CLASS_MAPPINGS = {
     "SigmaxTest.SD3ScheduleProbe": SD3ScheduleProbe,
     "SigmaxTest.AuraFlowScheduleProbe": AuraFlowScheduleProbe,
     "SigmaxTest.Lumina2ScheduleProbe": Lumina2ScheduleProbe,
+    "SigmaxTest.HunyuanImage21ScheduleProbe": HunyuanImage21ScheduleProbe,
     "SigmaxTest.CheckpointEvidenceProbe": CheckpointEvidenceProbe,
     "SigmaxTest.Krea2LoraExperimentalProbe": Krea2LoraExperimentalProbe,
     "SigmaxTest.Krea2ConditioningProbe": Krea2ConditioningProbe,
@@ -807,6 +880,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "SigmaxTest.SD3ScheduleProbe": "Sigmax Test — SD3 Schedule Probe",
     "SigmaxTest.AuraFlowScheduleProbe": "Sigmax Test — AuraFlow Schedule Probe",
     "SigmaxTest.Lumina2ScheduleProbe": "Sigmax Test — Lumina-Image 2.0 Schedule Probe",
+    "SigmaxTest.HunyuanImage21ScheduleProbe": "Sigmax Test — HunyuanImage 2.1 Schedule Probe",
     "SigmaxTest.CheckpointEvidenceProbe": "Sigmax Test — Checkpoint Evidence Probe",
     "SigmaxTest.Krea2LoraExperimentalProbe": "Sigmax Test — Krea 2 LoRA Experimental Probe",
     "SigmaxTest.Krea2ConditioningProbe": "Sigmax Test — Krea 2 Conditioning Probe",

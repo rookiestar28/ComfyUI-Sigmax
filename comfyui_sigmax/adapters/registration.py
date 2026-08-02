@@ -581,6 +581,7 @@ def builtin_node_registry() -> NodeRegistry:
         AuraFlowSigmaScheduler,
         CheckpointEvidenceInspector,
         Flux1SchnellSigmaScheduler,
+        HunyuanImage21SigmaScheduler,
         Krea2ConditioningRebalance,
         Krea2SigmaScheduler,
         Lumina2SigmaScheduler,
@@ -634,6 +635,11 @@ def builtin_node_registry() -> NodeRegistry:
                 node_id="Sigmax.Lumina2SigmaScheduler",
                 display_name="Lumina-Image 2.0 Sigma Scheduler",
                 node_class=Lumina2SigmaScheduler,
+            ),
+            discover_legacy_registration(
+                node_id="Sigmax.HunyuanImage21SigmaScheduler",
+                display_name="HunyuanImage 2.1 Sigma Scheduler",
+                node_class=HunyuanImage21SigmaScheduler,
             ),
             discover_legacy_registration(
                 node_id="Sigmax.QwenImageSigmaScheduler",

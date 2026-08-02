@@ -158,6 +158,10 @@ def source_contract_projection() -> dict[str, object]:
         FLUX1_SCHNELL_SIGMA_NODE_ID,
         FLUX1_SCHNELL_SIGMA_NODE_SCHEMA_ID,
     )
+    from comfyui_sigmax.nodes.hunyuan_image21_sigma_scheduler import (
+        HUNYUAN_IMAGE21_SIGMA_NODE_ID,
+        HUNYUAN_IMAGE21_SIGMA_NODE_SCHEMA_ID,
+    )
     from comfyui_sigmax.nodes.inspectors import (
         PROFILE_INSPECTOR_NODE_ID,
         PROFILE_INSPECTOR_SCHEMA_ID,
@@ -238,6 +242,7 @@ def source_contract_projection() -> dict[str, object]:
             },
             {"id": KREA2_SIGMA_NODE_ID, "schema": KREA2_SIGMA_NODE_SCHEMA_ID},
             {"id": LUMINA2_SIGMA_NODE_ID, "schema": LUMINA2_SIGMA_NODE_SCHEMA_ID},
+            {"id": HUNYUAN_IMAGE21_SIGMA_NODE_ID, "schema": HUNYUAN_IMAGE21_SIGMA_NODE_SCHEMA_ID},
             {"id": QWEN_IMAGE_SIGMA_NODE_ID, "schema": QWEN_IMAGE_SIGMA_NODE_SCHEMA_ID},
             {"id": SD3_SIGMA_NODE_ID, "schema": SD3_SIGMA_NODE_SCHEMA_ID},
             {"id": MODEL_AWARE_SIGMA_NODE_ID, "schema": MODEL_AWARE_SIGMA_NODE_SCHEMA_ID},

@@ -81,6 +81,8 @@ def test_builtin_provenance_layers_and_licenses_are_distinct() -> None:
     assert [row["profile_key"] for row in rows] == [
         "auraflow.v0-2.official@1",
         "flux1.schnell.official@1",
+        "hunyuan-image-2-1.base.official@1",
+        "hunyuan-image-2-1.distilled.official@1",
         "krea2.raw-turbo-lora.experimental@1",
         "krea2.raw.official@1",
         "krea2.turbo.official@1",
@@ -145,6 +147,16 @@ def test_builtin_provenance_layers_and_licenses_are_distinct() -> None:
                 "software_sources": 1,
             }
             assert set(row["license_identifiers"]) == {"Apache-2.0", "GPL-3.0-only"}
+        elif row["profile_key"].startswith("hunyuan-image-2-1."):
+            assert row["resource_counts"] == {
+                "frameworks": 1,
+                "model_weights": 2,
+                "software_sources": 1,
+            }
+            assert set(row["license_identifiers"]) == {
+                "GPL-3.0-only",
+                "LicenseRef-Tencent-Hunyuan-Community",
+            }
         else:
             assert row["profile_key"] == "flux1.schnell.official@1"
             assert row["resource_counts"] == {

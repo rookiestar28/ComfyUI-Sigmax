@@ -11,6 +11,8 @@ from comfyui_sigmax.core import EvidenceLevel, ScheduleContractError
 from comfyui_sigmax.profiles import (
     AURAFLOW_V02_SCHEMA,
     FLUX1_SCHNELL_SCHEMA,
+    HUNYUAN_IMAGE21_BASE_SCHEMA,
+    HUNYUAN_IMAGE21_DISTILLED_SCHEMA,
     KREA2_LORA_EXPERIMENTAL_SCHEMA,
     KREA2_RAW_SCHEMA,
     KREA2_TURBO_SCHEMA,
@@ -126,6 +128,8 @@ def test_builtin_registry_is_deterministic_exact_and_immutable() -> None:
     assert tuple(entry.key for entry in registry.entries) == (
         ProfileKey.from_schema(AURAFLOW_V02_SCHEMA),
         ProfileKey.from_schema(FLUX1_SCHNELL_SCHEMA),
+        ProfileKey.from_schema(HUNYUAN_IMAGE21_BASE_SCHEMA),
+        ProfileKey.from_schema(HUNYUAN_IMAGE21_DISTILLED_SCHEMA),
         ProfileKey.from_schema(KREA2_LORA_EXPERIMENTAL_SCHEMA),
         ProfileKey.from_schema(KREA2_RAW_SCHEMA),
         ProfileKey.from_schema(KREA2_TURBO_SCHEMA),
@@ -166,8 +170,8 @@ def test_external_registration_returns_a_new_canonical_snapshot() -> None:
     entry = updated.resolve(ProfileKey.from_schema(schema))
 
     assert updated is not registry
-    assert len(registry.entries) == 12
-    assert len(updated.entries) == 13
+    assert len(registry.entries) == 14
+    assert len(updated.entries) == 15
     assert entry.origin is ProfileOrigin.EXTERNAL
     assert entry.schema is schema
     assert entry.inheritance == _turbo_inheritance()

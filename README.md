@@ -1,28 +1,24 @@
 # ComfyUI-Sigmax
 
-ComfyUI-Sigmax provides model-aware sigma schedules for ComfyUI, with verified Krea 2, Z-Image,
-FLUX.1-schnell, Qwen Image, SD3, AuraFlow v0.2, and Lumina-Image 2.0 profiles plus editing tools.
+ComfyUI-Sigmax provides model-aware sigma schedules for ComfyUI, with verified Krea 2, Z-Image, FLUX.1-schnell, Qwen Image, SD3, AuraFlow v0.2, Lumina-Image 2.0, and HunyuanImage 2.1 profiles plus editing tools.
 
 ## Features
 
 - Explicit model and variant selection with no silent generic fallback.
-- Verified Krea 2, Z-Image, FLUX.1-schnell, Qwen Image, SD3, AuraFlow v0.2, and Lumina-Image 2.0 recipes.
+- Verified Krea 2, Z-Image, FLUX.1-schnell, Qwen Image, SD3, AuraFlow v0.2, Lumina-Image 2.0, and HunyuanImage 2.1 recipes.
 - Schedule slicing, concatenation, resampling, inspection, and comparison.
-- Experimental Krea 2 `CONDITIONING` tap rebalancing for explicitly selected RAW or Turbo
-  workflows, with fixed RMS preservation and no scheduler/model patching.
+- Experimental Krea 2 `CONDITIONING` tap rebalancing for explicitly selected RAW or Turbo workflows, with fixed RMS preservation and no scheduler/model patching.
 - Checkpoint header inspection without loading model weights.
 - Versioned schedule information and fingerprints for reproducible workflows.
 - No mandatory third-party runtime dependencies beyond the libraries provided by ComfyUI.
 
-Sigmax builds `SIGMAS` for ComfyUI custom sampling. It does not replace the sampler and does not
-download models.
+Sigmax builds `SIGMAS` for ComfyUI custom sampling. It does not replace the sampler and does not download models.
 
 ## Installation
 
 ### ComfyUI Manager
 
-Search for `ComfyUI-Sigmax` in ComfyUI Manager, install it, and restart ComfyUI. If it is not
-available in Manager, use the Git installation below.
+Search for `ComfyUI-Sigmax` in ComfyUI Manager, install it, and restart ComfyUI. If it is not available in Manager, use the Git installation below.
 
 ### Git
 
@@ -38,12 +34,11 @@ Restart ComfyUI. The expected package entry point is:
 ComfyUI/custom_nodes/comfyui-sigmax/__init__.py
 ```
 
-Python 3.10 or newer and ComfyUI 0.29.0 or newer are required. Do not install the repository's
-development or parity dependencies into ComfyUI just to use the nodes.
+Python 3.10 or newer and ComfyUI 0.29.0 or newer are required. Do not install the repository's development or parity dependencies into ComfyUI just to use the nodes.
 
 ## Use in ComfyUI
 
-Search the node menu for `Sigmax`. The package registers 19 namespaced nodes.
+Search the node menu for `Sigmax`. The package registers 20 namespaced nodes.
 
 ### Build a model schedule
 
@@ -59,14 +54,14 @@ Search the node menu for `Sigmax`. The package registers 19 namespaced nodes.
 | Original Stable Diffusion 3 | `Sigmax.SD3SigmaScheduler` | Select `Publisher Reference (1.0)` at 50 steps or `Comfy/Diffusers Fixed (3.0)` at 28 steps; source mode is required |
 | Original AuraFlow v0.2 | `Sigmax.AuraFlowSigmaScheduler` | `Official Fixed (1.73)`, 50 steps, CFG 3.5; source mode is explicit |
 | Lumina-Image 2.0 | `Sigmax.Lumina2SigmaScheduler` | `Official Fixed (6.0)`, 50 steps, CFG 4.0; source mode is explicit |
+| HunyuanImage 2.1 | `Sigmax.HunyuanImage21SigmaScheduler` | `Base (5.0)`, 50 steps, CFG 3.5, or `Distilled (4.0)`, 8 steps, CFG 3.25; variant is explicit |
 
 For normal use:
 
 1. Add the scheduler node for the selected model.
 2. Select the exact variant and keep `strict_official` enabled.
 3. For Krea 2, enter the actual output width and height.
-4. Connect the node's `SIGMAS` output directly to a custom-sampling path that accepts external
-   sigmas.
+4. Connect the node's `SIGMAS` output directly to a custom-sampling path that accepts external sigmas.
 5. Do not pass the result through another scheduler or apply another time shift.
 6. Read `schedule_info` when checking the selected recipe, dimensions, step range, or warnings.
 
@@ -83,6 +78,11 @@ Other versions, finetunes, dynamic shifts, model execution, and image quality ar
 
 The Lumina-Image 2.0 node covers only original Alpha-VLLM text-to-image with fixed ratio `6.0`
 and 50 steps. Video, mGPT, editing paths, dynamic shifts, execution, and image quality are outside scope.
+
+The HunyuanImage 2.1 node constructs schedule-only Base and Distilled direct-ratio paths (`5.0`
+and `4.0`). Base is the pinned ComfyUI-compatible lane; Distilled remains publisher-schedule-only
+until a native host path is qualified. Refiner, text/vision encoders, conditioning, weights, and
+image quality are outside scope, and Tencent's model license applies to separately obtained weights.
 
 `Sigmax.ModelAwareSigmaScheduler` can inspect a connected Krea 2 model, but shared filenames and
 model structure may identify only the family. If `Auto` reports ambiguity, select `Turbo` or

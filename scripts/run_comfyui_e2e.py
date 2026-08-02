@@ -94,6 +94,8 @@ _AURAFLOW_OUTPUT_NODE_ID: Final = "2"
 _AURAFLOW_TRACE_KEY: Final = "sigmax_auraflow_schedule"
 _LUMINA2_OUTPUT_NODE_ID: Final = "2"
 _LUMINA2_TRACE_KEY: Final = "sigmax_lumina2_schedule"
+_HUNYUAN_IMAGE21_OUTPUT_NODE_ID: Final = "2"
+_HUNYUAN_IMAGE21_TRACE_KEY: Final = "sigmax_hunyuan_image21_schedule"
 _KREA2_LORA_OUTPUT_NODE_ID: Final = "2"
 _KREA2_LORA_TRACE_KEY: Final = "sigmax_krea2_lora_experimental"
 _KREA2_CONDITIONING_OUTPUT_NODE_ID: Final = "3"
@@ -801,6 +803,89 @@ def verify_lumina2_h2_history(history: object, *, prompt_id: str) -> dict[str, o
         "profile_id": "lumina2.v2.official",
         "ratio": 6.0,
         "requested_transitions": 50,
+        "status": "succeeded",
+    }
+
+
+def build_hunyuan_image21_h2_api_prompt(variant: str) -> dict[str, object]:
+    """Return one model-free HunyuanImage 2.1 scheduler -> probe graph."""
+
+    if variant not in {"Base (5.0)", "Distilled (4.0)"}:
+        raise ScheduleContractError("HunyuanImage 2.1 H2 variant must be explicit")
+    steps = 50 if variant == "Base (5.0)" else 8
+    return {
+        "1": {
+            "class_type": "Sigmax.HunyuanImage21SigmaScheduler",
+            "inputs": {
+                "already_shifted": False,
+                "end_step": -1,
+                "start_step": 0,
+                "steps": steps,
+                "strict_source": True,
+                "variant": variant,
+            },
+        },
+        _HUNYUAN_IMAGE21_OUTPUT_NODE_ID: {
+            "class_type": "SigmaxTest.HunyuanImage21ScheduleProbe",
+            "inputs": {"schedule_info": ["1", 1], "sigmas": ["1", 0]},
+        },
+    }
+
+
+def verify_hunyuan_image21_h2_history(
+    history: object, *, prompt_id: str, variant: str
+) -> dict[str, object]:
+    """Verify one HunyuanImage 2.1 variant on the model-free host lane."""
+
+    if variant not in {"Base (5.0)", "Distilled (4.0)"}:
+        raise ScheduleContractError("HunyuanImage 2.1 H2 variant must be explicit")
+    expected_profile = (
+        "hunyuan-image-2-1.base.official"
+        if variant == "Base (5.0)"
+        else "hunyuan-image-2-1.distilled.official"
+    )
+    expected_ratio = 5.0 if variant == "Base (5.0)" else 4.0
+    expected_steps = 50 if variant == "Base (5.0)" else 8
+    root = _object(history, label="HunyuanImage 2.1 history")
+    entry = _object(root.get(prompt_id), label="HunyuanImage 2.1 history entry")
+    status = _object(entry.get("status"), label="HunyuanImage 2.1 prompt status")
+    if status.get("completed") is not True or status.get("status_str") != "success":
+        raise ScheduleContractError("HunyuanImage 2.1 prompt history does not prove success")
+    outputs = _object(entry.get("outputs"), label="HunyuanImage 2.1 prompt outputs")
+    output = _object(
+        outputs.get(_HUNYUAN_IMAGE21_OUTPUT_NODE_ID), label="HunyuanImage 2.1 probe output"
+    )
+    traces = _array(output.get(_HUNYUAN_IMAGE21_TRACE_KEY), label="HunyuanImage 2.1 probe trace")
+    if len(traces) != 1 or not isinstance(traces[0], str):
+        raise ScheduleContractError("HunyuanImage 2.1 probe trace is malformed")
+    trace = _object(json.loads(traces[0]), label="HunyuanImage 2.1 decoded trace")
+    info = _object(trace.get("schedule_info"), label="HunyuanImage 2.1 schedule information")
+    sigmas = _array(trace.get("sigmas"), label="HunyuanImage 2.1 sigma vector")
+    profile = _object(info.get("profile"), label="HunyuanImage 2.1 profile")
+    if (
+        info.get("schema") != "sigmax.hunyuan-image-2-1-sigma-node/1"
+        or profile.get("id") != expected_profile
+        or profile.get("evidence") != "official"
+        or profile.get("variant") != ("2.1" if variant == "Base (5.0)" else "2.1-distilled")
+        or _object(info.get("shift"), label="HunyuanImage 2.1 shift")
+        != {"kind": "direct_ratio", "multiplier": 1.0, "ratio": expected_ratio}
+        or _object(info.get("slicing"), label="HunyuanImage 2.1 slicing").get("output_steps")
+        != expected_steps
+        or len(sigmas) != expected_steps + 1
+        or sigmas[0] != 1.0
+        or sigmas[-1] != 0.0
+        or any(not isinstance(value, (int, float)) or isinstance(value, bool) for value in sigmas)
+        or any(float(left) <= float(right) for left, right in pairwise(sigmas))
+    ):
+        raise ScheduleContractError("HunyuanImage 2.1 H2 execution evidence drifted")
+    return {
+        "variant": variant,
+        "numerical_fingerprint": _object(
+            info.get("fingerprints"), label="HunyuanImage 2.1 fingerprints"
+        ).get("complete"),
+        "profile_id": expected_profile,
+        "ratio": expected_ratio,
+        "requested_transitions": expected_steps,
         "status": "succeeded",
     }
 
@@ -2598,6 +2683,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
             "H2_QWEN_IMAGE_M6_05",
             "H2_AURAFLOW_M6_05",
             "H2_LUMINA2_M6_05",
+            "H2_HUNYUAN_IMAGE21_M6_05",
             "H3_EULER_M5_01",
         ],
         "host": {
@@ -3011,6 +3097,56 @@ def run(args: argparse.Namespace) -> dict[str, object]:
             )
             evidence["h2_lumina2"] = lumina2_summary
             attempts["h2_lumina2.lumina2-v2-official-50"] = lumina2_transition
+
+            hunyuan_base_fixture = fixtures.get("hunyuan-image21-base-official-50")
+            hunyuan_distilled_fixture = fixtures.get("hunyuan-image21-distilled-official-8")
+            if hunyuan_base_fixture is None or hunyuan_distilled_fixture is None:
+                raise ScheduleContractError(
+                    "HunyuanImage 2.1 host cases have no canonical workflows"
+                )
+            hunyuan_results: list[dict[str, object]] = []
+            for variant, fixture, case_id in (
+                ("Base (5.0)", hunyuan_base_fixture, "hunyuan-image21-base-official-50"),
+                (
+                    "Distilled (4.0)",
+                    hunyuan_distilled_fixture,
+                    "hunyuan-image21-distilled-official-8",
+                ),
+            ):
+                hunyuan_workflow = cast(dict[str, object], fixture.workflow)
+
+                def submit_hunyuan(
+                    ordinal: int,
+                    *,
+                    selected_variant: str = variant,
+                    selected_case: str = case_id,
+                    selected_workflow: dict[str, object] = hunyuan_workflow,
+                ) -> tuple[str, dict[str, object]]:
+                    return _submit_successful_prompt(
+                        base_url=base_url,
+                        client_id=(
+                            f"sigmax-m6-05-hunyuan-image21-{selected_case}-attempt-{ordinal}"
+                        ),
+                        prompt=build_hunyuan_image21_h2_api_prompt(selected_variant),
+                        extra_data={"extra_pnginfo": {"workflow": selected_workflow}},
+                        execution_timeout=args.execution_timeout,
+                    )
+
+                def verify_hunyuan(
+                    history: object, prompt_id: str, *, selected_variant: str = variant
+                ) -> dict[str, object]:
+                    return verify_hunyuan_image21_h2_history(
+                        history, prompt_id=prompt_id, variant=selected_variant
+                    )
+
+                hunyuan_summary, hunyuan_transition = execute_verified_host_repeat(
+                    lane="H2_HUNYUAN_IMAGE21_M6_05",
+                    submit=submit_hunyuan,
+                    verify=verify_hunyuan,
+                )
+                hunyuan_results.append(hunyuan_summary)
+                attempts[f"h2_hunyuan_image21.{case_id}"] = hunyuan_transition
+            evidence["h2_hunyuan_image21"] = hunyuan_results
 
             def submit_runtime_rejection(ordinal: int) -> tuple[str, dict[str, object]]:
                 return _submit_rejected_runtime_prompt(

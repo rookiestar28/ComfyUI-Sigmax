@@ -14,6 +14,9 @@ import pytest
 from comfyui_sigmax.adapters.registration import builtin_node_registry
 from comfyui_sigmax.core import ScheduleContractError, SigmaDomain
 from comfyui_sigmax.nodes.aura_flow_sigma_scheduler import build_aura_flow_sigma_schedule
+from comfyui_sigmax.nodes.hunyuan_image21_sigma_scheduler import (
+    build_hunyuan_image21_sigma_schedule,
+)
 from comfyui_sigmax.nodes.inspectors import build_schedule_inspection
 from comfyui_sigmax.nodes.krea2_sigma_scheduler import (
     build_krea2_sigma_schedule,
@@ -543,6 +546,52 @@ def test_lumina2_h2_prompt_and_history_are_source_bound() -> None:
     assert summary["profile_id"] == "lumina2.v2.official"
     assert summary["ratio"] == 6.0
     assert summary["requested_transitions"] == 50
+    assert summary["status"] == "succeeded"
+
+
+@pytest.mark.parametrize(
+    ("variant", "steps", "profile_id", "ratio"),
+    [
+        ("Base (5.0)", 50, "hunyuan-image-2-1.base.official", 5.0),
+        ("Distilled (4.0)", 8, "hunyuan-image-2-1.distilled.official", 4.0),
+    ],
+)
+def test_hunyuan_image21_h2_prompt_and_history_are_variant_bound(
+    variant: str, steps: int, profile_id: str, ratio: float
+) -> None:
+    harness = _harness()
+    prompt = harness.build_hunyuan_image21_h2_api_prompt(variant)
+    assert prompt["1"] == {
+        "class_type": "Sigmax.HunyuanImage21SigmaScheduler",
+        "inputs": {
+            "already_shifted": False,
+            "end_step": -1,
+            "start_step": 0,
+            "steps": steps,
+            "strict_source": True,
+            "variant": variant,
+        },
+    }
+    result = build_hunyuan_image21_sigma_schedule(
+        variant=variant, steps=steps, strict_source=True, start_step=0, end_step=-1
+    )
+    trace = json.dumps(
+        {"schedule_info": json.loads(result.schedule_info_json), "sigmas": list(result.sigmas)},
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    history = {
+        "prompt-hunyuan": {
+            "outputs": {"2": {"sigmax_hunyuan_image21_schedule": [trace]}},
+            "status": {"completed": True, "status_str": "success"},
+        }
+    }
+    summary = harness.verify_hunyuan_image21_h2_history(
+        history, prompt_id="prompt-hunyuan", variant=variant
+    )
+    assert summary["profile_id"] == profile_id
+    assert summary["ratio"] == ratio
+    assert summary["requested_transitions"] == steps
     assert summary["status"] == "succeeded"
 
 

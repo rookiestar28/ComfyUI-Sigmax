@@ -104,6 +104,7 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "profiles" / "z_image.py").is_file())
         self.assertTrue((package_path / "profiles" / "sd3.py").is_file())
         self.assertTrue((package_path / "profiles" / "aura_flow.py").is_file())
+        self.assertTrue((package_path / "profiles" / "hunyuan_image21.py").is_file())
         self.assertTrue((package_path / "adapters" / "__init__.py").is_file())
         self.assertTrue((package_path / "adapters" / "comfyui.py").is_file())
         self.assertTrue((package_path / "adapters" / "registration.py").is_file())
@@ -133,6 +134,7 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "nodes" / "sd3_sigma_scheduler.py").is_file())
         self.assertTrue((package_path / "nodes" / "aura_flow_sigma_scheduler.py").is_file())
         self.assertTrue((package_path / "nodes" / "lumina2_sigma_scheduler.py").is_file())
+        self.assertTrue((package_path / "nodes" / "hunyuan_image21_sigma_scheduler.py").is_file())
         self.assertTrue((package_path / "profiles" / "lumina2.py").is_file())
         self.assertTrue((package_path / "profiles" / "qwen_image.py").is_file())
         self.assertTrue((package_path / "nodes" / "raw_workflow_output.py").is_file())
@@ -166,6 +168,7 @@ class PackageContractTests(unittest.TestCase):
                 "Sigmax.AuraFlowSigmaScheduler",
                 "Sigmax.CheckpointEvidenceInspector",
                 "Sigmax.Flux1SchnellSigmaScheduler",
+                "Sigmax.HunyuanImage21SigmaScheduler",
                 "Sigmax.Krea2ConditioningRebalance",
                 "Sigmax.Krea2SigmaScheduler",
                 "Sigmax.Lumina2SigmaScheduler",
@@ -190,6 +193,7 @@ class PackageContractTests(unittest.TestCase):
                 "Sigmax.AuraFlowSigmaScheduler": "AuraFlow Sigma Scheduler",
                 "Sigmax.CheckpointEvidenceInspector": "Checkpoint Evidence Inspector",
                 "Sigmax.Flux1SchnellSigmaScheduler": "FLUX.1-schnell Sigma Scheduler",
+                "Sigmax.HunyuanImage21SigmaScheduler": "HunyuanImage 2.1 Sigma Scheduler",
                 "Sigmax.Krea2ConditioningRebalance": "Krea 2 Conditioning Rebalance",
                 "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler",
                 "Sigmax.Lumina2SigmaScheduler": "Lumina-Image 2.0 Sigma Scheduler",

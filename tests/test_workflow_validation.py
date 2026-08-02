@@ -76,6 +76,8 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
     assert tuple(item.identifier for item in fixtures) == (
         "auraflow-v0-2-official-50",
         "flux1-schnell-official-4",
+        "hunyuan-image21-base-official-50",
+        "hunyuan-image21-distilled-official-8",
         "krea2-raw-diffusers-portrait-761x1353",
         "krea2-raw-official-landscape-1353x761",
         "krea2-raw-official-square-1024",
@@ -90,6 +92,8 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
     assert tuple(item.variant for item in fixtures) == (
         "AuraFlow v0.2",
         "FLUX.1-schnell",
+        "HunyuanImage 2.1 Base",
+        "HunyuanImage 2.1 Distilled",
         "RAW",
         "RAW",
         "RAW",
@@ -105,6 +109,8 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
 
     expected_scheduler_widgets = {
         "flux1-schnell-official-4": [4, True, 0, -1],
+        "hunyuan-image21-base-official-50": ["Base (5.0)", 50, True, 0, -1, False],
+        "hunyuan-image21-distilled-official-8": ["Distilled (4.0)", 8, True, 0, -1, False],
         "krea2-raw-diffusers-portrait-761x1353": [
             "RAW",
             28,
@@ -171,6 +177,8 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
             "SD3",
             "AuraFlow v0.2",
             "Lumina-Image 2.0",
+            "HunyuanImage 2.1 Base",
+            "HunyuanImage 2.1 Distilled",
         }
         assert workflow["last_node_id"] == (1 if is_sigma_only else 3)
         assert workflow["last_link_id"] == (0 if is_sigma_only else 5)
@@ -197,7 +205,11 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
                             else (
                                 ["Sigmax.Lumina2SigmaScheduler"]
                                 if fixture.variant == "Lumina-Image 2.0"
-                                else ["Sigmax.ZImageSigmaScheduler"]
+                                else (
+                                    ["Sigmax.HunyuanImage21SigmaScheduler"]
+                                    if fixture.variant.startswith("HunyuanImage 2.1")
+                                    else ["Sigmax.ZImageSigmaScheduler"]
+                                )
                             )
                         )
                     )
@@ -227,6 +239,8 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
             ),
             "AuraFlow v0.2": "auraflow.v0-2.official",
             "Lumina-Image 2.0": "lumina2.v2.official",
+            "HunyuanImage 2.1 Base": "hunyuan-image-2-1.base.official",
+            "HunyuanImage 2.1 Distilled": "hunyuan-image-2-1.distilled.official",
             "Z-Image Base": "z_image.base.official",
             "Z-Image Turbo": "z_image.turbo.official",
         }
@@ -249,6 +263,7 @@ def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
     assert tuple(baseline.object_info) == (
         "Sigmax.AuraFlowSigmaScheduler",
         "Sigmax.Flux1SchnellSigmaScheduler",
+        "Sigmax.HunyuanImage21SigmaScheduler",
         "Sigmax.Krea2ConditioningRebalance",
         "Sigmax.Krea2SigmaScheduler",
         "Sigmax.Lumina2SigmaScheduler",
@@ -263,7 +278,7 @@ def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
     assert report.lane is WorkflowValidationLane.KNOWN_GOOD
     assert report.host_version == CANONICAL_HOST_VERSION
     assert report.host_revision == CANONICAL_HOST_REVISION
-    assert report.workflow_count == 12
+    assert report.workflow_count == 14
     assert report.compatible is True
     assert report.gate_passed is True
     assert report.observational is False
@@ -273,6 +288,7 @@ def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
     assert projection["nodes"] == [
         {"id": "Sigmax.AuraFlowSigmaScheduler", "version": "1"},
         {"id": "Sigmax.Flux1SchnellSigmaScheduler", "version": "1"},
+        {"id": "Sigmax.HunyuanImage21SigmaScheduler", "version": "1"},
         {"id": "Sigmax.Krea2SigmaScheduler", "version": "1"},
         {"id": "Sigmax.Lumina2SigmaScheduler", "version": "1"},
         {"id": "Sigmax.QwenImageSigmaScheduler", "version": "1"},

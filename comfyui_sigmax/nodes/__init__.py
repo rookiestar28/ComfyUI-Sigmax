@@ -30,6 +30,14 @@ from comfyui_sigmax.nodes.flux1_schnell_sigma_scheduler import (
     bind_flux1_schnell_sigma_output_info,
     build_flux1_schnell_sigma_schedule,
 )
+from comfyui_sigmax.nodes.hunyuan_image21_sigma_scheduler import (
+    HUNYUAN_IMAGE21_SIGMA_NODE_ID,
+    HUNYUAN_IMAGE21_SIGMA_NODE_SCHEMA_ID,
+    HunyuanImage21SigmaNodeResult,
+    HunyuanImage21SigmaScheduler,
+    bind_hunyuan_image21_sigma_output_info,
+    build_hunyuan_image21_sigma_schedule,
+)
 from comfyui_sigmax.nodes.inspectors import (
     PROFILE_INSPECTOR_NODE_ID,
     PROFILE_INSPECTOR_SCHEMA_ID,
@@ -148,6 +156,8 @@ __all__ = [
     "CHECKPOINT_EVIDENCE_INSPECTOR_SCHEMA_ID",
     "FLUX1_SCHNELL_SIGMA_NODE_ID",
     "FLUX1_SCHNELL_SIGMA_NODE_SCHEMA_ID",
+    "HUNYUAN_IMAGE21_SIGMA_NODE_ID",
+    "HUNYUAN_IMAGE21_SIGMA_NODE_SCHEMA_ID",
     "KREA2_CONDITIONING_NODE_ID",
     "KREA2_CONDITIONING_NODE_SCHEMA_ID",
     "KREA2_SIGMA_NODE_ID",
@@ -190,6 +200,8 @@ __all__ = [
     "CheckpointEvidenceInspector",
     "Flux1SchnellSigmaNodeResult",
     "Flux1SchnellSigmaScheduler",
+    "HunyuanImage21SigmaNodeResult",
+    "HunyuanImage21SigmaScheduler",
     "Krea2ConditioningRebalance",
     "Krea2SigmaNodeResult",
     "Krea2SigmaScheduler",
@@ -224,6 +236,7 @@ __all__ = [
     "ZImageSigmaVariant",
     "bind_aura_flow_sigma_output_info",
     "bind_flux1_schnell_sigma_output_info",
+    "bind_hunyuan_image21_sigma_output_info",
     "bind_krea2_sigma_output_info",
     "bind_lumina2_sigma_output_info",
     "bind_qwen_image_sigma_output_info",
@@ -232,6 +245,7 @@ __all__ = [
     "build_advanced_flowmatch_schedule",
     "build_aura_flow_sigma_schedule",
     "build_flux1_schnell_sigma_schedule",
+    "build_hunyuan_image21_sigma_schedule",
     "build_krea2_sigma_schedule",
     "build_lumina2_sigma_schedule",
     "build_model_aware_sigma_schedule",

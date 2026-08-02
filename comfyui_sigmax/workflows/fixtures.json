@@ -317,6 +317,328 @@
         "id": "comfyui",
         "version": "0.29.0"
       },
+      "id": "hunyuan-image21-base-official-50",
+      "node_contracts": [
+        {
+          "node_id": 1,
+          "node_type": "Sigmax.HunyuanImage21SigmaScheduler",
+          "widget_slots": [
+            {
+              "fixed": "Base (5.0)",
+              "name": "variant",
+              "type": "COMBO"
+            },
+            {
+              "name": "steps",
+              "type": "INT"
+            },
+            {
+              "name": "strict_source",
+              "type": "BOOLEAN"
+            },
+            {
+              "name": "start_step",
+              "type": "INT"
+            },
+            {
+              "name": "end_step",
+              "type": "INT"
+            },
+            {
+              "name": "already_shifted",
+              "type": "BOOLEAN"
+            }
+          ]
+        }
+      ],
+      "nodes": [
+        {
+          "id": "Sigmax.HunyuanImage21SigmaScheduler",
+          "version": "1"
+        }
+      ],
+      "package": {
+        "id": "comfyui-sigmax",
+        "version": "1.0.0"
+      },
+      "profile": {
+        "id": "hunyuan-image-2-1.base.official",
+        "version": "1"
+      },
+      "variant": "HunyuanImage 2.1 Base",
+      "workflow": {
+        "version": 0.4,
+        "last_node_id": 1,
+        "last_link_id": 0,
+        "nodes": [
+          {
+            "id": 1,
+            "type": "Sigmax.HunyuanImage21SigmaScheduler",
+            "pos": [
+              40,
+              80
+            ],
+            "size": [
+              390,
+              250
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "outputs": [
+              {
+                "name": "sigmas",
+                "type": "SIGMAS",
+                "links": null,
+                "slot_index": 0
+              },
+              {
+                "name": "schedule_info",
+                "type": "STRING",
+                "links": null,
+                "slot_index": 1
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "Sigmax.HunyuanImage21SigmaScheduler",
+              "cnr_id": "comfyui-sigmax"
+            },
+            "widgets_values": [
+              "Base (5.0)",
+              50,
+              true,
+              0,
+              -1,
+              false
+            ]
+          }
+        ],
+        "links": [],
+        "extra": {
+          "comfyui_sigmax": {
+            "metadata": {
+              "artifact": {
+                "construction_fingerprint": "sha256:c5d04b39dc493dce817665dd4b7d5835cb416c41f14ca0b7e6c04f6e44f28bdb",
+                "construction_schema": "sigmax.schedule-artifact/1",
+                "numerical_fingerprint": "sha256:63640d1f280b8208ef399d45bd14a3ef6eecd651431cc12c3e25be45eeea7739",
+                "receipt_schema": "sigmax.execution-receipt-envelope/1"
+              },
+              "compatibility": {
+                "considered": [
+                  "model_identity",
+                  "prediction_type",
+                  "sigma_domain",
+                  "schedule_ownership",
+                  "terminal_sigma",
+                  "execution_behavior",
+                  "noise_ownership",
+                  "sampler_state",
+                  "partial_denoise",
+                  "per_token_timesteps",
+                  "reference_sampler"
+                ],
+                "level": "allow",
+                "reasons": [
+                  "compatible"
+                ]
+              },
+              "profile": {
+                "id": "hunyuan-image-2-1.base.official",
+                "version": "1"
+              },
+              "receipts": [],
+              "requirements": {
+                "host": {
+                  "api_version": "legacy_v1",
+                  "id": "comfyui",
+                  "version": "0.29.0"
+                },
+                "nodes": [
+                  {
+                    "id": "Sigmax.HunyuanImage21SigmaScheduler",
+                    "version": "1"
+                  }
+                ],
+                "package": {
+                  "id": "comfyui-sigmax",
+                  "version": "1.0.0"
+                }
+              },
+              "schema": "sigmax.workflow-metadata/1"
+            },
+            "metadata_fingerprint": "sha256:910a09c9bdcda7d849da86532cdcd4af1263f0c692613e546198ce53d4b83fe3",
+            "schema": "sigmax.workflow-metadata-envelope/1"
+          }
+        }
+      }
+    },
+    {
+      "host": {
+        "api_version": "legacy_v1",
+        "id": "comfyui",
+        "version": "0.29.0"
+      },
+      "id": "hunyuan-image21-distilled-official-8",
+      "node_contracts": [
+        {
+          "node_id": 1,
+          "node_type": "Sigmax.HunyuanImage21SigmaScheduler",
+          "widget_slots": [
+            {
+              "fixed": "Distilled (4.0)",
+              "name": "variant",
+              "type": "COMBO"
+            },
+            {
+              "name": "steps",
+              "type": "INT"
+            },
+            {
+              "name": "strict_source",
+              "type": "BOOLEAN"
+            },
+            {
+              "name": "start_step",
+              "type": "INT"
+            },
+            {
+              "name": "end_step",
+              "type": "INT"
+            },
+            {
+              "name": "already_shifted",
+              "type": "BOOLEAN"
+            }
+          ]
+        }
+      ],
+      "nodes": [
+        {
+          "id": "Sigmax.HunyuanImage21SigmaScheduler",
+          "version": "1"
+        }
+      ],
+      "package": {
+        "id": "comfyui-sigmax",
+        "version": "1.0.0"
+      },
+      "profile": {
+        "id": "hunyuan-image-2-1.distilled.official",
+        "version": "1"
+      },
+      "variant": "HunyuanImage 2.1 Distilled",
+      "workflow": {
+        "version": 0.4,
+        "last_node_id": 1,
+        "last_link_id": 0,
+        "nodes": [
+          {
+            "id": 1,
+            "type": "Sigmax.HunyuanImage21SigmaScheduler",
+            "pos": [
+              40,
+              80
+            ],
+            "size": [
+              390,
+              250
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "outputs": [
+              {
+                "name": "sigmas",
+                "type": "SIGMAS",
+                "links": null,
+                "slot_index": 0
+              },
+              {
+                "name": "schedule_info",
+                "type": "STRING",
+                "links": null,
+                "slot_index": 1
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "Sigmax.HunyuanImage21SigmaScheduler",
+              "cnr_id": "comfyui-sigmax"
+            },
+            "widgets_values": [
+              "Distilled (4.0)",
+              8,
+              true,
+              0,
+              -1,
+              false
+            ]
+          }
+        ],
+        "links": [],
+        "extra": {
+          "comfyui_sigmax": {
+            "metadata": {
+              "artifact": {
+                "construction_fingerprint": "sha256:1f733a35a921e7dd166d4442f2d5a0956c745f0faff124ae8a1d7c67b8c4e7e0",
+                "construction_schema": "sigmax.schedule-artifact/1",
+                "numerical_fingerprint": "sha256:1e441977aa4d99acfc1fa81c7ddf1c66e1336dfa05af348e87b6bd71103d6f8e",
+                "receipt_schema": "sigmax.execution-receipt-envelope/1"
+              },
+              "compatibility": {
+                "considered": [
+                  "model_identity",
+                  "prediction_type",
+                  "sigma_domain",
+                  "schedule_ownership",
+                  "terminal_sigma",
+                  "execution_behavior",
+                  "noise_ownership",
+                  "sampler_state",
+                  "partial_denoise",
+                  "per_token_timesteps",
+                  "reference_sampler"
+                ],
+                "level": "allow",
+                "reasons": [
+                  "compatible"
+                ]
+              },
+              "profile": {
+                "id": "hunyuan-image-2-1.distilled.official",
+                "version": "1"
+              },
+              "receipts": [],
+              "requirements": {
+                "host": {
+                  "api_version": "legacy_v1",
+                  "id": "comfyui",
+                  "version": "0.29.0"
+                },
+                "nodes": [
+                  {
+                    "id": "Sigmax.HunyuanImage21SigmaScheduler",
+                    "version": "1"
+                  }
+                ],
+                "package": {
+                  "id": "comfyui-sigmax",
+                  "version": "1.0.0"
+                }
+              },
+              "schema": "sigmax.workflow-metadata/1"
+            },
+            "metadata_fingerprint": "sha256:d67a533ec0a143a66db48e80b1221a8adb87adc599078ddf3a42cb858d216b80",
+            "schema": "sigmax.workflow-metadata-envelope/1"
+          }
+        }
+      }
+    },
+    {
+      "host": {
+        "api_version": "legacy_v1",
+        "id": "comfyui",
+        "version": "0.29.0"
+      },
       "id": "krea2-raw-diffusers-portrait-761x1353",
       "node_contracts": [
         {

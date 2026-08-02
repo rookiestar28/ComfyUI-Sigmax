@@ -29,6 +29,8 @@ validated baseline.
 | Original Stable Diffusion 3 | Original SD3 Medium T2I only; explicit publisher-reference `1.0` or ComfyUI/Diffusers fixed `3.0` shift | Use `Sigmax.SD3SigmaScheduler`; select the source mode explicitly |
 | Original AuraFlow v0.2 | Fixed unit-flow `1.73` ratio shift, original 50-step recipe | Use `Sigmax.AuraFlowSigmaScheduler`; select `Official Fixed (1.73)` explicitly |
 | Lumina-Image 2.0 | Fixed unit-flow `6.0` ratio shift, original 50-step recipe | Use `Sigmax.Lumina2SigmaScheduler`; select `Official Fixed (6.0)` explicitly |
+| HunyuanImage 2.1 Base | Fixed unit-flow `5.0` ratio shift, official 50-step recipe; schedule-only | Use `Sigmax.HunyuanImage21SigmaScheduler`; select `Base (5.0)` explicitly |
+| HunyuanImage 2.1 Distilled | Fixed unit-flow `4.0` ratio shift, official 8-step publisher recipe; native host path unqualified | Use `Sigmax.HunyuanImage21SigmaScheduler`; select `Distilled (4.0)` explicitly |
 
 The experimental `Sigmax.Krea2ConditioningRebalance` node accepts explicit RAW or Turbo
 `CONDITIONING` tensors with shape `(batch, sequence, 30720)`. It preserves standard ComfyUI
@@ -56,6 +58,10 @@ and does not establish compatibility with an arbitrary model.
   already-shifted sigmas to the node.
 - Lumina-Image 2.0 uses one fixed model-native ratio shift. Do not apply a second shift or pass
   already-shifted sigmas to the node.
+- HunyuanImage 2.1 uses one direct-ratio shift per explicit variant. The Base lane is host-compatible
+  at the pinned baseline; Distilled is schedule-only and must not be presented as native host parity.
+- HunyuanImage 2.1 model weights remain under Tencent's community license and are not distributed by
+  Sigmax; this package does not include model code, weights, encoders, or conditioning.
 
 ## Not currently claimed
 

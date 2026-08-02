@@ -1,9 +1,9 @@
 # ComfyUI-Sigmax
-ComfyUI-Sigmax provides model-aware sigma schedules for ComfyUI, with verified Krea 2, Z-Image, FLUX.1-schnell, Qwen Image, SD3, AuraFlow v0.2, Lumina-Image 2.0, HunyuanImage 2.1, Anima, and Wan 2.1/2.2 profiles plus editing tools.
+ComfyUI-Sigmax provides model-aware sigma schedules for ComfyUI, with verified Krea 2, Z-Image, FLUX.1-schnell, Qwen Image, SD3, AuraFlow v0.2, Lumina-Image 2.0, HunyuanImage 2.1, Anima, Wan 2.1/2.2, and LTX profiles plus editing tools.
 ## Features
 
 - Explicit model and variant selection with no silent generic fallback.
-- Verified Krea 2, Z-Image, FLUX.1-schnell, Qwen Image, SD3, AuraFlow v0.2, Lumina-Image 2.0, HunyuanImage 2.1, Anima, and Wan 2.1/2.2 recipes.
+- Verified Krea 2, Z-Image, FLUX.1-schnell, Qwen Image, SD3, AuraFlow v0.2, Lumina-Image 2.0, HunyuanImage 2.1, Anima, Wan 2.1/2.2, and LTX recipes.
 - Schedule slicing, concatenation, resampling, inspection, and comparison.
 - Experimental Krea 2 `CONDITIONING` tap rebalancing for explicitly selected RAW or Turbo workflows, with fixed RMS preservation and no scheduler/model patching.
 - Checkpoint header inspection without loading model weights.
@@ -36,7 +36,7 @@ Python 3.10 or newer and ComfyUI 0.29.0 or newer are required. Do not install th
 
 ## Use in ComfyUI
 
-Search the node menu for `Sigmax`. The package registers 22 namespaced nodes.
+Search the node menu for `Sigmax`. The package registers 23 namespaced nodes.
 
 ### Build a model schedule
 
@@ -56,6 +56,7 @@ Search the node menu for `Sigmax`. The package registers 22 namespaced nodes.
 | Anima Base v1.0 / Aesthetic / Turbo | `Sigmax.AnimaSigmaScheduler` | `Base`, 30-50 steps, default 50, CFG 4.5; `Aesthetic` uses the same recipe; `Turbo`, 8-12 steps, CFG 1.0; fixed shift 3.0 |
 | Wan 2.1 T2V / I2V | `Sigmax.WanSigmaScheduler` | Select generation, task, source, and resolution explicitly; official T2V 50 steps (`5.0`), official I2V 480P/720P 40 steps (`3.0`/`5.0`) |
 | Wan 2.2 TI2V 5B / A14B T2V/I2V | `Sigmax.WanSigmaScheduler` | Native or Diffusers-reference source lanes; TI2V 5B uses `5.0`; A14B T2V/I2V use `12.0`/`5.0` with caller-owned boundary metadata |
+| LTXV 0.9.8 / LTX-2 19B / LTX-2.3 22B | `Sigmax.LTXSigmaScheduler` | Dev adaptive token shift (20/40/30 default steps) or explicit LTX-2/LTX-2.3 distilled Stage 1/2 vectors; generation and stage are explicit |
 
 For normal use:
 
@@ -66,18 +67,14 @@ For normal use:
 5. Do not pass the result through another scheduler or apply another time shift.
 6. Read `schedule_info` when checking the selected recipe, dimensions, step range, or warnings.
 
-The Qwen Image node covers the original text-to-image family only: `Comfy Fixed` mirrors `1.15`,
-while `Diffusers Dynamic` requires `image_seq_len`; later variants and image-quality parity are out of scope.
+The Qwen Image node covers the original text-to-image family only: `Comfy Fixed` mirrors `1.15`, while `Diffusers Dynamic` requires `image_seq_len`; later variants and image-quality parity are out of scope.
 
-The SD3 node covers only the original Stability AI SD3 Medium text-to-image schedule. Its two
-source-qualified modes preserve the publisher 1.0 versus pinned ComfyUI/Diffusers 3.0 conflict;
+The SD3 node covers only the original Stability AI SD3 Medium text-to-image schedule. Its two source-qualified modes preserve the publisher 1.0 versus pinned ComfyUI/Diffusers 3.0 conflict;
 SD3.5, Turbo, ControlNet, model execution, and image quality are outside this support claim.
 
-The AuraFlow node covers only original fal AuraFlow v0.2 with fixed ratio `1.73` and 50 steps;
-other versions, finetunes, dynamic shifts, execution, and image quality are outside scope.
+The AuraFlow node covers only original fal AuraFlow v0.2 with fixed ratio `1.73` and 50 steps; other versions, finetunes, dynamic shifts, execution, and image quality are outside scope.
 
-The Lumina-Image 2.0 node covers only original Alpha-VLLM text-to-image with fixed ratio `6.0`
-and 50 steps; video, mGPT, editing paths, dynamic shifts, execution, and image quality are outside scope.
+The Lumina-Image 2.0 node covers only original Alpha-VLLM text-to-image with fixed ratio `6.0` and 50 steps; video, mGPT, editing paths, dynamic shifts, execution, and image quality are outside scope.
 
 The HunyuanImage 2.1 node constructs schedule-only Base and Distilled direct-ratio paths (`5.0`/`4.0`).
 Base is the pinned ComfyUI-compatible lane; Distilled remains publisher-schedule-only until a native
@@ -86,6 +83,9 @@ host path is qualified. Refiner, encoders, conditioning, weights, and image qual
 The Wan node constructs schedule-only unit-flow sigmas for the released 2.1/2.2 matrix; 2.1 I2V
 requires `480P` or `720P`, and 2.2 A14B boundaries are caller-owned metadata (never expert routing).
 Diffusers-reference lanes describe scheduler math only; video execution, weights, and quality parity are outside scope.
+
+The LTX node constructs schedule-only unit-flow sigmas for pinned LTXV 0.9.8, LTX-2 19B, and LTX-2.3 22B lanes. Dev mode derives one token-count shift; distilled modes use immutable
+publisher vectors. It does not load video weights, run encoders, or claim video-quality parity.
 
 `Sigmax.ModelAwareSigmaScheduler` can inspect a connected Krea 2 model, but weak evidence may
 identify only the family; if `Auto` reports ambiguity, select `Turbo` or `RAW` explicitly.

@@ -77,6 +77,7 @@ def test_packaged_manifest_freezes_the_complete_m8_01_boundary() -> None:
             "schema": "sigmax.krea2-conditioning-node/1",
         },
         {"id": "Sigmax.Krea2SigmaScheduler", "schema": "sigmax.krea2-sigma-node/1"},
+        {"id": "Sigmax.LTXSigmaScheduler", "schema": "sigmax.ltx-sigma-node/1"},
         {"id": "Sigmax.Lumina2SigmaScheduler", "schema": "sigmax.lumina2-sigma-node/1"},
         {
             "id": "Sigmax.ModelAwareSigmaScheduler",

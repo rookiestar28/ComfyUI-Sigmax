@@ -216,6 +216,11 @@ class WorkflowFixture:
             "Wan 2.1 T2V",
             "Wan 2.2 T2V A14B",
             "Wan 2.2 TI2V 5B",
+            "LTXV 0.9.8 Dev",
+            "LTX-2 19B Dev",
+            "LTX-2 19B Distilled Stage 1",
+            "LTX-2.3 22B Distilled Stage 2",
+            "LTX-2.3 22B Dev",
         }:
             raise ScheduleContractError("workflow fixture variant is unsupported")
         if not isinstance(self.package, WorkflowRequirement):
@@ -482,6 +487,11 @@ def load_canonical_workflow_fixtures() -> tuple[WorkflowFixture, ...]:
         "krea2-raw-official-landscape-1353x761",
         "krea2-raw-official-square-1024",
         "krea2-turbo-1024",
+        "ltx2-19b-dev-40",
+        "ltx2-19b-distilled-stage1-8",
+        "ltx2-3-22b-dev-30",
+        "ltx2-3-22b-distilled-stage2-3",
+        "ltxv-0-9-8-dev-20",
         "lumina2-v2-official-50",
         "qwen-image-comfy-fixed-official-50",
         "sd3-comfy-diffusers-fixed-framework-28",

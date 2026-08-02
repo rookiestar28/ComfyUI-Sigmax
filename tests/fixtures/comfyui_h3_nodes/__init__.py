@@ -25,6 +25,7 @@ _LUMINA2_UI_KEY = "sigmax_lumina2_schedule"
 _HUNYUAN_IMAGE21_UI_KEY = "sigmax_hunyuan_image21_schedule"
 _ANIMA_UI_KEY = "sigmax_anima_schedule"
 _WAN_UI_KEY = "sigmax_wan_schedule"
+_LTX_UI_KEY = "sigmax_ltx_schedule"
 _KREA2_LORA_UI_KEY = "sigmax_krea2_lora_experimental"
 _KREA2_CONDITIONING_UI_KEY = "sigmax_krea2_conditioning"
 _KREA2_CONDITIONING_FEATURES = 12 * 2560
@@ -615,6 +616,93 @@ class Lumina2ScheduleProbe:
         }
 
 
+class LTXScheduleProbe:
+    """Return model-free H2 evidence for one explicit LTX generation/stage."""
+
+    CATEGORY = "SigmaxTest"
+    DESCRIPTION = "Test-only LTX schedule H2 execution probe."
+    FUNCTION = "execute"
+    OUTPUT_NODE = True
+    RETURN_TYPES: tuple[()] = ()
+    RETURN_NAMES: tuple[()] = ()
+
+    @classmethod
+    def INPUT_TYPES(cls) -> dict[str, dict[str, tuple[object, ...]]]:
+        return {
+            "required": {
+                "sigmas": ("SIGMAS",),
+                "schedule_info": ("STRING", {"default": "", "multiline": True}),
+            }
+        }
+
+    def execute(self, sigmas: object, schedule_info: object) -> dict[str, object]:
+        if not isinstance(sigmas, torch.Tensor) or sigmas.device.type != "cpu":
+            raise ValueError("LTX H2 sigmas must be a CPU tensor")
+        if not isinstance(schedule_info, str):
+            raise ValueError("LTX H2 schedule information must be text")
+        info = json.loads(schedule_info)
+        if not isinstance(info, dict):
+            raise ValueError("LTX H2 schedule information must be an object")
+        generation = info.get("generation")
+        stage = info.get("stage")
+        expected_map: dict[tuple[str, str], tuple[str, int, float | None]] = {
+            ("LTXV 0.9.8", "Dev"): ("ltxv.0.9.8.dev", 20, 2.05),
+            ("LTX-2 19B", "Distilled Stage 1"): (
+                "ltx2.19b.distilled.stage1",
+                8,
+                None,
+            ),
+            ("LTX-2.3 22B", "Dev"): ("ltx2.3.22b.dev", 30, 2.05),
+            ("LTX-2.3 22B", "Distilled Stage 2"): (
+                "ltx2.3.22b.distilled.stage2",
+                3,
+                None,
+            ),
+        }
+        if not isinstance(generation, str) or not isinstance(stage, str):
+            raise ValueError("LTX H2 generation/stage metadata must be text")
+        expected = expected_map.get((generation, stage))
+        profile = info.get("profile")
+        shift = info.get("shift")
+        expected_start = 0.909375 if stage == "Distilled Stage 2" else 1.0
+        valid_shift = (
+            shift is None
+            if expected is not None and expected[2] is None
+            else isinstance(shift, int | float)
+            and expected is not None
+            and expected[2] is not None
+            and abs(float(shift) - expected[2]) <= 1e-12
+        )
+        if (
+            sigmas.dtype != torch.float32
+            or sigmas.ndim != 1
+            or expected is None
+            or len(sigmas) != expected[1] + 1
+            or info.get("schema") != "sigmax.ltx-sigma-node/1"
+            or profile != expected[0]
+            or info.get("slicing", {}).get("output_steps") != expected[1]
+            or not valid_shift
+            or abs(float(sigmas[0]) - expected_start) > 1e-6
+            or float(sigmas[-1]) != 0.0
+            or any(float(left) <= float(right) for left, right in pairwise(sigmas))
+        ):
+            raise ValueError("LTX H2 schedule contract drifted")
+        trace = {"schedule_info": info, "sigmas": _vector(sigmas)}
+        return {
+            "ui": {
+                _LTX_UI_KEY: [
+                    json.dumps(
+                        trace,
+                        allow_nan=False,
+                        ensure_ascii=False,
+                        separators=(",", ":"),
+                        sort_keys=True,
+                    )
+                ]
+            }
+        }
+
+
 class HunyuanImage21ScheduleProbe:
     """Return model-free H2 evidence for one HunyuanImage 2.1 variant."""
 
@@ -1020,6 +1108,7 @@ NODE_CLASS_MAPPINGS = {
     "SigmaxTest.HunyuanImage21ScheduleProbe": HunyuanImage21ScheduleProbe,
     "SigmaxTest.AnimaScheduleProbe": AnimaScheduleProbe,
     "SigmaxTest.WanScheduleProbe": WanScheduleProbe,
+    "SigmaxTest.LTXScheduleProbe": LTXScheduleProbe,
     "SigmaxTest.CheckpointEvidenceProbe": CheckpointEvidenceProbe,
     "SigmaxTest.Krea2LoraExperimentalProbe": Krea2LoraExperimentalProbe,
     "SigmaxTest.Krea2ConditioningProbe": Krea2ConditioningProbe,
@@ -1037,6 +1126,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "SigmaxTest.HunyuanImage21ScheduleProbe": "Sigmax Test — HunyuanImage 2.1 Schedule Probe",
     "SigmaxTest.AnimaScheduleProbe": "Sigmax Test — Anima Schedule Probe",
     "SigmaxTest.WanScheduleProbe": "Sigmax Test — Wan Schedule Probe",
+    "SigmaxTest.LTXScheduleProbe": "Sigmax Test — LTX Schedule Probe",
     "SigmaxTest.CheckpointEvidenceProbe": "Sigmax Test — Checkpoint Evidence Probe",
     "SigmaxTest.Krea2LoraExperimentalProbe": "Sigmax Test — Krea 2 LoRA Experimental Probe",
     "SigmaxTest.Krea2ConditioningProbe": "Sigmax Test — Krea 2 Conditioning Probe",

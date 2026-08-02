@@ -45,15 +45,16 @@ def test_packaged_matrix_has_exact_schema_identity_and_coverage() -> None:
     assert projection["schema"] == NUMERICAL_BENCHMARK_MATRIX_SCHEMA
     assert (
         matrix.matrix_fingerprint
-        == "sha256:e49630b140668b804562bd305b27e383e9af8d0f6f2f64b14f0cd471294a3ca3"
+        == "sha256:a665042d81d12553b193fc0115449d9637c218fbf68c22ab29a0b802ed559d2c"
     )
-    assert len(results) == 39
+    assert len(results) == 42
     assert projection["coverage"] == {
         "anima_schedule_parity": 3,
         "h2_workflow": 4,
         "h3_native_euler": 1,
+        "ltx_schedule_parity": 3,
         "raw_schedule_parity": 14,
-        "total_verified_results": 39,
+        "total_verified_results": 42,
         "turbo_schedule_parity": 4,
         "wan_schedule_parity": 13,
     }
@@ -177,6 +178,31 @@ def test_matrix_records_wan_schedule_parity_without_weight_or_quality_claims() -
         assert row["evidence"]["source_ids"] == ["parity.wan"]
 
 
+def test_matrix_records_ltx_adaptive_schedule_parity_without_weight_claims() -> None:
+    results = {
+        row["id"]: row
+        for row in cast(
+            list[dict[str, Any]],
+            load_numerical_benchmark_matrix().projection()["results"],
+        )
+        if row["lane"] == "ltx_schedule_parity"
+    }
+    assert sorted(results) == [
+        "parity.ltx.ltx2.19b.dev-40",
+        "parity.ltx.ltx2.3.22b.dev-30",
+        "parity.ltx.ltxv.0.9.8.dev-20",
+    ]
+    for row in results.values():
+        assert row["profile"]["variant"] in {"LTXV 0.9.8", "LTX-2 19B", "LTX-2.3 22B"}
+        assert row["profile"]["evidence"] == "official"
+        assert row["model_weights_present"] is False
+        assert row["weight_variant"] == "none"
+        assert row["execution"]["status"] == "not_executed"
+        assert row["schedule"]["mu"] == "2.05"
+        assert row["baselines"]["ltx_float64"]["status"] == "PASS"
+        assert row["baselines"]["ltx_float32"]["status"] == "PASS"
+
+
 def test_matrix_preserves_h2_artifact_receipt_and_first_repeat_truth() -> None:
     results = {
         row["id"]: row
@@ -291,7 +317,7 @@ def test_matrix_import_does_not_load_optional_or_host_frameworks() -> None:
         "(_ for _ in ()).throw(ImportError(n)) if n.split('.')[0] in blocked "
         "else real(n,*a,**k); "
         "from comfyui_sigmax.benchmark_matrix import load_numerical_benchmark_matrix; "
-        "m=load_numerical_benchmark_matrix(); assert len(m.projection()['results'])==39; "
+        "m=load_numerical_benchmark_matrix(); assert len(m.projection()['results'])==42; "
         "assert not blocked.intersection(sys.modules)"
     )
 

@@ -19,6 +19,13 @@ from comfyui_sigmax.profiles import (
     KREA2_LORA_EXPERIMENTAL_SCHEMA,
     KREA2_RAW_SCHEMA,
     KREA2_TURBO_SCHEMA,
+    LTX2_19B_DISTILLED_STAGE1_PROFILE,
+    LTX2_19B_DISTILLED_STAGE2_PROFILE,
+    LTX2_19B_PROFILE,
+    LTX23_22B_DISTILLED_STAGE1_PROFILE,
+    LTX23_22B_DISTILLED_STAGE2_PROFILE,
+    LTX23_22B_PROFILE,
+    LTXV_098_PROFILE,
     LUMINA2_SCHEMA,
     QWEN_IMAGE_COMFY_FIXED_SCHEMA,
     QWEN_IMAGE_DIFFUSERS_DYNAMIC_SCHEMA,
@@ -152,6 +159,13 @@ def test_builtin_registry_is_deterministic_exact_and_immutable() -> None:
         ProfileKey.from_schema(KREA2_LORA_EXPERIMENTAL_SCHEMA),
         ProfileKey.from_schema(KREA2_RAW_SCHEMA),
         ProfileKey.from_schema(KREA2_TURBO_SCHEMA),
+        ProfileKey.from_schema(LTX2_19B_PROFILE.schema),
+        ProfileKey.from_schema(LTX2_19B_DISTILLED_STAGE1_PROFILE.schema),
+        ProfileKey.from_schema(LTX2_19B_DISTILLED_STAGE2_PROFILE.schema),
+        ProfileKey.from_schema(LTX23_22B_PROFILE.schema),
+        ProfileKey.from_schema(LTX23_22B_DISTILLED_STAGE1_PROFILE.schema),
+        ProfileKey.from_schema(LTX23_22B_DISTILLED_STAGE2_PROFILE.schema),
+        ProfileKey.from_schema(LTXV_098_PROFILE.schema),
         ProfileKey.from_schema(LUMINA2_SCHEMA),
         ProfileKey.from_schema(QWEN_IMAGE_COMFY_FIXED_SCHEMA),
         ProfileKey.from_schema(QWEN_IMAGE_DIFFUSERS_DYNAMIC_SCHEMA),
@@ -202,8 +216,8 @@ def test_external_registration_returns_a_new_canonical_snapshot() -> None:
     entry = updated.resolve(ProfileKey.from_schema(schema))
 
     assert updated is not registry
-    assert len(registry.entries) == 30
-    assert len(updated.entries) == 31
+    assert len(registry.entries) == 37
+    assert len(updated.entries) == 38
     assert entry.origin is ProfileOrigin.EXTERNAL
     assert entry.schema is schema
     assert entry.inheritance == _turbo_inheritance()

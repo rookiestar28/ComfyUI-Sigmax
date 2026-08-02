@@ -85,6 +85,11 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
         "krea2-raw-official-landscape-1353x761",
         "krea2-raw-official-square-1024",
         "krea2-turbo-1024",
+        "ltx2-19b-dev-40",
+        "ltx2-19b-distilled-stage1-8",
+        "ltx2-3-22b-dev-30",
+        "ltx2-3-22b-distilled-stage2-3",
+        "ltxv-0-9-8-dev-20",
         "lumina2-v2-official-50",
         "qwen-image-comfy-fixed-official-50",
         "sd3-comfy-diffusers-fixed-framework-28",
@@ -108,6 +113,11 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
         "RAW",
         "RAW",
         "Turbo",
+        "LTX-2 19B Dev",
+        "LTX-2 19B Distilled Stage 1",
+        "LTX-2.3 22B Dev",
+        "LTX-2.3 22B Distilled Stage 2",
+        "LTXV 0.9.8 Dev",
         "Lumina-Image 2.0",
         "Qwen Image",
         "SD3",
@@ -156,6 +166,31 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
             -1,
         ],
         "krea2-turbo-1024": ["Turbo", 8, 1024, 1024, True, 0, -1],
+        "ltx2-19b-dev-40": ["LTX-2 19B", "Dev", 40, 4096, True, 0.1, True, 0, -1],
+        "ltx2-19b-distilled-stage1-8": [
+            "LTX-2 19B",
+            "Distilled Stage 1",
+            8,
+            4096,
+            True,
+            0.1,
+            True,
+            0,
+            -1,
+        ],
+        "ltx2-3-22b-dev-30": ["LTX-2.3 22B", "Dev", 30, 4096, True, 0.1, True, 0, -1],
+        "ltx2-3-22b-distilled-stage2-3": [
+            "LTX-2.3 22B",
+            "Distilled Stage 2",
+            3,
+            4096,
+            True,
+            0.1,
+            True,
+            0,
+            -1,
+        ],
+        "ltxv-0-9-8-dev-20": ["LTXV 0.9.8", "Dev", 20, 4096, True, 0.1, True, 0, -1],
         "lumina2-v2-official-50": ["Official Fixed (6.0)", 50, True, 0, -1, False],
         "qwen-image-comfy-fixed-official-50": ["Comfy Fixed", 50, 0, True, 0, -1],
         "sd3-comfy-diffusers-fixed-framework-28": [
@@ -247,6 +282,11 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
             "Wan 2.1 T2V",
             "Wan 2.2 T2V A14B",
             "Wan 2.2 TI2V 5B",
+            "LTXV 0.9.8 Dev",
+            "LTX-2 19B Dev",
+            "LTX-2 19B Distilled Stage 1",
+            "LTX-2.3 22B Distilled Stage 2",
+            "LTX-2.3 22B Dev",
         }
         assert workflow["last_node_id"] == (1 if is_sigma_only else 3)
         assert workflow["last_link_id"] == (0 if is_sigma_only else 5)
@@ -277,12 +317,16 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
                                     ["Sigmax.Lumina2SigmaScheduler"]
                                     if fixture.variant == "Lumina-Image 2.0"
                                     else (
-                                        ["Sigmax.HunyuanImage21SigmaScheduler"]
-                                        if fixture.variant.startswith("HunyuanImage 2.1")
+                                        ["Sigmax.LTXSigmaScheduler"]
+                                        if fixture.variant.startswith("LTX")
                                         else (
-                                            ["Sigmax.WanSigmaScheduler"]
-                                            if fixture.variant.startswith("Wan")
-                                            else ["Sigmax.ZImageSigmaScheduler"]
+                                            ["Sigmax.HunyuanImage21SigmaScheduler"]
+                                            if fixture.variant.startswith("HunyuanImage 2.1")
+                                            else (
+                                                ["Sigmax.WanSigmaScheduler"]
+                                                if fixture.variant.startswith("Wan")
+                                                else ["Sigmax.ZImageSigmaScheduler"]
+                                            )
                                         )
                                     )
                                 )
@@ -324,6 +368,11 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
             "Wan 2.1 T2V": "wan2.1.t2v.official-native",
             "Wan 2.2 T2V A14B": "wan2.2.t2v-a14b.official-native",
             "Wan 2.2 TI2V 5B": "wan2.2.ti2v.5b.comfy-native",
+            "LTXV 0.9.8 Dev": "ltxv.0.9.8.dev",
+            "LTX-2 19B Dev": "ltx2.19b.dev",
+            "LTX-2 19B Distilled Stage 1": "ltx2.19b.distilled.stage1",
+            "LTX-2.3 22B Dev": "ltx2.3.22b.dev",
+            "LTX-2.3 22B Distilled Stage 2": "ltx2.3.22b.distilled.stage2",
             "Z-Image Base": "z_image.base.official",
             "Z-Image Turbo": "z_image.turbo.official",
         }
@@ -350,6 +399,7 @@ def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
         "Sigmax.HunyuanImage21SigmaScheduler",
         "Sigmax.Krea2ConditioningRebalance",
         "Sigmax.Krea2SigmaScheduler",
+        "Sigmax.LTXSigmaScheduler",
         "Sigmax.Lumina2SigmaScheduler",
         "Sigmax.QwenImageSigmaScheduler",
         "Sigmax.RawWorkflowOutput",
@@ -363,7 +413,7 @@ def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
     assert report.lane is WorkflowValidationLane.KNOWN_GOOD
     assert report.host_version == CANONICAL_HOST_VERSION
     assert report.host_revision == CANONICAL_HOST_REVISION
-    assert report.workflow_count == 21
+    assert report.workflow_count == 26
     assert report.compatible is True
     assert report.gate_passed is True
     assert report.observational is False
@@ -376,6 +426,7 @@ def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
         {"id": "Sigmax.Flux1SchnellSigmaScheduler", "version": "1"},
         {"id": "Sigmax.HunyuanImage21SigmaScheduler", "version": "1"},
         {"id": "Sigmax.Krea2SigmaScheduler", "version": "1"},
+        {"id": "Sigmax.LTXSigmaScheduler", "version": "1"},
         {"id": "Sigmax.Lumina2SigmaScheduler", "version": "1"},
         {"id": "Sigmax.QwenImageSigmaScheduler", "version": "1"},
         {"id": "Sigmax.RawWorkflowOutput", "version": "1"},

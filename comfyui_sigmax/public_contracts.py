@@ -182,6 +182,10 @@ def source_contract_projection() -> dict[str, object]:
         KREA2_SIGMA_NODE_ID,
         KREA2_SIGMA_NODE_SCHEMA_ID,
     )
+    from comfyui_sigmax.nodes.ltx_sigma_scheduler import (
+        LTX_SIGMA_NODE_ID,
+        LTX_SIGMA_NODE_SCHEMA_ID,
+    )
     from comfyui_sigmax.nodes.lumina2_sigma_scheduler import (
         LUMINA2_SIGMA_NODE_ID,
         LUMINA2_SIGMA_NODE_SCHEMA_ID,
@@ -251,6 +255,7 @@ def source_contract_projection() -> dict[str, object]:
             },
             {"id": KREA2_SIGMA_NODE_ID, "schema": KREA2_SIGMA_NODE_SCHEMA_ID},
             {"id": LUMINA2_SIGMA_NODE_ID, "schema": LUMINA2_SIGMA_NODE_SCHEMA_ID},
+            {"id": LTX_SIGMA_NODE_ID, "schema": LTX_SIGMA_NODE_SCHEMA_ID},
             {"id": HUNYUAN_IMAGE21_SIGMA_NODE_ID, "schema": HUNYUAN_IMAGE21_SIGMA_NODE_SCHEMA_ID},
             {"id": QWEN_IMAGE_SIGMA_NODE_ID, "schema": QWEN_IMAGE_SIGMA_NODE_SCHEMA_ID},
             {"id": SD3_SIGMA_NODE_ID, "schema": SD3_SIGMA_NODE_SCHEMA_ID},

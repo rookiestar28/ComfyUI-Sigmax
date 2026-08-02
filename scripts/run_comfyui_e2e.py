@@ -100,6 +100,8 @@ _ANIMA_OUTPUT_NODE_ID: Final = "2"
 _ANIMA_TRACE_KEY: Final = "sigmax_anima_schedule"
 _WAN_OUTPUT_NODE_ID: Final = "2"
 _WAN_TRACE_KEY: Final = "sigmax_wan_schedule"
+_LTX_OUTPUT_NODE_ID: Final = "2"
+_LTX_TRACE_KEY: Final = "sigmax_ltx_schedule"
 _KREA2_LORA_OUTPUT_NODE_ID: Final = "2"
 _KREA2_LORA_TRACE_KEY: Final = "sigmax_krea2_lora_experimental"
 _KREA2_CONDITIONING_OUTPUT_NODE_ID: Final = "3"
@@ -924,7 +926,7 @@ def verify_anima_h2_history(history: object, *, prompt_id: str, variant: str) ->
 
     if variant not in {"Base (3.0)", "Aesthetic (3.0)", "Turbo (3.0)"}:
         raise ScheduleContractError("Anima H2 variant must be explicit")
-    expected = {
+    expected: tuple[str, str, int] = {
         "Base (3.0)": ("anima.base.framework-reference", "base-v1.0", 50),
         "Aesthetic (3.0)": ("anima.aesthetic.framework-reference", "aesthetic-v1", 50),
         "Turbo (3.0)": ("anima.turbo.framework-reference", "turbo-v1.0", 8),
@@ -967,6 +969,116 @@ def verify_anima_h2_history(history: object, *, prompt_id: str, variant: str) ->
         "profile_id": expected[0],
         "shift": 3.0,
         "requested_transitions": steps,
+        "status": "succeeded",
+    }
+
+
+def build_ltx_h2_api_prompt(
+    *, generation: str, stage: str, steps: int, token_count: int = 4096
+) -> dict[str, object]:
+    """Return one model-free explicit LTX scheduler -> probe graph."""
+
+    allowed = {
+        ("LTXV 0.9.8", "Dev", 20),
+        ("LTX-2 19B", "Distilled Stage 1", 8),
+        ("LTX-2.3 22B", "Dev", 30),
+        ("LTX-2.3 22B", "Distilled Stage 2", 3),
+    }
+    if (generation, stage, steps) not in allowed:
+        raise ScheduleContractError("LTX H2 selection must be one of the pinned dense cases")
+    if not isinstance(token_count, int) or isinstance(token_count, bool) or token_count < 1:
+        raise ScheduleContractError("LTX H2 token_count must be a positive integer")
+    return {
+        "1": {
+            "class_type": "Sigmax.LTXSigmaScheduler",
+            "inputs": {
+                "end_step": -1,
+                "generation": generation,
+                "stage": stage,
+                "steps": steps,
+                "start_step": 0,
+                "stretch": True,
+                "strict_official": True,
+                "terminal": 0.1,
+                "token_count": token_count,
+            },
+        },
+        _LTX_OUTPUT_NODE_ID: {
+            "class_type": "SigmaxTest.LTXScheduleProbe",
+            "inputs": {"schedule_info": ["1", 1], "sigmas": ["1", 0]},
+        },
+    }
+
+
+def verify_ltx_h2_history(
+    history: object,
+    *,
+    prompt_id: str,
+    generation: str,
+    stage: str,
+    steps: int,
+) -> dict[str, object]:
+    """Verify one model-free LTX trace and explicit generation/stage identity."""
+
+    expected_map: dict[tuple[str, str], tuple[str, int, float | None]] = {
+        ("LTXV 0.9.8", "Dev"): ("ltxv.0.9.8.dev", 20, 2.05),
+        ("LTX-2 19B", "Distilled Stage 1"): (
+            "ltx2.19b.distilled.stage1",
+            8,
+            None,
+        ),
+        ("LTX-2.3 22B", "Dev"): ("ltx2.3.22b.dev", 30, 2.05),
+        ("LTX-2.3 22B", "Distilled Stage 2"): (
+            "ltx2.3.22b.distilled.stage2",
+            3,
+            None,
+        ),
+    }
+    expected = expected_map.get((generation, stage))
+    if expected is None or steps != expected[1]:
+        raise ScheduleContractError("LTX H2 selection is unsupported")
+    root = _object(history, label="LTX H2 history")
+    entry = _object(root.get(prompt_id), label="LTX H2 history entry")
+    status = _object(entry.get("status"), label="LTX H2 prompt status")
+    if status.get("completed") is not True or status.get("status_str") != "success":
+        raise ScheduleContractError("LTX H2 prompt history does not prove success")
+    outputs = _object(entry.get("outputs"), label="LTX H2 prompt outputs")
+    output = _object(outputs.get(_LTX_OUTPUT_NODE_ID), label="LTX H2 probe output")
+    traces = _array(output.get(_LTX_TRACE_KEY), label="LTX H2 probe trace")
+    if len(traces) != 1 or not isinstance(traces[0], str):
+        raise ScheduleContractError("LTX H2 probe trace is malformed")
+    trace = _object(json.loads(traces[0]), label="LTX H2 decoded trace")
+    info = _object(trace.get("schedule_info"), label="LTX H2 schedule information")
+    sigmas = _array(trace.get("sigmas"), label="LTX H2 sigma vector")
+    shift = info.get("shift")
+    expected_start = 0.909375 if stage == "Distilled Stage 2" else 1.0
+    valid_shift = (
+        shift is None
+        if expected[2] is None
+        else isinstance(shift, int | float) and abs(float(shift) - expected[2]) <= 1e-12
+    )
+    if (
+        info.get("schema") != "sigmax.ltx-sigma-node/1"
+        or info.get("generation") != generation
+        or info.get("stage") != stage
+        or info.get("profile") != expected[0]
+        or info.get("slicing", {}).get("output_steps") != expected[1]
+        or not valid_shift
+        or len(sigmas) != expected[1] + 1
+        or abs(sigmas[0] - expected_start) > 1e-6
+        or sigmas[-1] != 0.0
+        or any(not isinstance(value, int | float) or isinstance(value, bool) for value in sigmas)
+        or any(float(left) <= float(right) for left, right in pairwise(sigmas))
+    ):
+        raise ScheduleContractError("LTX H2 execution evidence drifted")
+    return {
+        "generation": generation,
+        "stage": stage,
+        "numerical_fingerprint": _object(info.get("fingerprints"), label="LTX H2 fingerprints").get(
+            "complete"
+        ),
+        "profile_id": expected[0],
+        "requested_transitions": expected[1],
         "status": "succeeded",
     }
 
@@ -2901,6 +3013,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
             "H2_LUMINA2_M6_05",
             "H2_HUNYUAN_IMAGE21_M6_05",
             "H2_ANIMA_M6_05",
+            "H2_LTX_M6_05",
             "H3_EULER_M5_01",
         ],
         "host": {
@@ -3510,6 +3623,88 @@ def run(args: argparse.Namespace) -> dict[str, object]:
                 wan_results.append(wan_summary)
                 attempts[f"h2_wan.{case_id}"] = wan_transition
             evidence["h2_wan"] = wan_results
+
+            ltx_results: list[dict[str, object]] = []
+            for case in (
+                {
+                    "id": "ltxv-0-9-8-dev-20",
+                    "generation": "LTXV 0.9.8",
+                    "stage": "Dev",
+                    "steps": 20,
+                },
+                {
+                    "id": "ltx2-19b-distilled-stage1-8",
+                    "generation": "LTX-2 19B",
+                    "stage": "Distilled Stage 1",
+                    "steps": 8,
+                },
+                {
+                    "id": "ltx2-3-22b-dev-30",
+                    "generation": "LTX-2.3 22B",
+                    "stage": "Dev",
+                    "steps": 30,
+                },
+                {
+                    "id": "ltx2-3-22b-distilled-stage2-3",
+                    "generation": "LTX-2.3 22B",
+                    "stage": "Distilled Stage 2",
+                    "steps": 3,
+                },
+            ):
+                case_id = cast(str, case["id"])
+                ltx_fixture = fixtures.get(case_id)
+                if ltx_fixture is None:
+                    raise ScheduleContractError("LTX host case has no canonical workflow")
+                generation = cast(str, case["generation"])
+                stage = cast(str, case["stage"])
+                steps = cast(int, case["steps"])
+                ltx_workflow = cast(dict[str, object], ltx_fixture.workflow)
+
+                def submit_ltx(
+                    ordinal: int,
+                    *,
+                    selected_generation: str = generation,
+                    selected_stage: str = stage,
+                    selected_steps: int = steps,
+                    selected_case: str = case_id,
+                    selected_workflow: dict[str, object] = ltx_workflow,
+                ) -> tuple[str, dict[str, object]]:
+                    return _submit_successful_prompt(
+                        base_url=base_url,
+                        client_id=f"sigmax-m6-05-ltx-{selected_case}-attempt-{ordinal}",
+                        prompt=build_ltx_h2_api_prompt(
+                            generation=selected_generation,
+                            stage=selected_stage,
+                            steps=selected_steps,
+                        ),
+                        extra_data={"extra_pnginfo": {"workflow": selected_workflow}},
+                        execution_timeout=args.execution_timeout,
+                    )
+
+                def verify_ltx(
+                    history: object,
+                    prompt_id: str,
+                    *,
+                    selected_generation: str = generation,
+                    selected_stage: str = stage,
+                    selected_steps: int = steps,
+                ) -> dict[str, object]:
+                    return verify_ltx_h2_history(
+                        history,
+                        prompt_id=prompt_id,
+                        generation=selected_generation,
+                        stage=selected_stage,
+                        steps=selected_steps,
+                    )
+
+                ltx_summary, ltx_transition = execute_verified_host_repeat(
+                    lane="H2_LTX_M6_05",
+                    submit=submit_ltx,
+                    verify=verify_ltx,
+                )
+                ltx_results.append(ltx_summary)
+                attempts[f"h2_ltx.{case_id}"] = ltx_transition
+            evidence["h2_ltx"] = ltx_results
 
             def submit_runtime_rejection(ordinal: int) -> tuple[str, dict[str, object]]:
                 return _submit_rejected_runtime_prompt(

@@ -22,6 +22,7 @@ SOURCE_PATHS = (
     "tests/golden/aura_flow_v0_2.json",
     "tests/golden/anima_v1.json",
     "tests/golden/wan_v1.json",
+    "tests/golden/ltx_v1.json",
 )
 
 
@@ -481,6 +482,109 @@ def _wan_rows(wan: dict[str, Any]) -> list[dict[str, object]]:
     return rows
 
 
+def _ltx_rows(ltx: dict[str, Any]) -> list[dict[str, object]]:
+    """Project adaptive LTX vectors into schedule-only benchmark rows.
+
+    Distilled LTX vectors remain golden-only because the benchmark schema's ``mu`` field
+    represents an executed adaptive shift; recording a fabricated zero shift would hide
+    that these presets do not use token-derived shifting.
+    """
+
+    variant_by_profile = {
+        "ltxv.0.9.8.dev": "LTXV 0.9.8",
+        "ltx2.19b.dev": "LTX-2 19B",
+        "ltx2.3.22b.dev": "LTX-2.3 22B",
+    }
+    shift_by_tokens = {1024: "0.95", 4096: "2.05"}
+    rows: list[dict[str, object]] = []
+    for case in cast(list[dict[str, Any]], ltx["cases"]):
+        profile_id = cast(str, case["profile"])
+        token_count = case["token_count"]
+        if profile_id not in variant_by_profile or not isinstance(token_count, int):
+            continue
+        shift = shift_by_tokens.get(token_count)
+        if shift is None:
+            raise RuntimeError(f"LTX benchmark token anchor is not pinned: {token_count}")
+        steps = cast(int, case["steps"])
+        float64 = tuple(cast(float, value) for value in cast(list[object], case["float64"]))
+        float32 = tuple(cast(float, value) for value in cast(list[object], case["float32"]))
+        float64_fingerprint = numerical_fingerprint(
+            float64,
+            domain=SigmaDomain.UNIT_FLOW,
+            precision="float64",
+        )
+        float32_fingerprint = numerical_fingerprint(
+            float32,
+            domain=SigmaDomain.UNIT_FLOW,
+            precision="float32",
+        )
+        rows.append(
+            {
+                "baselines": {
+                    "ltx_float32": {
+                        "device": "cpu",
+                        "dtype": "float32",
+                        "fingerprint": float32_fingerprint,
+                        "max_abs_error": "0",
+                        "mean_abs_error": "0",
+                        "status": "PASS",
+                        "tolerance": "0",
+                    },
+                    "ltx_float64": {
+                        "device": "cpu",
+                        "dtype": "float64",
+                        "fingerprint": float64_fingerprint,
+                        "max_abs_error": "0",
+                        "mean_abs_error": "0",
+                        "status": "PASS",
+                        "tolerance": "0",
+                    },
+                },
+                "capability": {"level": "allow", "reasons": ["compatible"]},
+                "determinism": None,
+                "evidence": {
+                    "artifact": {
+                        "construction_fingerprint": None,
+                        "numerical_fingerprint": float64_fingerprint,
+                    },
+                    "receipt_fingerprint": None,
+                    "source_ids": ["parity.ltx"],
+                },
+                "execution": {
+                    "counts": _counts(
+                        requested_transitions=steps,
+                        effective_transitions=0,
+                        requested_model_evaluations=0,
+                        effective_model_evaluations=0,
+                    ),
+                    "rng_ownership": {"model": "none", "sampler": "none", "schedule": "none"},
+                    "status": "not_executed",
+                },
+                "id": f"parity.ltx.{profile_id}-{steps}",
+                "lane": "ltx_schedule_parity",
+                "model_weights_present": False,
+                "profile": _profile(
+                    identifier=profile_id,
+                    variant=variant_by_profile[profile_id],
+                    evidence="official",
+                    recipe=f"{profile_id}-{steps}",
+                ),
+                "repeat": None,
+                "runtime": _runtime(device="cpu", dtype="float64+float32"),
+                "schedule": {"image_seq_len": None, "mu": shift},
+                "weight_variant": "none",
+                "workload": _workload(
+                    requested_width=1024,
+                    requested_height=1024,
+                    effective_width=1024,
+                    effective_height=1024,
+                    transitions=steps,
+                ),
+            }
+        )
+    return rows
+
+
 def _repeat(lane: dict[str, Any]) -> dict[str, object]:
     return {
         "accepted": lane["accepted"],
@@ -693,6 +797,7 @@ def build_matrix_envelope() -> dict[str, object]:
     )
     results.extend(_anima_rows(sources["tests/golden/anima_v1.json"]))
     results.extend(_wan_rows(sources["tests/golden/wan_v1.json"]))
+    results.extend(_ltx_rows(sources["tests/golden/ltx_v1.json"]))
     results.extend(
         _workflow_rows(
             sources["comfyui_sigmax/workflows/fixtures.json"],
@@ -717,6 +822,7 @@ def build_matrix_envelope() -> dict[str, object]:
             "raw_schedule_parity",
             "turbo_schedule_parity",
             "wan_schedule_parity",
+            "ltx_schedule_parity",
         )
     }
     coverage["total_verified_results"] = len(results)

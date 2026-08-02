@@ -89,6 +89,13 @@ def test_builtin_provenance_layers_and_licenses_are_distinct() -> None:
         "krea2.raw-turbo-lora.experimental@1",
         "krea2.raw.official@1",
         "krea2.turbo.official@1",
+        "ltx2.19b.dev@1",
+        "ltx2.19b.distilled.stage1@1",
+        "ltx2.19b.distilled.stage2@1",
+        "ltx2.3.22b.dev@1",
+        "ltx2.3.22b.distilled.stage1@1",
+        "ltx2.3.22b.distilled.stage2@1",
+        "ltxv.0.9.8.dev@1",
         "lumina2.v2.official@1",
         "qwen_image.comfy-fixed.official@1",
         "qwen_image.diffusers-dynamic.framework-reference@1",
@@ -156,13 +163,24 @@ def test_builtin_provenance_layers_and_licenses_are_distinct() -> None:
                 "LicenseRef-Stability-AI-Community",
                 "MIT",
             }
-        elif row["profile_key"].startswith("lumina2."):
+        elif row["profile_key"].startswith("lumina2.") or row["profile_key"].startswith("ltxv."):
             assert row["resource_counts"] == {
                 "frameworks": 2,
                 "model_weights": 1,
                 "software_sources": 1,
             }
             assert set(row["license_identifiers"]) == {"Apache-2.0", "GPL-3.0-only"}
+        elif row["profile_key"].startswith("ltx2."):
+            assert row["resource_counts"] == {
+                "frameworks": 2,
+                "model_weights": 1,
+                "software_sources": 1,
+            }
+            assert set(row["license_identifiers"]) == {
+                "Apache-2.0",
+                "GPL-3.0-only",
+                "LicenseRef-LTX-2-Community",
+            }
         elif row["profile_key"].startswith("hunyuan-image-2-1."):
             assert row["resource_counts"] == {
                 "frameworks": 1,

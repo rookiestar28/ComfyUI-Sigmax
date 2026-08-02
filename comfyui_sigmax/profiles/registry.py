@@ -284,6 +284,15 @@ def builtin_profile_registry() -> ProfileRegistry:
     from comfyui_sigmax.profiles.krea2_lora_experimental import KREA2_LORA_EXPERIMENTAL_SCHEMA
     from comfyui_sigmax.profiles.krea2_raw import KREA2_RAW_SCHEMA
     from comfyui_sigmax.profiles.krea2_turbo import KREA2_TURBO_SCHEMA
+    from comfyui_sigmax.profiles.ltx import (
+        LTX2_19B_DISTILLED_STAGE1_PROFILE,
+        LTX2_19B_DISTILLED_STAGE2_PROFILE,
+        LTX2_19B_PROFILE,
+        LTX23_22B_DISTILLED_STAGE1_PROFILE,
+        LTX23_22B_DISTILLED_STAGE2_PROFILE,
+        LTX23_22B_PROFILE,
+        LTXV_098_PROFILE,
+    )
     from comfyui_sigmax.profiles.lumina2 import LUMINA2_SCHEMA
     from comfyui_sigmax.profiles.qwen_image import (
         QWEN_IMAGE_COMFY_FIXED_SCHEMA,
@@ -324,6 +333,13 @@ def builtin_profile_registry() -> ProfileRegistry:
                     _builtin_entry(KREA2_RAW_SCHEMA),
                     _builtin_entry(KREA2_TURBO_SCHEMA),
                     _builtin_entry(LUMINA2_SCHEMA),
+                    _builtin_entry(LTX2_19B_DISTILLED_STAGE1_PROFILE.schema),
+                    _builtin_entry(LTX2_19B_DISTILLED_STAGE2_PROFILE.schema),
+                    _builtin_entry(LTX2_19B_PROFILE.schema),
+                    _builtin_entry(LTX23_22B_DISTILLED_STAGE1_PROFILE.schema),
+                    _builtin_entry(LTX23_22B_DISTILLED_STAGE2_PROFILE.schema),
+                    _builtin_entry(LTX23_22B_PROFILE.schema),
+                    _builtin_entry(LTXV_098_PROFILE.schema),
                     _builtin_entry(HUNYUAN_IMAGE21_BASE_SCHEMA),
                     _builtin_entry(HUNYUAN_IMAGE21_DISTILLED_SCHEMA),
                     _builtin_entry(QWEN_IMAGE_COMFY_FIXED_SCHEMA),

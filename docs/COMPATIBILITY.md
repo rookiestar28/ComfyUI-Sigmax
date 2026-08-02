@@ -37,6 +37,7 @@ validated baseline.
 | Wan 2.1 I2V | Resolution-qualified official/Diffusers-reference paths: 480P `3.0` and 720P `5.0`, 40-step recipes | Use `Sigmax.WanSigmaScheduler`; select `I2V` and the actual `480P` or `720P` class |
 | Wan 2.2 TI2V 5B | Native and Diffusers-reference unit-flow `5.0` shift, 50-step recipes | Use `Sigmax.WanSigmaScheduler`; select `TI2V` and the source explicitly |
 | Wan 2.2 A14B T2V/I2V | Source-qualified unit-flow paths with caller-owned boundaries; native T2V/I2V `12.0`/`5.0`, Diffusers references `3.0` | Use `Sigmax.WanSigmaScheduler`; boundary output is metadata only and never routes experts |
+| LTXV 0.9.8 / LTX-2 19B / LTX-2.3 22B | Dev token-count adaptive shift; LTX-2/LTX-2.3 distilled Stage 1/2 immutable vectors; schedule-only | Use `Sigmax.LTXSigmaScheduler`; select generation and stage explicitly |
 
 The experimental `Sigmax.Krea2ConditioningRebalance` node accepts explicit RAW or Turbo
 `CONDITIONING` tensors with shape `(batch, sequence, 30720)`. It preserves standard ComfyUI
@@ -77,6 +78,8 @@ and does not establish compatibility with an arbitrary model.
   or low experts, load video weights, patch the model, or implement a video sampler.
 - Wan Diffusers-reference rows document scheduler sigma/timestep construction only; they do not
   claim UniPC solver parity when consumed by an Euler sampler.
+- LTX generation and stage are explicit; Dev token shifting and distilled vectors are separate
+  lanes. LTX profiles do not load video weights or claim video-quality parity.
 
 ## Not currently claimed
 

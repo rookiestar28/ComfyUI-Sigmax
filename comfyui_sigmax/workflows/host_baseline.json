@@ -353,6 +353,87 @@
       "deprecated": false,
       "experimental": false
     },
+    "Sigmax.LTXSigmaScheduler": {
+      "inputs": {
+        "generation": {
+          "name": "generation",
+          "type": "COMBO",
+          "isOptional": false,
+          "options": [
+            "LTXV 0.9.8",
+            "LTX-2 19B",
+            "LTX-2.3 22B"
+          ]
+        },
+        "stage": {
+          "name": "stage",
+          "type": "COMBO",
+          "isOptional": false,
+          "options": [
+            "Dev",
+            "Distilled Stage 1",
+            "Distilled Stage 2"
+          ]
+        },
+        "steps": {
+          "name": "steps",
+          "type": "INT",
+          "isOptional": false
+        },
+        "token_count": {
+          "name": "token_count",
+          "type": "INT",
+          "isOptional": false
+        },
+        "stretch": {
+          "name": "stretch",
+          "type": "BOOLEAN",
+          "isOptional": false
+        },
+        "terminal": {
+          "name": "terminal",
+          "type": "FLOAT",
+          "isOptional": false
+        },
+        "strict_official": {
+          "name": "strict_official",
+          "type": "BOOLEAN",
+          "isOptional": false
+        },
+        "start_step": {
+          "name": "start_step",
+          "type": "INT",
+          "isOptional": false
+        },
+        "end_step": {
+          "name": "end_step",
+          "type": "INT",
+          "isOptional": false
+        }
+      },
+      "outputs": [
+        {
+          "index": 0,
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "is_list": false
+        },
+        {
+          "index": 1,
+          "name": "schedule_info",
+          "type": "STRING",
+          "is_list": false
+        }
+      ],
+      "name": "Sigmax.LTXSigmaScheduler",
+      "display_name": "LTX Sigma Scheduler",
+      "description": "Builds explicit LTX adaptive or distilled sigma schedules without model loading.",
+      "category": "Sigmax/scheduling",
+      "output_node": false,
+      "python_module": "comfyui_sigmax.nodes",
+      "deprecated": false,
+      "experimental": false
+    },
     "Sigmax.Lumina2SigmaScheduler": {
       "inputs": {
         "mode": {
@@ -1158,6 +1239,103 @@
         }
       },
       "name": "Sigmax.Krea2SigmaScheduler",
+      "output": [
+        "SIGMAS",
+        "STRING"
+      ],
+      "output_is_list": [
+        false,
+        false
+      ],
+      "output_name": [
+        "sigmas",
+        "schedule_info"
+      ],
+      "output_node": false,
+      "python_module": "comfyui_sigmax.nodes"
+    },
+    "Sigmax.LTXSigmaScheduler": {
+      "category": "Sigmax/scheduling",
+      "deprecated": false,
+      "description": "Builds explicit LTX adaptive or distilled sigma schedules without model loading.",
+      "display_name": "LTX Sigma Scheduler",
+      "experimental": false,
+      "input": {
+        "required": {
+          "generation": [
+            [
+              "LTXV 0.9.8",
+              "LTX-2 19B",
+              "LTX-2.3 22B"
+            ]
+          ],
+          "stage": [
+            [
+              "Dev",
+              "Distilled Stage 1",
+              "Distilled Stage 2"
+            ]
+          ],
+          "steps": [
+            "INT",
+            {
+              "default": 20,
+              "max": 10000,
+              "min": 1,
+              "step": 1
+            }
+          ],
+          "token_count": [
+            "INT",
+            {
+              "default": 4096,
+              "max": 16777216,
+              "min": 1,
+              "step": 1
+            }
+          ],
+          "stretch": [
+            "BOOLEAN",
+            {
+              "default": true
+            }
+          ],
+          "terminal": [
+            "FLOAT",
+            {
+              "default": 0.1,
+              "max": 0.99,
+              "min": 0.001,
+              "step": 0.001
+            }
+          ],
+          "strict_official": [
+            "BOOLEAN",
+            {
+              "default": true
+            }
+          ],
+          "start_step": [
+            "INT",
+            {
+              "default": 0,
+              "max": 9999,
+              "min": 0,
+              "step": 1
+            }
+          ],
+          "end_step": [
+            "INT",
+            {
+              "default": -1,
+              "max": 10000,
+              "min": -1,
+              "step": 1
+            }
+          ]
+        }
+      },
+      "name": "Sigmax.LTXSigmaScheduler",
       "output": [
         "SIGMAS",
         "STRING"

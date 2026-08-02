@@ -50,6 +50,7 @@ _SOURCE_PATHS: Final = (
     "tests/golden/aura_flow_v0_2.json",
     "tests/golden/anima_v1.json",
     "tests/golden/wan_v1.json",
+    "tests/golden/ltx_v1.json",
 )
 _SOURCE_SCHEMAS: Final = {
     "comfyui_sigmax/workflows/fixtures.json": ("sigmax.workflow-fixture-bundle/1", None),
@@ -76,6 +77,7 @@ _SOURCE_SCHEMAS: Final = {
     "tests/golden/aura_flow_v0_2.json": ("sigmax.aura-flow-golden/1", None),
     "tests/golden/anima_v1.json": ("sigmax.anima-golden/1", None),
     "tests/golden/wan_v1.json": ("sigmax.wan-golden/1", None),
+    "tests/golden/ltx_v1.json": ("sigmax.ltx-golden/1", None),
 }
 _SOURCE_IDS: Final = frozenset(
     {
@@ -85,6 +87,7 @@ _SOURCE_IDS: Final = frozenset(
         "parity.raw",
         "parity.turbo",
         "parity.wan",
+        "parity.ltx",
         "workflow.fixtures",
     }
 )
@@ -95,6 +98,7 @@ _LANES: Final = (
     "raw_schedule_parity",
     "turbo_schedule_parity",
     "wan_schedule_parity",
+    "ltx_schedule_parity",
 )
 _EXCLUSIONS: Final = [
     "advanced_workflows",
@@ -309,12 +313,25 @@ def _validate_row(value: object) -> tuple[str, str]:
         "wan2.2.ti2v.5b.diffusers-reference",
         "wan2.2.t2v-a14b.diffusers-reference",
         "wan2.2.i2v-a14b.diffusers-reference",
+        "ltxv.0.9.8.dev",
+        "ltx2.19b.dev",
+        "ltx2.3.22b.dev",
         "krea2.raw.official",
         "krea2.turbo.official",
     }:
         raise ScheduleContractError("benchmark profile is unsupported")
     if (
-        profile["variant"] not in {"Aesthetic", "Base", "RAW", "Turbo", "Wan"}
+        profile["variant"]
+        not in {
+            "Aesthetic",
+            "Base",
+            "RAW",
+            "Turbo",
+            "Wan",
+            "LTXV 0.9.8",
+            "LTX-2 19B",
+            "LTX-2.3 22B",
+        }
         or profile["version"] != "1"
     ):
         raise ScheduleContractError("benchmark profile variant/version is invalid")
@@ -463,6 +480,15 @@ def _validate_row(value: object) -> tuple[str, str]:
         )
         for name, metric_set in baseline_map.items():
             _validate_metric_set(metric_set, name=f"baseline {name}")
+    elif lane == "ltx_schedule_parity":
+        baseline_map = _object(baselines, name="LTX schedule parity baselines")
+        _exact(
+            baseline_map,
+            frozenset({"ltx_float32", "ltx_float64"}),
+            name="LTX schedule parity baselines",
+        )
+        for name, metric_set in baseline_map.items():
+            _validate_metric_set(metric_set, name=f"baseline {name}")
     elif lane == "h3_native_euler":
         baseline_map = _object(baselines, name="native Euler baseline")
         _exact(baseline_map, frozenset({"native_euler"}), name="native Euler baseline")
@@ -532,7 +558,7 @@ def _validate_matrix(value: object) -> dict[str, object]:
     results = _array(matrix["results"], name="benchmark results")
     identities_and_lanes = [_validate_row(row) for row in results]
     identities = [item[0] for item in identities_and_lanes]
-    if len(results) != 39 or identities != sorted(identities) or len(set(identities)) != 39:
+    if len(results) != 42 or identities != sorted(identities) or len(set(identities)) != 42:
         raise ScheduleContractError("benchmark result identity/order coverage is invalid")
     observed = {lane: sum(item[1] == lane for item in identities_and_lanes) for lane in _LANES}
     observed["total_verified_results"] = len(results)

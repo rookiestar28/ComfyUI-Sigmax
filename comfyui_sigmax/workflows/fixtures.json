@@ -2438,6 +2438,891 @@
         "id": "comfyui",
         "version": "0.29.0"
       },
+      "id": "ltx2-19b-dev-40",
+      "node_contracts": [
+        {
+          "node_id": 1,
+          "node_type": "Sigmax.LTXSigmaScheduler",
+          "widget_slots": [
+            {
+              "fixed": "LTX-2 19B",
+              "name": "generation",
+              "type": "COMBO"
+            },
+            {
+              "fixed": "Dev",
+              "name": "stage",
+              "type": "COMBO"
+            },
+            {
+              "name": "steps",
+              "type": "INT"
+            },
+            {
+              "name": "token_count",
+              "type": "INT"
+            },
+            {
+              "name": "stretch",
+              "type": "BOOLEAN"
+            },
+            {
+              "name": "terminal",
+              "type": "FLOAT"
+            },
+            {
+              "name": "strict_official",
+              "type": "BOOLEAN"
+            },
+            {
+              "name": "start_step",
+              "type": "INT"
+            },
+            {
+              "name": "end_step",
+              "type": "INT"
+            }
+          ]
+        }
+      ],
+      "nodes": [
+        {
+          "id": "Sigmax.LTXSigmaScheduler",
+          "version": "1"
+        }
+      ],
+      "package": {
+        "id": "comfyui-sigmax",
+        "version": "1.0.0"
+      },
+      "profile": {
+        "id": "ltx2.19b.dev",
+        "version": "1"
+      },
+      "variant": "LTX-2 19B Dev",
+      "workflow": {
+        "version": 0.4,
+        "last_node_id": 1,
+        "last_link_id": 0,
+        "nodes": [
+          {
+            "id": 1,
+            "type": "Sigmax.LTXSigmaScheduler",
+            "pos": [
+              40,
+              80
+            ],
+            "size": [
+              460,
+              360
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "outputs": [
+              {
+                "name": "sigmas",
+                "type": "SIGMAS",
+                "links": null,
+                "slot_index": 0
+              },
+              {
+                "name": "schedule_info",
+                "type": "STRING",
+                "links": null,
+                "slot_index": 1
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "Sigmax.LTXSigmaScheduler",
+              "cnr_id": "comfyui-sigmax"
+            },
+            "widgets_values": [
+              "LTX-2 19B",
+              "Dev",
+              40,
+              4096,
+              true,
+              0.1,
+              true,
+              0,
+              -1
+            ]
+          }
+        ],
+        "links": [],
+        "extra": {
+          "comfyui_sigmax": {
+            "metadata": {
+              "artifact": {
+                "construction_fingerprint": "sha256:ad8ce9b2e18215bb335d7eacf10c91df1a793859271eeeaf74020b3899d7dd07",
+                "construction_schema": "sigmax.schedule-artifact/1",
+                "numerical_fingerprint": "sha256:676dd3a673777862209e2eb4a222e6da8bf73b907da65a6c853111fd0d978942",
+                "receipt_schema": "sigmax.execution-receipt-envelope/1"
+              },
+              "compatibility": {
+                "considered": [
+                  "model_identity",
+                  "prediction_type",
+                  "sigma_domain",
+                  "schedule_ownership",
+                  "terminal_sigma",
+                  "execution_behavior",
+                  "noise_ownership",
+                  "sampler_state",
+                  "partial_denoise",
+                  "per_token_timesteps",
+                  "reference_sampler"
+                ],
+                "level": "allow",
+                "reasons": [
+                  "compatible"
+                ]
+              },
+              "profile": {
+                "id": "ltx2.19b.dev",
+                "version": "1"
+              },
+              "receipts": [],
+              "requirements": {
+                "host": {
+                  "api_version": "legacy_v1",
+                  "id": "comfyui",
+                  "version": "0.29.0"
+                },
+                "nodes": [
+                  {
+                    "id": "Sigmax.LTXSigmaScheduler",
+                    "version": "1"
+                  }
+                ],
+                "package": {
+                  "id": "comfyui-sigmax",
+                  "version": "1.0.0"
+                }
+              },
+              "schema": "sigmax.workflow-metadata/1"
+            },
+            "metadata_fingerprint": "sha256:b5a02c0f5fc86aaa633ebd68ff1068715c3259c121be1121985f87d4c0eaa095",
+            "schema": "sigmax.workflow-metadata-envelope/1"
+          }
+        }
+      }
+    },
+    {
+      "host": {
+        "api_version": "legacy_v1",
+        "id": "comfyui",
+        "version": "0.29.0"
+      },
+      "id": "ltx2-19b-distilled-stage1-8",
+      "node_contracts": [
+        {
+          "node_id": 1,
+          "node_type": "Sigmax.LTXSigmaScheduler",
+          "widget_slots": [
+            {
+              "fixed": "LTX-2 19B",
+              "name": "generation",
+              "type": "COMBO"
+            },
+            {
+              "fixed": "Distilled Stage 1",
+              "name": "stage",
+              "type": "COMBO"
+            },
+            {
+              "name": "steps",
+              "type": "INT"
+            },
+            {
+              "name": "token_count",
+              "type": "INT"
+            },
+            {
+              "name": "stretch",
+              "type": "BOOLEAN"
+            },
+            {
+              "name": "terminal",
+              "type": "FLOAT"
+            },
+            {
+              "name": "strict_official",
+              "type": "BOOLEAN"
+            },
+            {
+              "name": "start_step",
+              "type": "INT"
+            },
+            {
+              "name": "end_step",
+              "type": "INT"
+            }
+          ]
+        }
+      ],
+      "nodes": [
+        {
+          "id": "Sigmax.LTXSigmaScheduler",
+          "version": "1"
+        }
+      ],
+      "package": {
+        "id": "comfyui-sigmax",
+        "version": "1.0.0"
+      },
+      "profile": {
+        "id": "ltx2.19b.distilled.stage1",
+        "version": "1"
+      },
+      "variant": "LTX-2 19B Distilled Stage 1",
+      "workflow": {
+        "version": 0.4,
+        "last_node_id": 1,
+        "last_link_id": 0,
+        "nodes": [
+          {
+            "id": 1,
+            "type": "Sigmax.LTXSigmaScheduler",
+            "pos": [
+              40,
+              80
+            ],
+            "size": [
+              460,
+              360
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "outputs": [
+              {
+                "name": "sigmas",
+                "type": "SIGMAS",
+                "links": null,
+                "slot_index": 0
+              },
+              {
+                "name": "schedule_info",
+                "type": "STRING",
+                "links": null,
+                "slot_index": 1
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "Sigmax.LTXSigmaScheduler",
+              "cnr_id": "comfyui-sigmax"
+            },
+            "widgets_values": [
+              "LTX-2 19B",
+              "Distilled Stage 1",
+              8,
+              4096,
+              true,
+              0.1,
+              true,
+              0,
+              -1
+            ]
+          }
+        ],
+        "links": [],
+        "extra": {
+          "comfyui_sigmax": {
+            "metadata": {
+              "artifact": {
+                "construction_fingerprint": "sha256:4787369a3b23e581794b0b86317aae2e16531588452af40b524d54799a623bc6",
+                "construction_schema": "sigmax.schedule-artifact/1",
+                "numerical_fingerprint": "sha256:b05d62a55c706700dffe15da9270c07bf95e775559aaccc13563e404a1b264ad",
+                "receipt_schema": "sigmax.execution-receipt-envelope/1"
+              },
+              "compatibility": {
+                "considered": [
+                  "model_identity",
+                  "prediction_type",
+                  "sigma_domain",
+                  "schedule_ownership",
+                  "terminal_sigma",
+                  "execution_behavior",
+                  "noise_ownership",
+                  "sampler_state",
+                  "partial_denoise",
+                  "per_token_timesteps",
+                  "reference_sampler"
+                ],
+                "level": "allow",
+                "reasons": [
+                  "compatible"
+                ]
+              },
+              "profile": {
+                "id": "ltx2.19b.distilled.stage1",
+                "version": "1"
+              },
+              "receipts": [],
+              "requirements": {
+                "host": {
+                  "api_version": "legacy_v1",
+                  "id": "comfyui",
+                  "version": "0.29.0"
+                },
+                "nodes": [
+                  {
+                    "id": "Sigmax.LTXSigmaScheduler",
+                    "version": "1"
+                  }
+                ],
+                "package": {
+                  "id": "comfyui-sigmax",
+                  "version": "1.0.0"
+                }
+              },
+              "schema": "sigmax.workflow-metadata/1"
+            },
+            "metadata_fingerprint": "sha256:a86481545d07e800e555277d67a67762bef6bb05511b3acd464c71ea10cf9abb",
+            "schema": "sigmax.workflow-metadata-envelope/1"
+          }
+        }
+      }
+    },
+    {
+      "host": {
+        "api_version": "legacy_v1",
+        "id": "comfyui",
+        "version": "0.29.0"
+      },
+      "id": "ltx2-3-22b-dev-30",
+      "node_contracts": [
+        {
+          "node_id": 1,
+          "node_type": "Sigmax.LTXSigmaScheduler",
+          "widget_slots": [
+            {
+              "fixed": "LTX-2.3 22B",
+              "name": "generation",
+              "type": "COMBO"
+            },
+            {
+              "fixed": "Dev",
+              "name": "stage",
+              "type": "COMBO"
+            },
+            {
+              "name": "steps",
+              "type": "INT"
+            },
+            {
+              "name": "token_count",
+              "type": "INT"
+            },
+            {
+              "name": "stretch",
+              "type": "BOOLEAN"
+            },
+            {
+              "name": "terminal",
+              "type": "FLOAT"
+            },
+            {
+              "name": "strict_official",
+              "type": "BOOLEAN"
+            },
+            {
+              "name": "start_step",
+              "type": "INT"
+            },
+            {
+              "name": "end_step",
+              "type": "INT"
+            }
+          ]
+        }
+      ],
+      "nodes": [
+        {
+          "id": "Sigmax.LTXSigmaScheduler",
+          "version": "1"
+        }
+      ],
+      "package": {
+        "id": "comfyui-sigmax",
+        "version": "1.0.0"
+      },
+      "profile": {
+        "id": "ltx2.3.22b.dev",
+        "version": "1"
+      },
+      "variant": "LTX-2.3 22B Dev",
+      "workflow": {
+        "version": 0.4,
+        "last_node_id": 1,
+        "last_link_id": 0,
+        "nodes": [
+          {
+            "id": 1,
+            "type": "Sigmax.LTXSigmaScheduler",
+            "pos": [
+              40,
+              80
+            ],
+            "size": [
+              460,
+              360
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "outputs": [
+              {
+                "name": "sigmas",
+                "type": "SIGMAS",
+                "links": null,
+                "slot_index": 0
+              },
+              {
+                "name": "schedule_info",
+                "type": "STRING",
+                "links": null,
+                "slot_index": 1
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "Sigmax.LTXSigmaScheduler",
+              "cnr_id": "comfyui-sigmax"
+            },
+            "widgets_values": [
+              "LTX-2.3 22B",
+              "Dev",
+              30,
+              4096,
+              true,
+              0.1,
+              true,
+              0,
+              -1
+            ]
+          }
+        ],
+        "links": [],
+        "extra": {
+          "comfyui_sigmax": {
+            "metadata": {
+              "artifact": {
+                "construction_fingerprint": "sha256:00daf5e99393725d44d6059721c5133f8f08dc8e49ec81eeea504ad459a859fd",
+                "construction_schema": "sigmax.schedule-artifact/1",
+                "numerical_fingerprint": "sha256:08aab65059e1b4f5c086d08f2983a7b5a1f7d1c1d5029e1eacef91b41ace2c8f",
+                "receipt_schema": "sigmax.execution-receipt-envelope/1"
+              },
+              "compatibility": {
+                "considered": [
+                  "model_identity",
+                  "prediction_type",
+                  "sigma_domain",
+                  "schedule_ownership",
+                  "terminal_sigma",
+                  "execution_behavior",
+                  "noise_ownership",
+                  "sampler_state",
+                  "partial_denoise",
+                  "per_token_timesteps",
+                  "reference_sampler"
+                ],
+                "level": "allow",
+                "reasons": [
+                  "compatible"
+                ]
+              },
+              "profile": {
+                "id": "ltx2.3.22b.dev",
+                "version": "1"
+              },
+              "receipts": [],
+              "requirements": {
+                "host": {
+                  "api_version": "legacy_v1",
+                  "id": "comfyui",
+                  "version": "0.29.0"
+                },
+                "nodes": [
+                  {
+                    "id": "Sigmax.LTXSigmaScheduler",
+                    "version": "1"
+                  }
+                ],
+                "package": {
+                  "id": "comfyui-sigmax",
+                  "version": "1.0.0"
+                }
+              },
+              "schema": "sigmax.workflow-metadata/1"
+            },
+            "metadata_fingerprint": "sha256:5cd392fa7aaf9cc3d7384ad022db455055223ab5e64e9da74ae74e1376ca4564",
+            "schema": "sigmax.workflow-metadata-envelope/1"
+          }
+        }
+      }
+    },
+    {
+      "host": {
+        "api_version": "legacy_v1",
+        "id": "comfyui",
+        "version": "0.29.0"
+      },
+      "id": "ltx2-3-22b-distilled-stage2-3",
+      "node_contracts": [
+        {
+          "node_id": 1,
+          "node_type": "Sigmax.LTXSigmaScheduler",
+          "widget_slots": [
+            {
+              "fixed": "LTX-2.3 22B",
+              "name": "generation",
+              "type": "COMBO"
+            },
+            {
+              "fixed": "Distilled Stage 2",
+              "name": "stage",
+              "type": "COMBO"
+            },
+            {
+              "name": "steps",
+              "type": "INT"
+            },
+            {
+              "name": "token_count",
+              "type": "INT"
+            },
+            {
+              "name": "stretch",
+              "type": "BOOLEAN"
+            },
+            {
+              "name": "terminal",
+              "type": "FLOAT"
+            },
+            {
+              "name": "strict_official",
+              "type": "BOOLEAN"
+            },
+            {
+              "name": "start_step",
+              "type": "INT"
+            },
+            {
+              "name": "end_step",
+              "type": "INT"
+            }
+          ]
+        }
+      ],
+      "nodes": [
+        {
+          "id": "Sigmax.LTXSigmaScheduler",
+          "version": "1"
+        }
+      ],
+      "package": {
+        "id": "comfyui-sigmax",
+        "version": "1.0.0"
+      },
+      "profile": {
+        "id": "ltx2.3.22b.distilled.stage2",
+        "version": "1"
+      },
+      "variant": "LTX-2.3 22B Distilled Stage 2",
+      "workflow": {
+        "version": 0.4,
+        "last_node_id": 1,
+        "last_link_id": 0,
+        "nodes": [
+          {
+            "id": 1,
+            "type": "Sigmax.LTXSigmaScheduler",
+            "pos": [
+              40,
+              80
+            ],
+            "size": [
+              460,
+              360
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "outputs": [
+              {
+                "name": "sigmas",
+                "type": "SIGMAS",
+                "links": null,
+                "slot_index": 0
+              },
+              {
+                "name": "schedule_info",
+                "type": "STRING",
+                "links": null,
+                "slot_index": 1
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "Sigmax.LTXSigmaScheduler",
+              "cnr_id": "comfyui-sigmax"
+            },
+            "widgets_values": [
+              "LTX-2.3 22B",
+              "Distilled Stage 2",
+              3,
+              4096,
+              true,
+              0.1,
+              true,
+              0,
+              -1
+            ]
+          }
+        ],
+        "links": [],
+        "extra": {
+          "comfyui_sigmax": {
+            "metadata": {
+              "artifact": {
+                "construction_fingerprint": "sha256:7431d8a58070675d4e5f7c75a9ce1ea7b9718463f89e0c393f2a4a0cb9a1314b",
+                "construction_schema": "sigmax.schedule-artifact/1",
+                "numerical_fingerprint": "sha256:c3f2609287314ab0b4f944929490e7f35da7beca4179be0f8440c20d125040b4",
+                "receipt_schema": "sigmax.execution-receipt-envelope/1"
+              },
+              "compatibility": {
+                "considered": [
+                  "model_identity",
+                  "prediction_type",
+                  "sigma_domain",
+                  "schedule_ownership",
+                  "terminal_sigma",
+                  "execution_behavior",
+                  "noise_ownership",
+                  "sampler_state",
+                  "partial_denoise",
+                  "per_token_timesteps",
+                  "reference_sampler"
+                ],
+                "level": "allow",
+                "reasons": [
+                  "compatible"
+                ]
+              },
+              "profile": {
+                "id": "ltx2.3.22b.distilled.stage2",
+                "version": "1"
+              },
+              "receipts": [],
+              "requirements": {
+                "host": {
+                  "api_version": "legacy_v1",
+                  "id": "comfyui",
+                  "version": "0.29.0"
+                },
+                "nodes": [
+                  {
+                    "id": "Sigmax.LTXSigmaScheduler",
+                    "version": "1"
+                  }
+                ],
+                "package": {
+                  "id": "comfyui-sigmax",
+                  "version": "1.0.0"
+                }
+              },
+              "schema": "sigmax.workflow-metadata/1"
+            },
+            "metadata_fingerprint": "sha256:fc630d371d3d8e3acb13e9e04db1de6ce940cf2f38a83e2c7fb40001b1fc6029",
+            "schema": "sigmax.workflow-metadata-envelope/1"
+          }
+        }
+      }
+    },
+    {
+      "host": {
+        "api_version": "legacy_v1",
+        "id": "comfyui",
+        "version": "0.29.0"
+      },
+      "id": "ltxv-0-9-8-dev-20",
+      "node_contracts": [
+        {
+          "node_id": 1,
+          "node_type": "Sigmax.LTXSigmaScheduler",
+          "widget_slots": [
+            {
+              "fixed": "LTXV 0.9.8",
+              "name": "generation",
+              "type": "COMBO"
+            },
+            {
+              "fixed": "Dev",
+              "name": "stage",
+              "type": "COMBO"
+            },
+            {
+              "name": "steps",
+              "type": "INT"
+            },
+            {
+              "name": "token_count",
+              "type": "INT"
+            },
+            {
+              "name": "stretch",
+              "type": "BOOLEAN"
+            },
+            {
+              "name": "terminal",
+              "type": "FLOAT"
+            },
+            {
+              "name": "strict_official",
+              "type": "BOOLEAN"
+            },
+            {
+              "name": "start_step",
+              "type": "INT"
+            },
+            {
+              "name": "end_step",
+              "type": "INT"
+            }
+          ]
+        }
+      ],
+      "nodes": [
+        {
+          "id": "Sigmax.LTXSigmaScheduler",
+          "version": "1"
+        }
+      ],
+      "package": {
+        "id": "comfyui-sigmax",
+        "version": "1.0.0"
+      },
+      "profile": {
+        "id": "ltxv.0.9.8.dev",
+        "version": "1"
+      },
+      "variant": "LTXV 0.9.8 Dev",
+      "workflow": {
+        "version": 0.4,
+        "last_node_id": 1,
+        "last_link_id": 0,
+        "nodes": [
+          {
+            "id": 1,
+            "type": "Sigmax.LTXSigmaScheduler",
+            "pos": [
+              40,
+              80
+            ],
+            "size": [
+              460,
+              360
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "outputs": [
+              {
+                "name": "sigmas",
+                "type": "SIGMAS",
+                "links": null,
+                "slot_index": 0
+              },
+              {
+                "name": "schedule_info",
+                "type": "STRING",
+                "links": null,
+                "slot_index": 1
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "Sigmax.LTXSigmaScheduler",
+              "cnr_id": "comfyui-sigmax"
+            },
+            "widgets_values": [
+              "LTXV 0.9.8",
+              "Dev",
+              20,
+              4096,
+              true,
+              0.1,
+              true,
+              0,
+              -1
+            ]
+          }
+        ],
+        "links": [],
+        "extra": {
+          "comfyui_sigmax": {
+            "metadata": {
+              "artifact": {
+                "construction_fingerprint": "sha256:188cb1caf828a92fe917d07ae7ab81b6f7900bc070fcfdfdbec68e22a50eb864",
+                "construction_schema": "sigmax.schedule-artifact/1",
+                "numerical_fingerprint": "sha256:a8d35f69b72de301f28a8345107ad82b7756a1fad8cae7055b094c648561b91a",
+                "receipt_schema": "sigmax.execution-receipt-envelope/1"
+              },
+              "compatibility": {
+                "considered": [
+                  "model_identity",
+                  "prediction_type",
+                  "sigma_domain",
+                  "schedule_ownership",
+                  "terminal_sigma",
+                  "execution_behavior",
+                  "noise_ownership",
+                  "sampler_state",
+                  "partial_denoise",
+                  "per_token_timesteps",
+                  "reference_sampler"
+                ],
+                "level": "allow",
+                "reasons": [
+                  "compatible"
+                ]
+              },
+              "profile": {
+                "id": "ltxv.0.9.8.dev",
+                "version": "1"
+              },
+              "receipts": [],
+              "requirements": {
+                "host": {
+                  "api_version": "legacy_v1",
+                  "id": "comfyui",
+                  "version": "0.29.0"
+                },
+                "nodes": [
+                  {
+                    "id": "Sigmax.LTXSigmaScheduler",
+                    "version": "1"
+                  }
+                ],
+                "package": {
+                  "id": "comfyui-sigmax",
+                  "version": "1.0.0"
+                }
+              },
+              "schema": "sigmax.workflow-metadata/1"
+            },
+            "metadata_fingerprint": "sha256:71ea775a7b1eb38700d5ed80d6c2a7931491f536cbe355387fbefa83aae2baf6",
+            "schema": "sigmax.workflow-metadata-envelope/1"
+          }
+        }
+      }
+    },
+    {
+      "host": {
+        "api_version": "legacy_v1",
+        "id": "comfyui",
+        "version": "0.29.0"
+      },
       "id": "lumina2-v2-official-50",
       "node_contracts": [
         {

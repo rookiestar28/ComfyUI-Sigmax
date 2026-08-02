@@ -88,6 +88,8 @@ _FLUX1_SCHNELL_OUTPUT_NODE_ID: Final = "2"
 _FLUX1_SCHNELL_TRACE_KEY: Final = "sigmax_flux1_schnell_schedule"
 _QWEN_IMAGE_OUTPUT_NODE_ID: Final = "2"
 _QWEN_IMAGE_TRACE_KEY: Final = "sigmax_qwen_image_schedule"
+_SD3_OUTPUT_NODE_ID: Final = "2"
+_SD3_TRACE_KEY: Final = "sigmax_sd3_schedule"
 _KREA2_LORA_OUTPUT_NODE_ID: Final = "2"
 _KREA2_LORA_TRACE_KEY: Final = "sigmax_krea2_lora_experimental"
 _KREA2_CONDITIONING_OUTPUT_NODE_ID: Final = "3"
@@ -589,6 +591,83 @@ def verify_qwen_image_h2_history(
         ).get("complete"),
         "profile_id": profile_id,
         "requested_transitions": 50,
+        "status": "succeeded",
+    }
+
+
+def build_sd3_h2_api_prompt(mode: str) -> dict[str, object]:
+    """Return one model-free original-SD3 scheduler -> probe graph."""
+
+    if mode not in {"Publisher Reference (1.0)", "Comfy/Diffusers Fixed (3.0)"}:
+        raise ScheduleContractError("SD3 H2 mode is unsupported")
+    steps = 50 if mode == "Publisher Reference (1.0)" else 28
+    return {
+        "1": {
+            "class_type": "Sigmax.SD3SigmaScheduler",
+            "inputs": {
+                "already_shifted": False,
+                "end_step": -1,
+                "mode": mode,
+                "start_step": 0,
+                "steps": steps,
+                "strict_source": True,
+            },
+        },
+        _SD3_OUTPUT_NODE_ID: {
+            "class_type": "SigmaxTest.SD3ScheduleProbe",
+            "inputs": {"schedule_info": ["1", 1], "sigmas": ["1", 0]},
+        },
+    }
+
+
+def verify_sd3_h2_history(history: object, *, prompt_id: str, mode: str) -> dict[str, object]:
+    """Verify one original-SD3 source mode on the model-free host lane."""
+
+    if mode not in {"Publisher Reference (1.0)", "Comfy/Diffusers Fixed (3.0)"}:
+        raise ScheduleContractError("SD3 H2 mode is unsupported")
+    root = _object(history, label="SD3 history")
+    entry = _object(root.get(prompt_id), label="SD3 history entry")
+    status = _object(entry.get("status"), label="SD3 prompt status")
+    if status.get("completed") is not True or status.get("status_str") != "success":
+        raise ScheduleContractError("SD3 prompt history does not prove success")
+    outputs = _object(entry.get("outputs"), label="SD3 prompt outputs")
+    output = _object(outputs.get(_SD3_OUTPUT_NODE_ID), label="SD3 probe output")
+    traces = _array(output.get(_SD3_TRACE_KEY), label="SD3 probe trace")
+    if len(traces) != 1 or not isinstance(traces[0], str):
+        raise ScheduleContractError("SD3 probe trace is malformed")
+    trace = _object(json.loads(traces[0]), label="SD3 decoded trace")
+    info = _object(trace.get("schedule_info"), label="SD3 schedule information")
+    sigmas = _array(trace.get("sigmas"), label="SD3 sigma vector")
+    if mode == "Publisher Reference (1.0)":
+        profile_id, evidence, ratio, steps = "sd3.publisher-reference.official", "official", 1.0, 50
+    else:
+        profile_id, evidence, ratio, steps = (
+            "sd3.comfy-diffusers-fixed.framework-reference",
+            "framework_reference",
+            3.0,
+            28,
+        )
+    if (
+        info.get("schema") != "sigmax.sd3-sigma-node/1"
+        or _object(info.get("profile"), label="SD3 profile").get("id") != profile_id
+        or _object(info.get("profile"), label="SD3 profile").get("evidence") != evidence
+        or _object(info.get("shift"), label="SD3 shift") != {"kind": "direct_ratio", "ratio": ratio}
+        or _object(info.get("slicing"), label="SD3 slicing").get("output_steps") != steps
+        or len(sigmas) != steps + 1
+        or sigmas[0] != 1.0
+        or sigmas[-1] != 0.0
+        or any(not isinstance(value, (int, float)) or isinstance(value, bool) for value in sigmas)
+        or any(float(left) <= float(right) for left, right in pairwise(sigmas))
+    ):
+        raise ScheduleContractError("SD3 H2 execution evidence drifted")
+    return {
+        "mode": mode,
+        "numerical_fingerprint": _object(info.get("fingerprints"), label="SD3 fingerprints").get(
+            "complete"
+        ),
+        "profile_id": profile_id,
+        "ratio": ratio,
+        "requested_transitions": steps,
         "status": "succeeded",
     }
 
@@ -2701,6 +2780,52 @@ def run(args: argparse.Namespace) -> dict[str, object]:
                 qwen_results.append(qwen_summary)
                 attempts[f"h2_qwen_image.{mode.casefold().replace(' ', '-')}"] = qwen_transition
             evidence["h2_qwen_image"] = qwen_results
+
+            sd3_results: list[dict[str, object]] = []
+            for mode, case_id in (
+                ("Publisher Reference (1.0)", "sd3-publisher-reference-official-50"),
+                ("Comfy/Diffusers Fixed (3.0)", "sd3-comfy-diffusers-fixed-framework-28"),
+            ):
+                fixture = fixtures.get(case_id)
+                if fixture is None:
+                    raise ScheduleContractError("SD3 host case has no canonical workflow")
+                sd3_workflow = cast(dict[str, object], fixture.workflow)
+
+                def submit_sd3(
+                    ordinal: int,
+                    *,
+                    selected_mode: str = mode,
+                    workflow: dict[str, object] = sd3_workflow,
+                    selected_case: str = case_id,
+                ) -> tuple[str, dict[str, object]]:
+                    return _submit_successful_prompt(
+                        base_url=base_url,
+                        client_id=(f"sigmax-m6-05-sd3-{selected_case}-attempt-{ordinal}"),
+                        prompt=build_sd3_h2_api_prompt(selected_mode),
+                        extra_data={"extra_pnginfo": {"workflow": workflow}},
+                        execution_timeout=args.execution_timeout,
+                    )
+
+                def verify_sd3(
+                    history: object,
+                    prompt_id: str,
+                    *,
+                    selected_mode: str = mode,
+                ) -> dict[str, object]:
+                    return verify_sd3_h2_history(
+                        history,
+                        prompt_id=prompt_id,
+                        mode=selected_mode,
+                    )
+
+                sd3_summary, sd3_transition = execute_verified_host_repeat(
+                    lane="H2_SD3_M6_05",
+                    submit=submit_sd3,
+                    verify=verify_sd3,
+                )
+                sd3_results.append(sd3_summary)
+                attempts[f"h2_sd3.{case_id}"] = sd3_transition
+            evidence["h2_sd3"] = sd3_results
 
             def submit_runtime_rejection(ordinal: int) -> tuple[str, dict[str, object]]:
                 return _submit_rejected_runtime_prompt(

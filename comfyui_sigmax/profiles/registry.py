@@ -278,6 +278,10 @@ def builtin_profile_registry() -> ProfileRegistry:
         QWEN_IMAGE_COMFY_FIXED_SCHEMA,
         QWEN_IMAGE_DIFFUSERS_DYNAMIC_SCHEMA,
     )
+    from comfyui_sigmax.profiles.sd3 import (
+        SD3_COMFY_DIFFUSERS_SCHEMA,
+        SD3_PUBLISHER_REFERENCE_SCHEMA,
+    )
     from comfyui_sigmax.profiles.z_image import Z_IMAGE_BASE_SCHEMA, Z_IMAGE_TURBO_SCHEMA
 
     entries = cast(
@@ -291,6 +295,8 @@ def builtin_profile_registry() -> ProfileRegistry:
                     _builtin_entry(KREA2_TURBO_SCHEMA),
                     _builtin_entry(QWEN_IMAGE_COMFY_FIXED_SCHEMA),
                     _builtin_entry(QWEN_IMAGE_DIFFUSERS_DYNAMIC_SCHEMA),
+                    _builtin_entry(SD3_COMFY_DIFFUSERS_SCHEMA),
+                    _builtin_entry(SD3_PUBLISHER_REFERENCE_SCHEMA),
                     _builtin_entry(Z_IMAGE_BASE_SCHEMA),
                     _builtin_entry(Z_IMAGE_TURBO_SCHEMA),
                 ),

@@ -1,13 +1,13 @@
 # ComfyUI-Sigmax
 
 ComfyUI-Sigmax provides model-aware sigma schedules for ComfyUI. It includes verified profiles
-for Krea 2 Turbo, Krea 2 RAW, Z-Image Base, Z-Image Turbo, FLUX.1-schnell, and original Qwen
-Image, plus tools for inspecting and editing schedules.
+for Krea 2 Turbo, Krea 2 RAW, Z-Image Base, Z-Image Turbo, FLUX.1-schnell, original Qwen
+Image, and original Stable Diffusion 3, plus tools for inspecting and editing schedules.
 
 ## Features
 
 - Explicit model and variant selection with no silent generic fallback.
-- Verified Krea 2, Z-Image, FLUX.1-schnell, and original Qwen Image schedule recipes.
+- Verified Krea 2, Z-Image, FLUX.1-schnell, original Qwen Image, and original SD3 schedule recipes.
 - Schedule slicing, concatenation, resampling, inspection, and comparison.
 - Experimental Krea 2 `CONDITIONING` tap rebalancing for explicitly selected RAW or Turbo
   workflows, with fixed RMS preservation and no scheduler/model patching.
@@ -44,7 +44,7 @@ development or parity dependencies into ComfyUI just to use the nodes.
 
 ## Use in ComfyUI
 
-Search the node menu for `Sigmax`. The package registers 16 namespaced nodes.
+Search the node menu for `Sigmax`. The package registers 17 namespaced nodes.
 
 ### Build a model schedule
 
@@ -57,6 +57,7 @@ Search the node menu for `Sigmax`. The package registers 16 namespaced nodes.
 | Z-Image Turbo | `Sigmax.ZImageSigmaScheduler` | `Turbo`, 8 steps, CFG 1.0 |
 | FLUX.1-schnell | `Sigmax.Flux1SchnellSigmaScheduler` | 1-4 steps, default 4, CFG 1.0 |
 | Original Qwen Image | `Sigmax.QwenImageSigmaScheduler` | `Comfy Fixed`, 50 steps, or `Diffusers Dynamic` with explicit `image_seq_len`; host true CFG 4.0 |
+| Original Stable Diffusion 3 | `Sigmax.SD3SigmaScheduler` | Select `Publisher Reference (1.0)` at 50 steps or `Comfy/Diffusers Fixed (3.0)` at 28 steps; source mode is required |
 
 For normal use:
 
@@ -72,6 +73,11 @@ The Qwen Image node covers the original text-to-image family only. `Comfy Fixed`
 pinned ComfyUI host surface (`1.15`); `Diffusers Dynamic` requires an explicit packed
 `image_seq_len`. Later Qwen variants, distilled/Lightning checkpoints, prompt enhancement, and
 image-quality parity are outside this support claim.
+
+The SD3 node covers only the original Stability AI SD3 Medium text-to-image schedule. Its two
+source-qualified modes preserve the publisher 1.0 versus pinned ComfyUI/Diffusers 3.0 conflict;
+neither is an implicit universal default. SD3.5, Turbo, ControlNet, model execution, and image
+quality are outside this support claim.
 
 `Sigmax.ModelAwareSigmaScheduler` can inspect a connected Krea 2 model, but shared filenames and
 model structure may identify only the family. If `Auto` reports ambiguity, select `Turbo` or

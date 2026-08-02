@@ -261,6 +261,66 @@
       "deprecated": false,
       "experimental": false
     },
+    "Sigmax.SD3SigmaScheduler": {
+      "inputs": {
+        "mode": {
+          "name": "mode",
+          "type": "COMBO",
+          "isOptional": false,
+          "options": [
+            "Publisher Reference (1.0)",
+            "Comfy/Diffusers Fixed (3.0)"
+          ]
+        },
+        "steps": {
+          "name": "steps",
+          "type": "INT",
+          "isOptional": false
+        },
+        "strict_source": {
+          "name": "strict_source",
+          "type": "BOOLEAN",
+          "isOptional": false
+        },
+        "start_step": {
+          "name": "start_step",
+          "type": "INT",
+          "isOptional": false
+        },
+        "end_step": {
+          "name": "end_step",
+          "type": "INT",
+          "isOptional": false
+        },
+        "already_shifted": {
+          "name": "already_shifted",
+          "type": "BOOLEAN",
+          "isOptional": false
+        }
+      },
+      "outputs": [
+        {
+          "index": 0,
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "is_list": false
+        },
+        {
+          "index": 1,
+          "name": "schedule_info",
+          "type": "STRING",
+          "is_list": false
+        }
+      ],
+      "name": "Sigmax.SD3SigmaScheduler",
+      "display_name": "Stable Diffusion 3 Sigma Scheduler",
+      "description": "Builds an explicit original Stable Diffusion 3 sigma schedule with a source-qualified shift.",
+      "category": "Sigmax/scheduling",
+      "output_node": false,
+      "python_module": "comfyui_sigmax.nodes",
+      "deprecated": false,
+      "experimental": false
+    },
     "Sigmax.ScheduleInspector": {
       "inputs": {
         "sigmas": {
@@ -673,6 +733,75 @@
       "output_is_list": [],
       "output_name": [],
       "output_node": true,
+      "python_module": "comfyui_sigmax.nodes"
+    },
+    "Sigmax.SD3SigmaScheduler": {
+      "category": "Sigmax/scheduling",
+      "deprecated": false,
+      "description": "Builds an explicit original Stable Diffusion 3 sigma schedule with a source-qualified shift.",
+      "display_name": "Stable Diffusion 3 Sigma Scheduler",
+      "experimental": false,
+      "input": {
+        "required": {
+          "mode": [
+            [
+              "Publisher Reference (1.0)",
+              "Comfy/Diffusers Fixed (3.0)"
+            ]
+          ],
+          "steps": [
+            "INT",
+            {
+              "default": 28,
+              "max": 10000,
+              "min": 1,
+              "step": 1
+            }
+          ],
+          "strict_source": [
+            "BOOLEAN",
+            {
+              "default": false
+            }
+          ],
+          "start_step": [
+            "INT",
+            {
+              "default": 0,
+              "max": 9999,
+              "min": 0
+            }
+          ],
+          "end_step": [
+            "INT",
+            {
+              "default": -1,
+              "max": 10000,
+              "min": -1
+            }
+          ],
+          "already_shifted": [
+            "BOOLEAN",
+            {
+              "default": false
+            }
+          ]
+        }
+      },
+      "name": "Sigmax.SD3SigmaScheduler",
+      "output": [
+        "SIGMAS",
+        "STRING"
+      ],
+      "output_is_list": [
+        false,
+        false
+      ],
+      "output_name": [
+        "sigmas",
+        "schedule_info"
+      ],
+      "output_node": false,
       "python_module": "comfyui_sigmax.nodes"
     },
     "Sigmax.ScheduleInspector": {

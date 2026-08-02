@@ -591,6 +591,7 @@ def builtin_node_registry() -> NodeRegistry:
         ScheduleInspector,
         ScheduleResample,
         ScheduleSlice,
+        SD3SigmaScheduler,
         TurboWorkflowOutput,
         ZImageSigmaScheduler,
     )
@@ -626,6 +627,11 @@ def builtin_node_registry() -> NodeRegistry:
                 node_id="Sigmax.QwenImageSigmaScheduler",
                 display_name="Qwen Image Sigma Scheduler",
                 node_class=QwenImageSigmaScheduler,
+            ),
+            discover_legacy_registration(
+                node_id="Sigmax.SD3SigmaScheduler",
+                display_name="Stable Diffusion 3 Sigma Scheduler",
+                node_class=SD3SigmaScheduler,
             ),
             discover_legacy_registration(
                 node_id="Sigmax.ModelAwareSigmaScheduler",

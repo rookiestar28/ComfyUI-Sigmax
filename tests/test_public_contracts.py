@@ -75,6 +75,7 @@ def test_packaged_manifest_freezes_the_complete_m8_01_boundary() -> None:
             "schema": "sigmax.qwen-image-sigma-node/1",
         },
         {"id": "Sigmax.RawWorkflowOutput", "schema": "sigmax.raw-workflow-output/1"},
+        {"id": "Sigmax.SD3SigmaScheduler", "schema": "sigmax.sd3-sigma-node/1"},
         {
             "id": "Sigmax.ScheduleComparison",
             "schema": "sigmax.schedule-comparison/1",

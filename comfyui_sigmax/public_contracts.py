@@ -190,6 +190,10 @@ def source_contract_projection() -> dict[str, object]:
         SCHEDULE_SLICE_NODE_ID,
         SCHEDULE_SLICE_SCHEMA_ID,
     )
+    from comfyui_sigmax.nodes.sd3_sigma_scheduler import (
+        SD3_SIGMA_NODE_ID,
+        SD3_SIGMA_NODE_SCHEMA_ID,
+    )
     from comfyui_sigmax.nodes.turbo_workflow_output import (
         TURBO_WORKFLOW_OUTPUT_NODE_ID,
         TURBO_WORKFLOW_OUTPUT_SCHEMA_ID,
@@ -225,6 +229,7 @@ def source_contract_projection() -> dict[str, object]:
             },
             {"id": KREA2_SIGMA_NODE_ID, "schema": KREA2_SIGMA_NODE_SCHEMA_ID},
             {"id": QWEN_IMAGE_SIGMA_NODE_ID, "schema": QWEN_IMAGE_SIGMA_NODE_SCHEMA_ID},
+            {"id": SD3_SIGMA_NODE_ID, "schema": SD3_SIGMA_NODE_SCHEMA_ID},
             {"id": MODEL_AWARE_SIGMA_NODE_ID, "schema": MODEL_AWARE_SIGMA_NODE_SCHEMA_ID},
             {"id": PROFILE_INSPECTOR_NODE_ID, "schema": PROFILE_INSPECTOR_SCHEMA_ID},
             {"id": RAW_WORKFLOW_OUTPUT_NODE_ID, "schema": RAW_WORKFLOW_OUTPUT_SCHEMA_ID},

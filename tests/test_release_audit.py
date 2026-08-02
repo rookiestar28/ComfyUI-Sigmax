@@ -85,6 +85,8 @@ def test_builtin_provenance_layers_and_licenses_are_distinct() -> None:
         "krea2.turbo.official@1",
         "qwen_image.comfy-fixed.official@1",
         "qwen_image.diffusers-dynamic.framework-reference@1",
+        "sd3.comfy-diffusers-fixed.framework-reference@1",
+        "sd3.publisher-reference.official@1",
         "z_image.base.official@1",
         "z_image.turbo.official@1",
     ]
@@ -115,6 +117,18 @@ def test_builtin_provenance_layers_and_licenses_are_distinct() -> None:
                 "software_sources": 1,
             }
             assert set(row["license_identifiers"]) == {"Apache-2.0", "GPL-3.0-only"}
+        elif row["profile_key"].startswith("sd3."):
+            assert row["resource_counts"] == {
+                "frameworks": 2,
+                "model_weights": 1,
+                "software_sources": 1,
+            }
+            assert set(row["license_identifiers"]) == {
+                "Apache-2.0",
+                "GPL-3.0-only",
+                "LicenseRef-Stability-AI-Community",
+                "MIT",
+            }
         else:
             assert row["profile_key"] == "flux1.schnell.official@1"
             assert row["resource_counts"] == {

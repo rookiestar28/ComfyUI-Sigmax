@@ -9,6 +9,10 @@ tracked independently from the frozen profile-schema version.
 
 ### Added
 
+- An original Stable Diffusion 3 schedule slice with `Sigmax.SD3SigmaScheduler`. It exposes
+  explicit, non-composable publisher-reference `1.0` and ComfyUI/Diffusers fixed `3.0` modes,
+  source-qualified golden vectors, workflow fixtures, and pinned-host model-free validation;
+  SD3.5, Turbo, model execution, and image-quality claims remain out of scope.
 - An experimental `Sigmax.Krea2ConditioningRebalance` node for explicit RAW/Turbo
   `(batch, sequence, 30720)` conditioning tensors. It applies versioned community-derived tap
   reweighting with fixed per-sample RMS restoration, preserves conditioning metadata, and emits

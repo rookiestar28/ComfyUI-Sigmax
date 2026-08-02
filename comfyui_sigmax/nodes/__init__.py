@@ -97,6 +97,14 @@ from comfyui_sigmax.nodes.schedule_algebra import (
     build_schedule_resample,
     build_schedule_slice,
 )
+from comfyui_sigmax.nodes.sd3_sigma_scheduler import (
+    SD3_SIGMA_NODE_ID,
+    SD3_SIGMA_NODE_SCHEMA_ID,
+    SD3SigmaNodeResult,
+    SD3SigmaScheduler,
+    bind_sd3_sigma_output_info,
+    build_sd3_sigma_schedule,
+)
 from comfyui_sigmax.nodes.turbo_workflow_output import (
     TURBO_WORKFLOW_BUNDLE_UI_KEY,
     TURBO_WORKFLOW_OUTPUT_NODE_ID,
@@ -147,6 +155,8 @@ __all__ = [
     "SCHEDULE_RESAMPLE_SCHEMA_ID",
     "SCHEDULE_SLICE_NODE_ID",
     "SCHEDULE_SLICE_SCHEMA_ID",
+    "SD3_SIGMA_NODE_ID",
+    "SD3_SIGMA_NODE_SCHEMA_ID",
     "TURBO_WORKFLOW_BUNDLE_UI_KEY",
     "TURBO_WORKFLOW_OUTPUT_NODE_ID",
     "TURBO_WORKFLOW_OUTPUT_SCHEMA_ID",
@@ -173,6 +183,8 @@ __all__ = [
     "QwenImageSigmaScheduler",
     "RawWorkflowOutput",
     "RawWorkflowOutputResult",
+    "SD3SigmaNodeResult",
+    "SD3SigmaScheduler",
     "ScheduleAlgebraNodeResult",
     "ScheduleComparison",
     "ScheduleComparisonResult",
@@ -189,6 +201,7 @@ __all__ = [
     "bind_flux1_schnell_sigma_output_info",
     "bind_krea2_sigma_output_info",
     "bind_qwen_image_sigma_output_info",
+    "bind_sd3_sigma_output_info",
     "bind_z_image_sigma_output_info",
     "build_advanced_flowmatch_schedule",
     "build_flux1_schnell_sigma_schedule",
@@ -202,6 +215,7 @@ __all__ = [
     "build_schedule_inspection",
     "build_schedule_resample",
     "build_schedule_slice",
+    "build_sd3_sigma_schedule",
     "build_turbo_workflow_output",
     "build_z_image_sigma_schedule",
     "probe_model_family",

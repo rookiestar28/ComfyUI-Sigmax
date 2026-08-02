@@ -204,6 +204,7 @@ class WorkflowFixture:
             "Z-Image Base",
             "Z-Image Turbo",
             "Qwen Image",
+            "SD3",
         }:
             raise ScheduleContractError("workflow fixture variant is unsupported")
         if not isinstance(self.package, WorkflowRequirement):
@@ -465,6 +466,8 @@ def load_canonical_workflow_fixtures() -> tuple[WorkflowFixture, ...]:
         "krea2-raw-official-square-1024",
         "krea2-turbo-1024",
         "qwen-image-comfy-fixed-official-50",
+        "sd3-comfy-diffusers-fixed-framework-28",
+        "sd3-publisher-reference-official-50",
         "z-image-base-official-50",
         "z-image-turbo-official-8",
     ):

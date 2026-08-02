@@ -19,6 +19,7 @@ from comfyui_sigmax.nodes.krea2_sigma_scheduler import (
     sigma_output_fingerprint,
 )
 from comfyui_sigmax.nodes.raw_workflow_output import build_raw_workflow_output
+from comfyui_sigmax.nodes.sd3_sigma_scheduler import build_sd3_sigma_schedule
 from comfyui_sigmax.nodes.turbo_workflow_output import build_turbo_workflow_output
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -343,6 +344,64 @@ def test_z_image_h2_prompt_and_history_are_variant_bound(variant: str, steps: in
     assert summary["ratio"] == (6.0 if variant == "Base" else 3.0)
     assert summary["requested_transitions"] == steps
     assert summary["status"] == "succeeded"
+
+
+@pytest.mark.parametrize(
+    ("mode", "steps"),
+    (("Publisher Reference (1.0)", 50), ("Comfy/Diffusers Fixed (3.0)", 28)),
+)
+def test_sd3_h2_prompt_and_history_are_source_mode_bound(mode: str, steps: int) -> None:
+    harness = _harness()
+    prompt = harness.build_sd3_h2_api_prompt(mode)
+    assert prompt["1"] == {
+        "class_type": "Sigmax.SD3SigmaScheduler",
+        "inputs": {
+            "already_shifted": False,
+            "end_step": -1,
+            "mode": mode,
+            "start_step": 0,
+            "steps": steps,
+            "strict_source": True,
+        },
+    }
+    result = build_sd3_sigma_schedule(
+        mode=mode,
+        steps=steps,
+        strict_source=True,
+        start_step=0,
+        end_step=-1,
+    )
+    trace = json.dumps(
+        {
+            "schedule_info": json.loads(result.schedule_info_json),
+            "sigmas": list(result.sigmas),
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    history = {
+        "prompt-sd3": {
+            "outputs": {"2": {"sigmax_sd3_schedule": [trace]}},
+            "status": {"completed": True, "status_str": "success"},
+        }
+    }
+    summary = harness.verify_sd3_h2_history(
+        history,
+        prompt_id="prompt-sd3",
+        mode=mode,
+    )
+    assert summary == {
+        "mode": mode,
+        "numerical_fingerprint": json.loads(result.schedule_info_json)["fingerprints"]["complete"],
+        "profile_id": (
+            "sd3.publisher-reference.official"
+            if mode == "Publisher Reference (1.0)"
+            else "sd3.comfy-diffusers-fixed.framework-reference"
+        ),
+        "ratio": 1.0 if mode == "Publisher Reference (1.0)" else 3.0,
+        "requested_transitions": steps,
+        "status": "succeeded",
+    }
 
 
 @pytest.mark.parametrize(

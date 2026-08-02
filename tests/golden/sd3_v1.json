@@ -1,0 +1,1 @@
+{"schema":"sigmax.sd3-golden/1","cases":[{"mode":"publisher_reference","steps":4,"float64":[1.0,0.75,0.5,0.25,0.0]},{"mode":"comfy_diffusers_fixed","steps":4,"float64":[1.0,0.9,0.75,0.5,0.0]}]}

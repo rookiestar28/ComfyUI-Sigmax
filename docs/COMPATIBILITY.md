@@ -26,6 +26,7 @@ validated baseline.
 | Z-Image Turbo | Fixed-ratio external sigma schedule, 8-step official recipe | Select `Turbo` explicitly |
 | FLUX.1-schnell | Unshifted external sigma schedule, 1-4 steps | Use the dedicated FLUX.1-schnell node |
 | Original Qwen Image | ComfyUI fixed `1.15` shift, or Diffusers dynamic shift with explicit `image_seq_len`; original T2I only | Use `Sigmax.QwenImageSigmaScheduler`; select the mode explicitly |
+| Original Stable Diffusion 3 | Original SD3 Medium T2I only; explicit publisher-reference `1.0` or ComfyUI/Diffusers fixed `3.0` shift | Use `Sigmax.SD3SigmaScheduler`; select the source mode explicitly |
 
 The experimental `Sigmax.Krea2ConditioningRebalance` node accepts explicit RAW or Turbo
 `CONDITIONING` tensors with shape `(batch, sequence, 30720)`. It preserves standard ComfyUI
@@ -47,6 +48,8 @@ and does not establish compatibility with an arbitrary model.
 - Model weights must be obtained separately under their own licenses and access terms.
 - Qwen Image dynamic mode requires an explicit packed image sequence length; it never falls back
   to the fixed mode when that input is absent.
+- SD3 source modes are intentionally non-composable. The publisher 1.0 and ComfyUI/Diffusers 3.0
+  values are separate evidence lanes, not a silent default selection.
 
 ## Not currently claimed
 

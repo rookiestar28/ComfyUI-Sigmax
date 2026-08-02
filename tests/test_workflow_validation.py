@@ -80,6 +80,8 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
         "krea2-raw-official-square-1024",
         "krea2-turbo-1024",
         "qwen-image-comfy-fixed-official-50",
+        "sd3-comfy-diffusers-fixed-framework-28",
+        "sd3-publisher-reference-official-50",
         "z-image-base-official-50",
         "z-image-turbo-official-8",
     )
@@ -90,6 +92,8 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
         "RAW",
         "Turbo",
         "Qwen Image",
+        "SD3",
+        "SD3",
         "Z-Image Base",
         "Z-Image Turbo",
     )
@@ -126,6 +130,22 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
         ],
         "krea2-turbo-1024": ["Turbo", 8, 1024, 1024, True, 0, -1],
         "qwen-image-comfy-fixed-official-50": ["Comfy Fixed", 50, 0, True, 0, -1],
+        "sd3-comfy-diffusers-fixed-framework-28": [
+            "Comfy/Diffusers Fixed (3.0)",
+            28,
+            True,
+            0,
+            -1,
+            False,
+        ],
+        "sd3-publisher-reference-official-50": [
+            "Publisher Reference (1.0)",
+            50,
+            True,
+            0,
+            -1,
+            False,
+        ],
         "z-image-base-official-50": ["Base", 50, True, 0, -1],
         "z-image-turbo-official-8": ["Turbo", 8, True, 0, -1],
     }
@@ -135,6 +155,7 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
         is_sigma_only = fixture.variant.startswith("Z-Image") or fixture.variant in {
             "FLUX.1-schnell",
             "Qwen Image",
+            "SD3",
         }
         assert workflow["last_node_id"] == (1 if is_sigma_only else 3)
         assert workflow["last_link_id"] == (0 if is_sigma_only else 5)
@@ -152,7 +173,11 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
                 else (
                     ["Sigmax.QwenImageSigmaScheduler"]
                     if fixture.variant == "Qwen Image"
-                    else ["Sigmax.ZImageSigmaScheduler"]
+                    else (
+                        ["Sigmax.SD3SigmaScheduler"]
+                        if fixture.variant == "SD3"
+                        else ["Sigmax.ZImageSigmaScheduler"]
+                    )
                 )
             )
             if is_sigma_only
@@ -172,6 +197,11 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
             "RAW": "krea2.raw.official",
             "Turbo": "krea2.turbo.official",
             "Qwen Image": "qwen_image.comfy-fixed.official",
+            "SD3": (
+                "sd3.comfy-diffusers-fixed.framework-reference"
+                if fixture.identifier.startswith("sd3-comfy")
+                else "sd3.publisher-reference.official"
+            ),
             "Z-Image Base": "z_image.base.official",
             "Z-Image Turbo": "z_image.turbo.official",
         }
@@ -197,6 +227,7 @@ def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
         "Sigmax.Krea2SigmaScheduler",
         "Sigmax.QwenImageSigmaScheduler",
         "Sigmax.RawWorkflowOutput",
+        "Sigmax.SD3SigmaScheduler",
         "Sigmax.ScheduleInspector",
         "Sigmax.TurboWorkflowOutput",
         "Sigmax.ZImageSigmaScheduler",
@@ -205,7 +236,7 @@ def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
     assert report.lane is WorkflowValidationLane.KNOWN_GOOD
     assert report.host_version == CANONICAL_HOST_VERSION
     assert report.host_revision == CANONICAL_HOST_REVISION
-    assert report.workflow_count == 8
+    assert report.workflow_count == 10
     assert report.compatible is True
     assert report.gate_passed is True
     assert report.observational is False
@@ -217,6 +248,7 @@ def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
         {"id": "Sigmax.Krea2SigmaScheduler", "version": "1"},
         {"id": "Sigmax.QwenImageSigmaScheduler", "version": "1"},
         {"id": "Sigmax.RawWorkflowOutput", "version": "1"},
+        {"id": "Sigmax.SD3SigmaScheduler", "version": "1"},
         {"id": "Sigmax.ScheduleInspector", "version": "1"},
         {"id": "Sigmax.TurboWorkflowOutput", "version": "1"},
         {"id": "Sigmax.ZImageSigmaScheduler", "version": "1"},

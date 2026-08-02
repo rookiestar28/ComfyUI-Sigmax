@@ -103,6 +103,7 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "profiles" / "krea2_turbo.py").is_file())
         self.assertTrue((package_path / "profiles" / "z_image.py").is_file())
         self.assertTrue((package_path / "profiles" / "sd3.py").is_file())
+        self.assertTrue((package_path / "profiles" / "aura_flow.py").is_file())
         self.assertTrue((package_path / "adapters" / "__init__.py").is_file())
         self.assertTrue((package_path / "adapters" / "comfyui.py").is_file())
         self.assertTrue((package_path / "adapters" / "registration.py").is_file())
@@ -130,6 +131,7 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "nodes" / "model_aware_sigma_scheduler.py").is_file())
         self.assertTrue((package_path / "nodes" / "qwen_image_sigma_scheduler.py").is_file())
         self.assertTrue((package_path / "nodes" / "sd3_sigma_scheduler.py").is_file())
+        self.assertTrue((package_path / "nodes" / "aura_flow_sigma_scheduler.py").is_file())
         self.assertTrue((package_path / "profiles" / "qwen_image.py").is_file())
         self.assertTrue((package_path / "nodes" / "raw_workflow_output.py").is_file())
         self.assertTrue((package_path / "nodes" / "schedule_algebra.py").is_file())
@@ -159,6 +161,7 @@ class PackageContractTests(unittest.TestCase):
         self.assertEqual(
             [
                 "Sigmax.AdvancedFlowMatchScheduler",
+                "Sigmax.AuraFlowSigmaScheduler",
                 "Sigmax.CheckpointEvidenceInspector",
                 "Sigmax.Flux1SchnellSigmaScheduler",
                 "Sigmax.Krea2ConditioningRebalance",
@@ -181,6 +184,7 @@ class PackageContractTests(unittest.TestCase):
         self.assertEqual(
             {
                 "Sigmax.AdvancedFlowMatchScheduler": "Advanced FlowMatch Scheduler",
+                "Sigmax.AuraFlowSigmaScheduler": "AuraFlow Sigma Scheduler",
                 "Sigmax.CheckpointEvidenceInspector": "Checkpoint Evidence Inspector",
                 "Sigmax.Flux1SchnellSigmaScheduler": "FLUX.1-schnell Sigma Scheduler",
                 "Sigmax.Krea2ConditioningRebalance": "Krea 2 Conditioning Rebalance",

@@ -205,6 +205,7 @@ class WorkflowFixture:
             "Z-Image Turbo",
             "Qwen Image",
             "SD3",
+            "AuraFlow v0.2",
         }:
             raise ScheduleContractError("workflow fixture variant is unsupported")
         if not isinstance(self.package, WorkflowRequirement):
@@ -460,6 +461,7 @@ def load_canonical_workflow_fixtures() -> tuple[WorkflowFixture, ...]:
         )
     result = tuple(sorted(fixtures, key=lambda item: item.identifier))
     if tuple(item.identifier for item in result) != (
+        "auraflow-v0-2-official-50",
         "flux1-schnell-official-4",
         "krea2-raw-diffusers-portrait-761x1353",
         "krea2-raw-official-landscape-1353x761",

@@ -9,6 +9,11 @@ tracked independently from the frozen profile-schema version.
 
 ### Added
 
+- An original AuraFlow v0.2 schedule slice with `Sigmax.AuraFlowSigmaScheduler`. It exposes the
+  source-qualified fixed unit-flow ratio `1.73`, an explicit 50-step recipe, independent golden
+  and parity vectors, canonical workflow metadata, and pinned-host model-free validation. Other
+  AuraFlow variants, model execution, and image-quality claims remain out of scope.
+
 - An original Stable Diffusion 3 schedule slice with `Sigmax.SD3SigmaScheduler`. It exposes
   explicit, non-composable publisher-reference `1.0` and ComfyUI/Diffusers fixed `3.0` modes,
   source-qualified golden vectors, workflow fixtures, and pinned-host model-free validation;

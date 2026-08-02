@@ -17,6 +17,7 @@ SOURCE_PATHS = (
     "tests/parity/fixtures/krea2_native_euler_parity_v1.json",
     "tests/parity/fixtures/krea2_raw_parity_v1.json",
     "tests/parity/fixtures/krea2_turbo_parity_v1.json",
+    "tests/golden/aura_flow_v0_2.json",
 )
 
 

@@ -8,6 +8,14 @@ from comfyui_sigmax.nodes.advanced_flowmatch_scheduler import (
     AdvancedFlowMatchShiftMode,
     build_advanced_flowmatch_schedule,
 )
+from comfyui_sigmax.nodes.aura_flow_sigma_scheduler import (
+    AURAFLOW_SIGMA_NODE_ID,
+    AURAFLOW_SIGMA_NODE_SCHEMA_ID,
+    AuraFlowSigmaNodeResult,
+    AuraFlowSigmaScheduler,
+    bind_aura_flow_sigma_output_info,
+    build_aura_flow_sigma_schedule,
+)
 from comfyui_sigmax.nodes.checkpoint_evidence_inspector import (
     CHECKPOINT_EVIDENCE_INSPECTOR_NODE_ID,
     CHECKPOINT_EVIDENCE_INSPECTOR_SCHEMA_ID,
@@ -126,6 +134,8 @@ from comfyui_sigmax.nodes.z_image_sigma_scheduler import (
 __all__ = [
     "ADVANCED_FLOWMATCH_NODE_ID",
     "ADVANCED_FLOWMATCH_NODE_SCHEMA_ID",
+    "AURAFLOW_SIGMA_NODE_ID",
+    "AURAFLOW_SIGMA_NODE_SCHEMA_ID",
     "CHECKPOINT_EVIDENCE_INSPECTOR_NODE_ID",
     "CHECKPOINT_EVIDENCE_INSPECTOR_SCHEMA_ID",
     "FLUX1_SCHNELL_SIGMA_NODE_ID",
@@ -165,6 +175,8 @@ __all__ = [
     "AdvancedFlowMatchNodeResult",
     "AdvancedFlowMatchScheduler",
     "AdvancedFlowMatchShiftMode",
+    "AuraFlowSigmaNodeResult",
+    "AuraFlowSigmaScheduler",
     "CheckpointEvidenceInspector",
     "Flux1SchnellSigmaNodeResult",
     "Flux1SchnellSigmaScheduler",
@@ -198,12 +210,14 @@ __all__ = [
     "ZImageSigmaNodeResult",
     "ZImageSigmaScheduler",
     "ZImageSigmaVariant",
+    "bind_aura_flow_sigma_output_info",
     "bind_flux1_schnell_sigma_output_info",
     "bind_krea2_sigma_output_info",
     "bind_qwen_image_sigma_output_info",
     "bind_sd3_sigma_output_info",
     "bind_z_image_sigma_output_info",
     "build_advanced_flowmatch_schedule",
+    "build_aura_flow_sigma_schedule",
     "build_flux1_schnell_sigma_schedule",
     "build_krea2_sigma_schedule",
     "build_model_aware_sigma_schedule",

@@ -13,6 +13,7 @@ from typing import Any, cast
 import pytest
 from comfyui_sigmax.adapters.registration import builtin_node_registry
 from comfyui_sigmax.core import ScheduleContractError, SigmaDomain
+from comfyui_sigmax.nodes.aura_flow_sigma_scheduler import build_aura_flow_sigma_schedule
 from comfyui_sigmax.nodes.inspectors import build_schedule_inspection
 from comfyui_sigmax.nodes.krea2_sigma_scheduler import (
     build_krea2_sigma_schedule,
@@ -463,6 +464,45 @@ def test_krea2_lora_experimental_h2_prompt_and_history_prove_mu_control(
     assert summary["mu_source"] == mu_source
     assert summary["mu"] == mu
     assert summary["requested_transitions"] == 12
+    assert summary["status"] == "succeeded"
+
+
+def test_auraflow_h2_prompt_and_history_are_source_bound() -> None:
+    harness = _harness()
+    prompt = harness.build_aura_flow_h2_api_prompt()
+    assert prompt["1"] == {
+        "class_type": "Sigmax.AuraFlowSigmaScheduler",
+        "inputs": {
+            "already_shifted": False,
+            "end_step": -1,
+            "mode": "Official Fixed (1.73)",
+            "start_step": 0,
+            "steps": 50,
+            "strict_source": True,
+        },
+    }
+    result = build_aura_flow_sigma_schedule(
+        mode="Official Fixed (1.73)",
+        steps=50,
+        strict_source=True,
+        start_step=0,
+        end_step=-1,
+    )
+    trace = json.dumps(
+        {"schedule_info": json.loads(result.schedule_info_json), "sigmas": list(result.sigmas)},
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    history = {
+        "prompt-aura": {
+            "outputs": {"2": {"sigmax_auraflow_schedule": [trace]}},
+            "status": {"completed": True, "status_str": "success"},
+        }
+    }
+    summary = harness.verify_aura_flow_h2_history(history, prompt_id="prompt-aura")
+    assert summary["profile_id"] == "auraflow.v0-2.official"
+    assert summary["ratio"] == 1.73
+    assert summary["requested_transitions"] == 50
     assert summary["status"] == "succeeded"
 
 

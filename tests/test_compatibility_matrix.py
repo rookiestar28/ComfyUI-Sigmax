@@ -103,6 +103,7 @@ def test_lane_selection_excludes_post_generation_matrix_validation() -> None:
 
     assert "tests/test_compatibility_matrix.py" not in runner.TEST_SELECTION
     assert "tests/test_compatibility_matrix.py" in runner.SOURCE_PATHS
+    assert "tests/golden/test_aura_flow_goldens.py" in runner.SOURCE_PATHS
 
 
 def test_generator_matches_the_packaged_resource() -> None:

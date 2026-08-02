@@ -146,6 +146,10 @@ def source_contract_projection() -> dict[str, object]:
         ADVANCED_FLOWMATCH_NODE_ID,
         ADVANCED_FLOWMATCH_NODE_SCHEMA_ID,
     )
+    from comfyui_sigmax.nodes.aura_flow_sigma_scheduler import (
+        AURAFLOW_SIGMA_NODE_ID,
+        AURAFLOW_SIGMA_NODE_SCHEMA_ID,
+    )
     from comfyui_sigmax.nodes.checkpoint_evidence_inspector import (
         CHECKPOINT_EVIDENCE_INSPECTOR_NODE_ID,
         CHECKPOINT_EVIDENCE_INSPECTOR_SCHEMA_ID,
@@ -215,6 +219,7 @@ def source_contract_projection() -> dict[str, object]:
     nodes = sorted(
         (
             {"id": ADVANCED_FLOWMATCH_NODE_ID, "schema": ADVANCED_FLOWMATCH_NODE_SCHEMA_ID},
+            {"id": AURAFLOW_SIGMA_NODE_ID, "schema": AURAFLOW_SIGMA_NODE_SCHEMA_ID},
             {
                 "id": CHECKPOINT_EVIDENCE_INSPECTOR_NODE_ID,
                 "schema": CHECKPOINT_EVIDENCE_INSPECTOR_SCHEMA_ID,

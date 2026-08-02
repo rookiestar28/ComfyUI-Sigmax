@@ -27,6 +27,7 @@ validated baseline.
 | FLUX.1-schnell | Unshifted external sigma schedule, 1-4 steps | Use the dedicated FLUX.1-schnell node |
 | Original Qwen Image | ComfyUI fixed `1.15` shift, or Diffusers dynamic shift with explicit `image_seq_len`; original T2I only | Use `Sigmax.QwenImageSigmaScheduler`; select the mode explicitly |
 | Original Stable Diffusion 3 | Original SD3 Medium T2I only; explicit publisher-reference `1.0` or ComfyUI/Diffusers fixed `3.0` shift | Use `Sigmax.SD3SigmaScheduler`; select the source mode explicitly |
+| Original AuraFlow v0.2 | Fixed unit-flow `1.73` ratio shift, original 50-step recipe | Use `Sigmax.AuraFlowSigmaScheduler`; select `Official Fixed (1.73)` explicitly |
 
 The experimental `Sigmax.Krea2ConditioningRebalance` node accepts explicit RAW or Turbo
 `CONDITIONING` tensors with shape `(batch, sequence, 30720)`. It preserves standard ComfyUI
@@ -50,6 +51,8 @@ and does not establish compatibility with an arbitrary model.
   to the fixed mode when that input is absent.
 - SD3 source modes are intentionally non-composable. The publisher 1.0 and ComfyUI/Diffusers 3.0
   values are separate evidence lanes, not a silent default selection.
+- AuraFlow v0.2 uses one fixed model-native ratio shift. Do not apply a second shift or pass
+  already-shifted sigmas to the node.
 
 ## Not currently claimed
 
@@ -58,6 +61,7 @@ and does not establish compatibility with an arbitrary model.
 - Partial-denoise execution and advanced model-patch workflows.
 - Automatic compatibility with unlisted model families.
 - Guaranteed compatibility with every future ComfyUI release.
+- AuraFlow v0.1/v0.3, PonyFlow, community finetunes, or real-model image-quality parity.
 
 If a workflow falls outside these boundaries, treat it as unvalidated rather than silently
 substituting another profile or schedule.

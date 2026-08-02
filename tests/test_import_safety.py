@@ -101,6 +101,7 @@ class ImportSafetyTests(unittest.TestCase):
             {
                 "class_mappings": {
                     "Sigmax.AdvancedFlowMatchScheduler": "AdvancedFlowMatchScheduler",
+                    "Sigmax.AuraFlowSigmaScheduler": "AuraFlowSigmaScheduler",
                     "Sigmax.CheckpointEvidenceInspector": "CheckpointEvidenceInspector",
                     "Sigmax.Flux1SchnellSigmaScheduler": "Flux1SchnellSigmaScheduler",
                     "Sigmax.Krea2ConditioningRebalance": "Krea2ConditioningRebalance",
@@ -122,6 +123,7 @@ class ImportSafetyTests(unittest.TestCase):
                 "diffusers_loaded": False,
                 "display_mappings": {
                     "Sigmax.AdvancedFlowMatchScheduler": "Advanced FlowMatch Scheduler",
+                    "Sigmax.AuraFlowSigmaScheduler": "AuraFlow Sigma Scheduler",
                     "Sigmax.CheckpointEvidenceInspector": "Checkpoint Evidence Inspector",
                     "Sigmax.Flux1SchnellSigmaScheduler": "FLUX.1-schnell Sigma Scheduler",
                     "Sigmax.Krea2ConditioningRebalance": "Krea 2 Conditioning Rebalance",
@@ -170,6 +172,7 @@ class ImportSafetyTests(unittest.TestCase):
             assert bootstrap.WEB_DIRECTORY == "./web"
             assert sorted(bootstrap.NODE_CLASS_MAPPINGS) == [
                 "Sigmax.AdvancedFlowMatchScheduler",
+                "Sigmax.AuraFlowSigmaScheduler",
                 "Sigmax.CheckpointEvidenceInspector",
                 "Sigmax.Flux1SchnellSigmaScheduler",
                 "Sigmax.Krea2ConditioningRebalance",
@@ -189,6 +192,7 @@ class ImportSafetyTests(unittest.TestCase):
             ]
             assert bootstrap.NODE_DISPLAY_NAME_MAPPINGS == {
                 "Sigmax.AdvancedFlowMatchScheduler": "Advanced FlowMatch Scheduler",
+                "Sigmax.AuraFlowSigmaScheduler": "AuraFlow Sigma Scheduler",
                 "Sigmax.CheckpointEvidenceInspector": "Checkpoint Evidence Inspector",
                 "Sigmax.Flux1SchnellSigmaScheduler": "FLUX.1-schnell Sigma Scheduler",
                 "Sigmax.Krea2ConditioningRebalance": "Krea 2 Conditioning Rebalance",
@@ -253,6 +257,7 @@ def test_bootstrap_supports_dynamic_comfyui_custom_node_loader() -> None:
     assert result.returncode == 0, result.stderr
     assert json.loads(result.stdout) == [
         "Sigmax.AdvancedFlowMatchScheduler",
+        "Sigmax.AuraFlowSigmaScheduler",
         "Sigmax.CheckpointEvidenceInspector",
         "Sigmax.Flux1SchnellSigmaScheduler",
         "Sigmax.Krea2ConditioningRebalance",

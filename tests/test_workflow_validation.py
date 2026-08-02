@@ -74,6 +74,7 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
     fixtures = load_canonical_workflow_fixtures()
 
     assert tuple(item.identifier for item in fixtures) == (
+        "auraflow-v0-2-official-50",
         "flux1-schnell-official-4",
         "krea2-raw-diffusers-portrait-761x1353",
         "krea2-raw-official-landscape-1353x761",
@@ -86,6 +87,7 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
         "z-image-turbo-official-8",
     )
     assert tuple(item.variant for item in fixtures) == (
+        "AuraFlow v0.2",
         "FLUX.1-schnell",
         "RAW",
         "RAW",
@@ -146,6 +148,14 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
             -1,
             False,
         ],
+        "auraflow-v0-2-official-50": [
+            "Official Fixed (1.73)",
+            50,
+            True,
+            0,
+            -1,
+            False,
+        ],
         "z-image-base-official-50": ["Base", 50, True, 0, -1],
         "z-image-turbo-official-8": ["Turbo", 8, True, 0, -1],
     }
@@ -156,6 +166,7 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
             "FLUX.1-schnell",
             "Qwen Image",
             "SD3",
+            "AuraFlow v0.2",
         }
         assert workflow["last_node_id"] == (1 if is_sigma_only else 3)
         assert workflow["last_link_id"] == (0 if is_sigma_only else 5)
@@ -176,7 +187,11 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
                     else (
                         ["Sigmax.SD3SigmaScheduler"]
                         if fixture.variant == "SD3"
-                        else ["Sigmax.ZImageSigmaScheduler"]
+                        else (
+                            ["Sigmax.AuraFlowSigmaScheduler"]
+                            if fixture.variant == "AuraFlow v0.2"
+                            else ["Sigmax.ZImageSigmaScheduler"]
+                        )
                     )
                 )
             )
@@ -202,6 +217,7 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
                 if fixture.identifier.startswith("sd3-comfy")
                 else "sd3.publisher-reference.official"
             ),
+            "AuraFlow v0.2": "auraflow.v0-2.official",
             "Z-Image Base": "z_image.base.official",
             "Z-Image Turbo": "z_image.turbo.official",
         }
@@ -222,6 +238,7 @@ def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
     assert baseline.host_version == CANONICAL_HOST_VERSION == "0.29.0"
     assert baseline.host_revision == CANONICAL_HOST_REVISION
     assert tuple(baseline.object_info) == (
+        "Sigmax.AuraFlowSigmaScheduler",
         "Sigmax.Flux1SchnellSigmaScheduler",
         "Sigmax.Krea2ConditioningRebalance",
         "Sigmax.Krea2SigmaScheduler",
@@ -236,7 +253,7 @@ def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
     assert report.lane is WorkflowValidationLane.KNOWN_GOOD
     assert report.host_version == CANONICAL_HOST_VERSION
     assert report.host_revision == CANONICAL_HOST_REVISION
-    assert report.workflow_count == 10
+    assert report.workflow_count == 11
     assert report.compatible is True
     assert report.gate_passed is True
     assert report.observational is False
@@ -244,6 +261,7 @@ def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
     projection = report.projection()
     assert projection["package"] == {"id": "comfyui-sigmax", "version": "1.0.0"}
     assert projection["nodes"] == [
+        {"id": "Sigmax.AuraFlowSigmaScheduler", "version": "1"},
         {"id": "Sigmax.Flux1SchnellSigmaScheduler", "version": "1"},
         {"id": "Sigmax.Krea2SigmaScheduler", "version": "1"},
         {"id": "Sigmax.QwenImageSigmaScheduler", "version": "1"},

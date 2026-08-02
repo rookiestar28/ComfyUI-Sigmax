@@ -47,6 +47,7 @@ _SOURCE_PATHS: Final = (
     "tests/parity/fixtures/krea2_native_euler_parity_v1.json",
     "tests/parity/fixtures/krea2_raw_parity_v1.json",
     "tests/parity/fixtures/krea2_turbo_parity_v1.json",
+    "tests/golden/aura_flow_v0_2.json",
 )
 _SOURCE_SCHEMAS: Final = {
     "comfyui_sigmax/workflows/fixtures.json": ("sigmax.workflow-fixture-bundle/1", None),
@@ -70,6 +71,7 @@ _SOURCE_SCHEMAS: Final = {
         "sigmax.krea2-turbo-parity/1",
         "PASS",
     ),
+    "tests/golden/aura_flow_v0_2.json": ("sigmax.aura-flow-golden/1", None),
 }
 _SOURCE_IDS: Final = frozenset(
     {"host.known_good", "parity.native_euler", "parity.raw", "parity.turbo", "workflow.fixtures"}

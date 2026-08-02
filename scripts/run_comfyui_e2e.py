@@ -90,6 +90,8 @@ _QWEN_IMAGE_OUTPUT_NODE_ID: Final = "2"
 _QWEN_IMAGE_TRACE_KEY: Final = "sigmax_qwen_image_schedule"
 _SD3_OUTPUT_NODE_ID: Final = "2"
 _SD3_TRACE_KEY: Final = "sigmax_sd3_schedule"
+_AURAFLOW_OUTPUT_NODE_ID: Final = "2"
+_AURAFLOW_TRACE_KEY: Final = "sigmax_auraflow_schedule"
 _KREA2_LORA_OUTPUT_NODE_ID: Final = "2"
 _KREA2_LORA_TRACE_KEY: Final = "sigmax_krea2_lora_experimental"
 _KREA2_CONDITIONING_OUTPUT_NODE_ID: Final = "3"
@@ -668,6 +670,71 @@ def verify_sd3_h2_history(history: object, *, prompt_id: str, mode: str) -> dict
         "profile_id": profile_id,
         "ratio": ratio,
         "requested_transitions": steps,
+        "status": "succeeded",
+    }
+
+
+def build_aura_flow_h2_api_prompt() -> dict[str, object]:
+    """Return one model-free original AuraFlow v0.2 scheduler -> probe graph."""
+
+    return {
+        "1": {
+            "class_type": "Sigmax.AuraFlowSigmaScheduler",
+            "inputs": {
+                "already_shifted": False,
+                "end_step": -1,
+                "mode": "Official Fixed (1.73)",
+                "start_step": 0,
+                "steps": 50,
+                "strict_source": True,
+            },
+        },
+        _AURAFLOW_OUTPUT_NODE_ID: {
+            "class_type": "SigmaxTest.AuraFlowScheduleProbe",
+            "inputs": {"schedule_info": ["1", 1], "sigmas": ["1", 0]},
+        },
+    }
+
+
+def verify_aura_flow_h2_history(history: object, *, prompt_id: str) -> dict[str, object]:
+    """Verify original AuraFlow v0.2 on the model-free host lane."""
+
+    root = _object(history, label="AuraFlow history")
+    entry = _object(root.get(prompt_id), label="AuraFlow history entry")
+    status = _object(entry.get("status"), label="AuraFlow prompt status")
+    if status.get("completed") is not True or status.get("status_str") != "success":
+        raise ScheduleContractError("AuraFlow prompt history does not prove success")
+    outputs = _object(entry.get("outputs"), label="AuraFlow prompt outputs")
+    output = _object(outputs.get(_AURAFLOW_OUTPUT_NODE_ID), label="AuraFlow probe output")
+    traces = _array(output.get(_AURAFLOW_TRACE_KEY), label="AuraFlow probe trace")
+    if len(traces) != 1 or not isinstance(traces[0], str):
+        raise ScheduleContractError("AuraFlow probe trace is malformed")
+    trace = _object(json.loads(traces[0]), label="AuraFlow decoded trace")
+    info = _object(trace.get("schedule_info"), label="AuraFlow schedule information")
+    sigmas = _array(trace.get("sigmas"), label="AuraFlow sigma vector")
+    if (
+        info.get("schema") != "sigmax.aura-flow-sigma-node/1"
+        or _object(info.get("profile"), label="AuraFlow profile").get("id")
+        != "auraflow.v0-2.official"
+        or _object(info.get("profile"), label="AuraFlow profile").get("evidence") != "official"
+        or _object(info.get("shift"), label="AuraFlow shift")
+        != {"kind": "direct_ratio", "multiplier": 1.0, "ratio": 1.73}
+        or _object(info.get("slicing"), label="AuraFlow slicing").get("output_steps") != 50
+        or len(sigmas) != 51
+        or sigmas[0] != 1.0
+        or sigmas[-1] != 0.0
+        or any(not isinstance(value, (int, float)) or isinstance(value, bool) for value in sigmas)
+        or any(float(left) <= float(right) for left, right in pairwise(sigmas))
+    ):
+        raise ScheduleContractError("AuraFlow H2 execution evidence drifted")
+    return {
+        "mode": "Official Fixed (1.73)",
+        "numerical_fingerprint": _object(
+            info.get("fingerprints"), label="AuraFlow fingerprints"
+        ).get("complete"),
+        "profile_id": "auraflow.v0-2.official",
+        "ratio": 1.73,
+        "requested_transitions": 50,
         "status": "succeeded",
     }
 
@@ -2463,6 +2530,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
             "H2_Z_IMAGE_M6_04",
             "H2_FLUX1_SCHNELL_M6_05",
             "H2_QWEN_IMAGE_M6_05",
+            "H2_AURAFLOW_M6_05",
             "H3_EULER_M5_01",
         ],
         "host": {
@@ -2826,6 +2894,31 @@ def run(args: argparse.Namespace) -> dict[str, object]:
                 sd3_results.append(sd3_summary)
                 attempts[f"h2_sd3.{case_id}"] = sd3_transition
             evidence["h2_sd3"] = sd3_results
+
+            aura_fixture = fixtures.get("auraflow-v0-2-official-50")
+            if aura_fixture is None:
+                raise ScheduleContractError("AuraFlow host case has no canonical workflow")
+            aura_workflow = cast(dict[str, object], aura_fixture.workflow)
+
+            def submit_aura_flow(ordinal: int) -> tuple[str, dict[str, object]]:
+                return _submit_successful_prompt(
+                    base_url=base_url,
+                    client_id=f"sigmax-m6-05-auraflow-attempt-{ordinal}",
+                    prompt=build_aura_flow_h2_api_prompt(),
+                    extra_data={"extra_pnginfo": {"workflow": aura_workflow}},
+                    execution_timeout=args.execution_timeout,
+                )
+
+            def verify_aura_flow(history: object, prompt_id: str) -> dict[str, object]:
+                return verify_aura_flow_h2_history(history, prompt_id=prompt_id)
+
+            aura_summary, aura_transition = execute_verified_host_repeat(
+                lane="H2_AURAFLOW_M6_05",
+                submit=submit_aura_flow,
+                verify=verify_aura_flow,
+            )
+            evidence["h2_auraflow"] = aura_summary
+            attempts["h2_auraflow.auraflow-v0-2-official-50"] = aura_transition
 
             def submit_runtime_rejection(ordinal: int) -> tuple[str, dict[str, object]]:
                 return _submit_rejected_runtime_prompt(

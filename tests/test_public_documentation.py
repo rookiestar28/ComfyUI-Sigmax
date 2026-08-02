@@ -92,9 +92,9 @@ def test_readme_is_limited_to_product_installation_and_use() -> None:
 
 def test_readme_matches_the_registered_node_surface() -> None:
     readme = _read(README)
-    assert len(NODE_CLASS_MAPPINGS) == 17
+    assert len(NODE_CLASS_MAPPINGS) == 18
     assert NODE_CLASS_MAPPINGS.keys() == NODE_DISPLAY_NAME_MAPPINGS.keys()
-    assert "registers 17 namespaced nodes" in readme
+    assert "registers 18 namespaced nodes" in readme
     for node_id in (
         "Sigmax.Krea2SigmaScheduler",
         "Sigmax.ZImageSigmaScheduler",
@@ -105,6 +105,7 @@ def test_readme_matches_the_registered_node_surface() -> None:
         "Sigmax.Krea2ConditioningRebalance",
         "Sigmax.QwenImageSigmaScheduler",
         "Sigmax.SD3SigmaScheduler",
+        "Sigmax.AuraFlowSigmaScheduler",
         "Sigmax.ProfileInspector",
         "Sigmax.ScheduleInspector",
         "Sigmax.ScheduleComparison",
@@ -125,6 +126,7 @@ def test_readme_records_the_reviewed_user_recipes_and_safety_boundaries() -> Non
         "1-4 steps, default 4, CFG 1.0",
         "`Comfy Fixed`, 50 steps, or `Diffusers Dynamic` with explicit `image_seq_len`",
         "`Publisher Reference (1.0)` at 50 steps or `Comfy/Diffusers Fixed (3.0)` at 28 steps",
+        "`Official Fixed (1.73)`, 50 steps, CFG 3.5",
     ):
         assert recipe in readme
     assert "Do not pass the result through another scheduler" in readme

@@ -1,5 +1,13 @@
 """Evidence-pinned model profiles built on the framework-independent core."""
 
+from comfyui_sigmax.profiles.aura_flow import (
+    AURAFLOW_V02_PROFILE,
+    AURAFLOW_V02_SCHEMA,
+    AuraFlowEvidenceReference,
+    AuraFlowProfile,
+    AuraFlowShiftMode,
+    build_aura_flow_schedule,
+)
 from comfyui_sigmax.profiles.checkpoint_evidence import (
     CHECKPOINT_EVIDENCE_INSPECTION_SCHEMA_ID,
     CHECKPOINT_EVIDENCE_INSPECTION_SCHEMA_VERSION,
@@ -158,6 +166,8 @@ from comfyui_sigmax.profiles.z_image import (
 )
 
 __all__ = [
+    "AURAFLOW_V02_PROFILE",
+    "AURAFLOW_V02_SCHEMA",
     "CAPABILITY_RESOLUTION_ADDITIONAL_REASON_CODES",
     "CAPABILITY_RESOLUTION_CORE_REASON_CODES",
     "CAPABILITY_RESOLUTION_SCHEMA_ID",
@@ -196,6 +206,9 @@ __all__ = [
     "Z_IMAGE_TURBO_PROFILE",
     "Z_IMAGE_TURBO_SCHEMA",
     "ArtifactVersionDeclaration",
+    "AuraFlowEvidenceReference",
+    "AuraFlowProfile",
+    "AuraFlowShiftMode",
     "BaseGridDeclaration",
     "CheckpointEvidenceInspection",
     "ConflictPolicy",
@@ -261,6 +274,7 @@ __all__ = [
     "ZImageEvidenceReference",
     "ZImageProfile",
     "ZImageVariant",
+    "build_aura_flow_schedule",
     "build_flux1_schnell_schedule",
     "build_krea2_lora_experimental_schedule",
     "build_krea2_raw_schedule",

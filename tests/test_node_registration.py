@@ -463,6 +463,7 @@ def test_builtin_registry_and_package_mappings_expose_only_validated_product_nod
     import comfyui_sigmax
     from comfyui_sigmax.nodes import (
         AdvancedFlowMatchScheduler,
+        AuraFlowSigmaScheduler,
         CheckpointEvidenceInspector,
         Flux1SchnellSigmaScheduler,
         Krea2ConditioningRebalance,
@@ -484,6 +485,7 @@ def test_builtin_registry_and_package_mappings_expose_only_validated_product_nod
     registry = builtin_node_registry()
     assert tuple(item.node_id for item in registry.entries) == (
         "Sigmax.AdvancedFlowMatchScheduler",
+        "Sigmax.AuraFlowSigmaScheduler",
         "Sigmax.CheckpointEvidenceInspector",
         "Sigmax.Flux1SchnellSigmaScheduler",
         "Sigmax.Krea2ConditioningRebalance",
@@ -503,6 +505,7 @@ def test_builtin_registry_and_package_mappings_expose_only_validated_product_nod
     )
     assert {
         "Sigmax.AdvancedFlowMatchScheduler": AdvancedFlowMatchScheduler,
+        "Sigmax.AuraFlowSigmaScheduler": AuraFlowSigmaScheduler,
         "Sigmax.CheckpointEvidenceInspector": CheckpointEvidenceInspector,
         "Sigmax.Flux1SchnellSigmaScheduler": Flux1SchnellSigmaScheduler,
         "Sigmax.Krea2ConditioningRebalance": Krea2ConditioningRebalance,
@@ -522,6 +525,7 @@ def test_builtin_registry_and_package_mappings_expose_only_validated_product_nod
     } == comfyui_sigmax.NODE_CLASS_MAPPINGS
     assert comfyui_sigmax.NODE_DISPLAY_NAME_MAPPINGS == {
         "Sigmax.AdvancedFlowMatchScheduler": "Advanced FlowMatch Scheduler",
+        "Sigmax.AuraFlowSigmaScheduler": "AuraFlow Sigma Scheduler",
         "Sigmax.CheckpointEvidenceInspector": "Checkpoint Evidence Inspector",
         "Sigmax.Flux1SchnellSigmaScheduler": "FLUX.1-schnell Sigma Scheduler",
         "Sigmax.Krea2ConditioningRebalance": "Krea 2 Conditioning Rebalance",

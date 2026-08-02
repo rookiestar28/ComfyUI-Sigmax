@@ -75,10 +75,10 @@ def build_fixture() -> dict[str, Any]:
         },
         "schema": "sigmax.wan-golden/1",
         "source_revisions": {
-            "official_wan21": "9737cba9c1c3c4d04b33fcad41c111989865d315",
-            "official_wan22": "42bf4cfaa384bc21833865abc2f9e6c0e67233dc",
-            "comfyui": "5cc026f5b81b3f01fe7a1438a0fd4131d2ebda25",
-            "diffusers": "3c468926ffd12b69baa4316e27b09306b8da19a6",
+            "official_wan21": "9737cba9c1c3c4d04b33fcad41c111989865d315",  # pragma: allowlist secret
+            "official_wan22": "42bf4cfaa384bc21833865abc2f9e6c0e67233dc",  # pragma: allowlist secret
+            "comfyui": "5cc026f5b81b3f01fe7a1438a0fd4131d2ebda25",  # pragma: allowlist secret
+            "diffusers": "3c468926ffd12b69baa4316e27b09306b8da19a6",  # pragma: allowlist secret
         },
         "tolerances": {"float32_max_abs": "1e-6", "float64_max_abs": "1e-15"},
     }

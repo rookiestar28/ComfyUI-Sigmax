@@ -41,10 +41,10 @@ def test_wan_pins_and_solver_ownership_are_explicit() -> None:
     import importlib
 
     module = importlib.import_module("comfyui_sigmax.profiles.wan")
-    assert module.WAN21_REPOSITORY_REVISION == "9737cba9c1c3c4d04b33fcad41c111989865d315"
-    assert module.WAN22_REPOSITORY_REVISION == "42bf4cfaa384bc21833865abc2f9e6c0e67233dc"
-    assert module.WAN_COMFYUI_REVISION == "5cc026f5b81b3f01fe7a1438a0fd4131d2ebda25"
-    assert module.WAN_DIFFUSERS_REVISION == "3c468926ffd12b69baa4316e27b09306b8da19a6"
+    assert module.WAN21_REPOSITORY_REVISION == "9737cba9c1c3c4d04b33fcad41c111989865d315"  # pragma: allowlist secret
+    assert module.WAN22_REPOSITORY_REVISION == "42bf4cfaa384bc21833865abc2f9e6c0e67233dc"  # pragma: allowlist secret
+    assert module.WAN_COMFYUI_REVISION == "5cc026f5b81b3f01fe7a1438a0fd4131d2ebda25"  # pragma: allowlist secret
+    assert module.WAN_DIFFUSERS_REVISION == "3c468926ffd12b69baa4316e27b09306b8da19a6"  # pragma: allowlist secret
     schema = module.WAN21_T2V_DIFFUSERS_SCHEMA
     assert schema.parameters == tuple(sorted(schema.parameters, key=lambda item: item.name))
     assert any("unipc" in limitation.lower() for limitation in schema.known_limitations)

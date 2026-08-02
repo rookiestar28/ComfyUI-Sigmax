@@ -5,7 +5,7 @@ from __future__ import annotations
 import importlib
 import json
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, cast
 
 from comfyui_sigmax.core import (
     ScheduleContractError,
@@ -174,14 +174,25 @@ def _resolve_selection(
     values = (generation, task, source, resolution)
     if not all(isinstance(value, str) for value in values):
         raise ScheduleContractError("Wan generation, task, source, and resolution must be strings")
-    key = (generation, task, source, resolution)
+    public_generation = cast(str, generation)
+    public_task = cast(str, task)
+    public_source = cast(str, source)
+    public_resolution = cast(str, resolution)
+    key = (public_generation, public_task, public_source, public_resolution)
     selection = _PROFILES.get(key)
     if selection is None:
         raise ScheduleContractError(
             "Wan profile selection is unsupported; choose an explicit released generation/task/source/resolution"
         )
     profile, profile_resolution = selection
-    return generation, task, source, resolution, profile, profile_resolution
+    return (
+        public_generation,
+        public_task,
+        public_source,
+        public_resolution,
+        profile,
+        profile_resolution,
+    )
 
 
 def build_wan_sigma_schedule(

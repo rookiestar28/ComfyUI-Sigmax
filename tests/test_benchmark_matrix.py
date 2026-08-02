@@ -45,16 +45,17 @@ def test_packaged_matrix_has_exact_schema_identity_and_coverage() -> None:
     assert projection["schema"] == NUMERICAL_BENCHMARK_MATRIX_SCHEMA
     assert (
         matrix.matrix_fingerprint
-        == "sha256:ecf2b01ae7a867bdfa16d2a1839b57444044792a3c44e43751afcdb4270af5ce"
+        == "sha256:e49630b140668b804562bd305b27e383e9af8d0f6f2f64b14f0cd471294a3ca3"
     )
-    assert len(results) == 26
+    assert len(results) == 39
     assert projection["coverage"] == {
         "anima_schedule_parity": 3,
         "h2_workflow": 4,
         "h3_native_euler": 1,
         "raw_schedule_parity": 14,
-        "total_verified_results": 26,
+        "total_verified_results": 39,
         "turbo_schedule_parity": 4,
+        "wan_schedule_parity": 13,
     }
     assert [row["id"] for row in results] == sorted(row["id"] for row in results)
     assert all(
@@ -133,6 +134,47 @@ def test_matrix_records_anima_schedule_parity_without_weight_or_quality_claims()
         assert row["baselines"]["anima_float32"]["status"] == "PASS"
         assert row["baselines"]["anima_float64"]["max_abs_error"] == "0"
         assert row["baselines"]["anima_float32"]["max_abs_error"] == "0"
+
+
+def test_matrix_records_wan_schedule_parity_without_weight_or_quality_claims() -> None:
+    results = {
+        row["id"]: row
+        for row in cast(
+            list[dict[str, Any]],
+            load_numerical_benchmark_matrix().projection()["results"],
+        )
+        if row["lane"] == "wan_schedule_parity"
+    }
+
+    assert len(results) == 13
+    assert sorted(results) == sorted(
+        (
+            "parity.wan.wan2.1.i2v.480p.diffusers-reference-40",
+            "parity.wan.wan2.1.i2v.480p.official-native-40",
+            "parity.wan.wan2.1.i2v.720p.diffusers-reference-40",
+            "parity.wan.wan2.1.i2v.720p.official-native-40",
+            "parity.wan.wan2.1.t2v.comfy-native-50",
+            "parity.wan.wan2.1.t2v.diffusers-reference-50",
+            "parity.wan.wan2.1.t2v.official-native-50",
+            "parity.wan.wan2.2.i2v-a14b.diffusers-reference-40",
+            "parity.wan.wan2.2.i2v-a14b.official-native-40",
+            "parity.wan.wan2.2.t2v-a14b.diffusers-reference-40",
+            "parity.wan.wan2.2.t2v-a14b.official-native-40",
+            "parity.wan.wan2.2.ti2v.5b.comfy-native-50",
+            "parity.wan.wan2.2.ti2v.5b.diffusers-reference-50",
+        )
+    )
+    for row in results.values():
+        assert row["profile"]["variant"] == "Wan"
+        assert row["capability"] == {"level": "allow", "reasons": ["compatible"]}
+        assert row["model_weights_present"] is False
+        assert row["weight_variant"] == "none"
+        assert row["execution"]["status"] == "not_executed"
+        assert row["execution"]["counts"]["effective_transitions"] == 0
+        assert row["execution"]["counts"]["effective_model_evaluations"] == 0
+        assert row["baselines"]["wan_float64"]["status"] == "PASS"
+        assert row["baselines"]["wan_float32"]["status"] == "PASS"
+        assert row["evidence"]["source_ids"] == ["parity.wan"]
 
 
 def test_matrix_preserves_h2_artifact_receipt_and_first_repeat_truth() -> None:
@@ -249,7 +291,7 @@ def test_matrix_import_does_not_load_optional_or_host_frameworks() -> None:
         "(_ for _ in ()).throw(ImportError(n)) if n.split('.')[0] in blocked "
         "else real(n,*a,**k); "
         "from comfyui_sigmax.benchmark_matrix import load_numerical_benchmark_matrix; "
-        "m=load_numerical_benchmark_matrix(); assert len(m.projection()['results'])==26; "
+        "m=load_numerical_benchmark_matrix(); assert len(m.projection()['results'])==39; "
         "assert not blocked.intersection(sys.modules)"
     )
 

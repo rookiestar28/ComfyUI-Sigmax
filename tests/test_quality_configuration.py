@@ -125,12 +125,8 @@ class QualityConfigurationTests(unittest.TestCase):
         wan22_repository_hash = (
             "82646227edf451d1da04d45e198a1071c461a6c1"  # pragma: allowlist secret
         )
-        wan_comfyui_hash = (
-            "ba2d9a512ac48100b11ca25836a795bc97546b8a"  # pragma: allowlist secret
-        )
-        wan_diffusers_hash = (
-            "ef2388a309fa35d5401f5952a447ca13a96ee801"  # pragma: allowlist secret
-        )
+        wan_comfyui_hash = "ba2d9a512ac48100b11ca25836a795bc97546b8a"  # pragma: allowlist secret
+        wan_diffusers_hash = "ef2388a309fa35d5401f5952a447ca13a96ee801"  # pragma: allowlist secret
         self.assertEqual(
             {
                 "comfyui_sigmax/workflows/host_baseline.json": [

@@ -80,6 +80,7 @@ def test_builtin_provenance_layers_and_licenses_are_distinct() -> None:
     rows = cast(list[dict[str, Any]], result["profiles"])
     assert [row["profile_key"] for row in rows] == [
         "flux1.schnell.official@1",
+        "krea2.raw-turbo-lora.experimental@1",
         "krea2.raw.official@1",
         "krea2.turbo.official@1",
         "z_image.base.official@1",
@@ -89,7 +90,7 @@ def test_builtin_provenance_layers_and_licenses_are_distinct() -> None:
         if row["profile_key"].startswith("krea2."):
             assert row["resource_counts"] == {
                 "frameworks": 2,
-                "model_weights": 1,
+                "model_weights": (2 if ".raw-turbo-lora." in row["profile_key"] else 1),
                 "software_sources": 1,
             }
             assert set(row["license_identifiers"]) == {

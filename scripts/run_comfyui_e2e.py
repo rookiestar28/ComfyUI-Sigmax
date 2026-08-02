@@ -86,6 +86,8 @@ _Z_IMAGE_OUTPUT_NODE_ID: Final = "2"
 _Z_IMAGE_TRACE_KEY: Final = "sigmax_z_image_schedule"
 _FLUX1_SCHNELL_OUTPUT_NODE_ID: Final = "2"
 _FLUX1_SCHNELL_TRACE_KEY: Final = "sigmax_flux1_schnell_schedule"
+_KREA2_LORA_OUTPUT_NODE_ID: Final = "2"
+_KREA2_LORA_TRACE_KEY: Final = "sigmax_krea2_lora_experimental"
 _CHECKPOINT_FIXTURE_NAME: Final = "sigmax-m6-08-fixture.safetensors"
 _H3_TEST_PACK_NAME: Final = "ComfyUI-Sigmax-H3"
 _H3_TEST_PACK_SOURCE: Final = (
@@ -180,6 +182,105 @@ def build_turbo_api_prompt() -> dict[str, object]:
                 "schedule_report": ["2", 0],
             },
         },
+    }
+
+
+def build_krea2_lora_experimental_h2_api_prompt(variant: str) -> dict[str, object]:
+    """Return a model-free 12-step experimental scheduler -> probe graph."""
+
+    allowed = {
+        "LoRA Experimental (RAW mu)",
+        "LoRA Experimental (Turbo mu)",
+    }
+    if variant not in allowed:
+        raise ScheduleContractError("experimental Krea 2 H2 variant is unsupported")
+    return {
+        "1": {
+            "class_type": "Sigmax.Krea2SigmaScheduler",
+            "inputs": {
+                "end_step": -1,
+                "height": 1024,
+                "start_step": 0,
+                "steps": 12,
+                "strict_official": True,
+                "variant": variant,
+                "width": 1024,
+            },
+        },
+        _KREA2_LORA_OUTPUT_NODE_ID: {
+            "class_type": "SigmaxTest.Krea2LoraExperimentalProbe",
+            "inputs": {"schedule_info": ["1", 1], "sigmas": ["1", 0]},
+        },
+    }
+
+
+def verify_krea2_lora_experimental_h2_history(
+    history: object,
+    *,
+    prompt_id: str,
+    variant: str,
+) -> dict[str, object]:
+    """Verify one real-host experimental schedule and the selected mu source."""
+
+    expected = {
+        "LoRA Experimental (RAW mu)": ("raw", 0.90625),
+        "LoRA Experimental (Turbo mu)": ("turbo", 1.15),
+    }
+    selection = expected.get(variant)
+    if selection is None:
+        raise ScheduleContractError("experimental Krea 2 H2 variant is unsupported")
+    expected_source, expected_mu = selection
+    root = _object(history, label="experimental Krea 2 history")
+    entry = _object(root.get(prompt_id), label="experimental Krea 2 history entry")
+    status = _object(entry.get("status"), label="experimental Krea 2 prompt status")
+    if status.get("completed") is not True or status.get("status_str") != "success":
+        raise ScheduleContractError("experimental Krea 2 prompt did not prove success")
+    outputs = _object(entry.get("outputs"), label="experimental Krea 2 outputs")
+    output = _object(
+        outputs.get(_KREA2_LORA_OUTPUT_NODE_ID),
+        label="experimental Krea 2 probe output",
+    )
+    traces = _array(output.get(_KREA2_LORA_TRACE_KEY), label="experimental Krea 2 trace")
+    if len(traces) != 1 or not isinstance(traces[0], str):
+        raise ScheduleContractError("experimental Krea 2 probe trace is malformed")
+    trace = _object(json.loads(traces[0]), label="experimental Krea 2 decoded trace")
+    info = _object(trace.get("schedule_info"), label="experimental Krea 2 information")
+    profile = _object(info.get("profile"), label="experimental Krea 2 profile")
+    shift = _object(info.get("shift"), label="experimental Krea 2 shift")
+    slicing = _object(info.get("slicing"), label="experimental Krea 2 slicing")
+    fingerprints = _object(info.get("fingerprints"), label="experimental Krea 2 fingerprints")
+    sigmas = _array(trace.get("sigmas"), label="experimental Krea 2 sigmas")
+    float_sigmas = tuple(float(value) for value in sigmas)
+    if (
+        info.get("schema") != "sigmax.krea2-sigma-node/1"
+        or profile
+        != {
+            "evidence": "experimental",
+            "id": "krea2.raw-turbo-lora.experimental",
+            "recipe": "krea2.raw-turbo-lora.experimental",
+            "variant": "raw_turbo_lora",
+            "version": "1",
+        }
+        or info.get("strict_official") is not False
+        or shift.get("mu_source") != expected_source
+        or shift.get("mu") != expected_mu
+        or slicing.get("output_steps") != 12
+        or len(float_sigmas) != 13
+        or float_sigmas[0] != 1.0
+        or float_sigmas[-1] != 0.0
+        or any(left <= right for left, right in pairwise(float_sigmas))
+        or fingerprints.get("output")
+        != sigma_output_fingerprint(float_sigmas, domain=SigmaDomain.UNIT_FLOW)
+    ):
+        raise ScheduleContractError("experimental Krea 2 H2 execution evidence drifted")
+    return {
+        "mu": expected_mu,
+        "mu_source": expected_source,
+        "numerical_fingerprint": fingerprints.get("complete"),
+        "output_fingerprint": fingerprints.get("output"),
+        "profile_id": "krea2.raw-turbo-lora.experimental",
+        "requested_transitions": 12,
+        "status": "succeeded",
     }
 
 
@@ -1499,6 +1600,7 @@ def _stage_extension(run_path: Path) -> Path:
         custom_node / "comfyui_sigmax",
         ignore=shutil.ignore_patterns("__pycache__", "*.pyc"),
     )
+    shutil.copytree(REPOSITORY_ROOT / "web", custom_node / "web")
     return custom_node
 
 
@@ -1909,6 +2011,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         "lanes": [
             "H1",
             "H2_TURBO_M2_05",
+            "H2_KREA2_LORA_EXPERIMENTAL_M4_11",
             "H2_RAW_M3_06",
             "H2_ALGEBRA_M4_09",
             "H2_CHECKPOINT_EVIDENCE_M6_08",
@@ -2036,6 +2139,48 @@ def run(args: argparse.Namespace) -> dict[str, object]:
             )
             evidence["h2_turbo"] = turbo_summary
             attempts["h2_turbo"] = turbo_transition
+
+            lora_results: list[dict[str, object]] = []
+            for lora_variant, case_id in (
+                ("LoRA Experimental (RAW mu)", "raw-mu"),
+                ("LoRA Experimental (Turbo mu)", "turbo-mu"),
+            ):
+
+                def submit_lora(
+                    ordinal: int,
+                    *,
+                    selected_variant: str = lora_variant,
+                    selected_case: str = case_id,
+                ) -> tuple[str, dict[str, object]]:
+                    return _submit_successful_prompt(
+                        base_url=base_url,
+                        client_id=f"sigmax-m4-11-{selected_case}-attempt-{ordinal}",
+                        prompt=build_krea2_lora_experimental_h2_api_prompt(selected_variant),
+                        execution_timeout=args.execution_timeout,
+                    )
+
+                def verify_lora(
+                    history: object,
+                    prompt_id: str,
+                    *,
+                    selected_variant: str = lora_variant,
+                ) -> dict[str, object]:
+                    return verify_krea2_lora_experimental_h2_history(
+                        history,
+                        prompt_id=prompt_id,
+                        variant=selected_variant,
+                    )
+
+                lora_summary, lora_transition = execute_verified_host_repeat(
+                    lane="H2_KREA2_LORA_EXPERIMENTAL_M4_11",
+                    submit=submit_lora,
+                    verify=verify_lora,
+                )
+                lora_results.append(lora_summary)
+                attempts[f"h2_krea2_lora.{case_id}"] = lora_transition
+            if lora_results[0]["numerical_fingerprint"] == lora_results[1]["numerical_fingerprint"]:
+                raise ScheduleContractError("experimental Krea 2 mu control is inert")
+            evidence["h2_krea2_lora_experimental"] = lora_results
 
             fixtures = {item.identifier: item for item in load_canonical_workflow_fixtures()}
             raw_results: list[dict[str, object]] = []
@@ -2167,7 +2312,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
                     history,
                     prompt_id=prompt_id,
                     case_id="raw-auto-variant",
-                    expected_message="variant must be Turbo or RAW",
+                    expected_message=("variant must be a supported explicit Krea 2 variant"),
                 )
 
             runtime_rejection, runtime_transition = execute_verified_host_repeat(

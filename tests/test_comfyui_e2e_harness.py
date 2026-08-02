@@ -115,6 +115,16 @@ def test_harness_latest_host_mode_requires_explicit_version_and_lane() -> None:
     assert arguments.validation_lane == "latest_host"
 
 
+def test_harness_stages_frontend_extension_with_custom_node(tmp_path: Path) -> None:
+    staged = _harness()._stage_extension(tmp_path / "run")
+
+    for name in (
+        "krea2_strict_official_extension.js",
+        "krea2_strict_official_policy.js",
+    ):
+        assert (staged / "web" / name).read_bytes() == (ROOT / "web" / name).read_bytes()
+
+
 def test_api_prompt_executes_scheduler_inspector_and_output_chain() -> None:
     prompt = _harness().build_turbo_api_prompt()
 
@@ -324,6 +334,68 @@ def test_z_image_h2_prompt_and_history_are_variant_bound(variant: str, steps: in
     assert summary["profile_id"] == f"z_image.{variant.casefold()}.official"
     assert summary["ratio"] == (6.0 if variant == "Base" else 3.0)
     assert summary["requested_transitions"] == steps
+    assert summary["status"] == "succeeded"
+
+
+@pytest.mark.parametrize(
+    ("variant", "mu_source", "mu"),
+    (
+        ("LoRA Experimental (RAW mu)", "raw", 0.90625),
+        ("LoRA Experimental (Turbo mu)", "turbo", 1.15),
+    ),
+)
+def test_krea2_lora_experimental_h2_prompt_and_history_prove_mu_control(
+    variant: str,
+    mu_source: str,
+    mu: float,
+) -> None:
+    harness = _harness()
+    prompt = harness.build_krea2_lora_experimental_h2_api_prompt(variant)
+    assert prompt["1"] == {
+        "class_type": "Sigmax.Krea2SigmaScheduler",
+        "inputs": {
+            "end_step": -1,
+            "height": 1024,
+            "start_step": 0,
+            "steps": 12,
+            "strict_official": True,
+            "variant": variant,
+            "width": 1024,
+        },
+    }
+    schedule = build_krea2_sigma_schedule(
+        variant=variant,
+        steps=12,
+        width=1024,
+        height=1024,
+        strict_official=True,
+        start_step=0,
+        end_step=-1,
+    )
+    sigmas = [struct.unpack(">f", struct.pack(">f", value))[0] for value in schedule.sigmas]
+    info = json.loads(schedule.schedule_info_json)
+    info["fingerprints"]["output"] = sigma_output_fingerprint(
+        tuple(sigmas), domain=SigmaDomain.UNIT_FLOW
+    )
+    trace = json.dumps(
+        {"schedule_info": info, "sigmas": sigmas}, sort_keys=True, separators=(",", ":")
+    )
+    history = {
+        "prompt-experimental": {
+            "outputs": {"2": {"sigmax_krea2_lora_experimental": [trace]}},
+            "status": {"completed": True, "status_str": "success"},
+        }
+    }
+
+    summary = harness.verify_krea2_lora_experimental_h2_history(
+        history,
+        prompt_id="prompt-experimental",
+        variant=variant,
+    )
+
+    assert summary["mu_source"] == mu_source
+    assert summary["mu"] == mu
+    assert summary["requested_transitions"] == 12
     assert summary["status"] == "succeeded"
 
 
@@ -1148,7 +1220,7 @@ def test_raw_history_verifier_rejects_incomplete_or_stale_evidence(mutation: str
     (
         (
             "raw-auto-variant",
-            "variant must be Turbo or RAW",
+            "variant must be a supported explicit Krea 2 variant",
             "input.variant_selection_required",
         ),
         (
@@ -1369,7 +1441,7 @@ def test_rejected_raw_history_fails_closed_on_stale_or_partial_evidence(
             "node_id": "1",
             "node_type": "Sigmax.Krea2SigmaScheduler",
             "executed": [],
-            "exception_message": "variant must be Turbo or RAW\n",
+            "exception_message": ("variant must be a supported explicit Krea 2 variant\n"),
             "exception_type": ("comfyui_sigmax.core.schedule_contracts.ScheduleContractError"),
             "traceback": ["bounded"],
             "current_inputs": {},
@@ -1452,7 +1524,7 @@ def test_rejected_raw_history_fails_closed_on_stale_or_partial_evidence(
             {"prompt-rejected": entry},
             prompt_id="prompt-rejected",
             case_id=case_id,
-            expected_message="variant must be Turbo or RAW",
+            expected_message="variant must be a supported explicit Krea 2 variant",
         )
 
 

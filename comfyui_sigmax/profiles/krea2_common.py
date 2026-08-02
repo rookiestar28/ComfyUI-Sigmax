@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 import re
 from dataclasses import dataclass
+from decimal import ROUND_HALF_EVEN, Decimal, localcontext
 from enum import Enum
 from typing import Final
 
@@ -177,6 +178,23 @@ def resolve_krea2_image_geometry(
         grid_height=grid_height,
         image_seq_len=grid_width * grid_height,
     )
+
+
+def canonical_krea2_shifted_grid(*, steps: int, mu: float) -> tuple[float, ...]:
+    """Build a deterministic binary64 Krea exponential-mu grid before terminal zero."""
+
+    count = _require_positive_integer("steps", steps)
+    shift = _require_finite_number("mu", mu)
+    # CRITICAL: system libm differs by one ULP across Windows/Linux; keep this Decimal path.
+    with localcontext() as context:
+        context.prec = 80
+        context.rounding = ROUND_HALF_EVEN
+        ratio = Decimal(str(shift)).exp()
+        shifted = [1.0]
+        for index in range(1, count):
+            numerator = ratio * (count - index)
+            shifted.append(float(numerator / (numerator + index)))
+    return tuple(shifted)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

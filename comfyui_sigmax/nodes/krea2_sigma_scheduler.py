@@ -22,8 +22,11 @@ from comfyui_sigmax.profiles import (
     KREA2_RAW_DIFFUSERS_REFERENCE_28,
     KREA2_RAW_OFFICIAL_FULL_52,
     KREA2_TURBO_PROFILE,
+    Krea2ExperimentalMuSource,
+    build_krea2_lora_experimental_schedule,
     build_krea2_raw_schedule,
     build_krea2_turbo_schedule,
+    derive_krea2_lora_experimental_shift,
     derive_krea2_raw_shift,
 )
 
@@ -40,6 +43,8 @@ class Krea2SigmaVariant(str, Enum):
 
     TURBO = "Turbo"
     RAW = "RAW"
+    LORA_RAW_MU = "LoRA Experimental (RAW mu)"
+    LORA_TURBO_MU = "LoRA Experimental (Turbo mu)"
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -70,11 +75,11 @@ def _positive_integer(value: object, *, label: str, maximum: int) -> int:
 
 def _variant(value: object) -> Krea2SigmaVariant:
     if not isinstance(value, str):
-        raise ScheduleContractError("variant must be Turbo or RAW")
+        raise ScheduleContractError("variant must be a supported explicit Krea 2 variant")
     try:
         return Krea2SigmaVariant(value)
     except ValueError as exc:
-        raise ScheduleContractError("variant must be Turbo or RAW") from exc
+        raise ScheduleContractError("variant must be a supported explicit Krea 2 variant") from exc
 
 
 def _slice_bounds(
@@ -118,7 +123,10 @@ def sigma_output_fingerprint(
         "schema": _OUTPUT_FINGERPRINT_SCHEMA,
         "sigmas": [float_to_ieee_hex(value, "float64") for value in values],
     }
-    return f"sha256:{hashlib.sha256(canonical_projection_bytes(projection)).hexdigest()}"
+    return (
+        "sha256:"
+        f"{hashlib.sha256(canonical_projection_bytes(projection, collection_limit=16_384)).hexdigest()}"
+    )
 
 
 def _canonical_info(projection: dict[str, object]) -> str:
@@ -179,9 +187,14 @@ def build_krea2_sigma_schedule(
     requested_height = _positive_integer(height, label="height", maximum=_MAX_DIMENSION)
     if not isinstance(strict_official, bool):
         raise ScheduleContractError("strict_official must be boolean")
+    experimental = selected_variant in {
+        Krea2SigmaVariant.LORA_RAW_MU,
+        Krea2SigmaVariant.LORA_TURBO_MU,
+    }
+    effective_strict_official = False if experimental else strict_official
 
     if selected_variant is Krea2SigmaVariant.TURBO:
-        if strict_official and requested_steps != 8:
+        if effective_strict_official and requested_steps != 8:
             raise ScheduleContractError("strict official Turbo requires exactly 8 steps")
         complete = build_krea2_turbo_schedule(
             steps=requested_steps,
@@ -197,8 +210,8 @@ def build_krea2_sigma_schedule(
             "kind": "fixed_exponential_mu",
             "mu": KREA2_TURBO_PROFILE.fixed_mu,
         }
-    else:
-        if strict_official and requested_steps != KREA2_RAW_OFFICIAL_FULL_52.steps:
+    elif selected_variant is Krea2SigmaVariant.RAW:
+        if effective_strict_official and requested_steps != KREA2_RAW_OFFICIAL_FULL_52.steps:
             raise ScheduleContractError("strict official RAW requires exactly 52 steps")
         recipes = {
             KREA2_RAW_DIFFUSERS_REFERENCE_28.steps: KREA2_RAW_DIFFUSERS_REFERENCE_28,
@@ -219,6 +232,35 @@ def build_krea2_sigma_schedule(
             "image_seq_len": derivation.geometry.image_seq_len,
             "kind": "resolution_exponential_mu",
             "mu": derivation.mu,
+        }
+    else:
+        mu_source = (
+            Krea2ExperimentalMuSource.RAW
+            if selected_variant is Krea2SigmaVariant.LORA_RAW_MU
+            else Krea2ExperimentalMuSource.TURBO
+        )
+        complete = build_krea2_lora_experimental_schedule(
+            steps=requested_steps,
+            width=requested_width,
+            height=requested_height,
+            mu_source=mu_source,
+        )
+        recipe_id = "krea2.raw-turbo-lora.experimental"
+        experimental_derivation = derive_krea2_lora_experimental_shift(
+            width=requested_width,
+            height=requested_height,
+            mu_source=mu_source,
+        )
+        shift = {
+            "extrapolated": experimental_derivation.extrapolated,
+            "image_seq_len": experimental_derivation.geometry.image_seq_len,
+            "kind": (
+                "resolution_exponential_mu"
+                if mu_source is Krea2ExperimentalMuSource.RAW
+                else "fixed_exponential_mu"
+            ),
+            "mu": experimental_derivation.mu,
+            "mu_source": mu_source.value,
         }
 
     start, end = _slice_bounds(
@@ -259,7 +301,15 @@ def build_krea2_sigma_schedule(
             "evidence": provenance.evidence.value,
             "id": provenance.profile_id,
             "recipe": recipe_id,
-            "variant": selected_variant.value.casefold(),
+            "variant": (
+                "raw_turbo_lora"
+                if selected_variant
+                in {
+                    Krea2SigmaVariant.LORA_RAW_MU,
+                    Krea2SigmaVariant.LORA_TURBO_MU,
+                }
+                else selected_variant.value.casefold()
+            ),
             "version": provenance.profile_version,
         },
         "schema": KREA2_SIGMA_NODE_SCHEMA_ID,
@@ -270,7 +320,7 @@ def build_krea2_sigma_schedule(
             "output_steps": len(output_sigmas) - 1,
             "start_step": start,
         },
-        "strict_official": strict_official,
+        "strict_official": effective_strict_official,
         "warnings": list(complete.warnings),
     }
     return Krea2SigmaNodeResult(
@@ -285,7 +335,8 @@ class Krea2SigmaScheduler:
     """Construct validated Krea 2 external sigmas for ComfyUI custom sampling."""
 
     DESCRIPTION = (
-        "Builds an explicit Krea 2 RAW or Turbo sigma schedule without patching model sampling."
+        "Builds explicit Krea 2 RAW, Turbo, or experimental RAW-to-Turbo LoRA sigmas without "
+        "patching model sampling."
     )
     CATEGORY = "Sigmax/scheduling"
     FUNCTION = "build"
@@ -299,7 +350,7 @@ class Krea2SigmaScheduler:
 
         return {
             "required": {
-                "variant": (("Turbo", "RAW"),),
+                "variant": (tuple(variant.value for variant in Krea2SigmaVariant),),
                 "steps": (
                     "INT",
                     {"default": 8, "min": 1, "max": _MAX_STEPS, "step": 1},

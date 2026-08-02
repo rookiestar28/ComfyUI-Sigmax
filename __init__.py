@@ -5,6 +5,8 @@ import sys
 from pathlib import Path
 from types import ModuleType
 
+WEB_DIRECTORY = "./web"
+
 
 def _load_checkout_package() -> ModuleType:
     """Load this checkout's nested package under its canonical absolute name."""
@@ -54,5 +56,6 @@ else:
 __all__ = [
     "NODE_CLASS_MAPPINGS",
     "NODE_DISPLAY_NAME_MAPPINGS",
+    "WEB_DIRECTORY",
     "__version__",
 ]

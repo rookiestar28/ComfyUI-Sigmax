@@ -37,6 +37,13 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
+      - name: Set up Node.js
+        # actions/setup-node v6.4.0
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e  # pragma: allowlist secret
+        with:
+          node-version: "20"
+          package-manager-cache: false
+
       - name: Create Windows environment
         if: runner.os == 'Windows'
         shell: pwsh

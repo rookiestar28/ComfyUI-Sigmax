@@ -78,6 +78,8 @@ def test_comfyignore_selection_matches_reviewed_runtime_boundary() -> None:
     assert "LICENSE.TXT" in selected
     assert "NOTICE" in selected
     assert "pyproject.toml" in selected
+    assert "web/krea2_strict_official_extension.js" in selected
+    assert "web/krea2_strict_official_policy.js" in selected
     assert "comfyui_sigmax/registry/release_manifest_v1.json" in selected
     assert any(path.startswith("comfyui_sigmax/") for path in selected)
     assert not any(
@@ -99,6 +101,8 @@ def test_registry_member_audit_rejects_paths_links_size_and_missing_contracts() 
         ("comfyui_sigmax/contracts/manifest_v1.json", b"{}\n", False),
         ("comfyui_sigmax/registry/release_manifest_v1.json", b"{}\n", False),
         ("comfyui_sigmax/workflows/fixtures.json", b"{}\n", False),
+        ("web/krea2_strict_official_extension.js", b"export {};\n", False),
+        ("web/krea2_strict_official_policy.js", b"export {};\n", False),
     ]
     assert registry.audit_registry_members(clean)["status"] == "PASS"
 

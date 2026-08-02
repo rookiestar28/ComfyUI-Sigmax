@@ -16,6 +16,7 @@ _ALGEBRA_UI_KEY = "sigmax_schedule_algebra"
 _CHECKPOINT_UI_KEY = "sigmax_checkpoint_evidence"
 _Z_IMAGE_UI_KEY = "sigmax_z_image_schedule"
 _FLUX1_SCHNELL_UI_KEY = "sigmax_flux1_schnell_schedule"
+_KREA2_LORA_UI_KEY = "sigmax_krea2_lora_experimental"
 
 
 def _vector(value: torch.Tensor) -> list[float]:
@@ -350,9 +351,63 @@ class Flux1SchnellScheduleProbe:
         }
 
 
+class Krea2LoraExperimentalProbe:
+    """Return model-free H2 evidence for one experimental Krea 2 LoRA schedule."""
+
+    CATEGORY = "SigmaxTest"
+    DESCRIPTION = "Test-only experimental Krea 2 LoRA H2 schedule probe."
+    FUNCTION = "execute"
+    OUTPUT_NODE = True
+    RETURN_TYPES: tuple[()] = ()
+    RETURN_NAMES: tuple[()] = ()
+
+    @classmethod
+    def INPUT_TYPES(cls) -> dict[str, dict[str, tuple[object, ...]]]:
+        return {
+            "required": {
+                "sigmas": ("SIGMAS",),
+                "schedule_info": ("STRING", {"default": "", "multiline": True}),
+            }
+        }
+
+    def execute(self, sigmas: object, schedule_info: object) -> dict[str, object]:
+        if not isinstance(sigmas, torch.Tensor) or sigmas.device.type != "cpu":
+            raise ValueError("experimental Krea 2 H2 sigmas must be a CPU tensor")
+        if sigmas.dtype != torch.float32 or sigmas.ndim != 1 or len(sigmas) != 13:
+            raise ValueError("experimental Krea 2 H2 sigmas must contain 12 transitions")
+        if not isinstance(schedule_info, str):
+            raise ValueError("experimental Krea 2 H2 information must be text")
+        info = json.loads(schedule_info)
+        if (
+            not isinstance(info, dict)
+            or info.get("schema") != "sigmax.krea2-sigma-node/1"
+            or info.get("profile", {}).get("id") != "krea2.raw-turbo-lora.experimental"
+            or info.get("profile", {}).get("evidence") != "experimental"
+            or info.get("shift", {}).get("mu_source") not in {"raw", "turbo"}
+            or info.get("slicing", {}).get("output_steps") != 12
+            or info.get("strict_official") is not False
+        ):
+            raise ValueError("experimental Krea 2 H2 schedule contract drifted")
+        trace = {"schedule_info": info, "sigmas": _vector(sigmas)}
+        return {
+            "ui": {
+                _KREA2_LORA_UI_KEY: [
+                    json.dumps(
+                        trace,
+                        allow_nan=False,
+                        ensure_ascii=False,
+                        separators=(",", ":"),
+                        sort_keys=True,
+                    )
+                ]
+            }
+        }
+
+
 NODE_CLASS_MAPPINGS = {
     "SigmaxTest.Flux1SchnellScheduleProbe": Flux1SchnellScheduleProbe,
     "SigmaxTest.CheckpointEvidenceProbe": CheckpointEvidenceProbe,
+    "SigmaxTest.Krea2LoraExperimentalProbe": Krea2LoraExperimentalProbe,
     "SigmaxTest.NativeEulerProbe": NativeEulerProbe,
     "SigmaxTest.ScheduleAlgebraProbe": ScheduleAlgebraProbe,
     "SigmaxTest.ZImageScheduleProbe": ZImageScheduleProbe,
@@ -360,6 +415,7 @@ NODE_CLASS_MAPPINGS = {
 NODE_DISPLAY_NAME_MAPPINGS = {
     "SigmaxTest.Flux1SchnellScheduleProbe": "Sigmax Test — FLUX.1-schnell Schedule Probe",
     "SigmaxTest.CheckpointEvidenceProbe": "Sigmax Test — Checkpoint Evidence Probe",
+    "SigmaxTest.Krea2LoraExperimentalProbe": "Sigmax Test — Krea 2 LoRA Experimental Probe",
     "SigmaxTest.NativeEulerProbe": "Sigmax Test — Native Euler Probe",
     "SigmaxTest.ScheduleAlgebraProbe": "Sigmax Test — Schedule Algebra Probe",
     "SigmaxTest.ZImageScheduleProbe": "Sigmax Test — Z-Image Schedule Probe",

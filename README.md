@@ -50,6 +50,7 @@ Search the node menu for `Sigmax`. The package registers 14 namespaced nodes.
 | --- | --- | --- |
 | Krea 2 Turbo | `Sigmax.Krea2SigmaScheduler` | `Turbo`, 8 steps, Euler, CFG 1.0 |
 | Krea 2 RAW | `Sigmax.Krea2SigmaScheduler` | `RAW`, 52 steps with CFG 4.5, or 28 steps with CFG 5.5 |
+| Krea 2 RAW + RAW-to-Turbo LoRA | `Sigmax.Krea2SigmaScheduler` | Experimental RAW/Turbo `mu`; user-selected steps; community starting point: 12 steps, Euler, CFG 1.0 |
 | Z-Image Base | `Sigmax.ZImageSigmaScheduler` | `Base`, 28-50 steps, default 50, CFG 4.0 |
 | Z-Image Turbo | `Sigmax.ZImageSigmaScheduler` | `Turbo`, 8 steps, CFG 1.0 |
 | FLUX.1-schnell | `Sigmax.Flux1SchnellSigmaScheduler` | 1-4 steps, default 4, CFG 1.0 |
@@ -67,6 +68,14 @@ For normal use:
 `Sigmax.ModelAwareSigmaScheduler` can inspect a connected Krea 2 model, but shared filenames and
 model structure may identify only the family. If `Auto` reports ambiguity, select `Turbo` or
 `RAW` explicitly.
+
+For a RAW checkpoint with a compatible RAW-to-Turbo model-difference LoRA, choose
+`LoRA Experimental (RAW mu)` or `LoRA Experimental (Turbo mu)` and set the desired steps. The
+node automatically forces `strict_official` off and disables that widget for either
+Experimental selection. The former derives `mu` from width/height; the latter fixes `mu = 1.15`.
+This path is experimental: the scheduler does not load or scale the LoRA, enforce CFG/sampler
+settings, or claim that 12 steps is official. Apply the LoRA to RAW only; do not stack equivalent
+RAW-to-Turbo LoRAs or apply one to the Turbo checkpoint.
 
 ### Inspect or modify a schedule
 

@@ -22,6 +22,7 @@ STAGES: Final = (
     "ruff-lint",
     "mypy",
     "core-independence",
+    "frontend-policy",
     "parity-contract",
     "pytest",
     "coverage",
@@ -29,12 +30,13 @@ STAGES: Final = (
 )
 
 LANE_STATUS: Final = {
-    "browser_e2e": "NOT_APPLICABLE",
+    "browser_e2e": "IMPLEMENTED_SEPARATE_GATE",
     "coinstallation_mutation": "IMPLEMENTED_SYNTHETIC",
     "comfyui_host_e2e": "IMPLEMENTED_SEPARATE_GATE",
     "core_independence": "IMPLEMENTED",
     "environment_guardrails": "IMPLEMENTED",
     "framework_parity": "IMPLEMENTED",
+    "frontend_policy": "IMPLEMENTED_NODE_TEST",
     "golden": "IMPLEMENTED",
     "gpu_model_weights": "NOT_IMPLEMENTED",
     "mutation": "NOT_IMPLEMENTED",
@@ -194,6 +196,7 @@ def main() -> int:
         "ruff-lint": [python, "-m", "ruff", "check", "."],
         "mypy": [python, "-m", "mypy", "comfyui_sigmax", "tests", "scripts"],
         "core-independence": [python, "scripts/check_core_independence.py"],
+        "frontend-policy": [python, "scripts/run_frontend_policy_tests.py"],
         "parity-contract": [
             python,
             "-m",

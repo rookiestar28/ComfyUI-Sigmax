@@ -17,6 +17,7 @@ class CiContractTests(unittest.TestCase):
             "scripts/environment_diagnostics.py",
             "scripts/preflight_check.py",
             "scripts/run_full_gate.py",
+            "scripts/run_frontend_policy_tests.py",
             "scripts/run_krea2_turbo_parity.py",
             "scripts/run_krea2_raw_parity.py",
             "scripts/run_full_tests_windows.ps1",
@@ -123,6 +124,7 @@ class CiContractTests(unittest.TestCase):
                 "ruff-lint",
                 "mypy",
                 "core-independence",
+                "frontend-policy",
                 "parity-contract",
                 "pytest",
                 "coverage",
@@ -130,7 +132,8 @@ class CiContractTests(unittest.TestCase):
             )
         ]
         self.assertEqual(sorted(positions), positions)
-        self.assertIn('"browser_e2e": "NOT_APPLICABLE"', runner)
+        self.assertIn('"browser_e2e": "IMPLEMENTED_SEPARATE_GATE"', runner)
+        self.assertIn('"frontend_policy": "IMPLEMENTED_NODE_TEST"', runner)
         self.assertIn(
             '"comfyui_host_e2e": "IMPLEMENTED_SEPARATE_GATE"',
             runner,
@@ -184,6 +187,9 @@ class CiContractTests(unittest.TestCase):
         self.assertIn('"3.13"', workflow)
         self.assertIn("scripts/run_full_tests_windows.ps1", workflow)
         self.assertIn("scripts/run_full_tests_linux.sh", workflow)
+        self.assertIn("actions/setup-node", workflow)
+        self.assertIn('node-version: "20"', workflow)
+        self.assertIn("package-manager-cache: false", workflow)
         self.assertIn("parity-pinned:", workflow)
         self.assertIn("requirements/parity-krea2-turbo.txt", workflow)
         self.assertIn("scripts.run_krea2_turbo_parity", workflow)
@@ -206,7 +212,7 @@ class CiContractTests(unittest.TestCase):
         self.assertIn("if: always()", workflow)
         self.assertIn("retention-days: 14", workflow)
         lowered = workflow.lower()
-        for forbidden in ("npm ", "node ", "playwright", "permissions: write-all"):
+        for forbidden in ("npm ", "playwright", "permissions: write-all"):
             with self.subTest(forbidden=forbidden):
                 self.assertNotIn(forbidden, lowered)
 

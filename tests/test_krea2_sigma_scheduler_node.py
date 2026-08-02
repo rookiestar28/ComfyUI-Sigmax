@@ -41,7 +41,12 @@ def test_node_declares_stable_legacy_current_schema() -> None:
     assert Krea2SigmaScheduler.FUNCTION == "build"
     assert Krea2SigmaScheduler.CATEGORY == "Sigmax/scheduling"
     assert Krea2SigmaScheduler.OUTPUT_NODE is False
-    assert inputs["required"]["variant"][0] == ("Turbo", "RAW")
+    assert inputs["required"]["variant"][0] == (
+        "Turbo",
+        "RAW",
+        "LoRA Experimental (RAW mu)",
+        "LoRA Experimental (Turbo mu)",
+    )
     assert set(inputs["required"]) == {
         "variant",
         "steps",
@@ -108,6 +113,101 @@ def test_non_strict_turbo_records_modified_evidence() -> None:
     assert info["warnings"] == [
         "requested steps differ from the official Turbo 8-step recipe; evidence is modified"
     ]
+
+
+@pytest.mark.parametrize(
+    ("variant", "mu_source", "expected_mu"),
+    (
+        ("LoRA Experimental (RAW mu)", "raw", 0.90625),
+        ("LoRA Experimental (Turbo mu)", "turbo", 1.15),
+    ),
+)
+def test_experimental_lora_variants_execute_selected_mu(
+    variant: str,
+    mu_source: str,
+    expected_mu: float,
+) -> None:
+    result = build_krea2_sigma_schedule(
+        variant=variant,
+        steps=12,
+        width=1024,
+        height=1024,
+        strict_official=False,
+        start_step=0,
+        end_step=-1,
+    )
+    info = _info(result)
+
+    assert len(result.sigmas) == 13
+    assert result.sigmas[-1] == 0.0
+    assert info["profile"] == {
+        "evidence": "experimental",
+        "id": "krea2.raw-turbo-lora.experimental",
+        "recipe": "krea2.raw-turbo-lora.experimental",
+        "variant": "raw_turbo_lora",
+        "version": "1",
+    }
+    assert info["shift"]["mu_source"] == mu_source
+    assert info["shift"]["mu"] == expected_mu
+    assert info["strict_official"] is False
+    assert any("experimental" in warning.casefold() for warning in info["warnings"])
+    assert any("RAW checkpoint" in warning for warning in info["warnings"])
+
+
+def test_experimental_mu_selection_is_not_inert() -> None:
+    common = {
+        "steps": 12,
+        "width": 1024,
+        "height": 1024,
+        "strict_official": False,
+        "start_step": 0,
+        "end_step": -1,
+    }
+
+    raw_mu = build_krea2_sigma_schedule(
+        variant="LoRA Experimental (RAW mu)",
+        **common,
+    )
+    turbo_mu = build_krea2_sigma_schedule(
+        variant="LoRA Experimental (Turbo mu)",
+        **common,
+    )
+
+    assert raw_mu.sigmas != turbo_mu.sigmas
+    assert _info(raw_mu)["fingerprints"]["complete"] != _info(turbo_mu)["fingerprints"]["complete"]
+
+
+@pytest.mark.parametrize(
+    "variant",
+    ("LoRA Experimental (RAW mu)", "LoRA Experimental (Turbo mu)"),
+)
+def test_experimental_lora_variants_force_strict_official_false(variant: str) -> None:
+    result = build_krea2_sigma_schedule(
+        variant=variant,
+        steps=12,
+        width=1024,
+        height=1024,
+        strict_official=True,
+        start_step=0,
+        end_step=-1,
+    )
+
+    assert _info(result)["strict_official"] is False
+
+
+@pytest.mark.parametrize("steps", (1, 7, 12, 37, 10_000))
+def test_experimental_lora_accepts_any_bounded_positive_step_count(steps: int) -> None:
+    result = build_krea2_sigma_schedule(
+        variant="LoRA Experimental (Turbo mu)",
+        steps=steps,
+        width=1024,
+        height=1024,
+        strict_official=False,
+        start_step=0,
+        end_step=-1,
+    )
+
+    assert len(result.sigmas) == steps + 1
 
 
 @pytest.mark.parametrize(

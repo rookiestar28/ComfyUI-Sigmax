@@ -59,7 +59,9 @@
           "isOptional": false,
           "options": [
             "Turbo",
-            "RAW"
+            "RAW",
+            "LoRA Experimental (RAW mu)",
+            "LoRA Experimental (Turbo mu)"
           ]
         },
         "steps": {
@@ -109,7 +111,7 @@
       ],
       "name": "Sigmax.Krea2SigmaScheduler",
       "display_name": "Krea 2 Sigma Scheduler",
-      "description": "Builds an explicit Krea 2 RAW or Turbo sigma schedule without patching model sampling.",
+      "description": "Builds explicit Krea 2 RAW, Turbo, or experimental RAW-to-Turbo LoRA sigmas without patching model sampling.",
       "category": "Sigmax/scheduling",
       "output_node": false,
       "python_module": "comfyui_sigmax.nodes",
@@ -319,7 +321,7 @@
     "Sigmax.Krea2SigmaScheduler": {
       "category": "Sigmax/scheduling",
       "deprecated": false,
-      "description": "Builds an explicit Krea 2 RAW or Turbo sigma schedule without patching model sampling.",
+      "description": "Builds explicit Krea 2 RAW, Turbo, or experimental RAW-to-Turbo LoRA sigmas without patching model sampling.",
       "display_name": "Krea 2 Sigma Scheduler",
       "experimental": false,
       "input": {
@@ -327,7 +329,9 @@
           "variant": [
             [
               "Turbo",
-              "RAW"
+              "RAW",
+              "LoRA Experimental (RAW mu)",
+              "LoRA Experimental (Turbo mu)"
             ]
           ],
           "steps": [

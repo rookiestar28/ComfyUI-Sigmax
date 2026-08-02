@@ -50,6 +50,7 @@ BOOTSTRAP_PROBE = textwrap.dedent(
         },
         "display_mappings": module.NODE_DISPLAY_NAME_MAPPINGS,
         "version": module.__version__,
+        "web_directory": module.WEB_DIRECTORY,
         "uses_package_mappings": (
             module.NODE_CLASS_MAPPINGS
             is sys.modules[
@@ -135,6 +136,7 @@ class ImportSafetyTests(unittest.TestCase):
                 "torch_call_unchanged": True,
                 "uses_package_mappings": True,
                 "version": "1.0.0",
+                "web_directory": "./web",
             },
             json.loads(result.stdout),
         )
@@ -159,6 +161,7 @@ class ImportSafetyTests(unittest.TestCase):
             import __init__ as bootstrap
 
             assert bootstrap.__version__ == "1.0.0"
+            assert bootstrap.WEB_DIRECTORY == "./web"
             assert sorted(bootstrap.NODE_CLASS_MAPPINGS) == [
                 "Sigmax.AdvancedFlowMatchScheduler",
                 "Sigmax.CheckpointEvidenceInspector",
@@ -224,6 +227,7 @@ def test_bootstrap_supports_dynamic_comfyui_custom_node_loader() -> None:
         module = importlib.util.module_from_spec(spec)
         sys.modules[spec.name] = module
         spec.loader.exec_module(module)
+        assert module.WEB_DIRECTORY == "./web"
         print(json.dumps(sorted(module.NODE_CLASS_MAPPINGS)))
         """
     )

@@ -56,6 +56,7 @@ FORBIDDEN_REGISTRY_FILES: Final = frozenset(
 _ALLOWED_ROOT_FILES: Final = frozenset(
     {".comfyignore", "LICENSE.TXT", "NOTICE", "README.md", "__init__.py", "pyproject.toml"}
 )
+_ALLOWED_ROOT_PREFIXES: Final = ("comfyui_sigmax/", "web/")
 _REQUIRED_FILES: Final = frozenset(
     {
         "LICENSE.TXT",
@@ -67,6 +68,8 @@ _REQUIRED_FILES: Final = frozenset(
         "comfyui_sigmax/contracts/manifest_v1.json",
         "comfyui_sigmax/registry/release_manifest_v1.json",
         "comfyui_sigmax/workflows/fixtures.json",
+        "web/krea2_strict_official_extension.js",
+        "web/krea2_strict_official_policy.js",
     }
 )
 _MODEL_SUFFIXES: Final = frozenset(
@@ -176,6 +179,8 @@ def build_release_manifest(root: Path = ROOT) -> dict[str, object]:
             "comfyui_sigmax/workflows/fixtures.json",
             "comfyui_sigmax/workflows/host_baseline.json",
             "pyproject.toml",
+            "web/krea2_strict_official_extension.js",
+            "web/krea2_strict_official_policy.js",
         )
     ]
     manifest: dict[str, object] = {
@@ -387,7 +392,7 @@ def audit_registry_members(members: list[tuple[str, bytes, bool]]) -> dict[str, 
             findings.add("archive.link_forbidden")
         if len(payload) > MAX_MEMBER_BYTES:
             findings.add("archive.oversized")
-        if not (name in _ALLOWED_ROOT_FILES or name.startswith("comfyui_sigmax/")):
+        if not (name in _ALLOWED_ROOT_FILES or name.startswith(_ALLOWED_ROOT_PREFIXES)):
             findings.add("archive.top_level_invalid")
     if not _REQUIRED_FILES.issubset(names):
         findings.add("archive.required_missing")

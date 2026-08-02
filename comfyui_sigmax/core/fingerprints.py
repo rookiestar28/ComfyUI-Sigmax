@@ -22,6 +22,7 @@ _SHA256_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
 _KEY_PATTERN = re.compile(r"^[a-z][a-z0-9_]*$")
 _MAX_DEPTH = 32
 _MAX_COLLECTION_LENGTH = 1024
+_MAX_SCHEDULE_COLLECTION_LENGTH = 16_384
 _MAX_STRING_LENGTH = 4096
 _MAX_CANONICAL_BYTES = 1_048_576
 _MAX_INTEROPERABLE_INTEGER = (2**53) - 1
@@ -94,7 +95,12 @@ def build_numerical_projection(
     }
 
 
-def _normalize_projection(value: object, *, depth: int) -> object:
+def _normalize_projection(
+    value: object,
+    *,
+    depth: int,
+    collection_limit: int,
+) -> object:
     if depth > _MAX_DEPTH:
         raise ScheduleContractError("canonical projection exceeds maximum depth")
 
@@ -113,11 +119,14 @@ def _normalize_projection(value: object, *, depth: int) -> object:
             raise ScheduleContractError("string exceeds canonical projection limit")
         return unicodedata.normalize("NFC", value)
     if isinstance(value, list):
-        if len(value) > _MAX_COLLECTION_LENGTH:
+        if len(value) > collection_limit:
             raise ScheduleContractError("collection exceeds canonical projection limit")
-        return [_normalize_projection(item, depth=depth + 1) for item in value]
+        return [
+            _normalize_projection(item, depth=depth + 1, collection_limit=collection_limit)
+            for item in value
+        ]
     if isinstance(value, Mapping):
-        if len(value) > _MAX_COLLECTION_LENGTH:
+        if len(value) > collection_limit:
             raise ScheduleContractError("collection exceeds canonical projection limit")
         normalized: dict[str, object] = {}
         for key, child in value.items():
@@ -125,17 +134,35 @@ def _normalize_projection(value: object, *, depth: int) -> object:
                 raise ScheduleContractError(
                     "canonical projection keys must be controlled ASCII identifiers"
                 )
-            normalized[key] = _normalize_projection(child, depth=depth + 1)
+            normalized[key] = _normalize_projection(
+                child,
+                depth=depth + 1,
+                collection_limit=collection_limit,
+            )
         return normalized
     raise ScheduleContractError(f"unsupported canonical projection type: {type(value).__name__}")
 
 
-def canonical_projection_bytes(projection: Mapping[str, object]) -> bytes:
+def canonical_projection_bytes(
+    projection: Mapping[str, object],
+    *,
+    collection_limit: int = _MAX_COLLECTION_LENGTH,
+) -> bytes:
     """Return canonical UTF-8 bytes for one bounded Sigmax projection."""
 
     if not isinstance(projection, Mapping):
         raise ScheduleContractError("canonical projection root must be a mapping")
-    normalized = _normalize_projection(projection, depth=0)
+    if (
+        not isinstance(collection_limit, int)
+        or isinstance(collection_limit, bool)
+        or not _MAX_COLLECTION_LENGTH <= collection_limit <= _MAX_SCHEDULE_COLLECTION_LENGTH
+    ):
+        raise ScheduleContractError("canonical projection collection limit is invalid")
+    normalized = _normalize_projection(
+        projection,
+        depth=0,
+        collection_limit=collection_limit,
+    )
     encoded = json.dumps(
         normalized,
         ensure_ascii=False,
@@ -161,7 +188,13 @@ def numerical_fingerprint(
     """Fingerprint an exact normalized numerical schedule."""
 
     projection = build_numerical_projection(sigmas, domain=domain, precision=precision)
-    return _sha256_identity(canonical_projection_bytes(projection))
+    # IMPORTANT: scheduler inputs permit 10,000 transitions; retain the independent byte cap.
+    return _sha256_identity(
+        canonical_projection_bytes(
+            projection,
+            collection_limit=_MAX_SCHEDULE_COLLECTION_LENGTH,
+        )
+    )
 
 
 def construction_fingerprint(projection: Mapping[str, object]) -> str:

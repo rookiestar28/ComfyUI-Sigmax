@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from decimal import ROUND_HALF_EVEN, Decimal, localcontext
 from enum import Enum
 from typing import Final
 
@@ -49,6 +48,7 @@ from comfyui_sigmax.profiles.krea2_common import (
     _require_finite_number,
     _require_identifier,
     _require_positive_integer,
+    canonical_krea2_shifted_grid,
     resolve_krea2_image_geometry,
 )
 from comfyui_sigmax.profiles.schema_v1 import (
@@ -530,21 +530,6 @@ def derive_krea2_raw_shift(
     )
 
 
-def _canonical_raw_shifted_grid(*, steps: int, mu: float) -> tuple[float, ...]:
-    """Build the M3-03 deterministic binary64 RAW grid before terminal zero."""
-
-    # CRITICAL: system libm differs by one ULP across Windows/Linux; keep this Decimal oracle.
-    with localcontext() as context:
-        context.prec = 80
-        context.rounding = ROUND_HALF_EVEN
-        ratio = Decimal(str(mu)).exp()
-        shifted = [1.0]
-        for index in range(1, steps):
-            numerator = ratio * (steps - index)
-            shifted.append(float(numerator / (numerator + index)))
-    return tuple(shifted)
-
-
 def build_krea2_raw_schedule(
     *,
     width: int = 1024,
@@ -622,7 +607,7 @@ def build_krea2_raw_schedule(
         overrides=tuple(overrides),
     )
     sigmas = apply_terminal_policy(
-        _canonical_raw_shifted_grid(
+        canonical_krea2_shifted_grid(
             steps=recipe.steps,
             mu=derivation.mu,
         ),

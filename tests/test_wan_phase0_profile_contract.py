@@ -91,7 +91,7 @@ def test_wan_resolution_and_derivative_requests_fail_closed() -> None:
     builder = _api("build_wan_schedule")
     with pytest.raises(ScheduleContractError, match="resolution"):
         builder(profile=module.WanProfileId.WAN21_I2V_480P_OFFICIAL, steps=40, resolution="720p")
-    with pytest.raises(ScheduleContractError, match="unsupported|derivative|profile"):
+    with pytest.raises(ScheduleContractError, match=r"unsupported|derivative|profile"):
         builder(profile="wan2.1.fun-control", steps=40)
 
 

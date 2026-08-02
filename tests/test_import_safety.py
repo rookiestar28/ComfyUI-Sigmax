@@ -120,6 +120,7 @@ class ImportSafetyTests(unittest.TestCase):
                     "Sigmax.ScheduleResample": "ScheduleResample",
                     "Sigmax.ScheduleSlice": "ScheduleSlice",
                     "Sigmax.TurboWorkflowOutput": "TurboWorkflowOutput",
+                    "Sigmax.WanSigmaScheduler": "WanSigmaScheduler",
                     "Sigmax.ZImageSigmaScheduler": "ZImageSigmaScheduler",
                 },
                 "comfy_loaded": False,
@@ -145,6 +146,7 @@ class ImportSafetyTests(unittest.TestCase):
                     "Sigmax.ScheduleResample": "Schedule Resample",
                     "Sigmax.ScheduleSlice": "Schedule Slice",
                     "Sigmax.TurboWorkflowOutput": "Turbo Workflow Output",
+                    "Sigmax.WanSigmaScheduler": "Wan Sigma Scheduler",
                     "Sigmax.ZImageSigmaScheduler": "Z-Image Sigma Scheduler",
                 },
                 "torch_call_unchanged": True,
@@ -197,6 +199,7 @@ class ImportSafetyTests(unittest.TestCase):
                 "Sigmax.ScheduleResample",
                 "Sigmax.ScheduleSlice",
                 "Sigmax.TurboWorkflowOutput",
+                "Sigmax.WanSigmaScheduler",
                 "Sigmax.ZImageSigmaScheduler",
             ]
             assert bootstrap.NODE_DISPLAY_NAME_MAPPINGS == {
@@ -220,6 +223,7 @@ class ImportSafetyTests(unittest.TestCase):
                 "Sigmax.ScheduleResample": "Schedule Resample",
                 "Sigmax.ScheduleSlice": "Schedule Slice",
                 "Sigmax.TurboWorkflowOutput": "Turbo Workflow Output",
+                "Sigmax.WanSigmaScheduler": "Wan Sigma Scheduler",
                 "Sigmax.ZImageSigmaScheduler": "Z-Image Sigma Scheduler",
             }
             """
@@ -288,6 +292,7 @@ def test_bootstrap_supports_dynamic_comfyui_custom_node_loader() -> None:
         "Sigmax.ScheduleResample",
         "Sigmax.ScheduleSlice",
         "Sigmax.TurboWorkflowOutput",
+        "Sigmax.WanSigmaScheduler",
         "Sigmax.ZImageSigmaScheduler",
     ]
 

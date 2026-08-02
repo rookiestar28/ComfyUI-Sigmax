@@ -62,7 +62,7 @@ def test_wan_node_metadata_declares_boundary_without_routing() -> None:
 def test_wan_node_rejects_implicit_derivatives_and_second_shift() -> None:
     module = _node_module()
     builder = module.build_wan_sigma_schedule
-    with pytest.raises(ScheduleContractError, match="profile|generation|task"):
+    with pytest.raises(ScheduleContractError, match=r"profile|generation|task"):
         builder(
             generation="Wan",
             task="Fun-Control",

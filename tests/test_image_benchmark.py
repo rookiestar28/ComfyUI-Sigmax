@@ -131,7 +131,7 @@ def test_protocol_binds_numerical_matrix_and_declares_unapproved_heavy_state() -
     projection = load_image_benchmark_protocol().projection()
 
     assert projection["numerical_prerequisite"] == {
-        "matrix_fingerprint": "sha256:ecf2b01ae7a867bdfa16d2a1839b57444044792a3c44e43751afcdb4270af5ce",
+            "matrix_fingerprint": "sha256:e49630b140668b804562bd305b27e383e9af8d0f6f2f64b14f0cd471294a3ca3",
         "required_status": "PASS",
         "schema": "sigmax.numerical-benchmark-matrix/1",
     }

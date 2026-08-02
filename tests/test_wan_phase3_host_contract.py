@@ -112,7 +112,7 @@ def test_wan_h2_verifier_accepts_canonical_model_free_trace(
 
 
 def test_wan_h2_rejects_unqualified_selection() -> None:
-    with pytest.raises(ScheduleContractError, match="pinned|unsupported"):
+    with pytest.raises(ScheduleContractError, match=r"pinned|unsupported"):
         harness.build_wan_h2_api_prompt(
             generation="Wan 2.2",
             task="Fun-Control",

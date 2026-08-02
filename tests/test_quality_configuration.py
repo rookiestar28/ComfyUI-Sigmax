@@ -119,6 +119,18 @@ class QualityConfigurationTests(unittest.TestCase):
         anima_diffusers_hash = (
             "f58458136cb7e75d5ca36d42759b1a3bad4dd74f"  # pragma: allowlist secret
         )
+        wan21_repository_hash = (
+            "5c2a1ae717b4a560a897024cd35315259a766130"  # pragma: allowlist secret
+        )
+        wan22_repository_hash = (
+            "82646227edf451d1da04d45e198a1071c461a6c1"  # pragma: allowlist secret
+        )
+        wan_comfyui_hash = (
+            "ba2d9a512ac48100b11ca25836a795bc97546b8a"  # pragma: allowlist secret
+        )
+        wan_diffusers_hash = (
+            "ef2388a309fa35d5401f5952a447ca13a96ee801"  # pragma: allowlist secret
+        )
         self.assertEqual(
             {
                 "comfyui_sigmax/workflows/host_baseline.json": [
@@ -221,6 +233,36 @@ class QualityConfigurationTests(unittest.TestCase):
                         "hashed_secret": head_hash,
                         "is_verified": False,
                         "line_number": 32,
+                    },
+                ],
+                "tests/golden/wan_v1.json": [
+                    {
+                        "type": "Hex High Entropy String",
+                        "filename": "tests/golden/wan_v1.json",
+                        "hashed_secret": wan21_repository_hash,
+                        "is_verified": False,
+                        "line_number": 1,
+                    },
+                    {
+                        "type": "Hex High Entropy String",
+                        "filename": "tests/golden/wan_v1.json",
+                        "hashed_secret": wan22_repository_hash,
+                        "is_verified": False,
+                        "line_number": 1,
+                    },
+                    {
+                        "type": "Hex High Entropy String",
+                        "filename": "tests/golden/wan_v1.json",
+                        "hashed_secret": wan_comfyui_hash,
+                        "is_verified": False,
+                        "line_number": 1,
+                    },
+                    {
+                        "type": "Hex High Entropy String",
+                        "filename": "tests/golden/wan_v1.json",
+                        "hashed_secret": wan_diffusers_hash,
+                        "is_verified": False,
+                        "line_number": 1,
                     },
                 ],
                 "tests/parity/test_anima_phase0_parity.py": [

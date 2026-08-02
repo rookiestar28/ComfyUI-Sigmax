@@ -87,6 +87,14 @@ from comfyui_sigmax.profiles.krea2_variant import (
     collect_krea2_variant_evidence,
     resolve_krea2_variant,
 )
+from comfyui_sigmax.profiles.lumina2 import (
+    LUMINA2_PROFILE,
+    LUMINA2_SCHEMA,
+    Lumina2EvidenceReference,
+    Lumina2Profile,
+    Lumina2ShiftMode,
+    build_lumina2_schedule,
+)
 from comfyui_sigmax.profiles.qwen_image import (
     QWEN_IMAGE_COMFY_FIXED_PROFILE,
     QWEN_IMAGE_COMFY_FIXED_SCHEMA,
@@ -191,6 +199,8 @@ __all__ = [
     "KREA2_TURBO_OFFICIAL_SHA256",
     "KREA2_TURBO_PROFILE",
     "KREA2_TURBO_SCHEMA",
+    "LUMINA2_PROFILE",
+    "LUMINA2_SCHEMA",
     "PROFILE_SCHEMA_ID",
     "PROFILE_SCHEMA_VERSION",
     "QWEN_IMAGE_COMFY_FIXED_PROFILE",
@@ -245,6 +255,9 @@ __all__ = [
     "Krea2VariantResolutionError",
     "Krea2VariantResolutionStatus",
     "LicenseDeclaration",
+    "Lumina2EvidenceReference",
+    "Lumina2Profile",
+    "Lumina2ShiftMode",
     "ModelCapabilityEvidence",
     "ModelIdentityEvidence",
     "ModelIdentityStatus",
@@ -279,6 +292,7 @@ __all__ = [
     "build_krea2_lora_experimental_schedule",
     "build_krea2_raw_schedule",
     "build_krea2_turbo_schedule",
+    "build_lumina2_schedule",
     "build_qwen_image_schedule",
     "build_sd3_schedule",
     "build_z_image_schedule",

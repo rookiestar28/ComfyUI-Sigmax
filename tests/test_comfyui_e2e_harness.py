@@ -19,6 +19,7 @@ from comfyui_sigmax.nodes.krea2_sigma_scheduler import (
     build_krea2_sigma_schedule,
     sigma_output_fingerprint,
 )
+from comfyui_sigmax.nodes.lumina2_sigma_scheduler import build_lumina2_sigma_schedule
 from comfyui_sigmax.nodes.raw_workflow_output import build_raw_workflow_output
 from comfyui_sigmax.nodes.sd3_sigma_scheduler import build_sd3_sigma_schedule
 from comfyui_sigmax.nodes.turbo_workflow_output import build_turbo_workflow_output
@@ -502,6 +503,45 @@ def test_auraflow_h2_prompt_and_history_are_source_bound() -> None:
     summary = harness.verify_aura_flow_h2_history(history, prompt_id="prompt-aura")
     assert summary["profile_id"] == "auraflow.v0-2.official"
     assert summary["ratio"] == 1.73
+    assert summary["requested_transitions"] == 50
+    assert summary["status"] == "succeeded"
+
+
+def test_lumina2_h2_prompt_and_history_are_source_bound() -> None:
+    harness = _harness()
+    prompt = harness.build_lumina2_h2_api_prompt()
+    assert prompt["1"] == {
+        "class_type": "Sigmax.Lumina2SigmaScheduler",
+        "inputs": {
+            "already_shifted": False,
+            "end_step": -1,
+            "mode": "Official Fixed (6.0)",
+            "start_step": 0,
+            "steps": 50,
+            "strict_source": True,
+        },
+    }
+    result = build_lumina2_sigma_schedule(
+        mode="Official Fixed (6.0)",
+        steps=50,
+        strict_source=True,
+        start_step=0,
+        end_step=-1,
+    )
+    trace = json.dumps(
+        {"schedule_info": json.loads(result.schedule_info_json), "sigmas": list(result.sigmas)},
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    history = {
+        "prompt-lumina2": {
+            "outputs": {"2": {"sigmax_lumina2_schedule": [trace]}},
+            "status": {"completed": True, "status_str": "success"},
+        }
+    }
+    summary = harness.verify_lumina2_h2_history(history, prompt_id="prompt-lumina2")
+    assert summary["profile_id"] == "lumina2.v2.official"
+    assert summary["ratio"] == 6.0
     assert summary["requested_transitions"] == 50
     assert summary["status"] == "succeeded"
 

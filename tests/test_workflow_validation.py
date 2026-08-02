@@ -80,6 +80,7 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
         "krea2-raw-official-landscape-1353x761",
         "krea2-raw-official-square-1024",
         "krea2-turbo-1024",
+        "lumina2-v2-official-50",
         "qwen-image-comfy-fixed-official-50",
         "sd3-comfy-diffusers-fixed-framework-28",
         "sd3-publisher-reference-official-50",
@@ -93,6 +94,7 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
         "RAW",
         "RAW",
         "Turbo",
+        "Lumina-Image 2.0",
         "Qwen Image",
         "SD3",
         "SD3",
@@ -131,6 +133,7 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
             -1,
         ],
         "krea2-turbo-1024": ["Turbo", 8, 1024, 1024, True, 0, -1],
+        "lumina2-v2-official-50": ["Official Fixed (6.0)", 50, True, 0, -1, False],
         "qwen-image-comfy-fixed-official-50": ["Comfy Fixed", 50, 0, True, 0, -1],
         "sd3-comfy-diffusers-fixed-framework-28": [
             "Comfy/Diffusers Fixed (3.0)",
@@ -167,6 +170,7 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
             "Qwen Image",
             "SD3",
             "AuraFlow v0.2",
+            "Lumina-Image 2.0",
         }
         assert workflow["last_node_id"] == (1 if is_sigma_only else 3)
         assert workflow["last_link_id"] == (0 if is_sigma_only else 5)
@@ -190,7 +194,11 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
                         else (
                             ["Sigmax.AuraFlowSigmaScheduler"]
                             if fixture.variant == "AuraFlow v0.2"
-                            else ["Sigmax.ZImageSigmaScheduler"]
+                            else (
+                                ["Sigmax.Lumina2SigmaScheduler"]
+                                if fixture.variant == "Lumina-Image 2.0"
+                                else ["Sigmax.ZImageSigmaScheduler"]
+                            )
                         )
                     )
                 )
@@ -218,6 +226,7 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
                 else "sd3.publisher-reference.official"
             ),
             "AuraFlow v0.2": "auraflow.v0-2.official",
+            "Lumina-Image 2.0": "lumina2.v2.official",
             "Z-Image Base": "z_image.base.official",
             "Z-Image Turbo": "z_image.turbo.official",
         }
@@ -242,6 +251,7 @@ def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
         "Sigmax.Flux1SchnellSigmaScheduler",
         "Sigmax.Krea2ConditioningRebalance",
         "Sigmax.Krea2SigmaScheduler",
+        "Sigmax.Lumina2SigmaScheduler",
         "Sigmax.QwenImageSigmaScheduler",
         "Sigmax.RawWorkflowOutput",
         "Sigmax.SD3SigmaScheduler",
@@ -253,7 +263,7 @@ def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
     assert report.lane is WorkflowValidationLane.KNOWN_GOOD
     assert report.host_version == CANONICAL_HOST_VERSION
     assert report.host_revision == CANONICAL_HOST_REVISION
-    assert report.workflow_count == 11
+    assert report.workflow_count == 12
     assert report.compatible is True
     assert report.gate_passed is True
     assert report.observational is False
@@ -264,6 +274,7 @@ def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
         {"id": "Sigmax.AuraFlowSigmaScheduler", "version": "1"},
         {"id": "Sigmax.Flux1SchnellSigmaScheduler", "version": "1"},
         {"id": "Sigmax.Krea2SigmaScheduler", "version": "1"},
+        {"id": "Sigmax.Lumina2SigmaScheduler", "version": "1"},
         {"id": "Sigmax.QwenImageSigmaScheduler", "version": "1"},
         {"id": "Sigmax.RawWorkflowOutput", "version": "1"},
         {"id": "Sigmax.SD3SigmaScheduler", "version": "1"},

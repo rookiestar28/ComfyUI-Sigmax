@@ -132,6 +132,8 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "nodes" / "qwen_image_sigma_scheduler.py").is_file())
         self.assertTrue((package_path / "nodes" / "sd3_sigma_scheduler.py").is_file())
         self.assertTrue((package_path / "nodes" / "aura_flow_sigma_scheduler.py").is_file())
+        self.assertTrue((package_path / "nodes" / "lumina2_sigma_scheduler.py").is_file())
+        self.assertTrue((package_path / "profiles" / "lumina2.py").is_file())
         self.assertTrue((package_path / "profiles" / "qwen_image.py").is_file())
         self.assertTrue((package_path / "nodes" / "raw_workflow_output.py").is_file())
         self.assertTrue((package_path / "nodes" / "schedule_algebra.py").is_file())
@@ -166,6 +168,7 @@ class PackageContractTests(unittest.TestCase):
                 "Sigmax.Flux1SchnellSigmaScheduler",
                 "Sigmax.Krea2ConditioningRebalance",
                 "Sigmax.Krea2SigmaScheduler",
+                "Sigmax.Lumina2SigmaScheduler",
                 "Sigmax.ModelAwareSigmaScheduler",
                 "Sigmax.ProfileInspector",
                 "Sigmax.QwenImageSigmaScheduler",
@@ -189,6 +192,7 @@ class PackageContractTests(unittest.TestCase):
                 "Sigmax.Flux1SchnellSigmaScheduler": "FLUX.1-schnell Sigma Scheduler",
                 "Sigmax.Krea2ConditioningRebalance": "Krea 2 Conditioning Rebalance",
                 "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler",
+                "Sigmax.Lumina2SigmaScheduler": "Lumina-Image 2.0 Sigma Scheduler",
                 "Sigmax.ModelAwareSigmaScheduler": "Model-Aware Sigma Scheduler",
                 "Sigmax.ProfileInspector": "Profile Inspector",
                 "Sigmax.QwenImageSigmaScheduler": "Qwen Image Sigma Scheduler",

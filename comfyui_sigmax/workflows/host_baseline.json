@@ -232,6 +232,65 @@
       "deprecated": false,
       "experimental": false
     },
+    "Sigmax.Lumina2SigmaScheduler": {
+      "inputs": {
+        "mode": {
+          "name": "mode",
+          "type": "COMBO",
+          "isOptional": false,
+          "options": [
+            "Official Fixed (6.0)"
+          ]
+        },
+        "steps": {
+          "name": "steps",
+          "type": "INT",
+          "isOptional": false
+        },
+        "strict_source": {
+          "name": "strict_source",
+          "type": "BOOLEAN",
+          "isOptional": false
+        },
+        "start_step": {
+          "name": "start_step",
+          "type": "INT",
+          "isOptional": false
+        },
+        "end_step": {
+          "name": "end_step",
+          "type": "INT",
+          "isOptional": false
+        },
+        "already_shifted": {
+          "name": "already_shifted",
+          "type": "BOOLEAN",
+          "isOptional": false
+        }
+      },
+      "outputs": [
+        {
+          "index": 0,
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "is_list": false
+        },
+        {
+          "index": 1,
+          "name": "schedule_info",
+          "type": "STRING",
+          "is_list": false
+        }
+      ],
+      "name": "Sigmax.Lumina2SigmaScheduler",
+      "display_name": "Lumina-Image 2.0 Sigma Scheduler",
+      "description": "Builds an explicit Lumina-Image 2.0 fixed-shift sigma schedule.",
+      "category": "Sigmax/scheduling",
+      "output_node": false,
+      "python_module": "comfyui_sigmax.nodes",
+      "deprecated": false,
+      "experimental": false
+    },
     "Sigmax.QwenImageSigmaScheduler": {
       "inputs": {
         "mode": {
@@ -741,6 +800,74 @@
         }
       },
       "name": "Sigmax.Krea2SigmaScheduler",
+      "output": [
+        "SIGMAS",
+        "STRING"
+      ],
+      "output_is_list": [
+        false,
+        false
+      ],
+      "output_name": [
+        "sigmas",
+        "schedule_info"
+      ],
+      "output_node": false,
+      "python_module": "comfyui_sigmax.nodes"
+    },
+    "Sigmax.Lumina2SigmaScheduler": {
+      "category": "Sigmax/scheduling",
+      "deprecated": false,
+      "description": "Builds an explicit Lumina-Image 2.0 fixed-shift sigma schedule.",
+      "display_name": "Lumina-Image 2.0 Sigma Scheduler",
+      "experimental": false,
+      "input": {
+        "required": {
+          "mode": [
+            [
+              "Official Fixed (6.0)"
+            ]
+          ],
+          "steps": [
+            "INT",
+            {
+              "default": 50,
+              "max": 10000,
+              "min": 1,
+              "step": 1
+            }
+          ],
+          "strict_source": [
+            "BOOLEAN",
+            {
+              "default": false
+            }
+          ],
+          "start_step": [
+            "INT",
+            {
+              "default": 0,
+              "max": 9999,
+              "min": 0
+            }
+          ],
+          "end_step": [
+            "INT",
+            {
+              "default": -1,
+              "max": 10000,
+              "min": -1
+            }
+          ],
+          "already_shifted": [
+            "BOOLEAN",
+            {
+              "default": false
+            }
+          ]
+        }
+      },
+      "name": "Sigmax.Lumina2SigmaScheduler",
       "output": [
         "SIGMAS",
         "STRING"

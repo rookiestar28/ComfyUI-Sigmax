@@ -92,6 +92,8 @@ _SD3_OUTPUT_NODE_ID: Final = "2"
 _SD3_TRACE_KEY: Final = "sigmax_sd3_schedule"
 _AURAFLOW_OUTPUT_NODE_ID: Final = "2"
 _AURAFLOW_TRACE_KEY: Final = "sigmax_auraflow_schedule"
+_LUMINA2_OUTPUT_NODE_ID: Final = "2"
+_LUMINA2_TRACE_KEY: Final = "sigmax_lumina2_schedule"
 _KREA2_LORA_OUTPUT_NODE_ID: Final = "2"
 _KREA2_LORA_TRACE_KEY: Final = "sigmax_krea2_lora_experimental"
 _KREA2_CONDITIONING_OUTPUT_NODE_ID: Final = "3"
@@ -734,6 +736,70 @@ def verify_aura_flow_h2_history(history: object, *, prompt_id: str) -> dict[str,
         ).get("complete"),
         "profile_id": "auraflow.v0-2.official",
         "ratio": 1.73,
+        "requested_transitions": 50,
+        "status": "succeeded",
+    }
+
+
+def build_lumina2_h2_api_prompt() -> dict[str, object]:
+    """Return one model-free Lumina-Image 2.0 scheduler -> probe graph."""
+
+    return {
+        "1": {
+            "class_type": "Sigmax.Lumina2SigmaScheduler",
+            "inputs": {
+                "already_shifted": False,
+                "end_step": -1,
+                "mode": "Official Fixed (6.0)",
+                "start_step": 0,
+                "steps": 50,
+                "strict_source": True,
+            },
+        },
+        _LUMINA2_OUTPUT_NODE_ID: {
+            "class_type": "SigmaxTest.Lumina2ScheduleProbe",
+            "inputs": {"schedule_info": ["1", 1], "sigmas": ["1", 0]},
+        },
+    }
+
+
+def verify_lumina2_h2_history(history: object, *, prompt_id: str) -> dict[str, object]:
+    """Verify Lumina-Image 2.0 on the model-free host lane."""
+
+    root = _object(history, label="Lumina2 history")
+    entry = _object(root.get(prompt_id), label="Lumina2 history entry")
+    status = _object(entry.get("status"), label="Lumina2 prompt status")
+    if status.get("completed") is not True or status.get("status_str") != "success":
+        raise ScheduleContractError("Lumina2 prompt history does not prove success")
+    outputs = _object(entry.get("outputs"), label="Lumina2 prompt outputs")
+    output = _object(outputs.get(_LUMINA2_OUTPUT_NODE_ID), label="Lumina2 probe output")
+    traces = _array(output.get(_LUMINA2_TRACE_KEY), label="Lumina2 probe trace")
+    if len(traces) != 1 or not isinstance(traces[0], str):
+        raise ScheduleContractError("Lumina2 probe trace is malformed")
+    trace = _object(json.loads(traces[0]), label="Lumina2 decoded trace")
+    info = _object(trace.get("schedule_info"), label="Lumina2 schedule information")
+    sigmas = _array(trace.get("sigmas"), label="Lumina2 sigma vector")
+    if (
+        info.get("schema") != "sigmax.lumina2-sigma-node/1"
+        or _object(info.get("profile"), label="Lumina2 profile").get("id") != "lumina2.v2.official"
+        or _object(info.get("profile"), label="Lumina2 profile").get("evidence") != "official"
+        or _object(info.get("shift"), label="Lumina2 shift")
+        != {"kind": "direct_ratio", "multiplier": 1.0, "ratio": 6.0}
+        or _object(info.get("slicing"), label="Lumina2 slicing").get("output_steps") != 50
+        or len(sigmas) != 51
+        or sigmas[0] != 1.0
+        or sigmas[-1] != 0.0
+        or any(not isinstance(value, (int, float)) or isinstance(value, bool) for value in sigmas)
+        or any(float(left) <= float(right) for left, right in pairwise(sigmas))
+    ):
+        raise ScheduleContractError("Lumina2 H2 execution evidence drifted")
+    return {
+        "mode": "Official Fixed (6.0)",
+        "numerical_fingerprint": _object(
+            info.get("fingerprints"), label="Lumina2 fingerprints"
+        ).get("complete"),
+        "profile_id": "lumina2.v2.official",
+        "ratio": 6.0,
         "requested_transitions": 50,
         "status": "succeeded",
     }
@@ -2531,6 +2597,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
             "H2_FLUX1_SCHNELL_M6_05",
             "H2_QWEN_IMAGE_M6_05",
             "H2_AURAFLOW_M6_05",
+            "H2_LUMINA2_M6_05",
             "H3_EULER_M5_01",
         ],
         "host": {
@@ -2919,6 +2986,31 @@ def run(args: argparse.Namespace) -> dict[str, object]:
             )
             evidence["h2_auraflow"] = aura_summary
             attempts["h2_auraflow.auraflow-v0-2-official-50"] = aura_transition
+
+            lumina2_fixture = fixtures.get("lumina2-v2-official-50")
+            if lumina2_fixture is None:
+                raise ScheduleContractError("Lumina2 host case has no canonical workflow")
+            lumina2_workflow = cast(dict[str, object], lumina2_fixture.workflow)
+
+            def submit_lumina2(ordinal: int) -> tuple[str, dict[str, object]]:
+                return _submit_successful_prompt(
+                    base_url=base_url,
+                    client_id=f"sigmax-m6-05-lumina2-attempt-{ordinal}",
+                    prompt=build_lumina2_h2_api_prompt(),
+                    extra_data={"extra_pnginfo": {"workflow": lumina2_workflow}},
+                    execution_timeout=args.execution_timeout,
+                )
+
+            def verify_lumina2(history: object, prompt_id: str) -> dict[str, object]:
+                return verify_lumina2_h2_history(history, prompt_id=prompt_id)
+
+            lumina2_summary, lumina2_transition = execute_verified_host_repeat(
+                lane="H2_LUMINA2_M6_05",
+                submit=submit_lumina2,
+                verify=verify_lumina2,
+            )
+            evidence["h2_lumina2"] = lumina2_summary
+            attempts["h2_lumina2.lumina2-v2-official-50"] = lumina2_transition
 
             def submit_runtime_rejection(ordinal: int) -> tuple[str, dict[str, object]]:
                 return _submit_rejected_runtime_prompt(

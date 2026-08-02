@@ -275,6 +275,7 @@ def builtin_profile_registry() -> ProfileRegistry:
     from comfyui_sigmax.profiles.krea2_lora_experimental import KREA2_LORA_EXPERIMENTAL_SCHEMA
     from comfyui_sigmax.profiles.krea2_raw import KREA2_RAW_SCHEMA
     from comfyui_sigmax.profiles.krea2_turbo import KREA2_TURBO_SCHEMA
+    from comfyui_sigmax.profiles.lumina2 import LUMINA2_SCHEMA
     from comfyui_sigmax.profiles.qwen_image import (
         QWEN_IMAGE_COMFY_FIXED_SCHEMA,
         QWEN_IMAGE_DIFFUSERS_DYNAMIC_SCHEMA,
@@ -295,6 +296,7 @@ def builtin_profile_registry() -> ProfileRegistry:
                     _builtin_entry(KREA2_LORA_EXPERIMENTAL_SCHEMA),
                     _builtin_entry(KREA2_RAW_SCHEMA),
                     _builtin_entry(KREA2_TURBO_SCHEMA),
+                    _builtin_entry(LUMINA2_SCHEMA),
                     _builtin_entry(QWEN_IMAGE_COMFY_FIXED_SCHEMA),
                     _builtin_entry(QWEN_IMAGE_DIFFUSERS_DYNAMIC_SCHEMA),
                     _builtin_entry(SD3_COMFY_DIFFUSERS_SCHEMA),

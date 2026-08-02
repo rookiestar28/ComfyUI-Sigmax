@@ -1,13 +1,12 @@
 # ComfyUI-Sigmax
 
-ComfyUI-Sigmax provides model-aware sigma schedules for ComfyUI. It includes verified profiles for
-Krea 2 Turbo, Krea 2 RAW, Z-Image Base, Z-Image Turbo, FLUX.1-schnell, original Qwen Image,
-original Stable Diffusion 3, and original AuraFlow v0.2, plus schedule inspection and editing tools.
+ComfyUI-Sigmax provides model-aware sigma schedules for ComfyUI, with verified Krea 2, Z-Image,
+FLUX.1-schnell, Qwen Image, SD3, AuraFlow v0.2, and Lumina-Image 2.0 profiles plus editing tools.
 
 ## Features
 
 - Explicit model and variant selection with no silent generic fallback.
-- Verified Krea 2, Z-Image, FLUX.1-schnell, original Qwen Image, original SD3, and AuraFlow v0.2 recipes.
+- Verified Krea 2, Z-Image, FLUX.1-schnell, Qwen Image, SD3, AuraFlow v0.2, and Lumina-Image 2.0 recipes.
 - Schedule slicing, concatenation, resampling, inspection, and comparison.
 - Experimental Krea 2 `CONDITIONING` tap rebalancing for explicitly selected RAW or Turbo
   workflows, with fixed RMS preservation and no scheduler/model patching.
@@ -44,7 +43,7 @@ development or parity dependencies into ComfyUI just to use the nodes.
 
 ## Use in ComfyUI
 
-Search the node menu for `Sigmax`. The package registers 18 namespaced nodes.
+Search the node menu for `Sigmax`. The package registers 19 namespaced nodes.
 
 ### Build a model schedule
 
@@ -59,6 +58,7 @@ Search the node menu for `Sigmax`. The package registers 18 namespaced nodes.
 | Original Qwen Image | `Sigmax.QwenImageSigmaScheduler` | `Comfy Fixed`, 50 steps, or `Diffusers Dynamic` with explicit `image_seq_len`; host true CFG 4.0 |
 | Original Stable Diffusion 3 | `Sigmax.SD3SigmaScheduler` | Select `Publisher Reference (1.0)` at 50 steps or `Comfy/Diffusers Fixed (3.0)` at 28 steps; source mode is required |
 | Original AuraFlow v0.2 | `Sigmax.AuraFlowSigmaScheduler` | `Official Fixed (1.73)`, 50 steps, CFG 3.5; source mode is explicit |
+| Lumina-Image 2.0 | `Sigmax.Lumina2SigmaScheduler` | `Official Fixed (6.0)`, 50 steps, CFG 4.0; source mode is explicit |
 
 For normal use:
 
@@ -70,19 +70,19 @@ For normal use:
 5. Do not pass the result through another scheduler or apply another time shift.
 6. Read `schedule_info` when checking the selected recipe, dimensions, step range, or warnings.
 
-The Qwen Image node covers the original text-to-image family only. `Comfy Fixed` mirrors the
-pinned ComfyUI host surface (`1.15`); `Diffusers Dynamic` requires an explicit packed
-`image_seq_len`. Later Qwen variants, distilled/Lightning checkpoints, prompt enhancement, and
-image-quality parity are outside this support claim.
+The Qwen Image node covers the original text-to-image family only: `Comfy Fixed` mirrors `1.15`,
+while `Diffusers Dynamic` requires `image_seq_len`; later variants and image-quality parity are out of scope.
 
 The SD3 node covers only the original Stability AI SD3 Medium text-to-image schedule. Its two
 source-qualified modes preserve the publisher 1.0 versus pinned ComfyUI/Diffusers 3.0 conflict;
 neither is an implicit universal default. SD3.5, Turbo, ControlNet, model execution, and image
 quality are outside this support claim.
 
-The AuraFlow node covers only the original fal AuraFlow v0.2 text-to-image schedule, using the
-source-qualified fixed unit-flow ratio `1.73` and 50-step reference recipe. v0.1/v0.3, PonyFlow,
-community finetunes, dynamic/resolution shifts, model execution, and image quality are outside scope.
+The AuraFlow node covers only original fal AuraFlow v0.2 with fixed ratio `1.73` and 50 steps.
+Other versions, finetunes, dynamic shifts, model execution, and image quality are outside scope.
+
+The Lumina-Image 2.0 node covers only original Alpha-VLLM text-to-image with fixed ratio `6.0`
+and 50 steps. Video, mGPT, editing paths, dynamic shifts, execution, and image quality are outside scope.
 
 `Sigmax.ModelAwareSigmaScheduler` can inspect a connected Krea 2 model, but shared filenames and
 model structure may identify only the family. If `Auto` reports ambiguity, select `Turbo` or

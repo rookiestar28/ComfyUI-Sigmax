@@ -41,7 +41,9 @@ LANES: Final = {
 }
 SOURCE_PATHS: Final = (
     "comfyui_sigmax/__init__.py",
+    "comfyui_sigmax/nodes/anima_sigma_scheduler.py",
     "comfyui_sigmax/nodes/krea2_sigma_scheduler.py",
+    "comfyui_sigmax/profiles/anima.py",
     "comfyui_sigmax/profiles/krea2_raw.py",
     "comfyui_sigmax/profiles/krea2_turbo.py",
 )
@@ -233,6 +235,9 @@ def build_evidence(lane_id: str) -> dict[str, object]:
     )
     tensor_workload = _identity({"id": "tensor-turbo-8-cpu-boundary", "sources": sources})
     import_workload = _identity({"id": "isolated-package-startup", "sources": sources})
+    # WSL execution from a mounted Windows workspace has a higher process-startup floor;
+    # retain the tighter native-Windows ceiling while keeping a two-second WSL regression cap.
+    startup_maximum = 2_000_000_000 if expected_platform == "wsl" else 1_000_000_000
 
     counters_first = {"constructions": 0, "round_trips": 0, "transfers": 0}
     counters_repeat = {"constructions": 0, "round_trips": 0, "transfers": 0}
@@ -309,7 +314,7 @@ def build_evidence(lane_id: str) -> dict[str, object]:
                 "package.isolated_startup",
                 PerformanceUnit.NANOSECONDS,
                 1,
-                1_000_000_000,
+                startup_maximum,
                 import_workload,
             ),
             startup_first[0],

@@ -89,6 +89,10 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
         "qwen-image-comfy-fixed-official-50",
         "sd3-comfy-diffusers-fixed-framework-28",
         "sd3-publisher-reference-official-50",
+        "wan21-i2v-480p-official-40",
+        "wan21-t2v-official-50",
+        "wan22-t2v-a14b-native-40",
+        "wan22-ti2v-5b-native-50",
         "z-image-base-official-50",
         "z-image-turbo-official-8",
     )
@@ -108,6 +112,10 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
         "Qwen Image",
         "SD3",
         "SD3",
+        "Wan 2.1 I2V 480P",
+        "Wan 2.1 T2V",
+        "Wan 2.2 T2V A14B",
+        "Wan 2.2 TI2V 5B",
         "Z-Image Base",
         "Z-Image Turbo",
     )
@@ -176,6 +184,50 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
         ],
         "z-image-base-official-50": ["Base", 50, True, 0, -1],
         "z-image-turbo-official-8": ["Turbo", 8, True, 0, -1],
+        "wan21-i2v-480p-official-40": [
+            "Wan 2.1",
+            "I2V",
+            "Official native",
+            "480P",
+            40,
+            True,
+            0,
+            -1,
+            False,
+        ],
+        "wan21-t2v-official-50": [
+            "Wan 2.1",
+            "T2V",
+            "Official native",
+            "None",
+            50,
+            True,
+            0,
+            -1,
+            False,
+        ],
+        "wan22-t2v-a14b-native-40": [
+            "Wan 2.2",
+            "T2V A14B",
+            "Official native",
+            "None",
+            40,
+            True,
+            0,
+            -1,
+            False,
+        ],
+        "wan22-ti2v-5b-native-50": [
+            "Wan 2.2",
+            "TI2V",
+            "ComfyUI native",
+            "None",
+            50,
+            True,
+            0,
+            -1,
+            False,
+        ],
     }
     for fixture in fixtures:
         workflow = fixture.workflow
@@ -191,6 +243,10 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
             "Lumina-Image 2.0",
             "HunyuanImage 2.1 Base",
             "HunyuanImage 2.1 Distilled",
+            "Wan 2.1 I2V 480P",
+            "Wan 2.1 T2V",
+            "Wan 2.2 T2V A14B",
+            "Wan 2.2 TI2V 5B",
         }
         assert workflow["last_node_id"] == (1 if is_sigma_only else 3)
         assert workflow["last_link_id"] == (0 if is_sigma_only else 5)
@@ -223,7 +279,11 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
                                     else (
                                         ["Sigmax.HunyuanImage21SigmaScheduler"]
                                         if fixture.variant.startswith("HunyuanImage 2.1")
-                                        else ["Sigmax.ZImageSigmaScheduler"]
+                                        else (
+                                            ["Sigmax.WanSigmaScheduler"]
+                                            if fixture.variant.startswith("Wan")
+                                            else ["Sigmax.ZImageSigmaScheduler"]
+                                        )
                                     )
                                 )
                             )
@@ -260,6 +320,10 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
             "Lumina-Image 2.0": "lumina2.v2.official",
             "HunyuanImage 2.1 Base": "hunyuan-image-2-1.base.official",
             "HunyuanImage 2.1 Distilled": "hunyuan-image-2-1.distilled.official",
+            "Wan 2.1 I2V 480P": "wan2.1.i2v.480p.official-native",
+            "Wan 2.1 T2V": "wan2.1.t2v.official-native",
+            "Wan 2.2 T2V A14B": "wan2.2.t2v-a14b.official-native",
+            "Wan 2.2 TI2V 5B": "wan2.2.ti2v.5b.comfy-native",
             "Z-Image Base": "z_image.base.official",
             "Z-Image Turbo": "z_image.turbo.official",
         }
@@ -292,13 +356,14 @@ def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
         "Sigmax.SD3SigmaScheduler",
         "Sigmax.ScheduleInspector",
         "Sigmax.TurboWorkflowOutput",
+        "Sigmax.WanSigmaScheduler",
         "Sigmax.ZImageSigmaScheduler",
     )
     assert report.scan_mode is WorkflowScanMode.PINNED_STATIC
     assert report.lane is WorkflowValidationLane.KNOWN_GOOD
     assert report.host_version == CANONICAL_HOST_VERSION
     assert report.host_revision == CANONICAL_HOST_REVISION
-    assert report.workflow_count == 17
+    assert report.workflow_count == 21
     assert report.compatible is True
     assert report.gate_passed is True
     assert report.observational is False
@@ -317,6 +382,7 @@ def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
         {"id": "Sigmax.SD3SigmaScheduler", "version": "1"},
         {"id": "Sigmax.ScheduleInspector", "version": "1"},
         {"id": "Sigmax.TurboWorkflowOutput", "version": "1"},
+        {"id": "Sigmax.WanSigmaScheduler", "version": "1"},
         {"id": "Sigmax.ZImageSigmaScheduler", "version": "1"},
     ]
 

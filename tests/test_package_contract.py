@@ -105,6 +105,7 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "profiles" / "sd3.py").is_file())
         self.assertTrue((package_path / "profiles" / "aura_flow.py").is_file())
         self.assertTrue((package_path / "profiles" / "hunyuan_image21.py").is_file())
+        self.assertTrue((package_path / "profiles" / "wan.py").is_file())
         self.assertTrue((package_path / "adapters" / "__init__.py").is_file())
         self.assertTrue((package_path / "adapters" / "comfyui.py").is_file())
         self.assertTrue((package_path / "adapters" / "registration.py").is_file())
@@ -141,6 +142,7 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "nodes" / "schedule_algebra.py").is_file())
         self.assertTrue((package_path / "nodes" / "turbo_workflow_output.py").is_file())
         self.assertTrue((package_path / "nodes" / "z_image_sigma_scheduler.py").is_file())
+        self.assertTrue((package_path / "nodes" / "wan_sigma_scheduler.py").is_file())
         self.assertTrue((package_path / "workflows" / "__init__.py").is_file())
         self.assertTrue((package_path / "workflows" / "validation.py").is_file())
         self.assertTrue((package_path / "workflows" / "fixtures.json").is_file())
@@ -184,6 +186,7 @@ class PackageContractTests(unittest.TestCase):
                 "Sigmax.ScheduleResample",
                 "Sigmax.ScheduleSlice",
                 "Sigmax.TurboWorkflowOutput",
+                "Sigmax.WanSigmaScheduler",
                 "Sigmax.ZImageSigmaScheduler",
             ],
             sorted(package.NODE_CLASS_MAPPINGS),
@@ -210,6 +213,7 @@ class PackageContractTests(unittest.TestCase):
                 "Sigmax.ScheduleResample": "Schedule Resample",
                 "Sigmax.ScheduleSlice": "Schedule Slice",
                 "Sigmax.TurboWorkflowOutput": "Turbo Workflow Output",
+                "Sigmax.WanSigmaScheduler": "Wan Sigma Scheduler",
                 "Sigmax.ZImageSigmaScheduler": "Z-Image Sigma Scheduler",
             },
             package.NODE_DISPLAY_NAME_MAPPINGS,

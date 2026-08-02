@@ -597,6 +597,7 @@ def builtin_node_registry() -> NodeRegistry:
         ScheduleSlice,
         SD3SigmaScheduler,
         TurboWorkflowOutput,
+        WanSigmaScheduler,
         ZImageSigmaScheduler,
     )
 
@@ -706,6 +707,11 @@ def builtin_node_registry() -> NodeRegistry:
                 node_id="Sigmax.ZImageSigmaScheduler",
                 display_name="Z-Image Sigma Scheduler",
                 node_class=ZImageSigmaScheduler,
+            ),
+            discover_legacy_registration(
+                node_id="Sigmax.WanSigmaScheduler",
+                display_name="Wan Sigma Scheduler",
+                node_class=WanSigmaScheduler,
             ),
         )
     )

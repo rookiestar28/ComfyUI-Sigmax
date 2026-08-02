@@ -111,6 +111,10 @@ def test_packaged_manifest_freezes_the_complete_m8_01_boundary() -> None:
             "schema": "sigmax.turbo-workflow-output/1",
         },
         {
+            "id": "Sigmax.WanSigmaScheduler",
+            "schema": "sigmax.wan-sigma-node/1",
+        },
+        {
             "id": "Sigmax.ZImageSigmaScheduler",
             "schema": "sigmax.z-image-sigma-node/1",
         },

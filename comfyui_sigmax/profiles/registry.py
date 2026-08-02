@@ -293,6 +293,21 @@ def builtin_profile_registry() -> ProfileRegistry:
         SD3_COMFY_DIFFUSERS_SCHEMA,
         SD3_PUBLISHER_REFERENCE_SCHEMA,
     )
+    from comfyui_sigmax.profiles.wan import (
+        WAN21_COMFY_NATIVE_SCHEMA,
+        WAN21_I2V_480P_DIFFUSERS_SCHEMA,
+        WAN21_I2V_480P_OFFICIAL_SCHEMA,
+        WAN21_I2V_720P_DIFFUSERS_SCHEMA,
+        WAN21_I2V_720P_OFFICIAL_SCHEMA,
+        WAN21_T2V_DIFFUSERS_SCHEMA,
+        WAN21_T2V_OFFICIAL_SCHEMA,
+        WAN22_I2V_A14B_DIFFUSERS_SCHEMA,
+        WAN22_I2V_A14B_NATIVE_SCHEMA,
+        WAN22_T2V_A14B_DIFFUSERS_SCHEMA,
+        WAN22_T2V_A14B_NATIVE_SCHEMA,
+        WAN22_TI2V_5B_DIFFUSERS_SCHEMA,
+        WAN22_TI2V_5B_NATIVE_SCHEMA,
+    )
     from comfyui_sigmax.profiles.z_image import Z_IMAGE_BASE_SCHEMA, Z_IMAGE_TURBO_SCHEMA
 
     entries = cast(
@@ -317,6 +332,19 @@ def builtin_profile_registry() -> ProfileRegistry:
                     _builtin_entry(SD3_PUBLISHER_REFERENCE_SCHEMA),
                     _builtin_entry(Z_IMAGE_BASE_SCHEMA),
                     _builtin_entry(Z_IMAGE_TURBO_SCHEMA),
+                    _builtin_entry(WAN21_COMFY_NATIVE_SCHEMA),
+                    _builtin_entry(WAN21_I2V_480P_DIFFUSERS_SCHEMA),
+                    _builtin_entry(WAN21_I2V_480P_OFFICIAL_SCHEMA),
+                    _builtin_entry(WAN21_I2V_720P_DIFFUSERS_SCHEMA),
+                    _builtin_entry(WAN21_I2V_720P_OFFICIAL_SCHEMA),
+                    _builtin_entry(WAN21_T2V_DIFFUSERS_SCHEMA),
+                    _builtin_entry(WAN21_T2V_OFFICIAL_SCHEMA),
+                    _builtin_entry(WAN22_I2V_A14B_DIFFUSERS_SCHEMA),
+                    _builtin_entry(WAN22_I2V_A14B_NATIVE_SCHEMA),
+                    _builtin_entry(WAN22_T2V_A14B_DIFFUSERS_SCHEMA),
+                    _builtin_entry(WAN22_T2V_A14B_NATIVE_SCHEMA),
+                    _builtin_entry(WAN22_TI2V_5B_DIFFUSERS_SCHEMA),
+                    _builtin_entry(WAN22_TI2V_5B_NATIVE_SCHEMA),
                 ),
                 key=lambda entry: entry.key.canonical,
             )

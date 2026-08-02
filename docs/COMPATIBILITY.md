@@ -33,6 +33,10 @@ validated baseline.
 | HunyuanImage 2.1 Distilled | Fixed unit-flow `4.0` ratio shift, official 8-step publisher recipe; native host path unqualified | Use `Sigmax.HunyuanImage21SigmaScheduler`; select `Distilled (4.0)` explicitly |
 | Anima Base / Aesthetic | Fixed unit-flow rational `3.0` shift, 30-50 step framework-reference recipe; schedule-only | Use `Sigmax.AnimaSigmaScheduler`; select `Base` or `Aesthetic` explicitly |
 | Anima Turbo | Fixed unit-flow rational `3.0` shift, 8-12 step framework-reference recipe; schedule-only | Use `Sigmax.AnimaSigmaScheduler`; select `Turbo` explicitly |
+| Wan 2.1 T2V | Source-qualified unit-flow direct-ratio shift (`5.0` official, `8.0` ComfyUI-native, `3.0` Diffusers reference), 50-step recipes | Use `Sigmax.WanSigmaScheduler`; select generation, task, source, and `None` resolution explicitly |
+| Wan 2.1 I2V | Resolution-qualified official/Diffusers-reference paths: 480P `3.0` and 720P `5.0`, 40-step recipes | Use `Sigmax.WanSigmaScheduler`; select `I2V` and the actual `480P` or `720P` class |
+| Wan 2.2 TI2V 5B | Native and Diffusers-reference unit-flow `5.0` shift, 50-step recipes | Use `Sigmax.WanSigmaScheduler`; select `TI2V` and the source explicitly |
+| Wan 2.2 A14B T2V/I2V | Source-qualified unit-flow paths with caller-owned boundaries; native T2V/I2V `12.0`/`5.0`, Diffusers references `3.0` | Use `Sigmax.WanSigmaScheduler`; boundary output is metadata only and never routes experts |
 
 The experimental `Sigmax.Krea2ConditioningRebalance` node accepts explicit RAW or Turbo
 `CONDITIONING` tensors with shape `(batch, sequence, 30720)`. It preserves standard ComfyUI
@@ -67,6 +71,12 @@ and does not establish compatibility with an arbitrary model.
 - Anima applies one fixed rational `3.0` shift and rejects already-shifted composition. The node
   does not load Anima weights, run conditioning, or establish image-quality or prompt-adherence claims;
   Anima weight files remain under CircleStone Labs and applicable derivative licenses.
+- Wan profiles keep ComfyUI-native, official-native, and Diffusers-reference shift ownership
+  separate. A Wan 2.1 I2V resolution is mandatory, and unsupported derivatives fail closed.
+- Wan 2.2 A14B boundaries are descriptive caller-owned split metadata; Sigmax does not select high
+  or low experts, load video weights, patch the model, or implement a video sampler.
+- Wan Diffusers-reference rows document scheduler sigma/timestep construction only; they do not
+  claim UniPC solver parity when consumed by an Euler sampler.
 
 ## Not currently claimed
 
@@ -75,7 +85,8 @@ and does not establish compatibility with an arbitrary model.
 - Partial-denoise execution and advanced model-patch workflows.
 - Automatic compatibility with unlisted model families.
 - Guaranteed compatibility with every future ComfyUI release.
-- AuraFlow v0.1/v0.3, PonyFlow, community finetunes, or real-model image-quality parity.
+- AuraFlow v0.1/v0.3, PonyFlow, Wan derivatives (FLF2V/VACE/Fun-Control and similar), community
+  finetunes, or real-model image-quality parity.
 
 If a workflow falls outside these boundaries, treat it as unvalidated rather than silently
 substituting another profile or schedule.

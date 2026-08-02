@@ -214,6 +214,10 @@ def source_contract_projection() -> dict[str, object]:
         TURBO_WORKFLOW_OUTPUT_NODE_ID,
         TURBO_WORKFLOW_OUTPUT_SCHEMA_ID,
     )
+    from comfyui_sigmax.nodes.wan_sigma_scheduler import (
+        WAN_SIGMA_NODE_ID,
+        WAN_SIGMA_NODE_SCHEMA_ID,
+    )
     from comfyui_sigmax.nodes.z_image_sigma_scheduler import (
         Z_IMAGE_SIGMA_NODE_ID,
         Z_IMAGE_SIGMA_NODE_SCHEMA_ID,
@@ -259,6 +263,7 @@ def source_contract_projection() -> dict[str, object]:
             {"id": SCHEDULE_RESAMPLE_NODE_ID, "schema": SCHEDULE_RESAMPLE_SCHEMA_ID},
             {"id": SCHEDULE_SLICE_NODE_ID, "schema": SCHEDULE_SLICE_SCHEMA_ID},
             {"id": TURBO_WORKFLOW_OUTPUT_NODE_ID, "schema": TURBO_WORKFLOW_OUTPUT_SCHEMA_ID},
+            {"id": WAN_SIGMA_NODE_ID, "schema": WAN_SIGMA_NODE_SCHEMA_ID},
             {"id": Z_IMAGE_SIGMA_NODE_ID, "schema": Z_IMAGE_SIGMA_NODE_SCHEMA_ID},
         ),
         key=lambda item: item["id"],

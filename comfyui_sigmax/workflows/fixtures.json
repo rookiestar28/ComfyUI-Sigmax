@@ -3081,6 +3081,746 @@
         "id": "comfyui",
         "version": "0.29.0"
       },
+      "id": "wan21-i2v-480p-official-40",
+      "node_contracts": [
+        {
+          "node_id": 1,
+          "node_type": "Sigmax.WanSigmaScheduler",
+          "widget_slots": [
+            {
+              "fixed": "Wan 2.1",
+              "name": "generation",
+              "type": "COMBO"
+            },
+            {
+              "fixed": "I2V",
+              "name": "task",
+              "type": "COMBO"
+            },
+            {
+              "fixed": "Official native",
+              "name": "source",
+              "type": "COMBO"
+            },
+            {
+              "fixed": "480P",
+              "name": "resolution",
+              "type": "COMBO"
+            },
+            {
+              "name": "steps",
+              "type": "INT"
+            },
+            {
+              "name": "strict_source",
+              "type": "BOOLEAN"
+            },
+            {
+              "name": "start_step",
+              "type": "INT"
+            },
+            {
+              "name": "end_step",
+              "type": "INT"
+            },
+            {
+              "name": "already_shifted",
+              "type": "BOOLEAN"
+            }
+          ]
+        }
+      ],
+      "nodes": [
+        {
+          "id": "Sigmax.WanSigmaScheduler",
+          "version": "1"
+        }
+      ],
+      "package": {
+        "id": "comfyui-sigmax",
+        "version": "1.0.0"
+      },
+      "profile": {
+        "id": "wan2.1.i2v.480p.official-native",
+        "version": "1"
+      },
+      "variant": "Wan 2.1 I2V 480P",
+      "workflow": {
+        "version": 0.4,
+        "last_node_id": 1,
+        "last_link_id": 0,
+        "nodes": [
+          {
+            "id": 1,
+            "type": "Sigmax.WanSigmaScheduler",
+            "pos": [
+              40,
+              80
+            ],
+            "size": [
+              440,
+              330
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "outputs": [
+              {
+                "name": "sigmas",
+                "type": "SIGMAS",
+                "links": null,
+                "slot_index": 0
+              },
+              {
+                "name": "boundary_step",
+                "type": "INT",
+                "links": null,
+                "slot_index": 1
+              },
+              {
+                "name": "schedule_info",
+                "type": "STRING",
+                "links": null,
+                "slot_index": 2
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "Sigmax.WanSigmaScheduler",
+              "cnr_id": "comfyui-sigmax"
+            },
+            "widgets_values": [
+              "Wan 2.1",
+              "I2V",
+              "Official native",
+              "480P",
+              40,
+              true,
+              0,
+              -1,
+              false
+            ]
+          }
+        ],
+        "links": [],
+        "extra": {
+          "comfyui_sigmax": {
+            "metadata": {
+              "artifact": {
+                "construction_fingerprint": "sha256:5765ce0efc6fd488ff42c2c3ad6a91cb42434528a7cfa0cdc6d21f61ef7856f9",
+                "construction_schema": "sigmax.schedule-artifact/1",
+                "numerical_fingerprint": "sha256:200b7ff3ca8c7a5fc5dd8149617cf831383967f11977aa3ead14b710bf891332",
+                "receipt_schema": "sigmax.execution-receipt-envelope/1"
+              },
+              "compatibility": {
+                "considered": [
+                  "model_identity",
+                  "prediction_type",
+                  "sigma_domain",
+                  "schedule_ownership",
+                  "terminal_sigma",
+                  "execution_behavior",
+                  "noise_ownership",
+                  "sampler_state",
+                  "partial_denoise",
+                  "per_token_timesteps",
+                  "reference_sampler"
+                ],
+                "level": "allow",
+                "reasons": [
+                  "compatible"
+                ]
+              },
+              "profile": {
+                "id": "wan2.1.i2v.480p.official-native",
+                "version": "1"
+              },
+              "receipts": [],
+              "requirements": {
+                "host": {
+                  "api_version": "legacy_v1",
+                  "id": "comfyui",
+                  "version": "0.29.0"
+                },
+                "nodes": [
+                  {
+                    "id": "Sigmax.WanSigmaScheduler",
+                    "version": "1"
+                  }
+                ],
+                "package": {
+                  "id": "comfyui-sigmax",
+                  "version": "1.0.0"
+                }
+              },
+              "schema": "sigmax.workflow-metadata/1"
+            },
+            "metadata_fingerprint": "sha256:7d794ca03d25a05b7e4473ec9ab873d09f3b32324a10f9948dc3987fc5f21714",
+            "schema": "sigmax.workflow-metadata-envelope/1"
+          }
+        }
+      }
+    },
+    {
+      "host": {
+        "api_version": "legacy_v1",
+        "id": "comfyui",
+        "version": "0.29.0"
+      },
+      "id": "wan21-t2v-official-50",
+      "node_contracts": [
+        {
+          "node_id": 1,
+          "node_type": "Sigmax.WanSigmaScheduler",
+          "widget_slots": [
+            {
+              "fixed": "Wan 2.1",
+              "name": "generation",
+              "type": "COMBO"
+            },
+            {
+              "fixed": "T2V",
+              "name": "task",
+              "type": "COMBO"
+            },
+            {
+              "fixed": "Official native",
+              "name": "source",
+              "type": "COMBO"
+            },
+            {
+              "fixed": "None",
+              "name": "resolution",
+              "type": "COMBO"
+            },
+            {
+              "name": "steps",
+              "type": "INT"
+            },
+            {
+              "name": "strict_source",
+              "type": "BOOLEAN"
+            },
+            {
+              "name": "start_step",
+              "type": "INT"
+            },
+            {
+              "name": "end_step",
+              "type": "INT"
+            },
+            {
+              "name": "already_shifted",
+              "type": "BOOLEAN"
+            }
+          ]
+        }
+      ],
+      "nodes": [
+        {
+          "id": "Sigmax.WanSigmaScheduler",
+          "version": "1"
+        }
+      ],
+      "package": {
+        "id": "comfyui-sigmax",
+        "version": "1.0.0"
+      },
+      "profile": {
+        "id": "wan2.1.t2v.official-native",
+        "version": "1"
+      },
+      "variant": "Wan 2.1 T2V",
+      "workflow": {
+        "version": 0.4,
+        "last_node_id": 1,
+        "last_link_id": 0,
+        "nodes": [
+          {
+            "id": 1,
+            "type": "Sigmax.WanSigmaScheduler",
+            "pos": [
+              40,
+              80
+            ],
+            "size": [
+              440,
+              330
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "outputs": [
+              {
+                "name": "sigmas",
+                "type": "SIGMAS",
+                "links": null,
+                "slot_index": 0
+              },
+              {
+                "name": "boundary_step",
+                "type": "INT",
+                "links": null,
+                "slot_index": 1
+              },
+              {
+                "name": "schedule_info",
+                "type": "STRING",
+                "links": null,
+                "slot_index": 2
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "Sigmax.WanSigmaScheduler",
+              "cnr_id": "comfyui-sigmax"
+            },
+            "widgets_values": [
+              "Wan 2.1",
+              "T2V",
+              "Official native",
+              "None",
+              50,
+              true,
+              0,
+              -1,
+              false
+            ]
+          }
+        ],
+        "links": [],
+        "extra": {
+          "comfyui_sigmax": {
+            "metadata": {
+              "artifact": {
+                "construction_fingerprint": "sha256:02ec99c12c2bfca93a797e7c01b20918a4fa0177162d6af56580925c3292055e",
+                "construction_schema": "sigmax.schedule-artifact/1",
+                "numerical_fingerprint": "sha256:63640d1f280b8208ef399d45bd14a3ef6eecd651431cc12c3e25be45eeea7739",
+                "receipt_schema": "sigmax.execution-receipt-envelope/1"
+              },
+              "compatibility": {
+                "considered": [
+                  "model_identity",
+                  "prediction_type",
+                  "sigma_domain",
+                  "schedule_ownership",
+                  "terminal_sigma",
+                  "execution_behavior",
+                  "noise_ownership",
+                  "sampler_state",
+                  "partial_denoise",
+                  "per_token_timesteps",
+                  "reference_sampler"
+                ],
+                "level": "allow",
+                "reasons": [
+                  "compatible"
+                ]
+              },
+              "profile": {
+                "id": "wan2.1.t2v.official-native",
+                "version": "1"
+              },
+              "receipts": [],
+              "requirements": {
+                "host": {
+                  "api_version": "legacy_v1",
+                  "id": "comfyui",
+                  "version": "0.29.0"
+                },
+                "nodes": [
+                  {
+                    "id": "Sigmax.WanSigmaScheduler",
+                    "version": "1"
+                  }
+                ],
+                "package": {
+                  "id": "comfyui-sigmax",
+                  "version": "1.0.0"
+                }
+              },
+              "schema": "sigmax.workflow-metadata/1"
+            },
+            "metadata_fingerprint": "sha256:7e3e832e5f1c1c72d9dd87c6fb5be8cb405b0924679126ce52f96f7eebdc6ac5",
+            "schema": "sigmax.workflow-metadata-envelope/1"
+          }
+        }
+      }
+    },
+    {
+      "host": {
+        "api_version": "legacy_v1",
+        "id": "comfyui",
+        "version": "0.29.0"
+      },
+      "id": "wan22-t2v-a14b-native-40",
+      "node_contracts": [
+        {
+          "node_id": 1,
+          "node_type": "Sigmax.WanSigmaScheduler",
+          "widget_slots": [
+            {
+              "fixed": "Wan 2.2",
+              "name": "generation",
+              "type": "COMBO"
+            },
+            {
+              "fixed": "T2V A14B",
+              "name": "task",
+              "type": "COMBO"
+            },
+            {
+              "fixed": "Official native",
+              "name": "source",
+              "type": "COMBO"
+            },
+            {
+              "fixed": "None",
+              "name": "resolution",
+              "type": "COMBO"
+            },
+            {
+              "name": "steps",
+              "type": "INT"
+            },
+            {
+              "name": "strict_source",
+              "type": "BOOLEAN"
+            },
+            {
+              "name": "start_step",
+              "type": "INT"
+            },
+            {
+              "name": "end_step",
+              "type": "INT"
+            },
+            {
+              "name": "already_shifted",
+              "type": "BOOLEAN"
+            }
+          ]
+        }
+      ],
+      "nodes": [
+        {
+          "id": "Sigmax.WanSigmaScheduler",
+          "version": "1"
+        }
+      ],
+      "package": {
+        "id": "comfyui-sigmax",
+        "version": "1.0.0"
+      },
+      "profile": {
+        "id": "wan2.2.t2v-a14b.official-native",
+        "version": "1"
+      },
+      "variant": "Wan 2.2 T2V A14B",
+      "workflow": {
+        "version": 0.4,
+        "last_node_id": 1,
+        "last_link_id": 0,
+        "nodes": [
+          {
+            "id": 1,
+            "type": "Sigmax.WanSigmaScheduler",
+            "pos": [
+              40,
+              80
+            ],
+            "size": [
+              440,
+              330
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "outputs": [
+              {
+                "name": "sigmas",
+                "type": "SIGMAS",
+                "links": null,
+                "slot_index": 0
+              },
+              {
+                "name": "boundary_step",
+                "type": "INT",
+                "links": null,
+                "slot_index": 1
+              },
+              {
+                "name": "schedule_info",
+                "type": "STRING",
+                "links": null,
+                "slot_index": 2
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "Sigmax.WanSigmaScheduler",
+              "cnr_id": "comfyui-sigmax"
+            },
+            "widgets_values": [
+              "Wan 2.2",
+              "T2V A14B",
+              "Official native",
+              "None",
+              40,
+              true,
+              0,
+              -1,
+              false
+            ]
+          }
+        ],
+        "links": [],
+        "extra": {
+          "comfyui_sigmax": {
+            "metadata": {
+              "artifact": {
+                "construction_fingerprint": "sha256:bc502700ee1198f535528a16a691e16cc230f0363d294a273d7c31d1a0ab0d14",
+                "construction_schema": "sigmax.schedule-artifact/1",
+                "numerical_fingerprint": "sha256:42b6524db8e2f827a84480d5ec4aff8336a3e2615f6456ea4780c4eeae0b7e31",
+                "receipt_schema": "sigmax.execution-receipt-envelope/1"
+              },
+              "compatibility": {
+                "considered": [
+                  "model_identity",
+                  "prediction_type",
+                  "sigma_domain",
+                  "schedule_ownership",
+                  "terminal_sigma",
+                  "execution_behavior",
+                  "noise_ownership",
+                  "sampler_state",
+                  "partial_denoise",
+                  "per_token_timesteps",
+                  "reference_sampler"
+                ],
+                "level": "allow",
+                "reasons": [
+                  "compatible"
+                ]
+              },
+              "profile": {
+                "id": "wan2.2.t2v-a14b.official-native",
+                "version": "1"
+              },
+              "receipts": [],
+              "requirements": {
+                "host": {
+                  "api_version": "legacy_v1",
+                  "id": "comfyui",
+                  "version": "0.29.0"
+                },
+                "nodes": [
+                  {
+                    "id": "Sigmax.WanSigmaScheduler",
+                    "version": "1"
+                  }
+                ],
+                "package": {
+                  "id": "comfyui-sigmax",
+                  "version": "1.0.0"
+                }
+              },
+              "schema": "sigmax.workflow-metadata/1"
+            },
+            "metadata_fingerprint": "sha256:96f740a3856a29ee7b0f5bf154f0e2a40a54ee8fbfe293da69d2716fa3f80a6a",
+            "schema": "sigmax.workflow-metadata-envelope/1"
+          }
+        }
+      }
+    },
+    {
+      "host": {
+        "api_version": "legacy_v1",
+        "id": "comfyui",
+        "version": "0.29.0"
+      },
+      "id": "wan22-ti2v-5b-native-50",
+      "node_contracts": [
+        {
+          "node_id": 1,
+          "node_type": "Sigmax.WanSigmaScheduler",
+          "widget_slots": [
+            {
+              "fixed": "Wan 2.2",
+              "name": "generation",
+              "type": "COMBO"
+            },
+            {
+              "fixed": "TI2V",
+              "name": "task",
+              "type": "COMBO"
+            },
+            {
+              "fixed": "ComfyUI native",
+              "name": "source",
+              "type": "COMBO"
+            },
+            {
+              "fixed": "None",
+              "name": "resolution",
+              "type": "COMBO"
+            },
+            {
+              "name": "steps",
+              "type": "INT"
+            },
+            {
+              "name": "strict_source",
+              "type": "BOOLEAN"
+            },
+            {
+              "name": "start_step",
+              "type": "INT"
+            },
+            {
+              "name": "end_step",
+              "type": "INT"
+            },
+            {
+              "name": "already_shifted",
+              "type": "BOOLEAN"
+            }
+          ]
+        }
+      ],
+      "nodes": [
+        {
+          "id": "Sigmax.WanSigmaScheduler",
+          "version": "1"
+        }
+      ],
+      "package": {
+        "id": "comfyui-sigmax",
+        "version": "1.0.0"
+      },
+      "profile": {
+        "id": "wan2.2.ti2v.5b.comfy-native",
+        "version": "1"
+      },
+      "variant": "Wan 2.2 TI2V 5B",
+      "workflow": {
+        "version": 0.4,
+        "last_node_id": 1,
+        "last_link_id": 0,
+        "nodes": [
+          {
+            "id": 1,
+            "type": "Sigmax.WanSigmaScheduler",
+            "pos": [
+              40,
+              80
+            ],
+            "size": [
+              440,
+              330
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "outputs": [
+              {
+                "name": "sigmas",
+                "type": "SIGMAS",
+                "links": null,
+                "slot_index": 0
+              },
+              {
+                "name": "boundary_step",
+                "type": "INT",
+                "links": null,
+                "slot_index": 1
+              },
+              {
+                "name": "schedule_info",
+                "type": "STRING",
+                "links": null,
+                "slot_index": 2
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "Sigmax.WanSigmaScheduler",
+              "cnr_id": "comfyui-sigmax"
+            },
+            "widgets_values": [
+              "Wan 2.2",
+              "TI2V",
+              "ComfyUI native",
+              "None",
+              50,
+              true,
+              0,
+              -1,
+              false
+            ]
+          }
+        ],
+        "links": [],
+        "extra": {
+          "comfyui_sigmax": {
+            "metadata": {
+              "artifact": {
+                "construction_fingerprint": "sha256:7f60c67ae927f816713a84c113462362a9e4bb6651f000edf6203dfeb809075d",
+                "construction_schema": "sigmax.schedule-artifact/1",
+                "numerical_fingerprint": "sha256:63640d1f280b8208ef399d45bd14a3ef6eecd651431cc12c3e25be45eeea7739",
+                "receipt_schema": "sigmax.execution-receipt-envelope/1"
+              },
+              "compatibility": {
+                "considered": [
+                  "model_identity",
+                  "prediction_type",
+                  "sigma_domain",
+                  "schedule_ownership",
+                  "terminal_sigma",
+                  "execution_behavior",
+                  "noise_ownership",
+                  "sampler_state",
+                  "partial_denoise",
+                  "per_token_timesteps",
+                  "reference_sampler"
+                ],
+                "level": "allow",
+                "reasons": [
+                  "compatible"
+                ]
+              },
+              "profile": {
+                "id": "wan2.2.ti2v.5b.comfy-native",
+                "version": "1"
+              },
+              "receipts": [],
+              "requirements": {
+                "host": {
+                  "api_version": "legacy_v1",
+                  "id": "comfyui",
+                  "version": "0.29.0"
+                },
+                "nodes": [
+                  {
+                    "id": "Sigmax.WanSigmaScheduler",
+                    "version": "1"
+                  }
+                ],
+                "package": {
+                  "id": "comfyui-sigmax",
+                  "version": "1.0.0"
+                }
+              },
+              "schema": "sigmax.workflow-metadata/1"
+            },
+            "metadata_fingerprint": "sha256:99dcae2d292aea82a28d0773c6d222afb60b10b9b8440f16f93e418bf3fbb856",
+            "schema": "sigmax.workflow-metadata-envelope/1"
+          }
+        }
+      }
+    },
+    {
+      "host": {
+        "api_version": "legacy_v1",
+        "id": "comfyui",
+        "version": "0.29.0"
+      },
       "id": "z-image-base-official-50",
       "node_contracts": [
         {

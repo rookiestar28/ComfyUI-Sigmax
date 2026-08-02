@@ -212,6 +212,10 @@ class WorkflowFixture:
             "Lumina-Image 2.0",
             "HunyuanImage 2.1 Base",
             "HunyuanImage 2.1 Distilled",
+            "Wan 2.1 I2V 480P",
+            "Wan 2.1 T2V",
+            "Wan 2.2 T2V A14B",
+            "Wan 2.2 TI2V 5B",
         }:
             raise ScheduleContractError("workflow fixture variant is unsupported")
         if not isinstance(self.package, WorkflowRequirement):
@@ -482,6 +486,10 @@ def load_canonical_workflow_fixtures() -> tuple[WorkflowFixture, ...]:
         "qwen-image-comfy-fixed-official-50",
         "sd3-comfy-diffusers-fixed-framework-28",
         "sd3-publisher-reference-official-50",
+        "wan21-i2v-480p-official-40",
+        "wan21-t2v-official-50",
+        "wan22-t2v-a14b-native-40",
+        "wan22-ti2v-5b-native-50",
         "z-image-base-official-50",
         "z-image-turbo-official-8",
     ):

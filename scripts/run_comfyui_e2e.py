@@ -98,6 +98,8 @@ _HUNYUAN_IMAGE21_OUTPUT_NODE_ID: Final = "2"
 _HUNYUAN_IMAGE21_TRACE_KEY: Final = "sigmax_hunyuan_image21_schedule"
 _ANIMA_OUTPUT_NODE_ID: Final = "2"
 _ANIMA_TRACE_KEY: Final = "sigmax_anima_schedule"
+_WAN_OUTPUT_NODE_ID: Final = "2"
+_WAN_TRACE_KEY: Final = "sigmax_wan_schedule"
 _KREA2_LORA_OUTPUT_NODE_ID: Final = "2"
 _KREA2_LORA_TRACE_KEY: Final = "sigmax_krea2_lora_experimental"
 _KREA2_CONDITIONING_OUTPUT_NODE_ID: Final = "3"
@@ -363,7 +365,7 @@ def verify_krea2_conditioning_h2_history(
         or shape != [1, 97, 30720]
         or metadata_keys
         != ["area", "attention_mask", "pooled_output", "reference_latents", "source_marker"]
-        or not isinstance(rms, (int, float))
+        or not isinstance(rms, int | float)
         or isinstance(rms, bool)
         or not math.isfinite(float(rms))
         or float(rms) <= 0.0
@@ -438,7 +440,7 @@ def verify_z_image_h2_history(
         or len(sigmas) != expected_steps + 1
         or sigmas[0] != 1.0
         or sigmas[-1] != 0.0
-        or any(not isinstance(value, (int, float)) or isinstance(value, bool) for value in sigmas)
+        or any(not isinstance(value, int | float) or isinstance(value, bool) for value in sigmas)
         or any(float(left) <= float(right) for left, right in pairwise(sigmas))
     ):
         raise ScheduleContractError("Z-Image H2 execution evidence drifted")
@@ -587,7 +589,7 @@ def verify_qwen_image_h2_history(
         or len(sigmas) != 51
         or sigmas[0] != 1.0
         or sigmas[-1] != 0.0
-        or any(not isinstance(value, (int, float)) or isinstance(value, bool) for value in sigmas)
+        or any(not isinstance(value, int | float) or isinstance(value, bool) for value in sigmas)
         or any(float(left) <= float(right) for left, right in pairwise(sigmas))
     ):
         raise ScheduleContractError("Qwen Image H2 execution evidence drifted")
@@ -664,7 +666,7 @@ def verify_sd3_h2_history(history: object, *, prompt_id: str, mode: str) -> dict
         or len(sigmas) != steps + 1
         or sigmas[0] != 1.0
         or sigmas[-1] != 0.0
-        or any(not isinstance(value, (int, float)) or isinstance(value, bool) for value in sigmas)
+        or any(not isinstance(value, int | float) or isinstance(value, bool) for value in sigmas)
         or any(float(left) <= float(right) for left, right in pairwise(sigmas))
     ):
         raise ScheduleContractError("SD3 H2 execution evidence drifted")
@@ -729,7 +731,7 @@ def verify_aura_flow_h2_history(history: object, *, prompt_id: str) -> dict[str,
         or len(sigmas) != 51
         or sigmas[0] != 1.0
         or sigmas[-1] != 0.0
-        or any(not isinstance(value, (int, float)) or isinstance(value, bool) for value in sigmas)
+        or any(not isinstance(value, int | float) or isinstance(value, bool) for value in sigmas)
         or any(float(left) <= float(right) for left, right in pairwise(sigmas))
     ):
         raise ScheduleContractError("AuraFlow H2 execution evidence drifted")
@@ -793,7 +795,7 @@ def verify_lumina2_h2_history(history: object, *, prompt_id: str) -> dict[str, o
         or len(sigmas) != 51
         or sigmas[0] != 1.0
         or sigmas[-1] != 0.0
-        or any(not isinstance(value, (int, float)) or isinstance(value, bool) for value in sigmas)
+        or any(not isinstance(value, int | float) or isinstance(value, bool) for value in sigmas)
         or any(float(left) <= float(right) for left, right in pairwise(sigmas))
     ):
         raise ScheduleContractError("Lumina2 H2 execution evidence drifted")
@@ -876,7 +878,7 @@ def verify_hunyuan_image21_h2_history(
         or len(sigmas) != expected_steps + 1
         or sigmas[0] != 1.0
         or sigmas[-1] != 0.0
-        or any(not isinstance(value, (int, float)) or isinstance(value, bool) for value in sigmas)
+        or any(not isinstance(value, int | float) or isinstance(value, bool) for value in sigmas)
         or any(float(left) <= float(right) for left, right in pairwise(sigmas))
     ):
         raise ScheduleContractError("HunyuanImage 2.1 H2 execution evidence drifted")
@@ -953,7 +955,7 @@ def verify_anima_h2_history(history: object, *, prompt_id: str, variant: str) ->
         or len(sigmas) != steps + 1
         or sigmas[0] != 1.0
         or sigmas[-1] != 0.0
-        or any(not isinstance(value, (int, float)) or isinstance(value, bool) for value in sigmas)
+        or any(not isinstance(value, int | float) or isinstance(value, bool) for value in sigmas)
         or any(float(left) <= float(right) for left, right in pairwise(sigmas))
     ):
         raise ScheduleContractError("Anima H2 execution evidence drifted")
@@ -964,6 +966,141 @@ def verify_anima_h2_history(history: object, *, prompt_id: str, variant: str) ->
         ),
         "profile_id": expected[0],
         "shift": 3.0,
+        "requested_transitions": steps,
+        "status": "succeeded",
+    }
+
+
+def build_wan_h2_api_prompt(
+    *,
+    generation: str,
+    task: str,
+    source: str,
+    resolution: str,
+    steps: int,
+    strict_source: bool = True,
+    start_step: int = 0,
+    end_step: int = -1,
+) -> dict[str, object]:
+    """Return one model-free explicit Wan scheduler -> probe graph."""
+
+    allowed = {
+        ("Wan 2.1", "T2V", "Official native", "None", 50),
+        ("Wan 2.1", "I2V", "Official native", "480P", 40),
+        ("Wan 2.2", "TI2V", "ComfyUI native", "None", 50),
+        ("Wan 2.2", "T2V A14B", "Official native", "None", 40),
+    }
+    if (generation, task, source, resolution, steps) not in allowed:
+        raise ScheduleContractError("Wan H2 selection must be one of the pinned dense cases")
+    if not isinstance(strict_source, bool):
+        raise ScheduleContractError("Wan H2 strict_source must be boolean")
+    return {
+        "1": {
+            "class_type": "Sigmax.WanSigmaScheduler",
+            "inputs": {
+                "already_shifted": False,
+                "end_step": end_step,
+                "generation": generation,
+                "resolution": resolution,
+                "source": source,
+                "start_step": start_step,
+                "steps": steps,
+                "strict_source": strict_source,
+                "task": task,
+            },
+        },
+        _WAN_OUTPUT_NODE_ID: {
+            "class_type": "SigmaxTest.WanScheduleProbe",
+            "inputs": {"schedule_info": ["1", 2], "sigmas": ["1", 0]},
+        },
+    }
+
+
+def verify_wan_h2_history(
+    history: object,
+    *,
+    prompt_id: str,
+    generation: str,
+    task: str,
+    source: str,
+    resolution: str,
+    steps: int,
+) -> dict[str, object]:
+    """Verify one model-free Wan H2 trace and caller-owned A14B boundary."""
+
+    expected = {
+        ("Wan 2.1", "T2V", "Official native", "None", 50): (
+            "wan2.1.t2v.official-native",
+            "official",
+            5.0,
+            None,
+        ),
+        ("Wan 2.1", "I2V", "Official native", "480P", 40): (
+            "wan2.1.i2v.480p.official-native",
+            "official",
+            3.0,
+            None,
+        ),
+        ("Wan 2.2", "TI2V", "ComfyUI native", "None", 50): (
+            "wan2.2.ti2v.5b.comfy-native",
+            "framework_reference",
+            5.0,
+            None,
+        ),
+        ("Wan 2.2", "T2V A14B", "Official native", "None", 40): (
+            "wan2.2.t2v-a14b.official-native",
+            "official",
+            12.0,
+            0.875,
+        ),
+    }
+    selection = expected.get((generation, task, source, resolution, steps))
+    if selection is None:
+        raise ScheduleContractError("Wan H2 selection is unsupported")
+    expected_profile, expected_evidence, expected_ratio, expected_boundary = selection
+    root = _object(history, label="Wan H2 history")
+    entry = _object(root.get(prompt_id), label="Wan H2 history entry")
+    status = _object(entry.get("status"), label="Wan H2 prompt status")
+    if status.get("completed") is not True or status.get("status_str") != "success":
+        raise ScheduleContractError("Wan H2 prompt history does not prove success")
+    outputs = _object(entry.get("outputs"), label="Wan H2 prompt outputs")
+    output = _object(outputs.get(_WAN_OUTPUT_NODE_ID), label="Wan H2 probe output")
+    traces = _array(output.get(_WAN_TRACE_KEY), label="Wan H2 probe trace")
+    if len(traces) != 1 or not isinstance(traces[0], str):
+        raise ScheduleContractError("Wan H2 probe trace is malformed")
+    trace = _object(json.loads(traces[0]), label="Wan H2 decoded trace")
+    info = _object(trace.get("schedule_info"), label="Wan H2 schedule information")
+    profile = _object(info.get("profile"), label="Wan H2 profile")
+    shift = _object(info.get("shift"), label="Wan H2 shift")
+    slicing = _object(info.get("slicing"), label="Wan H2 slicing")
+    boundary = _object(info.get("boundary"), label="Wan H2 boundary")
+    fingerprints = _object(info.get("fingerprints"), label="Wan H2 fingerprints")
+    sigmas = _array(trace.get("sigmas"), label="Wan H2 sigma vector")
+    float_sigmas = tuple(float(value) for value in sigmas)
+    if (
+        info.get("schema") != "sigmax.wan-sigma-node/1"
+        or profile.get("id") != expected_profile
+        or profile.get("evidence") != expected_evidence
+        or shift != {"kind": "direct_ratio", "multiplier": 1.0, "ratio": expected_ratio}
+        or info.get("strict_source") is not True
+        or slicing.get("output_steps") != steps
+        or len(float_sigmas) != steps + 1
+        or float_sigmas[0] != 1.0
+        or float_sigmas[-1] != 0.0
+        or any(left <= right for left, right in pairwise(float_sigmas))
+        or boundary.get("model_dispatch") is not False
+        or boundary.get("routing_owner") != "caller"
+        or (expected_boundary is None and boundary.get("step") != -1)
+        or (expected_boundary is not None and boundary.get("normalized") != expected_boundary)
+        or fingerprints.get("output")
+        != sigma_output_fingerprint(float_sigmas, domain=SigmaDomain.UNIT_FLOW)
+    ):
+        raise ScheduleContractError("Wan H2 execution evidence drifted")
+    return {
+        "boundary": expected_boundary,
+        "numerical_fingerprint": fingerprints.get("complete"),
+        "output_fingerprint": fingerprints.get("output"),
+        "profile_id": expected_profile,
         "requested_transitions": steps,
         "status": "succeeded",
     }
@@ -1402,7 +1539,7 @@ def _typed_host_summary(value: object, *, depth: int = 0) -> object:
             key: _typed_host_summary(child, depth=depth + 1)
             for key, child in cast(Mapping[str, object], value).items()
         }
-    if isinstance(value, (list, tuple)):
+    if isinstance(value, list | tuple):
         return [_typed_host_summary(child, depth=depth + 1) for child in value]
     return value
 
@@ -3273,6 +3410,106 @@ def run(args: argparse.Namespace) -> dict[str, object]:
                 anima_results.append(anima_summary)
                 attempts[f"h2_anima.{case_id}"] = anima_transition
             evidence["h2_anima"] = anima_results
+
+            wan_results: list[dict[str, object]] = []
+            for case in (
+                {
+                    "id": "wan21-t2v-official-50",
+                    "generation": "Wan 2.1",
+                    "task": "T2V",
+                    "source": "Official native",
+                    "resolution": "None",
+                    "steps": 50,
+                },
+                {
+                    "id": "wan21-i2v-480p-official-40",
+                    "generation": "Wan 2.1",
+                    "task": "I2V",
+                    "source": "Official native",
+                    "resolution": "480P",
+                    "steps": 40,
+                },
+                {
+                    "id": "wan22-ti2v-5b-native-50",
+                    "generation": "Wan 2.2",
+                    "task": "TI2V",
+                    "source": "ComfyUI native",
+                    "resolution": "None",
+                    "steps": 50,
+                },
+                {
+                    "id": "wan22-t2v-a14b-native-40",
+                    "generation": "Wan 2.2",
+                    "task": "T2V A14B",
+                    "source": "Official native",
+                    "resolution": "None",
+                    "steps": 40,
+                },
+            ):
+                case_id = cast(str, case["id"])
+                wan_fixture = fixtures.get(case_id)
+                if wan_fixture is None:
+                    raise ScheduleContractError("Wan host case has no canonical workflow")
+                generation = cast(str, case["generation"])
+                task = cast(str, case["task"])
+                source = cast(str, case["source"])
+                resolution = cast(str, case["resolution"])
+                steps = cast(int, case["steps"])
+                wan_workflow = cast(dict[str, object], wan_fixture.workflow)
+
+                def submit_wan(
+                    ordinal: int,
+                    *,
+                    selected_generation: str = generation,
+                    selected_task: str = task,
+                    selected_source: str = source,
+                    selected_resolution: str = resolution,
+                    selected_steps: int = steps,
+                    selected_case: str = case_id,
+                    selected_workflow: dict[str, object] = wan_workflow,
+                ) -> tuple[str, dict[str, object]]:
+                    return _submit_successful_prompt(
+                        base_url=base_url,
+                        client_id=f"sigmax-m6-05-wan-{selected_case}-attempt-{ordinal}",
+                        prompt=build_wan_h2_api_prompt(
+                            generation=selected_generation,
+                            task=selected_task,
+                            source=selected_source,
+                            resolution=selected_resolution,
+                            steps=selected_steps,
+                        ),
+                        extra_data={"extra_pnginfo": {"workflow": selected_workflow}},
+                        execution_timeout=args.execution_timeout,
+                    )
+
+                def verify_wan(
+                    history: object,
+                    prompt_id: str,
+                    *,
+                    selected_generation: str = generation,
+                    selected_task: str = task,
+                    selected_source: str = source,
+                    selected_resolution: str = resolution,
+                    selected_steps: int = steps,
+                ) -> dict[str, object]:
+                    return verify_wan_h2_history(
+                        history,
+                        prompt_id=prompt_id,
+                        generation=selected_generation,
+                        task=selected_task,
+                        source=selected_source,
+                        resolution=selected_resolution,
+                        steps=selected_steps,
+                    )
+
+                wan_summary, wan_transition = execute_verified_host_repeat(
+                    lane="H2_WAN_M6_05",
+                    submit=submit_wan,
+                    verify=verify_wan,
+                )
+                wan_results.append(wan_summary)
+                attempts[f"h2_wan.{case_id}"] = wan_transition
+            evidence["h2_wan"] = wan_results
 
             def submit_runtime_rejection(ordinal: int) -> tuple[str, dict[str, object]]:
                 return _submit_rejected_runtime_prompt(

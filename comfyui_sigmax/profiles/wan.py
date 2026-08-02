@@ -1,0 +1,1159 @@
+"""Source-qualified Wan 2.1 and Wan 2.2 schedule profiles.
+
+The Wan family has several documented shift owners.  This module keeps the ComfyUI-native,
+official-native, and Diffusers-reference paths separate and exposes A14B boundaries as metadata
+only.  It never loads weights, dispatches experts, implements UniPC, or patches a model.
+"""
+
+from __future__ import annotations
+
+import math
+import re
+from dataclasses import dataclass
+from enum import Enum
+from typing import Final
+
+from comfyui_sigmax.core import (
+    BaseGridSpec,
+    EvidenceLevel,
+    ExecutionBehavior,
+    ModelCapabilities,
+    NoiseOwnership,
+    PredictionType,
+    ProfileCapabilities,
+    Provenance,
+    SamplerCapabilities,
+    ScheduleContractError,
+    ScheduleInputs,
+    ScheduleOwnership,
+    ScheduleRequest,
+    ScheduleResult,
+    SigmaDomain,
+    SliceSpec,
+    TerminalPolicy,
+    TerminalRequirement,
+    TerminalSigma,
+    TransformContract,
+    TransformStage,
+    apply_terminal_policy,
+    direct_ratio_shift,
+    flowmatch_reciprocal_step_grid,
+    validate_sigma_schedule,
+)
+from comfyui_sigmax.profiles.schema_v1 import (
+    PROFILE_SCHEMA_ID,
+    PROFILE_SCHEMA_VERSION,
+    ArtifactVersionDeclaration,
+    BaseGridDeclaration,
+    DetectionDeclaration,
+    FrameworkProvenance,
+    GuidanceDeclaration,
+    InferenceRecipe,
+    LicenseDeclaration,
+    ModelWeightProvenance,
+    ProfileField,
+    ProfileSchemaV1,
+    SlicingDeclaration,
+    SoftwareSourceProvenance,
+    StepRangeDeclaration,
+    TerminalDeclaration,
+    TransformDeclaration,
+)
+from comfyui_sigmax.version import VERSION
+
+WAN21_REPOSITORY_REVISION: Final = (
+    "9737cba9c1c3c4d04b33fcad41c111989865d315"  # pragma: allowlist secret
+)
+WAN22_REPOSITORY_REVISION: Final = (
+    "42bf4cfaa384bc21833865abc2f9e6c0e67233dc"  # pragma: allowlist secret
+)
+WAN_COMFYUI_REVISION: Final = "5cc026f5b81b3f01fe7a1438a0fd4131d2ebda25"  # pragma: allowlist secret
+WAN_DIFFUSERS_REVISION: Final = (
+    "3c468926ffd12b69baa4316e27b09306b8da19a6"  # pragma: allowlist secret
+)
+WAN21_T2V_MODEL_REVISION: Final = (
+    "37ec512624d61f7aa208f7ea8140a131f93afc9a"  # pragma: allowlist secret
+)
+WAN21_I2V_480_MODEL_REVISION: Final = (
+    "6b73f84e66371cdfe870c72acd6826e1d61cf279"  # pragma: allowlist secret
+)
+WAN21_I2V_720_MODEL_REVISION: Final = (
+    "8823af45fcc58a8aa999a54b04be9abc7d2aac98"  # pragma: allowlist secret
+)
+WAN22_T2V_MODEL_REVISION: Final = (
+    "5be7df9619b54f4e2667b2755bc6a756675b5cd7"  # pragma: allowlist secret
+)
+WAN22_I2V_MODEL_REVISION: Final = (
+    "596658fd9ca6b7b71d5057529bbf319ecbc61d74"  # pragma: allowlist secret
+)
+WAN22_TI2V_MODEL_REVISION: Final = (
+    "b8fff7315c768468a5333511427288870b2e9635"  # pragma: allowlist secret
+)
+
+_WAN21_T2V_SHA256: Final = (
+    "38071ab59bd94681c686fa51d75a1968f64e470262043be31f7a094e442fd981"  # pragma: allowlist secret
+)
+_WAN21_I2V_480_SHA256: Final = (
+    "09c0170242cfe9598208724585196ca18f294928fe25971149e1d7b37b3b51d6"  # pragma: allowlist secret
+)
+_WAN21_I2V_720_SHA256: Final = (
+    "3c36c371b3060931770f693f22253a7de7c76fc79cffb0ab08032fb5a04784e4"  # pragma: allowlist secret
+)
+_WAN22_T2V_SHA256: Final = (
+    "299e6304544f2783896372fa919e755a8bb9ab8caf898ce08a678dae391e1179"  # pragma: allowlist secret
+)
+_WAN22_I2V_SHA256: Final = (
+    "0400c403bd7cfe6c1c29b47ff9cb575495dc590c9be2511a3b44ae5795add106"  # pragma: allowlist secret
+)
+_WAN22_TI2V_SHA256: Final = (
+    "511bec832a201caa410d09c5ce7dbbf8ad2708c345d82038f684fc74cce982be"  # pragma: allowlist secret
+)
+
+_COMMIT_PATTERN: Final = re.compile(r"^[0-9a-f]{40}$")
+_MAX_STEPS: Final = 10_000
+_TRAINING_TIMESTEPS: Final = 1000
+_BOUNDARY_TOLERANCE: Final = 1e-15
+
+
+class WanGeneration(str, Enum):
+    """Explicit Wan generation axis."""
+
+    WAN21 = "wan2.1"
+    WAN22 = "wan2.2"
+
+
+class WanTask(str, Enum):
+    """Supported task families; derivative wrappers are intentionally absent."""
+
+    T2V = "t2v"
+    I2V = "i2v"
+    TI2V = "ti2v"
+
+
+class WanSource(str, Enum):
+    """The complete owner of the selected Wan shift."""
+
+    COMFY_NATIVE = "comfy_native"
+    OFFICIAL_NATIVE = "official_native"
+    DIFFUSERS_REFERENCE = "diffusers_reference"
+
+
+class WanResolution(str, Enum):
+    """Resolution classes required by the official Wan I2V profiles."""
+
+    NONE = "none"
+    P480 = "480p"
+    P720 = "720p"
+
+
+class WanProfileId(str, Enum):
+    """Exact public profile identities in the first Wan support slice."""
+
+    WAN21_COMFY_NATIVE = "wan2.1.t2v.comfy-native"
+    WAN21_T2V_OFFICIAL = "wan2.1.t2v.official-native"
+    WAN21_I2V_480P_OFFICIAL = "wan2.1.i2v.480p.official-native"
+    WAN21_I2V_720P_OFFICIAL = "wan2.1.i2v.720p.official-native"
+    WAN21_T2V_DIFFUSERS = "wan2.1.t2v.diffusers-reference"
+    WAN21_I2V_480P_DIFFUSERS = "wan2.1.i2v.480p.diffusers-reference"
+    WAN21_I2V_720P_DIFFUSERS = "wan2.1.i2v.720p.diffusers-reference"
+    WAN22_TI2V_5B_NATIVE = "wan2.2.ti2v.5b.comfy-native"
+    WAN22_T2V_A14B_NATIVE = "wan2.2.t2v-a14b.official-native"
+    WAN22_I2V_A14B_NATIVE = "wan2.2.i2v-a14b.official-native"
+    WAN22_TI2V_5B_DIFFUSERS = "wan2.2.ti2v.5b.diffusers-reference"
+    WAN22_T2V_A14B_DIFFUSERS = "wan2.2.t2v-a14b.diffusers-reference"
+    WAN22_I2V_A14B_DIFFUSERS = "wan2.2.i2v-a14b.diffusers-reference"
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class WanEvidenceReference:
+    """One pinned source lane for a Wan schedule profile."""
+
+    lane: str
+    url: str
+    revision: str
+    locators: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        if self.lane not in {
+            "comfyui_implementation",
+            "diffusers_framework",
+            "official_wan21",
+            "official_wan22",
+        }:
+            raise ScheduleContractError("Wan evidence lane is unsupported")
+        if not isinstance(self.url, str) or not self.url.startswith("https://"):
+            raise ScheduleContractError("Wan evidence URL must use HTTPS")
+        if not isinstance(self.revision, str) or not _COMMIT_PATTERN.fullmatch(self.revision):
+            raise ScheduleContractError("Wan evidence revision is invalid")
+        if not self.locators or self.locators != tuple(sorted(set(self.locators))):
+            raise ScheduleContractError("Wan evidence locators must be sorted and unique")
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class WanBoundary:
+    """A descriptive A14B split index; it never performs model dispatch."""
+
+    normalized: float
+    transition_index: int
+    crossing: str
+    routing_owner: str = "caller"
+    model_dispatch: bool = False
+
+    def __post_init__(self) -> None:
+        if (
+            isinstance(self.normalized, bool)
+            or not isinstance(self.normalized, int | float)
+            or not math.isfinite(float(self.normalized))
+            or not 0.0 < float(self.normalized) < 1.0
+        ):
+            raise ScheduleContractError("Wan boundary must be a finite normalized value in (0, 1)")
+        if (
+            not isinstance(self.transition_index, int)
+            or isinstance(self.transition_index, bool)
+            or self.transition_index < 0
+        ):
+            raise ScheduleContractError("Wan boundary transition index must be non-negative")
+        if self.crossing not in {"at_or_above", "crossed_below"}:
+            raise ScheduleContractError("Wan boundary crossing is unsupported")
+        if self.routing_owner != "caller" or self.model_dispatch is not False:
+            raise ScheduleContractError("Wan boundary cannot own model dispatch")
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class WanScheduleResult:
+    """Schedule result plus optional caller-owned A14B boundary metadata."""
+
+    schedule: ScheduleResult
+    boundary: WanBoundary | None
+
+    @property
+    def request(self) -> ScheduleRequest:
+        return self.schedule.request
+
+    @property
+    def effective_inputs(self) -> ScheduleInputs:
+        return self.schedule.effective_inputs
+
+    @property
+    def sigmas(self) -> tuple[float, ...]:
+        return self.schedule.sigmas
+
+    @property
+    def final_domain(self) -> SigmaDomain:
+        return self.schedule.final_domain
+
+    @property
+    def warnings(self) -> tuple[str, ...]:
+        return self.schedule.warnings
+
+
+_APACHE_2 = LicenseDeclaration(
+    declaration_version="1",
+    identifier="Apache-2.0",
+    name="Apache License 2.0",
+    url="https://www.apache.org/licenses/LICENSE-2.0",
+)
+_GPL_3_ONLY = LicenseDeclaration(
+    declaration_version="1",
+    identifier="GPL-3.0-only",
+    name="GNU General Public License v3.0 only",
+    url="https://www.gnu.org/licenses/gpl-3.0.html",
+)
+_WAN21_URL: Final = "https://github.com/Wan-Video/Wan2.1"
+_WAN22_URL: Final = "https://github.com/Wan-Video/Wan2.2"
+_COMFYUI_URL: Final = "https://github.com/Comfy-Org/ComfyUI"
+_DIFFUSERS_URL: Final = "https://github.com/huggingface/diffusers"
+_WAN21_HF_URL: Final = "https://huggingface.co/Wan-AI/Wan2.1-T2V-1.3B"
+_WAN21_I2V_480_HF_URL: Final = "https://huggingface.co/Wan-AI/Wan2.1-I2V-14B-480P"
+_WAN21_I2V_720_HF_URL: Final = "https://huggingface.co/Wan-AI/Wan2.1-I2V-14B-720P"
+_WAN22_T2V_HF_URL: Final = "https://huggingface.co/Wan-AI/Wan2.2-T2V-A14B-Diffusers"
+_WAN22_I2V_HF_URL: Final = "https://huggingface.co/Wan-AI/Wan2.2-I2V-A14B-Diffusers"
+_WAN22_TI2V_HF_URL: Final = "https://huggingface.co/Wan-AI/Wan2.2-TI2V-5B-Diffusers"
+
+_WAN21_SOURCE = SoftwareSourceProvenance(
+    record_version="1",
+    source_id="wan.video.wan2-1.official",
+    resource_version="2.1",
+    revision=WAN21_REPOSITORY_REVISION,
+    url=_WAN21_URL,
+    license=_APACHE_2,
+    locators=("LICENSE", "README.md", "wan/configs/wan_t2v_1.3B.py"),
+)
+_WAN22_SOURCE = SoftwareSourceProvenance(
+    record_version="1",
+    source_id="wan.video.wan2-2.official",
+    resource_version="2.2",
+    revision=WAN22_REPOSITORY_REVISION,
+    url=_WAN22_URL,
+    license=_APACHE_2,
+    locators=("LICENSE", "README.md", "wan/configs/wan_t2v_A14B.py"),
+)
+_COMFYUI_FRAMEWORK = FrameworkProvenance(
+    record_version="1",
+    framework_id="comfyui.wan.framework",
+    resource_version="0.29.0",
+    revision=WAN_COMFYUI_REVISION,
+    url=_COMFYUI_URL,
+    license=_GPL_3_ONLY,
+    locators=("comfy/model_sampling.py", "comfy/supported_models.py"),
+)
+_DIFFUSERS_FRAMEWORK = FrameworkProvenance(
+    record_version="1",
+    framework_id="diffusers.wan.framework",
+    resource_version="0.39.0",
+    revision=WAN_DIFFUSERS_REVISION,
+    url=_DIFFUSERS_URL,
+    license=_APACHE_2,
+    locators=(
+        "src/diffusers/schedulers/scheduling_flow_match_euler_discrete.py",
+        "src/diffusers/schedulers/scheduling_unipc_multistep.py",
+    ),
+)
+
+
+def _weight(
+    *,
+    weight_id: str,
+    resource_version: str,
+    revision: str,
+    sha256: str,
+    url: str,
+) -> ModelWeightProvenance:
+    return ModelWeightProvenance(
+        record_version="1",
+        weight_id=weight_id,
+        resource_version=resource_version,
+        revision=revision,
+        sha256=sha256,
+        url=url,
+        license=_APACHE_2,
+    )
+
+
+_WAN21_T2V_WEIGHT = _weight(
+    weight_id="wan-ai.wan2-1.t2v-1-3b.vae",
+    resource_version="Wan2.1_VAE.pth",
+    revision=WAN21_T2V_MODEL_REVISION,
+    sha256=_WAN21_T2V_SHA256,
+    url=_WAN21_HF_URL,
+)
+_WAN21_I2V_480_WEIGHT = _weight(
+    weight_id="wan-ai.wan2-1.i2v-480p.transformer-01",
+    resource_version="diffusion_pytorch_model-00001-of-00007.safetensors",
+    revision=WAN21_I2V_480_MODEL_REVISION,
+    sha256=_WAN21_I2V_480_SHA256,
+    url=_WAN21_I2V_480_HF_URL,
+)
+_WAN21_I2V_720_WEIGHT = _weight(
+    weight_id="wan-ai.wan2-1.i2v-720p.transformer-01",
+    resource_version="diffusion_pytorch_model-00001-of-00007.safetensors",
+    revision=WAN21_I2V_720_MODEL_REVISION,
+    sha256=_WAN21_I2V_720_SHA256,
+    url=_WAN21_I2V_720_HF_URL,
+)
+_WAN22_T2V_WEIGHT = _weight(
+    weight_id="wan-ai.wan2-2.t2v-a14b.transformer-01",
+    resource_version="transformer/diffusion_pytorch_model-00001-of-00012.safetensors",
+    revision=WAN22_T2V_MODEL_REVISION,
+    sha256=_WAN22_T2V_SHA256,
+    url=_WAN22_T2V_HF_URL,
+)
+_WAN22_I2V_WEIGHT = _weight(
+    weight_id="wan-ai.wan2-2.i2v-a14b.transformer-01",
+    resource_version="transformer/diffusion_pytorch_model-00001-of-00012.safetensors",
+    revision=WAN22_I2V_MODEL_REVISION,
+    sha256=_WAN22_I2V_SHA256,
+    url=_WAN22_I2V_HF_URL,
+)
+_WAN22_TI2V_WEIGHT = _weight(
+    weight_id="wan-ai.wan2-2.ti2v-5b.transformer-01",
+    resource_version="transformer/diffusion_pytorch_model-00001-of-00005.safetensors",
+    revision=WAN22_TI2V_MODEL_REVISION,
+    sha256=_WAN22_TI2V_SHA256,
+    url=_WAN22_TI2V_HF_URL,
+)
+
+_ARTIFACT_VERSIONS = ArtifactVersionDeclaration(
+    numerical_schema="sigmax.numerical-schedule/1",
+    construction_schema="sigmax.schedule-artifact/1",
+    envelope_schema="sigmax.schedule-artifact-envelope/1",
+)
+_BASE_GRID = BaseGridDeclaration(
+    identifier="flowmatch.reciprocal_step",
+    output_domain=SigmaDomain.UNIT_FLOW,
+    terminal_included=False,
+    parameters=(ProfileField(name="training_timesteps", value=_TRAINING_TIMESTEPS),),
+)
+_TERMINAL = TerminalDeclaration(
+    policy=TerminalPolicy.APPEND_ZERO,
+    sigma=TerminalSigma.ZERO,
+    value=0.0,
+)
+_SLICING = SlicingDeclaration(
+    supports_step_range=True,
+    supports_denoise_tail=True,
+    zero_denoise_is_empty=True,
+)
+_DETECTION = DetectionDeclaration(
+    strategy_id="wan.explicit-profile-v1",
+    strict_default=True,
+    ambiguity_requires_explicit=True,
+    resolving_sources=("explicit_profile",),
+    suggestion_sources=(),
+    family_only_sources=(),
+)
+
+
+def _sampler(sampler_id: str, revision: str) -> SamplerCapabilities:
+    return SamplerCapabilities(
+        sampler_id=sampler_id,
+        sampler_version=revision,
+        accepted_prediction_types=(PredictionType.FLOW_VELOCITY,),
+        accepted_sigma_domains=(SigmaDomain.UNIT_FLOW,),
+        accepted_ownerships=(ScheduleOwnership.EXTERNAL_SIGMAS,),
+        terminal_requirement=TerminalRequirement.REQUIRES_ZERO,
+        execution_behavior=ExecutionBehavior.DETERMINISTIC,
+        noise_ownership=NoiseOwnership.NONE,
+        required_state=(),
+        supports_partial_denoise=True,
+        supports_per_token_timesteps=False,
+    )
+
+
+_COMFY_SAMPLER_ID: Final = "flowmatch.euler"
+_UNIPC_SAMPLER_ID: Final = "unipc.multistep"
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class _WanDefinition:
+    profile: WanProfileId
+    generation: WanGeneration
+    task: WanTask
+    source: WanSource
+    resolution: WanResolution
+    ratio: float
+    steps: int
+    model_variant: str
+    display_name: str
+    evidence: EvidenceLevel
+    primary_source_id: str
+    sampler_id: str
+    guidance: float
+    cfg_low: float | None = None
+    cfg_high: float | None = None
+    boundary: float | None = None
+    weight: ModelWeightProvenance = _WAN21_T2V_WEIGHT
+
+
+def _definition(
+    profile: WanProfileId,
+    generation: WanGeneration,
+    task: WanTask,
+    source: WanSource,
+    resolution: WanResolution,
+    ratio: float,
+    steps: int,
+    model_variant: str,
+    display_name: str,
+    evidence: EvidenceLevel,
+    primary_source_id: str,
+    sampler_id: str,
+    guidance: float,
+    *,
+    cfg_low: float | None = None,
+    cfg_high: float | None = None,
+    boundary: float | None = None,
+    weight: ModelWeightProvenance,
+) -> _WanDefinition:
+    return _WanDefinition(
+        profile=profile,
+        generation=generation,
+        task=task,
+        source=source,
+        resolution=resolution,
+        ratio=ratio,
+        steps=steps,
+        model_variant=model_variant,
+        display_name=display_name,
+        evidence=evidence,
+        primary_source_id=primary_source_id,
+        sampler_id=sampler_id,
+        guidance=guidance,
+        cfg_low=cfg_low,
+        cfg_high=cfg_high,
+        boundary=boundary,
+        weight=weight,
+    )
+
+
+_DEFINITIONS: tuple[_WanDefinition, ...] = (
+    _definition(
+        WanProfileId.WAN21_COMFY_NATIVE,
+        WanGeneration.WAN21,
+        WanTask.T2V,
+        WanSource.COMFY_NATIVE,
+        WanResolution.NONE,
+        8.0,
+        50,
+        "2.1-t2v-comfy-native",
+        "Wan 2.1 T2V ComfyUI Native Shift",
+        EvidenceLevel.FRAMEWORK_REFERENCE,
+        _COMFYUI_FRAMEWORK.framework_id,
+        _COMFY_SAMPLER_ID,
+        5.0,
+        weight=_WAN21_T2V_WEIGHT,
+    ),
+    _definition(
+        WanProfileId.WAN21_T2V_OFFICIAL,
+        WanGeneration.WAN21,
+        WanTask.T2V,
+        WanSource.OFFICIAL_NATIVE,
+        WanResolution.NONE,
+        5.0,
+        50,
+        "2.1-t2v",
+        "Wan 2.1 T2V Official Native Shift",
+        EvidenceLevel.OFFICIAL,
+        _WAN21_SOURCE.source_id,
+        _COMFY_SAMPLER_ID,
+        5.0,
+        weight=_WAN21_T2V_WEIGHT,
+    ),
+    _definition(
+        WanProfileId.WAN21_I2V_480P_OFFICIAL,
+        WanGeneration.WAN21,
+        WanTask.I2V,
+        WanSource.OFFICIAL_NATIVE,
+        WanResolution.P480,
+        3.0,
+        40,
+        "2.1-i2v-480p",
+        "Wan 2.1 I2V 480P Official Native Shift",
+        EvidenceLevel.OFFICIAL,
+        _WAN21_SOURCE.source_id,
+        _COMFY_SAMPLER_ID,
+        5.0,
+        weight=_WAN21_I2V_480_WEIGHT,
+    ),
+    _definition(
+        WanProfileId.WAN21_I2V_720P_OFFICIAL,
+        WanGeneration.WAN21,
+        WanTask.I2V,
+        WanSource.OFFICIAL_NATIVE,
+        WanResolution.P720,
+        5.0,
+        40,
+        "2.1-i2v-720p",
+        "Wan 2.1 I2V 720P Official Native Shift",
+        EvidenceLevel.OFFICIAL,
+        _WAN21_SOURCE.source_id,
+        _COMFY_SAMPLER_ID,
+        5.0,
+        weight=_WAN21_I2V_720_WEIGHT,
+    ),
+    _definition(
+        WanProfileId.WAN21_T2V_DIFFUSERS,
+        WanGeneration.WAN21,
+        WanTask.T2V,
+        WanSource.DIFFUSERS_REFERENCE,
+        WanResolution.NONE,
+        3.0,
+        50,
+        "2.1-t2v-diffusers",
+        "Wan 2.1 T2V Diffusers Schedule Reference",
+        EvidenceLevel.FRAMEWORK_REFERENCE,
+        _DIFFUSERS_FRAMEWORK.framework_id,
+        _UNIPC_SAMPLER_ID,
+        5.0,
+        weight=_WAN21_T2V_WEIGHT,
+    ),
+    _definition(
+        WanProfileId.WAN21_I2V_480P_DIFFUSERS,
+        WanGeneration.WAN21,
+        WanTask.I2V,
+        WanSource.DIFFUSERS_REFERENCE,
+        WanResolution.P480,
+        3.0,
+        40,
+        "2.1-i2v-480p-diffusers",
+        "Wan 2.1 I2V 480P Diffusers Schedule Reference",
+        EvidenceLevel.FRAMEWORK_REFERENCE,
+        _DIFFUSERS_FRAMEWORK.framework_id,
+        _UNIPC_SAMPLER_ID,
+        5.0,
+        weight=_WAN21_I2V_480_WEIGHT,
+    ),
+    _definition(
+        WanProfileId.WAN21_I2V_720P_DIFFUSERS,
+        WanGeneration.WAN21,
+        WanTask.I2V,
+        WanSource.DIFFUSERS_REFERENCE,
+        WanResolution.P720,
+        5.0,
+        40,
+        "2.1-i2v-720p-diffusers",
+        "Wan 2.1 I2V 720P Diffusers Schedule Reference",
+        EvidenceLevel.FRAMEWORK_REFERENCE,
+        _DIFFUSERS_FRAMEWORK.framework_id,
+        _UNIPC_SAMPLER_ID,
+        5.0,
+        weight=_WAN21_I2V_720_WEIGHT,
+    ),
+    _definition(
+        WanProfileId.WAN22_TI2V_5B_NATIVE,
+        WanGeneration.WAN22,
+        WanTask.TI2V,
+        WanSource.COMFY_NATIVE,
+        WanResolution.NONE,
+        5.0,
+        50,
+        "2.2-ti2v-5b",
+        "Wan 2.2 TI2V 5B Native Shift",
+        EvidenceLevel.FRAMEWORK_REFERENCE,
+        _COMFYUI_FRAMEWORK.framework_id,
+        _COMFY_SAMPLER_ID,
+        5.0,
+        weight=_WAN22_TI2V_WEIGHT,
+    ),
+    _definition(
+        WanProfileId.WAN22_T2V_A14B_NATIVE,
+        WanGeneration.WAN22,
+        WanTask.T2V,
+        WanSource.OFFICIAL_NATIVE,
+        WanResolution.NONE,
+        12.0,
+        40,
+        "2.2-t2v-a14b",
+        "Wan 2.2 T2V A14B Official Native Shift",
+        EvidenceLevel.OFFICIAL,
+        _WAN22_SOURCE.source_id,
+        _COMFY_SAMPLER_ID,
+        3.0,
+        cfg_low=3.0,
+        cfg_high=4.0,
+        boundary=0.875,
+        weight=_WAN22_T2V_WEIGHT,
+    ),
+    _definition(
+        WanProfileId.WAN22_I2V_A14B_NATIVE,
+        WanGeneration.WAN22,
+        WanTask.I2V,
+        WanSource.OFFICIAL_NATIVE,
+        WanResolution.NONE,
+        5.0,
+        40,
+        "2.2-i2v-a14b",
+        "Wan 2.2 I2V A14B Official Native Shift",
+        EvidenceLevel.OFFICIAL,
+        _WAN22_SOURCE.source_id,
+        _COMFY_SAMPLER_ID,
+        3.5,
+        cfg_low=3.5,
+        cfg_high=3.5,
+        boundary=0.9,
+        weight=_WAN22_I2V_WEIGHT,
+    ),
+    _definition(
+        WanProfileId.WAN22_TI2V_5B_DIFFUSERS,
+        WanGeneration.WAN22,
+        WanTask.TI2V,
+        WanSource.DIFFUSERS_REFERENCE,
+        WanResolution.NONE,
+        5.0,
+        50,
+        "2.2-ti2v-5b-diffusers",
+        "Wan 2.2 TI2V 5B Diffusers Schedule Reference",
+        EvidenceLevel.FRAMEWORK_REFERENCE,
+        _DIFFUSERS_FRAMEWORK.framework_id,
+        _UNIPC_SAMPLER_ID,
+        5.0,
+        weight=_WAN22_TI2V_WEIGHT,
+    ),
+    _definition(
+        WanProfileId.WAN22_T2V_A14B_DIFFUSERS,
+        WanGeneration.WAN22,
+        WanTask.T2V,
+        WanSource.DIFFUSERS_REFERENCE,
+        WanResolution.NONE,
+        3.0,
+        40,
+        "2.2-t2v-a14b-diffusers",
+        "Wan 2.2 T2V A14B Diffusers Schedule Reference",
+        EvidenceLevel.FRAMEWORK_REFERENCE,
+        _DIFFUSERS_FRAMEWORK.framework_id,
+        _UNIPC_SAMPLER_ID,
+        3.0,
+        boundary=0.875,
+        weight=_WAN22_T2V_WEIGHT,
+    ),
+    _definition(
+        WanProfileId.WAN22_I2V_A14B_DIFFUSERS,
+        WanGeneration.WAN22,
+        WanTask.I2V,
+        WanSource.DIFFUSERS_REFERENCE,
+        WanResolution.NONE,
+        3.0,
+        40,
+        "2.2-i2v-a14b-diffusers",
+        "Wan 2.2 I2V A14B Diffusers Schedule Reference",
+        EvidenceLevel.FRAMEWORK_REFERENCE,
+        _DIFFUSERS_FRAMEWORK.framework_id,
+        _UNIPC_SAMPLER_ID,
+        3.5,
+        boundary=0.9,
+        weight=_WAN22_I2V_WEIGHT,
+    ),
+)
+
+
+def _references() -> tuple[WanEvidenceReference, ...]:
+    return (
+        WanEvidenceReference(
+            lane="comfyui_implementation",
+            url=_COMFYUI_URL,
+            revision=WAN_COMFYUI_REVISION,
+            locators=("comfy/model_sampling.py", "comfy/supported_models.py"),
+        ),
+        WanEvidenceReference(
+            lane="diffusers_framework",
+            url=_DIFFUSERS_URL,
+            revision=WAN_DIFFUSERS_REVISION,
+            locators=(
+                "src/diffusers/schedulers/scheduling_flow_match_euler_discrete.py",
+                "src/diffusers/schedulers/scheduling_unipc_multistep.py",
+            ),
+        ),
+        WanEvidenceReference(
+            lane="official_wan21",
+            url=_WAN21_URL,
+            revision=WAN21_REPOSITORY_REVISION,
+            locators=("LICENSE", "README.md", "wan/configs/wan_t2v_1.3B.py"),
+        ),
+        WanEvidenceReference(
+            lane="official_wan22",
+            url=_WAN22_URL,
+            revision=WAN22_REPOSITORY_REVISION,
+            locators=("LICENSE", "README.md", "wan/configs/wan_t2v_A14B.py"),
+        ),
+    )
+
+
+_REFERENCES = _references()
+
+
+def _source_for(definition: _WanDefinition) -> str:
+    if definition.source is WanSource.COMFY_NATIVE:
+        return _COMFYUI_URL
+    if definition.source is WanSource.DIFFUSERS_REFERENCE:
+        return _DIFFUSERS_URL
+    return _WAN21_URL if definition.generation is WanGeneration.WAN21 else _WAN22_URL
+
+
+def _revision_for(definition: _WanDefinition) -> str:
+    if definition.source is WanSource.COMFY_NATIVE:
+        return WAN_COMFYUI_REVISION
+    if definition.source is WanSource.DIFFUSERS_REFERENCE:
+        return WAN_DIFFUSERS_REVISION
+    return (
+        WAN21_REPOSITORY_REVISION
+        if definition.generation is WanGeneration.WAN21
+        else WAN22_REPOSITORY_REVISION
+    )
+
+
+def _schema(definition: _WanDefinition) -> ProfileSchemaV1:
+    model = ModelCapabilities(
+        model_family="wan",
+        model_variant=definition.model_variant,
+        accepted_prediction_types=(PredictionType.FLOW_VELOCITY,),
+        accepted_sigma_domains=(SigmaDomain.UNIT_FLOW,),
+        accepted_ownerships=(ScheduleOwnership.EXTERNAL_SIGMAS,),
+        supports_partial_denoise=True,
+        supports_per_token_timesteps=False,
+    )
+    profile = ProfileCapabilities(
+        profile_id=definition.profile.value,
+        profile_version="1",
+        model_family="wan",
+        model_variant=definition.model_variant,
+        prediction_type=PredictionType.FLOW_VELOCITY,
+        sigma_domain=SigmaDomain.UNIT_FLOW,
+        ownership=ScheduleOwnership.EXTERNAL_SIGMAS,
+        terminal_sigma=TerminalSigma.ZERO,
+        allowed_execution_behaviors=(ExecutionBehavior.DETERMINISTIC,),
+        allowed_noise_ownerships=(NoiseOwnership.NONE,),
+        allowed_sampler_state=(),
+        supports_partial_denoise=True,
+        supports_per_token_timesteps=False,
+        reference_sampler_ids=(definition.sampler_id,),
+    )
+    source_ids = (
+        (_WAN21_SOURCE,) if definition.generation is WanGeneration.WAN21 else (_WAN22_SOURCE,)
+    )
+    frameworks = (_COMFYUI_FRAMEWORK, _DIFFUSERS_FRAMEWORK)
+    parameters: list[ProfileField] = [
+        ProfileField(name="generation", value=definition.generation.value),
+        ProfileField(name="resolution_class", value=definition.resolution.value),
+        ProfileField(name="shift", value=definition.ratio),
+        ProfileField(name="solver", value=definition.sampler_id),
+        ProfileField(name="source_mode", value=definition.source.value),
+        ProfileField(name="task", value=definition.task.value),
+        ProfileField(name="training_timesteps", value=_TRAINING_TIMESTEPS),
+    ]
+    if definition.boundary is not None:
+        parameters.append(ProfileField(name="boundary", value=definition.boundary))
+    if definition.cfg_high is not None:
+        parameters.append(ProfileField(name="cfg_high", value=definition.cfg_high))
+    if definition.cfg_low is not None:
+        parameters.append(ProfileField(name="cfg_low", value=definition.cfg_low))
+    parameters = sorted(parameters, key=lambda field: field.name)
+    limitations = [
+        "Only the exact released Wan generation/task/source matrix is qualified; derivative wrappers and weak-name aliases fail closed.",
+        "The direct-ratio shift owns the complete primary transform and cannot be composed with another shift or already-shifted sigmas.",
+        "Model weights, text conditioning, video execution, and visual quality are not verified by this schedule profile.",
+    ]
+    if definition.source is WanSource.DIFFUSERS_REFERENCE:
+        limitations.append(
+            "The Diffusers profile describes the UniPC scheduler sigma/timestep contract only; it does not establish UniPC solver parity under an Euler sampler."
+        )
+    if definition.boundary is not None:
+        limitations.append(
+            "The A14B boundary is caller-owned metadata; Sigmax never selects a high/low expert or dispatches a model."
+        )
+    if definition.resolution is not WanResolution.NONE:
+        limitations.append(
+            "The resolution class is required because the official Wan I2V shift is resolution-sensitive."
+        )
+    limitations.append(
+        "Shift-16 FLF2V/VACE and all other derivatives remain a named Phase 1 defer condition pending independent evidence."
+    )
+    guidance = GuidanceDeclaration(
+        model_convention="cfg_scale",
+        host_convention="cfg_scale",
+        model_value=definition.guidance,
+        host_value=definition.guidance,
+    )
+    recipe = InferenceRecipe(
+        recipe_id=definition.profile.value,
+        evidence=definition.evidence,
+        source_id=definition.primary_source_id,
+        steps=StepRangeDeclaration(
+            minimum=1,
+            maximum=_MAX_STEPS,
+            default=definition.steps,
+            reference_steps=(definition.steps,),
+            allow_modified=True,
+        ),
+        guidance=guidance,
+    )
+    return ProfileSchemaV1(
+        schema_id=PROFILE_SCHEMA_ID,
+        schema_version=PROFILE_SCHEMA_VERSION,
+        profile_id=definition.profile.value,
+        profile_version="1",
+        display_name=definition.display_name,
+        model_family="wan",
+        model_variant=definition.model_variant,
+        evidence=definition.evidence,
+        primary_source_id=definition.primary_source_id,
+        prediction_type=PredictionType.FLOW_VELOCITY,
+        sigma_domain=SigmaDomain.UNIT_FLOW,
+        ownership=ScheduleOwnership.EXTERNAL_SIGMAS,
+        base_grid=_BASE_GRID,
+        transforms=(
+            TransformDeclaration(
+                identifier="direct_ratio.shift",
+                stage=TransformStage.PRIMARY_TIME_SHIFT,
+                input_domain=SigmaDomain.UNIT_FLOW,
+                output_domain=SigmaDomain.UNIT_FLOW,
+                parameters=(ProfileField(name="ratio", value=definition.ratio),),
+            ),
+            TransformDeclaration(
+                identifier="terminal.append_zero",
+                stage=TransformStage.TERMINAL,
+                input_domain=SigmaDomain.UNIT_FLOW,
+                output_domain=SigmaDomain.UNIT_FLOW,
+            ),
+        ),
+        terminal=_TERMINAL,
+        slicing=_SLICING,
+        recipes=(recipe,),
+        detection=_DETECTION,
+        model_capabilities=model,
+        profile_capabilities=profile,
+        reference_sampler_capabilities=_sampler(definition.sampler_id, _revision_for(definition)),
+        artifact_versions=_ARTIFACT_VERSIONS,
+        software_sources=tuple(sorted(source_ids, key=lambda item: item.source_id)),
+        frameworks=tuple(sorted(frameworks, key=lambda item: item.framework_id)),
+        model_weights=(definition.weight,),
+        parameters=tuple(parameters),
+        known_limitations=tuple(limitations),
+    )
+
+
+_SCHEMAS_BY_PROFILE = {definition.profile: _schema(definition) for definition in _DEFINITIONS}
+
+WAN21_COMFY_NATIVE_SCHEMA: Final = _SCHEMAS_BY_PROFILE[WanProfileId.WAN21_COMFY_NATIVE]
+WAN21_T2V_OFFICIAL_SCHEMA: Final = _SCHEMAS_BY_PROFILE[WanProfileId.WAN21_T2V_OFFICIAL]
+WAN21_I2V_480P_OFFICIAL_SCHEMA: Final = _SCHEMAS_BY_PROFILE[WanProfileId.WAN21_I2V_480P_OFFICIAL]
+WAN21_I2V_720P_OFFICIAL_SCHEMA: Final = _SCHEMAS_BY_PROFILE[WanProfileId.WAN21_I2V_720P_OFFICIAL]
+WAN21_T2V_DIFFUSERS_SCHEMA: Final = _SCHEMAS_BY_PROFILE[WanProfileId.WAN21_T2V_DIFFUSERS]
+WAN21_I2V_480P_DIFFUSERS_SCHEMA: Final = _SCHEMAS_BY_PROFILE[WanProfileId.WAN21_I2V_480P_DIFFUSERS]
+WAN21_I2V_720P_DIFFUSERS_SCHEMA: Final = _SCHEMAS_BY_PROFILE[WanProfileId.WAN21_I2V_720P_DIFFUSERS]
+WAN22_TI2V_5B_NATIVE_SCHEMA: Final = _SCHEMAS_BY_PROFILE[WanProfileId.WAN22_TI2V_5B_NATIVE]
+WAN22_T2V_A14B_NATIVE_SCHEMA: Final = _SCHEMAS_BY_PROFILE[WanProfileId.WAN22_T2V_A14B_NATIVE]
+WAN22_I2V_A14B_NATIVE_SCHEMA: Final = _SCHEMAS_BY_PROFILE[WanProfileId.WAN22_I2V_A14B_NATIVE]
+WAN22_TI2V_5B_DIFFUSERS_SCHEMA: Final = _SCHEMAS_BY_PROFILE[WanProfileId.WAN22_TI2V_5B_DIFFUSERS]
+WAN22_T2V_A14B_DIFFUSERS_SCHEMA: Final = _SCHEMAS_BY_PROFILE[WanProfileId.WAN22_T2V_A14B_DIFFUSERS]
+WAN22_I2V_A14B_DIFFUSERS_SCHEMA: Final = _SCHEMAS_BY_PROFILE[WanProfileId.WAN22_I2V_A14B_DIFFUSERS]
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class WanProfile:
+    """Immutable Wan profile plus four pinned evidence lanes."""
+
+    profile: WanProfileId
+    schema: ProfileSchemaV1
+    references: tuple[WanEvidenceReference, ...]
+
+    @property
+    def profile_id(self) -> str:
+        return self.schema.profile_id
+
+    @property
+    def profile_version(self) -> str:
+        return self.schema.profile_version
+
+    def __post_init__(self) -> None:
+        if _SCHEMAS_BY_PROFILE.get(self.profile) is not self.schema:
+            raise ScheduleContractError("Wan profile/schema mismatch")
+        lanes = tuple(reference.lane for reference in self.references)
+        if lanes != tuple(sorted(set(lanes))) or len(lanes) != 4:
+            raise ScheduleContractError("Wan requires four pinned evidence lanes")
+
+
+_PROFILES_BY_ID = {
+    profile: WanProfile(profile=profile, schema=schema, references=_REFERENCES)
+    for profile, schema in _SCHEMAS_BY_PROFILE.items()
+}
+
+WAN21_COMFY_NATIVE_PROFILE: Final = _PROFILES_BY_ID[WanProfileId.WAN21_COMFY_NATIVE]
+WAN21_T2V_OFFICIAL_PROFILE: Final = _PROFILES_BY_ID[WanProfileId.WAN21_T2V_OFFICIAL]
+WAN21_I2V_480P_OFFICIAL_PROFILE: Final = _PROFILES_BY_ID[WanProfileId.WAN21_I2V_480P_OFFICIAL]
+WAN21_I2V_720P_OFFICIAL_PROFILE: Final = _PROFILES_BY_ID[WanProfileId.WAN21_I2V_720P_OFFICIAL]
+WAN21_T2V_DIFFUSERS_PROFILE: Final = _PROFILES_BY_ID[WanProfileId.WAN21_T2V_DIFFUSERS]
+WAN21_I2V_480P_DIFFUSERS_PROFILE: Final = _PROFILES_BY_ID[WanProfileId.WAN21_I2V_480P_DIFFUSERS]
+WAN21_I2V_720P_DIFFUSERS_PROFILE: Final = _PROFILES_BY_ID[WanProfileId.WAN21_I2V_720P_DIFFUSERS]
+WAN22_TI2V_5B_NATIVE_PROFILE: Final = _PROFILES_BY_ID[WanProfileId.WAN22_TI2V_5B_NATIVE]
+WAN22_T2V_A14B_NATIVE_PROFILE: Final = _PROFILES_BY_ID[WanProfileId.WAN22_T2V_A14B_NATIVE]
+WAN22_I2V_A14B_NATIVE_PROFILE: Final = _PROFILES_BY_ID[WanProfileId.WAN22_I2V_A14B_NATIVE]
+WAN22_TI2V_5B_DIFFUSERS_PROFILE: Final = _PROFILES_BY_ID[WanProfileId.WAN22_TI2V_5B_DIFFUSERS]
+WAN22_T2V_A14B_DIFFUSERS_PROFILE: Final = _PROFILES_BY_ID[WanProfileId.WAN22_T2V_A14B_DIFFUSERS]
+WAN22_I2V_A14B_DIFFUSERS_PROFILE: Final = _PROFILES_BY_ID[WanProfileId.WAN22_I2V_A14B_DIFFUSERS]
+
+
+def _coerce_profile(value: object) -> WanProfileId:
+    if isinstance(value, WanProfileId):
+        return value
+    raise ScheduleContractError("profile must be an explicit WanProfileId")
+
+
+def _coerce_resolution(value: object, *, default: WanResolution) -> WanResolution:
+    if value is None:
+        return default
+    if isinstance(value, WanResolution):
+        return value
+    if isinstance(value, str):
+        try:
+            return WanResolution(value)
+        except ValueError as exc:
+            raise ScheduleContractError("resolution is unsupported") from exc
+    raise ScheduleContractError("resolution is unsupported")
+
+
+def derive_wan_boundary(*, sigmas: tuple[float, ...], normalized_boundary: float) -> WanBoundary:
+    """Return the first low-noise transition at or below a normalized boundary."""
+
+    if not isinstance(sigmas, tuple) or len(sigmas) < 2:
+        raise ScheduleContractError("Wan boundary requires a terminal-inclusive sigma tuple")
+    if (
+        isinstance(normalized_boundary, bool)
+        or not isinstance(normalized_boundary, int | float)
+        or not math.isfinite(float(normalized_boundary))
+        or not 0.0 < float(normalized_boundary) < 1.0
+    ):
+        raise ScheduleContractError("Wan boundary must be a finite normalized value in (0, 1)")
+    previous = float("inf")
+    boundary = float(normalized_boundary)
+    normalized_sigmas: list[float] = []
+    for value in sigmas:
+        if (
+            isinstance(value, bool)
+            or not isinstance(value, int | float)
+            or not math.isfinite(float(value))
+            or float(value) > previous
+        ):
+            raise ScheduleContractError("Wan boundary sigmas must be finite and descending")
+        current = float(value)
+        normalized_sigmas.append(current)
+        previous = current
+    for index, current in enumerate(normalized_sigmas):
+        if current <= boundary:
+            crossing = (
+                "at_or_above"
+                if math.isclose(current, boundary, rel_tol=0.0, abs_tol=_BOUNDARY_TOLERANCE)
+                else "crossed_below"
+            )
+            return WanBoundary(
+                normalized=boundary,
+                transition_index=index,
+                crossing=crossing,
+            )
+    raise ScheduleContractError("Wan boundary is outside the constructed schedule")
+
+
+def _definition_for(profile: WanProfileId) -> _WanDefinition:
+    for definition in _DEFINITIONS:
+        if definition.profile is profile:
+            return definition
+    raise ScheduleContractError("profile is unsupported")
+
+
+def build_wan_schedule(
+    *,
+    profile: WanProfileId,
+    steps: int,
+    resolution: WanResolution | str | None = None,
+    strict_source: bool = False,
+    already_shifted: bool = False,
+) -> WanScheduleResult:
+    """Build one explicit Wan schedule and caller-owned A14B boundary metadata."""
+
+    selected = _coerce_profile(profile)
+    definition = _definition_for(selected)
+    if not isinstance(strict_source, bool) or not isinstance(already_shifted, bool):
+        raise ScheduleContractError("strict_source and already_shifted must be boolean")
+    if already_shifted:
+        raise ScheduleContractError("already shifted sigmas cannot be composed with Wan shift")
+    if not isinstance(steps, int) or isinstance(steps, bool) or not 1 <= steps <= _MAX_STEPS:
+        raise ScheduleContractError(f"steps must be an integer between 1 and {_MAX_STEPS}")
+    selected_resolution = _coerce_resolution(resolution, default=WanResolution.NONE)
+    if selected_resolution is not definition.resolution:
+        if definition.resolution is not WanResolution.NONE:
+            raise ScheduleContractError(
+                f"resolution {definition.resolution.value} is required for {selected.value}"
+            )
+        raise ScheduleContractError("resolution must be none for this Wan profile")
+    if strict_source and steps != definition.steps:
+        raise ScheduleContractError(
+            f"steps must equal the pinned {definition.profile.value} {definition.steps}-step recipe"
+        )
+    evidence = definition.evidence if steps == definition.steps else EvidenceLevel.MODIFIED
+    warnings = (
+        ()
+        if evidence is not EvidenceLevel.MODIFIED
+        else (
+            f"steps differ from the pinned {definition.profile.value} {definition.steps}-step recipe; evidence is modified",
+        )
+    )
+    shifted = direct_ratio_shift(
+        flowmatch_reciprocal_step_grid(steps), ratio=definition.ratio, domain=SigmaDomain.UNIT_FLOW
+    )
+    sigmas = apply_terminal_policy(
+        shifted, policy=TerminalPolicy.APPEND_ZERO, domain=SigmaDomain.UNIT_FLOW
+    )
+    request = ScheduleRequest(
+        ownership=ScheduleOwnership.EXTERNAL_SIGMAS,
+        requested_inputs=ScheduleInputs(steps=steps),
+        sigma_domain=SigmaDomain.UNIT_FLOW,
+        provenance=Provenance(
+            engine_version=VERSION,
+            evidence=evidence,
+            source=_source_for(definition),
+            source_revision=_revision_for(definition),
+            profile_id=definition.profile.value,
+            profile_version="1",
+        ),
+        base_grid=BaseGridSpec(
+            identifier="flowmatch.reciprocal_step", output_domain=SigmaDomain.UNIT_FLOW
+        ),
+        transforms=(
+            TransformContract(
+                name="direct_ratio.shift",
+                stage=TransformStage.PRIMARY_TIME_SHIFT,
+                input_domain=SigmaDomain.UNIT_FLOW,
+                output_domain=SigmaDomain.UNIT_FLOW,
+            ),
+            TransformContract(
+                name="terminal.append_zero",
+                stage=TransformStage.TERMINAL,
+                input_domain=SigmaDomain.UNIT_FLOW,
+                output_domain=SigmaDomain.UNIT_FLOW,
+            ),
+        ),
+        terminal_policy=TerminalPolicy.APPEND_ZERO,
+        slicing=SliceSpec(),
+    )
+    schedule = ScheduleResult(
+        request=request,
+        effective_inputs=ScheduleInputs(steps=steps),
+        sigmas=validate_sigma_schedule(
+            sigmas,
+            domain=SigmaDomain.UNIT_FLOW,
+            expected_steps=steps,
+            require_terminal_zero=True,
+        ),
+        final_domain=SigmaDomain.UNIT_FLOW,
+        warnings=warnings,
+    )
+    boundary = (
+        derive_wan_boundary(sigmas=schedule.sigmas, normalized_boundary=definition.boundary)
+        if definition.boundary is not None
+        else None
+    )
+    return WanScheduleResult(schedule=schedule, boundary=boundary)
+
+
+__all__ = [
+    "WAN21_COMFY_NATIVE_PROFILE",
+    "WAN21_COMFY_NATIVE_SCHEMA",
+    "WAN21_I2V_480P_DIFFUSERS_PROFILE",
+    "WAN21_I2V_480P_DIFFUSERS_SCHEMA",
+    "WAN21_I2V_480P_OFFICIAL_PROFILE",
+    "WAN21_I2V_480P_OFFICIAL_SCHEMA",
+    "WAN21_I2V_720P_DIFFUSERS_PROFILE",
+    "WAN21_I2V_720P_DIFFUSERS_SCHEMA",
+    "WAN21_I2V_720P_OFFICIAL_PROFILE",
+    "WAN21_I2V_720P_OFFICIAL_SCHEMA",
+    "WAN21_REPOSITORY_REVISION",
+    "WAN21_T2V_DIFFUSERS_PROFILE",
+    "WAN21_T2V_DIFFUSERS_SCHEMA",
+    "WAN21_T2V_OFFICIAL_PROFILE",
+    "WAN21_T2V_OFFICIAL_SCHEMA",
+    "WAN22_I2V_A14B_DIFFUSERS_PROFILE",
+    "WAN22_I2V_A14B_DIFFUSERS_SCHEMA",
+    "WAN22_I2V_A14B_NATIVE_PROFILE",
+    "WAN22_I2V_A14B_NATIVE_SCHEMA",
+    "WAN22_REPOSITORY_REVISION",
+    "WAN22_T2V_A14B_DIFFUSERS_PROFILE",
+    "WAN22_T2V_A14B_DIFFUSERS_SCHEMA",
+    "WAN22_T2V_A14B_NATIVE_PROFILE",
+    "WAN22_T2V_A14B_NATIVE_SCHEMA",
+    "WAN22_TI2V_5B_DIFFUSERS_PROFILE",
+    "WAN22_TI2V_5B_DIFFUSERS_SCHEMA",
+    "WAN22_TI2V_5B_NATIVE_PROFILE",
+    "WAN22_TI2V_5B_NATIVE_SCHEMA",
+    "WAN_COMFYUI_REVISION",
+    "WAN_DIFFUSERS_REVISION",
+    "WanBoundary",
+    "WanEvidenceReference",
+    "WanGeneration",
+    "WanProfile",
+    "WanProfileId",
+    "WanResolution",
+    "WanScheduleResult",
+    "WanSource",
+    "WanTask",
+    "build_wan_schedule",
+    "derive_wan_boundary",
+]

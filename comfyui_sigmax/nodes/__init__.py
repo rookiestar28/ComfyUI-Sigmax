@@ -145,6 +145,14 @@ from comfyui_sigmax.nodes.turbo_workflow_output import (
     TurboWorkflowOutputResult,
     build_turbo_workflow_output,
 )
+from comfyui_sigmax.nodes.wan_sigma_scheduler import (
+    WAN_SIGMA_NODE_ID,
+    WAN_SIGMA_NODE_SCHEMA_ID,
+    WanSigmaNodeResult,
+    WanSigmaScheduler,
+    bind_wan_sigma_output_info,
+    build_wan_sigma_schedule,
+)
 from comfyui_sigmax.nodes.z_image_sigma_scheduler import (
     Z_IMAGE_SIGMA_NODE_ID,
     Z_IMAGE_SIGMA_NODE_SCHEMA_ID,
@@ -200,6 +208,8 @@ __all__ = [
     "TURBO_WORKFLOW_BUNDLE_UI_KEY",
     "TURBO_WORKFLOW_OUTPUT_NODE_ID",
     "TURBO_WORKFLOW_OUTPUT_SCHEMA_ID",
+    "WAN_SIGMA_NODE_ID",
+    "WAN_SIGMA_NODE_SCHEMA_ID",
     "Z_IMAGE_SIGMA_NODE_ID",
     "Z_IMAGE_SIGMA_NODE_SCHEMA_ID",
     "AdvancedFlowMatchNodeResult",
@@ -243,6 +253,8 @@ __all__ = [
     "ScheduleSlice",
     "TurboWorkflowOutput",
     "TurboWorkflowOutputResult",
+    "WanSigmaNodeResult",
+    "WanSigmaScheduler",
     "ZImageSigmaNodeResult",
     "ZImageSigmaScheduler",
     "ZImageSigmaVariant",
@@ -254,6 +266,7 @@ __all__ = [
     "bind_lumina2_sigma_output_info",
     "bind_qwen_image_sigma_output_info",
     "bind_sd3_sigma_output_info",
+    "bind_wan_sigma_output_info",
     "bind_z_image_sigma_output_info",
     "build_advanced_flowmatch_schedule",
     "build_anima_sigma_schedule",
@@ -273,6 +286,7 @@ __all__ = [
     "build_schedule_slice",
     "build_sd3_sigma_schedule",
     "build_turbo_workflow_output",
+    "build_wan_sigma_schedule",
     "build_z_image_sigma_schedule",
     "probe_model_family",
     "sigma_output_fingerprint",

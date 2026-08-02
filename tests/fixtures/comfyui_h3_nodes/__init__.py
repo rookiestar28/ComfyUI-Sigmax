@@ -24,6 +24,7 @@ _AURAFLOW_UI_KEY = "sigmax_auraflow_schedule"
 _LUMINA2_UI_KEY = "sigmax_lumina2_schedule"
 _HUNYUAN_IMAGE21_UI_KEY = "sigmax_hunyuan_image21_schedule"
 _ANIMA_UI_KEY = "sigmax_anima_schedule"
+_WAN_UI_KEY = "sigmax_wan_schedule"
 _KREA2_LORA_UI_KEY = "sigmax_krea2_lora_experimental"
 _KREA2_CONDITIONING_UI_KEY = "sigmax_krea2_conditioning"
 _KREA2_CONDITIONING_FEATURES = 12 * 2560
@@ -757,6 +758,84 @@ class AnimaScheduleProbe:
         }
 
 
+class WanScheduleProbe:
+    """Return model-free H2 evidence for explicit Wan profiles."""
+
+    CATEGORY = "SigmaxTest"
+    DESCRIPTION = "Test-only Wan 2.1/2.2 schedule H2 execution probe."
+    FUNCTION = "execute"
+    OUTPUT_NODE = True
+    RETURN_TYPES: tuple[()] = ()
+    RETURN_NAMES: tuple[()] = ()
+
+    @classmethod
+    def INPUT_TYPES(cls) -> dict[str, dict[str, tuple[object, ...]]]:
+        return {
+            "required": {
+                "sigmas": ("SIGMAS",),
+                "schedule_info": ("STRING", {"default": "", "multiline": True}),
+            }
+        }
+
+    def execute(self, sigmas: object, schedule_info: object) -> dict[str, object]:
+        if not isinstance(sigmas, torch.Tensor) or sigmas.device.type != "cpu":
+            raise ValueError("Wan H2 sigmas must be a CPU tensor")
+        if sigmas.dtype != torch.float32 or sigmas.ndim != 1:
+            raise ValueError("Wan H2 sigmas must be a float32 vector")
+        if not isinstance(schedule_info, str):
+            raise ValueError("Wan H2 schedule information must be text")
+        info = json.loads(schedule_info)
+        if not isinstance(info, dict):
+            raise ValueError("Wan H2 schedule information must be an object")
+        profile = info.get("profile", {})
+        shift = info.get("shift", {})
+        slicing = info.get("slicing", {})
+        boundary = info.get("boundary", {})
+        if not all(isinstance(item, dict) for item in (profile, shift, slicing, boundary)):
+            raise ValueError("Wan H2 schedule information is malformed")
+        expected = {
+            "wan2.1.t2v.official-native": ("official", 5.0, 50, None),
+            "wan2.1.i2v.480p.official-native": ("official", 3.0, 40, None),
+            "wan2.2.ti2v.5b.comfy-native": ("framework_reference", 5.0, 50, None),
+            "wan2.2.t2v-a14b.official-native": ("official", 12.0, 40, 0.875),
+        }.get(profile.get("id"))
+        steps = slicing.get("output_steps")
+        float_sigmas = _vector(sigmas)
+        expected_boundary = expected[3] if expected is not None else None
+        if (
+            info.get("schema") != "sigmax.wan-sigma-node/1"
+            or expected is None
+            or profile.get("evidence") != expected[0]
+            or shift != {"kind": "direct_ratio", "multiplier": 1.0, "ratio": expected[1]}
+            or info.get("strict_source") is not True
+            or type(steps) is not int
+            or steps != expected[2]
+            or len(float_sigmas) != steps + 1
+            or float_sigmas[0] != 1.0
+            or float_sigmas[-1] != 0.0
+            or any(float(left) <= float(right) for left, right in pairwise(float_sigmas))
+            or boundary.get("model_dispatch") is not False
+            or boundary.get("routing_owner") != "caller"
+            or (expected_boundary is None and boundary.get("step") != -1)
+            or (expected_boundary is not None and boundary.get("normalized") != expected_boundary)
+        ):
+            raise ValueError("Wan H2 schedule contract drifted")
+        trace = {"schedule_info": info, "sigmas": float_sigmas}
+        return {
+            "ui": {
+                _WAN_UI_KEY: [
+                    json.dumps(
+                        trace,
+                        allow_nan=False,
+                        ensure_ascii=False,
+                        separators=(",", ":"),
+                        sort_keys=True,
+                    )
+                ]
+            }
+        }
+
+
 class Krea2LoraExperimentalProbe:
     """Return model-free H2 evidence for one experimental Krea 2 LoRA schedule."""
 
@@ -881,7 +960,7 @@ class Krea2ConditioningProbe:
         if not isinstance(conditioning, list) or len(conditioning) != 1:
             raise ValueError("M4-12 probe requires one conditioning entry")
         entry = conditioning[0]
-        if not isinstance(entry, (list, tuple)) or len(entry) != 2:
+        if not isinstance(entry, list | tuple) or len(entry) != 2:
             raise ValueError("M4-12 probe conditioning pair is malformed")
         tensor, metadata = entry
         if not isinstance(tensor, torch.Tensor) or tensor.device.type != "cpu":
@@ -940,6 +1019,7 @@ NODE_CLASS_MAPPINGS = {
     "SigmaxTest.Lumina2ScheduleProbe": Lumina2ScheduleProbe,
     "SigmaxTest.HunyuanImage21ScheduleProbe": HunyuanImage21ScheduleProbe,
     "SigmaxTest.AnimaScheduleProbe": AnimaScheduleProbe,
+    "SigmaxTest.WanScheduleProbe": WanScheduleProbe,
     "SigmaxTest.CheckpointEvidenceProbe": CheckpointEvidenceProbe,
     "SigmaxTest.Krea2LoraExperimentalProbe": Krea2LoraExperimentalProbe,
     "SigmaxTest.Krea2ConditioningProbe": Krea2ConditioningProbe,
@@ -956,6 +1036,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "SigmaxTest.Lumina2ScheduleProbe": "Sigmax Test — Lumina-Image 2.0 Schedule Probe",
     "SigmaxTest.HunyuanImage21ScheduleProbe": "Sigmax Test — HunyuanImage 2.1 Schedule Probe",
     "SigmaxTest.AnimaScheduleProbe": "Sigmax Test — Anima Schedule Probe",
+    "SigmaxTest.WanScheduleProbe": "Sigmax Test — Wan Schedule Probe",
     "SigmaxTest.CheckpointEvidenceProbe": "Sigmax Test — Checkpoint Evidence Probe",
     "SigmaxTest.Krea2LoraExperimentalProbe": "Sigmax Test — Krea 2 LoRA Experimental Probe",
     "SigmaxTest.Krea2ConditioningProbe": "Sigmax Test — Krea 2 Conditioning Probe",

@@ -8,6 +8,14 @@ from comfyui_sigmax.nodes.advanced_flowmatch_scheduler import (
     AdvancedFlowMatchShiftMode,
     build_advanced_flowmatch_schedule,
 )
+from comfyui_sigmax.nodes.anima_sigma_scheduler import (
+    ANIMA_SIGMA_NODE_ID,
+    ANIMA_SIGMA_NODE_SCHEMA_ID,
+    AnimaSigmaNodeResult,
+    AnimaSigmaScheduler,
+    bind_anima_sigma_output_info,
+    build_anima_sigma_schedule,
+)
 from comfyui_sigmax.nodes.aura_flow_sigma_scheduler import (
     AURAFLOW_SIGMA_NODE_ID,
     AURAFLOW_SIGMA_NODE_SCHEMA_ID,
@@ -150,6 +158,8 @@ from comfyui_sigmax.nodes.z_image_sigma_scheduler import (
 __all__ = [
     "ADVANCED_FLOWMATCH_NODE_ID",
     "ADVANCED_FLOWMATCH_NODE_SCHEMA_ID",
+    "ANIMA_SIGMA_NODE_ID",
+    "ANIMA_SIGMA_NODE_SCHEMA_ID",
     "AURAFLOW_SIGMA_NODE_ID",
     "AURAFLOW_SIGMA_NODE_SCHEMA_ID",
     "CHECKPOINT_EVIDENCE_INSPECTOR_NODE_ID",
@@ -195,6 +205,8 @@ __all__ = [
     "AdvancedFlowMatchNodeResult",
     "AdvancedFlowMatchScheduler",
     "AdvancedFlowMatchShiftMode",
+    "AnimaSigmaNodeResult",
+    "AnimaSigmaScheduler",
     "AuraFlowSigmaNodeResult",
     "AuraFlowSigmaScheduler",
     "CheckpointEvidenceInspector",
@@ -234,6 +246,7 @@ __all__ = [
     "ZImageSigmaNodeResult",
     "ZImageSigmaScheduler",
     "ZImageSigmaVariant",
+    "bind_anima_sigma_output_info",
     "bind_aura_flow_sigma_output_info",
     "bind_flux1_schnell_sigma_output_info",
     "bind_hunyuan_image21_sigma_output_info",
@@ -243,6 +256,7 @@ __all__ = [
     "bind_sd3_sigma_output_info",
     "bind_z_image_sigma_output_info",
     "build_advanced_flowmatch_schedule",
+    "build_anima_sigma_schedule",
     "build_aura_flow_sigma_schedule",
     "build_flux1_schnell_sigma_schedule",
     "build_hunyuan_image21_sigma_schedule",

@@ -165,6 +165,7 @@ class PackageContractTests(unittest.TestCase):
         self.assertEqual(
             [
                 "Sigmax.AdvancedFlowMatchScheduler",
+                "Sigmax.AnimaSigmaScheduler",
                 "Sigmax.AuraFlowSigmaScheduler",
                 "Sigmax.CheckpointEvidenceInspector",
                 "Sigmax.Flux1SchnellSigmaScheduler",
@@ -190,6 +191,7 @@ class PackageContractTests(unittest.TestCase):
         self.assertEqual(
             {
                 "Sigmax.AdvancedFlowMatchScheduler": "Advanced FlowMatch Scheduler",
+                "Sigmax.AnimaSigmaScheduler": "Anima Sigma Scheduler",
                 "Sigmax.AuraFlowSigmaScheduler": "AuraFlow Sigma Scheduler",
                 "Sigmax.CheckpointEvidenceInspector": "Checkpoint Evidence Inspector",
                 "Sigmax.Flux1SchnellSigmaScheduler": "FLUX.1-schnell Sigma Scheduler",

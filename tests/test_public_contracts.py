@@ -53,6 +53,10 @@ def test_packaged_manifest_freezes_the_complete_m8_01_boundary() -> None:
             "schema": "sigmax.advanced-flowmatch-node/1",
         },
         {
+            "id": "Sigmax.AnimaSigmaScheduler",
+            "schema": "sigmax.anima-sigma-node/1",
+        },
+        {
             "id": "Sigmax.AuraFlowSigmaScheduler",
             "schema": "sigmax.aura-flow-sigma-node/1",
         },

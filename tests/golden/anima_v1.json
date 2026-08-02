@@ -1,0 +1,34 @@
+{
+  "schema": "sigmax.anima-golden/1",
+  "source_revisions": {
+    "official_model_card": "f7382c4bf9d7ffe4ceea593a0adbb470c56dd79b",
+    "official_diffusers_base": "073c3a9db359c31ad0e8aa268d15775473c2176c",
+    "comfyui": "5cc026f5b81b3f01fe7a1438a0fd4131d2ebda25"
+  },
+  "shift": {
+    "kind": "rational",
+    "shift": 3.0,
+    "training_timesteps": 1000,
+    "dynamic": false
+  },
+  "cases": [
+    {
+      "variant": "base",
+      "steps": 4,
+      "float64": [1.0, 0.9, 0.75, 0.5, 0.0],
+      "float32": [1.0, 0.8999999761581421, 0.75, 0.5, 0.0]
+    },
+    {
+      "variant": "aesthetic",
+      "steps": 4,
+      "float64": [1.0, 0.9, 0.75, 0.5, 0.0],
+      "float32": [1.0, 0.8999999761581421, 0.75, 0.5, 0.0]
+    },
+    {
+      "variant": "turbo",
+      "steps": 8,
+      "float64": [1.0, 0.9545454545454546, 0.9, 0.8333333333333334, 0.75, 0.6428571428571429, 0.5, 0.3, 0.0],
+      "float32": [1.0, 0.9545454382896423, 0.8999999761581421, 0.8333333134651184, 0.75, 0.6428571343421936, 0.5, 0.30000001192092896, 0.0]
+    }
+  ]
+}

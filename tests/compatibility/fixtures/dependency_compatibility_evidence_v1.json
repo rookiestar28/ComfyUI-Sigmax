@@ -25,7 +25,7 @@
         "comfyui": null,
         "container": null,
         "diffusers": null,
-        "python": "3.10.12",
+        "python": "3.10.20",
         "torch": null
       },
       "evidence_kind": "executed_invariant_contract",

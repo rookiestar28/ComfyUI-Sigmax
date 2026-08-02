@@ -74,6 +74,9 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
     fixtures = load_canonical_workflow_fixtures()
 
     assert tuple(item.identifier for item in fixtures) == (
+        "anima-aesthetic-v1-framework-50",
+        "anima-base-v1-framework-50",
+        "anima-turbo-v1-framework-8",
         "auraflow-v0-2-official-50",
         "flux1-schnell-official-4",
         "hunyuan-image21-base-official-50",
@@ -90,6 +93,9 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
         "z-image-turbo-official-8",
     )
     assert tuple(item.variant for item in fixtures) == (
+        "Anima Aesthetic v1.x",
+        "Anima Base v1.0",
+        "Anima Turbo v1.0",
         "AuraFlow v0.2",
         "FLUX.1-schnell",
         "HunyuanImage 2.1 Base",
@@ -108,6 +114,9 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
     assert fixtures[0].workflow is not fixtures[1].workflow
 
     expected_scheduler_widgets = {
+        "anima-aesthetic-v1-framework-50": ["Aesthetic (3.0)", 50, True, 0, -1, False],
+        "anima-base-v1-framework-50": ["Base (3.0)", 50, True, 0, -1, False],
+        "anima-turbo-v1-framework-8": ["Turbo (3.0)", 8, True, 0, -1, False],
         "flux1-schnell-official-4": [4, True, 0, -1],
         "hunyuan-image21-base-official-50": ["Base (5.0)", 50, True, 0, -1, False],
         "hunyuan-image21-distilled-official-8": ["Distilled (4.0)", 8, True, 0, -1, False],
@@ -172,6 +181,9 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
         workflow = fixture.workflow
         assert workflow["version"] == 0.4
         is_sigma_only = fixture.variant.startswith("Z-Image") or fixture.variant in {
+            "Anima Aesthetic v1.x",
+            "Anima Base v1.0",
+            "Anima Turbo v1.0",
             "FLUX.1-schnell",
             "Qwen Image",
             "SD3",
@@ -191,24 +203,28 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
         assert metadata.host.version == CANONICAL_HOST_VERSION
         expected_nodes = (
             (
-                ["Sigmax.Flux1SchnellSigmaScheduler"]
-                if fixture.variant == "FLUX.1-schnell"
+                ["Sigmax.AnimaSigmaScheduler"]
+                if fixture.variant.startswith("Anima")
                 else (
-                    ["Sigmax.QwenImageSigmaScheduler"]
-                    if fixture.variant == "Qwen Image"
+                    ["Sigmax.Flux1SchnellSigmaScheduler"]
+                    if fixture.variant == "FLUX.1-schnell"
                     else (
-                        ["Sigmax.SD3SigmaScheduler"]
-                        if fixture.variant == "SD3"
+                        ["Sigmax.QwenImageSigmaScheduler"]
+                        if fixture.variant == "Qwen Image"
                         else (
-                            ["Sigmax.AuraFlowSigmaScheduler"]
-                            if fixture.variant == "AuraFlow v0.2"
+                            ["Sigmax.SD3SigmaScheduler"]
+                            if fixture.variant == "SD3"
                             else (
-                                ["Sigmax.Lumina2SigmaScheduler"]
-                                if fixture.variant == "Lumina-Image 2.0"
+                                ["Sigmax.AuraFlowSigmaScheduler"]
+                                if fixture.variant == "AuraFlow v0.2"
                                 else (
-                                    ["Sigmax.HunyuanImage21SigmaScheduler"]
-                                    if fixture.variant.startswith("HunyuanImage 2.1")
-                                    else ["Sigmax.ZImageSigmaScheduler"]
+                                    ["Sigmax.Lumina2SigmaScheduler"]
+                                    if fixture.variant == "Lumina-Image 2.0"
+                                    else (
+                                        ["Sigmax.HunyuanImage21SigmaScheduler"]
+                                        if fixture.variant.startswith("HunyuanImage 2.1")
+                                        else ["Sigmax.ZImageSigmaScheduler"]
+                                    )
                                 )
                             )
                         )
@@ -228,6 +244,9 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
         )
         assert tuple(item.identifier for item in metadata.nodes) == tuple(sorted(expected_nodes))
         expected_profile = {
+            "Anima Aesthetic v1.x": "anima.aesthetic.framework-reference",
+            "Anima Base v1.0": "anima.base.framework-reference",
+            "Anima Turbo v1.0": "anima.turbo.framework-reference",
             "FLUX.1-schnell": "flux1.schnell.official",
             "RAW": "krea2.raw.official",
             "Turbo": "krea2.turbo.official",
@@ -261,6 +280,7 @@ def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
     assert baseline.host_version == CANONICAL_HOST_VERSION == "0.29.0"
     assert baseline.host_revision == CANONICAL_HOST_REVISION
     assert tuple(baseline.object_info) == (
+        "Sigmax.AnimaSigmaScheduler",
         "Sigmax.AuraFlowSigmaScheduler",
         "Sigmax.Flux1SchnellSigmaScheduler",
         "Sigmax.HunyuanImage21SigmaScheduler",
@@ -278,7 +298,7 @@ def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
     assert report.lane is WorkflowValidationLane.KNOWN_GOOD
     assert report.host_version == CANONICAL_HOST_VERSION
     assert report.host_revision == CANONICAL_HOST_REVISION
-    assert report.workflow_count == 14
+    assert report.workflow_count == 17
     assert report.compatible is True
     assert report.gate_passed is True
     assert report.observational is False
@@ -286,6 +306,7 @@ def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
     projection = report.projection()
     assert projection["package"] == {"id": "comfyui-sigmax", "version": "1.0.0"}
     assert projection["nodes"] == [
+        {"id": "Sigmax.AnimaSigmaScheduler", "version": "1"},
         {"id": "Sigmax.AuraFlowSigmaScheduler", "version": "1"},
         {"id": "Sigmax.Flux1SchnellSigmaScheduler", "version": "1"},
         {"id": "Sigmax.HunyuanImage21SigmaScheduler", "version": "1"},

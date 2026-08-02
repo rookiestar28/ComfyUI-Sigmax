@@ -23,6 +23,7 @@ _SD3_UI_KEY = "sigmax_sd3_schedule"
 _AURAFLOW_UI_KEY = "sigmax_auraflow_schedule"
 _LUMINA2_UI_KEY = "sigmax_lumina2_schedule"
 _HUNYUAN_IMAGE21_UI_KEY = "sigmax_hunyuan_image21_schedule"
+_ANIMA_UI_KEY = "sigmax_anima_schedule"
 _KREA2_LORA_UI_KEY = "sigmax_krea2_lora_experimental"
 _KREA2_CONDITIONING_UI_KEY = "sigmax_krea2_conditioning"
 _KREA2_CONDITIONING_FEATURES = 12 * 2560
@@ -684,6 +685,78 @@ class HunyuanImage21ScheduleProbe:
         }
 
 
+class AnimaScheduleProbe:
+    """Return model-free H2 evidence for one explicit Anima v1 variant."""
+
+    CATEGORY = "SigmaxTest"
+    DESCRIPTION = "Test-only Anima v1 schedule H2 execution probe."
+    FUNCTION = "execute"
+    OUTPUT_NODE = True
+    RETURN_TYPES: tuple[()] = ()
+    RETURN_NAMES: tuple[()] = ()
+
+    @classmethod
+    def INPUT_TYPES(cls) -> dict[str, dict[str, tuple[object, ...]]]:
+        return {
+            "required": {
+                "sigmas": ("SIGMAS",),
+                "schedule_info": ("STRING", {"default": "", "multiline": True}),
+            }
+        }
+
+    def execute(self, sigmas: object, schedule_info: object) -> dict[str, object]:
+        if not isinstance(sigmas, torch.Tensor) or sigmas.device.type != "cpu":
+            raise ValueError("Anima H2 sigmas must be a CPU tensor")
+        if not isinstance(schedule_info, str):
+            raise ValueError("Anima H2 schedule information must be text")
+        info = json.loads(schedule_info)
+        if not isinstance(info, dict):
+            raise ValueError("Anima H2 schedule information must be an object")
+        profile = info.get("profile", {})
+        if not isinstance(profile, dict):
+            raise ValueError("Anima H2 profile is malformed")
+        variant = profile.get("variant")
+        if not isinstance(variant, str):
+            raise ValueError("Anima H2 profile variant is malformed")
+        expected = {
+            "base-v1.0": ("anima.base.framework-reference", 30, 50),
+            "aesthetic-v1": ("anima.aesthetic.framework-reference", 30, 50),
+            "turbo-v1.0": ("anima.turbo.framework-reference", 8, 12),
+        }.get(variant)
+        steps = info.get("slicing", {}).get("output_steps")
+        if (
+            expected is None
+            or sigmas.dtype != torch.float32
+            or sigmas.ndim != 1
+            or type(steps) is not int
+            or steps < expected[1]
+            or steps > expected[2]
+            or len(sigmas) != steps + 1
+            or info.get("schema") != "sigmax.anima-sigma-node/1"
+            or profile.get("id") != expected[0]
+            or profile.get("evidence") != "framework_reference"
+            or info.get("shift") != {"kind": "rational", "multiplier": 1.0, "shift": 3.0}
+            or float(sigmas[0]) != 1.0
+            or float(sigmas[-1]) != 0.0
+            or any(float(left) <= float(right) for left, right in pairwise(sigmas))
+        ):
+            raise ValueError("Anima H2 schedule contract drifted")
+        trace = {"schedule_info": info, "sigmas": _vector(sigmas)}
+        return {
+            "ui": {
+                _ANIMA_UI_KEY: [
+                    json.dumps(
+                        trace,
+                        allow_nan=False,
+                        ensure_ascii=False,
+                        separators=(",", ":"),
+                        sort_keys=True,
+                    )
+                ]
+            }
+        }
+
+
 class Krea2LoraExperimentalProbe:
     """Return model-free H2 evidence for one experimental Krea 2 LoRA schedule."""
 
@@ -866,6 +939,7 @@ NODE_CLASS_MAPPINGS = {
     "SigmaxTest.AuraFlowScheduleProbe": AuraFlowScheduleProbe,
     "SigmaxTest.Lumina2ScheduleProbe": Lumina2ScheduleProbe,
     "SigmaxTest.HunyuanImage21ScheduleProbe": HunyuanImage21ScheduleProbe,
+    "SigmaxTest.AnimaScheduleProbe": AnimaScheduleProbe,
     "SigmaxTest.CheckpointEvidenceProbe": CheckpointEvidenceProbe,
     "SigmaxTest.Krea2LoraExperimentalProbe": Krea2LoraExperimentalProbe,
     "SigmaxTest.Krea2ConditioningProbe": Krea2ConditioningProbe,
@@ -881,6 +955,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "SigmaxTest.AuraFlowScheduleProbe": "Sigmax Test — AuraFlow Schedule Probe",
     "SigmaxTest.Lumina2ScheduleProbe": "Sigmax Test — Lumina-Image 2.0 Schedule Probe",
     "SigmaxTest.HunyuanImage21ScheduleProbe": "Sigmax Test — HunyuanImage 2.1 Schedule Probe",
+    "SigmaxTest.AnimaScheduleProbe": "Sigmax Test — Anima Schedule Probe",
     "SigmaxTest.CheckpointEvidenceProbe": "Sigmax Test — Checkpoint Evidence Probe",
     "SigmaxTest.Krea2LoraExperimentalProbe": "Sigmax Test — Krea 2 LoRA Experimental Probe",
     "SigmaxTest.Krea2ConditioningProbe": "Sigmax Test — Krea 2 Conditioning Probe",

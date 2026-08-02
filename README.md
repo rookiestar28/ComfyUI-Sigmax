@@ -1,11 +1,10 @@
 # ComfyUI-Sigmax
-
-ComfyUI-Sigmax provides model-aware sigma schedules for ComfyUI, with verified Krea 2, Z-Image, FLUX.1-schnell, Qwen Image, SD3, AuraFlow v0.2, Lumina-Image 2.0, and HunyuanImage 2.1 profiles plus editing tools.
+ComfyUI-Sigmax provides model-aware sigma schedules for ComfyUI, with verified Krea 2, Z-Image, FLUX.1-schnell, Qwen Image, SD3, AuraFlow v0.2, Lumina-Image 2.0, HunyuanImage 2.1, and Anima profiles plus editing tools.
 
 ## Features
 
 - Explicit model and variant selection with no silent generic fallback.
-- Verified Krea 2, Z-Image, FLUX.1-schnell, Qwen Image, SD3, AuraFlow v0.2, Lumina-Image 2.0, and HunyuanImage 2.1 recipes.
+- Verified Krea 2, Z-Image, FLUX.1-schnell, Qwen Image, SD3, AuraFlow v0.2, Lumina-Image 2.0, HunyuanImage 2.1, and Anima recipes.
 - Schedule slicing, concatenation, resampling, inspection, and comparison.
 - Experimental Krea 2 `CONDITIONING` tap rebalancing for explicitly selected RAW or Turbo workflows, with fixed RMS preservation and no scheduler/model patching.
 - Checkpoint header inspection without loading model weights.
@@ -38,7 +37,7 @@ Python 3.10 or newer and ComfyUI 0.29.0 or newer are required. Do not install th
 
 ## Use in ComfyUI
 
-Search the node menu for `Sigmax`. The package registers 20 namespaced nodes.
+Search the node menu for `Sigmax`. The package registers 21 namespaced nodes.
 
 ### Build a model schedule
 
@@ -55,6 +54,7 @@ Search the node menu for `Sigmax`. The package registers 20 namespaced nodes.
 | Original AuraFlow v0.2 | `Sigmax.AuraFlowSigmaScheduler` | `Official Fixed (1.73)`, 50 steps, CFG 3.5; source mode is explicit |
 | Lumina-Image 2.0 | `Sigmax.Lumina2SigmaScheduler` | `Official Fixed (6.0)`, 50 steps, CFG 4.0; source mode is explicit |
 | HunyuanImage 2.1 | `Sigmax.HunyuanImage21SigmaScheduler` | `Base (5.0)`, 50 steps, CFG 3.5, or `Distilled (4.0)`, 8 steps, CFG 3.25; variant is explicit |
+| Anima Base v1.0 / Aesthetic / Turbo | `Sigmax.AnimaSigmaScheduler` | `Base`, 30-50 steps, default 50, CFG 4.5; `Aesthetic` uses the same recipe; `Turbo`, 8-12 steps, CFG 1.0; fixed shift 3.0 |
 
 For normal use:
 

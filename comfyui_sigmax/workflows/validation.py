@@ -198,6 +198,9 @@ class WorkflowFixture:
     def __post_init__(self) -> None:
         _text(self.identifier, label="workflow fixture identifier")
         if self.variant not in {
+            "Anima Aesthetic v1.x",
+            "Anima Base v1.0",
+            "Anima Turbo v1.0",
             "FLUX.1-schnell",
             "RAW",
             "Turbo",
@@ -464,6 +467,9 @@ def load_canonical_workflow_fixtures() -> tuple[WorkflowFixture, ...]:
         )
     result = tuple(sorted(fixtures, key=lambda item: item.identifier))
     if tuple(item.identifier for item in result) != (
+        "anima-aesthetic-v1-framework-50",
+        "anima-base-v1-framework-50",
+        "anima-turbo-v1-framework-8",
         "auraflow-v0-2-official-50",
         "flux1-schnell-official-4",
         "hunyuan-image21-base-official-50",

@@ -9,6 +9,9 @@ from typing import Any, cast
 import pytest
 from comfyui_sigmax.core import EvidenceLevel, ScheduleContractError
 from comfyui_sigmax.profiles import (
+    ANIMA_AESTHETIC_SCHEMA,
+    ANIMA_BASE_SCHEMA,
+    ANIMA_TURBO_SCHEMA,
     AURAFLOW_V02_SCHEMA,
     FLUX1_SCHNELL_SCHEMA,
     HUNYUAN_IMAGE21_BASE_SCHEMA,
@@ -126,6 +129,9 @@ def test_builtin_registry_is_deterministic_exact_and_immutable() -> None:
     registry = builtin_profile_registry()
 
     assert tuple(entry.key for entry in registry.entries) == (
+        ProfileKey.from_schema(ANIMA_AESTHETIC_SCHEMA),
+        ProfileKey.from_schema(ANIMA_BASE_SCHEMA),
+        ProfileKey.from_schema(ANIMA_TURBO_SCHEMA),
         ProfileKey.from_schema(AURAFLOW_V02_SCHEMA),
         ProfileKey.from_schema(FLUX1_SCHNELL_SCHEMA),
         ProfileKey.from_schema(HUNYUAN_IMAGE21_BASE_SCHEMA),
@@ -170,8 +176,8 @@ def test_external_registration_returns_a_new_canonical_snapshot() -> None:
     entry = updated.resolve(ProfileKey.from_schema(schema))
 
     assert updated is not registry
-    assert len(registry.entries) == 14
-    assert len(updated.entries) == 15
+    assert len(registry.entries) == 17
+    assert len(updated.entries) == 18
     assert entry.origin is ProfileOrigin.EXTERNAL
     assert entry.schema is schema
     assert entry.inheritance == _turbo_inheritance()

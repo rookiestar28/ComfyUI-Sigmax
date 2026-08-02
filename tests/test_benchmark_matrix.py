@@ -45,14 +45,15 @@ def test_packaged_matrix_has_exact_schema_identity_and_coverage() -> None:
     assert projection["schema"] == NUMERICAL_BENCHMARK_MATRIX_SCHEMA
     assert (
         matrix.matrix_fingerprint
-        == "sha256:8edd92528197c95271eacef0efd8bf357e76a6c8f37f6572f54f0d2812e572b3"
+        == "sha256:ecf2b01ae7a867bdfa16d2a1839b57444044792a3c44e43751afcdb4270af5ce"
     )
-    assert len(results) == 23
+    assert len(results) == 26
     assert projection["coverage"] == {
+        "anima_schedule_parity": 3,
         "h2_workflow": 4,
         "h3_native_euler": 1,
         "raw_schedule_parity": 14,
-        "total_verified_results": 23,
+        "total_verified_results": 26,
         "turbo_schedule_parity": 4,
     }
     assert [row["id"] for row in results] == sorted(row["id"] for row in results)
@@ -99,6 +100,39 @@ def test_matrix_records_parity_geometry_runtime_and_exact_metrics() -> None:
     }
     assert raw["schedule"]["image_seq_len"] == 4080
     assert raw["schedule"]["mu"] == "0.904557291666667"
+
+
+def test_matrix_records_anima_schedule_parity_without_weight_or_quality_claims() -> None:
+    results = {
+        row["id"]: row
+        for row in cast(
+            list[dict[str, Any]],
+            load_numerical_benchmark_matrix().projection()["results"],
+        )
+        if row["lane"] == "anima_schedule_parity"
+    }
+
+    assert sorted(results) == [
+        "parity.anima.aesthetic-4",
+        "parity.anima.base-4",
+        "parity.anima.turbo-8",
+    ]
+    for row in results.values():
+        assert row["capability"] == {"level": "allow", "reasons": ["compatible"]}
+        assert row["model_weights_present"] is False
+        assert row["weight_variant"] == "none"
+        assert row["execution"]["status"] == "not_executed"
+        assert row["execution"]["counts"]["effective_transitions"] == 0
+        assert row["execution"]["counts"]["effective_model_evaluations"] == 0
+        expected_evidence = (
+            "framework_reference" if row["profile"]["variant"] == "Turbo" else "modified"
+        )
+        assert row["profile"]["evidence"] == expected_evidence
+        assert row["schedule"] == {"image_seq_len": None, "mu": "3.0"}
+        assert row["baselines"]["anima_float64"]["status"] == "PASS"
+        assert row["baselines"]["anima_float32"]["status"] == "PASS"
+        assert row["baselines"]["anima_float64"]["max_abs_error"] == "0"
+        assert row["baselines"]["anima_float32"]["max_abs_error"] == "0"
 
 
 def test_matrix_preserves_h2_artifact_receipt_and_first_repeat_truth() -> None:
@@ -215,7 +249,7 @@ def test_matrix_import_does_not_load_optional_or_host_frameworks() -> None:
         "(_ for _ in ()).throw(ImportError(n)) if n.split('.')[0] in blocked "
         "else real(n,*a,**k); "
         "from comfyui_sigmax.benchmark_matrix import load_numerical_benchmark_matrix; "
-        "m=load_numerical_benchmark_matrix(); assert len(m.projection()['results'])==23; "
+        "m=load_numerical_benchmark_matrix(); assert len(m.projection()['results'])==26; "
         "assert not blocked.intersection(sys.modules)"
     )
 

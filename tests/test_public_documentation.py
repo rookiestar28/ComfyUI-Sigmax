@@ -76,6 +76,7 @@ def test_readme_is_limited_to_product_installation_and_use() -> None:
         "Python 3.10 or newer",
         "ComfyUI 0.29.0 or newer",
         "HunyuanImage 2.1",
+        "Anima Base v1.0",
         "SIGMAS",
         "schedule_info",
     ):
@@ -93,14 +94,15 @@ def test_readme_is_limited_to_product_installation_and_use() -> None:
 
 def test_readme_matches_the_registered_node_surface() -> None:
     readme = _read(README)
-    assert len(NODE_CLASS_MAPPINGS) == 20
+    assert len(NODE_CLASS_MAPPINGS) == 21
     assert NODE_CLASS_MAPPINGS.keys() == NODE_DISPLAY_NAME_MAPPINGS.keys()
-    assert "registers 20 namespaced nodes" in readme
+    assert "registers 21 namespaced nodes" in readme
     for node_id in (
         "Sigmax.Krea2SigmaScheduler",
         "Sigmax.ZImageSigmaScheduler",
         "Sigmax.Flux1SchnellSigmaScheduler",
         "Sigmax.HunyuanImage21SigmaScheduler",
+        "Sigmax.AnimaSigmaScheduler",
         "Sigmax.ModelAwareSigmaScheduler",
         "Sigmax.AdvancedFlowMatchScheduler",
         "Sigmax.CheckpointEvidenceInspector",
@@ -131,6 +133,7 @@ def test_readme_records_the_reviewed_user_recipes_and_safety_boundaries() -> Non
         "`Publisher Reference (1.0)` at 50 steps or `Comfy/Diffusers Fixed (3.0)` at 28 steps",
         "`Official Fixed (1.73)`, 50 steps, CFG 3.5",
         "`Base (5.0)`, 50 steps, CFG 3.5",
+        "`Base`, 30-50 steps, default 50, CFG 4.5",
     ):
         assert recipe in readme
     assert "Do not pass the result through another scheduler" in readme

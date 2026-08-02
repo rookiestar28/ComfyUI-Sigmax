@@ -96,6 +96,8 @@ _LUMINA2_OUTPUT_NODE_ID: Final = "2"
 _LUMINA2_TRACE_KEY: Final = "sigmax_lumina2_schedule"
 _HUNYUAN_IMAGE21_OUTPUT_NODE_ID: Final = "2"
 _HUNYUAN_IMAGE21_TRACE_KEY: Final = "sigmax_hunyuan_image21_schedule"
+_ANIMA_OUTPUT_NODE_ID: Final = "2"
+_ANIMA_TRACE_KEY: Final = "sigmax_anima_schedule"
 _KREA2_LORA_OUTPUT_NODE_ID: Final = "2"
 _KREA2_LORA_TRACE_KEY: Final = "sigmax_krea2_lora_experimental"
 _KREA2_CONDITIONING_OUTPUT_NODE_ID: Final = "3"
@@ -886,6 +888,83 @@ def verify_hunyuan_image21_h2_history(
         "profile_id": expected_profile,
         "ratio": expected_ratio,
         "requested_transitions": expected_steps,
+        "status": "succeeded",
+    }
+
+
+def build_anima_h2_api_prompt(variant: str) -> dict[str, object]:
+    """Return one model-free Anima v1 scheduler -> probe graph."""
+
+    if variant not in {"Base (3.0)", "Aesthetic (3.0)", "Turbo (3.0)"}:
+        raise ScheduleContractError("Anima H2 variant must be explicit")
+    steps = 8 if variant == "Turbo (3.0)" else 50
+    return {
+        "1": {
+            "class_type": "Sigmax.AnimaSigmaScheduler",
+            "inputs": {
+                "already_shifted": False,
+                "end_step": -1,
+                "start_step": 0,
+                "steps": steps,
+                "strict_source": True,
+                "variant": variant,
+            },
+        },
+        _ANIMA_OUTPUT_NODE_ID: {
+            "class_type": "SigmaxTest.AnimaScheduleProbe",
+            "inputs": {"schedule_info": ["1", 1], "sigmas": ["1", 0]},
+        },
+    }
+
+
+def verify_anima_h2_history(history: object, *, prompt_id: str, variant: str) -> dict[str, object]:
+    """Verify one Anima v1 variant on the model-free host lane."""
+
+    if variant not in {"Base (3.0)", "Aesthetic (3.0)", "Turbo (3.0)"}:
+        raise ScheduleContractError("Anima H2 variant must be explicit")
+    expected = {
+        "Base (3.0)": ("anima.base.framework-reference", "base-v1.0", 50),
+        "Aesthetic (3.0)": ("anima.aesthetic.framework-reference", "aesthetic-v1", 50),
+        "Turbo (3.0)": ("anima.turbo.framework-reference", "turbo-v1.0", 8),
+    }[variant]
+    root = _object(history, label="Anima history")
+    entry = _object(root.get(prompt_id), label="Anima history entry")
+    status = _object(entry.get("status"), label="Anima prompt status")
+    if status.get("completed") is not True or status.get("status_str") != "success":
+        raise ScheduleContractError("Anima prompt history does not prove success")
+    outputs = _object(entry.get("outputs"), label="Anima prompt outputs")
+    output = _object(outputs.get(_ANIMA_OUTPUT_NODE_ID), label="Anima probe output")
+    traces = _array(output.get(_ANIMA_TRACE_KEY), label="Anima probe trace")
+    if len(traces) != 1 or not isinstance(traces[0], str):
+        raise ScheduleContractError("Anima probe trace is malformed")
+    trace = _object(json.loads(traces[0]), label="Anima decoded trace")
+    info = _object(trace.get("schedule_info"), label="Anima schedule information")
+    sigmas = _array(trace.get("sigmas"), label="Anima sigma vector")
+    profile = _object(info.get("profile"), label="Anima profile")
+    steps = expected[2]
+    if (
+        info.get("schema") != "sigmax.anima-sigma-node/1"
+        or profile.get("id") != expected[0]
+        or profile.get("variant") != expected[1]
+        or profile.get("evidence") != "framework_reference"
+        or _object(info.get("shift"), label="Anima shift")
+        != {"kind": "rational", "multiplier": 1.0, "shift": 3.0}
+        or _object(info.get("slicing"), label="Anima slicing").get("output_steps") != steps
+        or len(sigmas) != steps + 1
+        or sigmas[0] != 1.0
+        or sigmas[-1] != 0.0
+        or any(not isinstance(value, (int, float)) or isinstance(value, bool) for value in sigmas)
+        or any(float(left) <= float(right) for left, right in pairwise(sigmas))
+    ):
+        raise ScheduleContractError("Anima H2 execution evidence drifted")
+    return {
+        "variant": variant,
+        "numerical_fingerprint": _object(info.get("fingerprints"), label="Anima fingerprints").get(
+            "complete"
+        ),
+        "profile_id": expected[0],
+        "shift": 3.0,
+        "requested_transitions": steps,
         "status": "succeeded",
     }
 
@@ -2684,6 +2763,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
             "H2_AURAFLOW_M6_05",
             "H2_LUMINA2_M6_05",
             "H2_HUNYUAN_IMAGE21_M6_05",
+            "H2_ANIMA_M6_05",
             "H3_EULER_M5_01",
         ],
         "host": {
@@ -3147,6 +3227,52 @@ def run(args: argparse.Namespace) -> dict[str, object]:
                 hunyuan_results.append(hunyuan_summary)
                 attempts[f"h2_hunyuan_image21.{case_id}"] = hunyuan_transition
             evidence["h2_hunyuan_image21"] = hunyuan_results
+
+            anima_results: list[dict[str, object]] = []
+            for variant, case_id in (
+                ("Base (3.0)", "anima-base-v1-framework-50"),
+                ("Aesthetic (3.0)", "anima-aesthetic-v1-framework-50"),
+                ("Turbo (3.0)", "anima-turbo-v1-framework-8"),
+            ):
+                anima_fixture = fixtures.get(case_id)
+                if anima_fixture is None:
+                    raise ScheduleContractError("Anima host case has no canonical workflow")
+
+                def submit_anima(
+                    ordinal: int,
+                    *,
+                    selected_variant: str = variant,
+                ) -> tuple[str, dict[str, object]]:
+                    return _submit_successful_prompt(
+                        base_url=base_url,
+                        client_id=(
+                            f"sigmax-m6-05-anima-"
+                            f"{selected_variant.casefold().replace(' ', '-')}-attempt-{ordinal}"
+                        ),
+                        prompt=build_anima_h2_api_prompt(selected_variant),
+                        execution_timeout=args.execution_timeout,
+                    )
+
+                def verify_anima(
+                    history: object,
+                    prompt_id: str,
+                    *,
+                    selected_variant: str = variant,
+                ) -> dict[str, object]:
+                    return verify_anima_h2_history(
+                        history,
+                        prompt_id=prompt_id,
+                        variant=selected_variant,
+                    )
+
+                anima_summary, anima_transition = execute_verified_host_repeat(
+                    lane="H2_ANIMA_M6_05",
+                    submit=submit_anima,
+                    verify=verify_anima,
+                )
+                anima_results.append(anima_summary)
+                attempts[f"h2_anima.{case_id}"] = anima_transition
+            evidence["h2_anima"] = anima_results
 
             def submit_runtime_rejection(ordinal: int) -> tuple[str, dict[str, object]]:
                 return _submit_rejected_runtime_prompt(

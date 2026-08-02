@@ -1,5 +1,20 @@
 """Evidence-pinned model profiles built on the framework-independent core."""
 
+from comfyui_sigmax.profiles.anima import (
+    ANIMA_AESTHETIC_PROFILE,
+    ANIMA_AESTHETIC_SCHEMA,
+    ANIMA_BASE_PROFILE,
+    ANIMA_BASE_SCHEMA,
+    ANIMA_COMFYUI_REVISION,
+    ANIMA_DIFFUSERS_REVISION,
+    ANIMA_REPOSITORY_REVISION,
+    ANIMA_TURBO_PROFILE,
+    ANIMA_TURBO_SCHEMA,
+    AnimaEvidenceReference,
+    AnimaProfile,
+    AnimaVariant,
+    build_anima_schedule,
+)
 from comfyui_sigmax.profiles.aura_flow import (
     AURAFLOW_V02_PROFILE,
     AURAFLOW_V02_SCHEMA,
@@ -184,6 +199,15 @@ from comfyui_sigmax.profiles.z_image import (
 )
 
 __all__ = [
+    "ANIMA_AESTHETIC_PROFILE",
+    "ANIMA_AESTHETIC_SCHEMA",
+    "ANIMA_BASE_PROFILE",
+    "ANIMA_BASE_SCHEMA",
+    "ANIMA_COMFYUI_REVISION",
+    "ANIMA_DIFFUSERS_REVISION",
+    "ANIMA_REPOSITORY_REVISION",
+    "ANIMA_TURBO_PROFILE",
+    "ANIMA_TURBO_SCHEMA",
     "AURAFLOW_V02_PROFILE",
     "AURAFLOW_V02_SCHEMA",
     "CAPABILITY_RESOLUTION_ADDITIONAL_REASON_CODES",
@@ -229,6 +253,9 @@ __all__ = [
     "Z_IMAGE_BASE_SCHEMA",
     "Z_IMAGE_TURBO_PROFILE",
     "Z_IMAGE_TURBO_SCHEMA",
+    "AnimaEvidenceReference",
+    "AnimaProfile",
+    "AnimaVariant",
     "ArtifactVersionDeclaration",
     "AuraFlowEvidenceReference",
     "AuraFlowProfile",
@@ -304,6 +331,7 @@ __all__ = [
     "ZImageEvidenceReference",
     "ZImageProfile",
     "ZImageVariant",
+    "build_anima_schedule",
     "build_aura_flow_schedule",
     "build_flux1_schnell_schedule",
     "build_hunyuan_image21_schedule",

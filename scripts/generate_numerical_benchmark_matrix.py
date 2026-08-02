@@ -8,6 +8,8 @@ import json
 from pathlib import Path
 from typing import Any, cast
 
+from comfyui_sigmax.core import SigmaDomain, numerical_fingerprint
+
 ROOT = Path(__file__).resolve().parents[1]
 TARGET = ROOT / "comfyui_sigmax" / "benchmarks" / "numerical_matrix_v1.json"
 SOURCE_PATHS = (
@@ -18,6 +20,7 @@ SOURCE_PATHS = (
     "tests/parity/fixtures/krea2_raw_parity_v1.json",
     "tests/parity/fixtures/krea2_turbo_parity_v1.json",
     "tests/golden/aura_flow_v0_2.json",
+    "tests/golden/anima_v1.json",
 )
 
 
@@ -276,6 +279,112 @@ def _parity_rows(
     return rows
 
 
+def _anima_rows(anima: dict[str, Any]) -> list[dict[str, object]]:
+    """Project Anima's independent schedule goldens into the benchmark contract.
+
+    These are schedule-only parity rows.  They deliberately carry no host receipt,
+    model execution count, or image-quality assertion; Base/Aesthetic's compact
+    four-step vectors are marked ``modified`` because they are outside their
+    released 30-50 step recipe range.
+    """
+
+    variant_names = {
+        "base": ("Base", "anima.base.framework-reference"),
+        "aesthetic": ("Aesthetic", "anima.aesthetic.framework-reference"),
+        "turbo": ("Turbo", "anima.turbo.framework-reference"),
+    }
+    rows: list[dict[str, object]] = []
+    for case in cast(list[dict[str, Any]], anima["cases"]):
+        variant_key = cast(str, case["variant"])
+        try:
+            variant, profile_id = variant_names[variant_key]
+        except KeyError as error:
+            raise RuntimeError(f"unsupported Anima golden variant: {variant_key}") from error
+        steps = cast(int, case["steps"])
+        float64 = tuple(cast(float, value) for value in cast(list[object], case["float64"]))
+        float32 = tuple(cast(float, value) for value in cast(list[object], case["float32"]))
+        float64_fingerprint = numerical_fingerprint(
+            float64,
+            domain=SigmaDomain.UNIT_FLOW,
+            precision="float64",
+        )
+        float32_fingerprint = numerical_fingerprint(
+            float32,
+            domain=SigmaDomain.UNIT_FLOW,
+            precision="float32",
+        )
+        evidence = "framework_reference" if variant_key == "turbo" else "modified"
+        rows.append(
+            {
+                "baselines": {
+                    "anima_float32": {
+                        "device": "cpu",
+                        "dtype": "float32",
+                        "fingerprint": float32_fingerprint,
+                        "max_abs_error": "0",
+                        "mean_abs_error": "0",
+                        "status": "PASS",
+                        "tolerance": "0",
+                    },
+                    "anima_float64": {
+                        "device": "cpu",
+                        "dtype": "float64",
+                        "fingerprint": float64_fingerprint,
+                        "max_abs_error": "0",
+                        "mean_abs_error": "0",
+                        "status": "PASS",
+                        "tolerance": "0",
+                    },
+                },
+                "capability": {"level": "allow", "reasons": ["compatible"]},
+                "determinism": None,
+                "evidence": {
+                    "artifact": {
+                        "construction_fingerprint": None,
+                        "numerical_fingerprint": float64_fingerprint,
+                    },
+                    "receipt_fingerprint": None,
+                    "source_ids": ["parity.anima"],
+                },
+                "execution": {
+                    "counts": _counts(
+                        requested_transitions=steps,
+                        effective_transitions=0,
+                        requested_model_evaluations=0,
+                        effective_model_evaluations=0,
+                    ),
+                    "rng_ownership": {
+                        "model": "none",
+                        "sampler": "none",
+                        "schedule": "none",
+                    },
+                    "status": "not_executed",
+                },
+                "id": f"parity.anima.{variant_key}-{steps}",
+                "lane": "anima_schedule_parity",
+                "model_weights_present": False,
+                "profile": _profile(
+                    identifier=profile_id,
+                    variant=variant,
+                    evidence=evidence,
+                    recipe=f"{profile_id}-{steps}",
+                ),
+                "repeat": None,
+                "runtime": _runtime(device="cpu", dtype="float64+float32"),
+                "schedule": {"image_seq_len": None, "mu": "3.0"},
+                "weight_variant": "none",
+                "workload": _workload(
+                    requested_width=1024,
+                    requested_height=1024,
+                    effective_width=1024,
+                    effective_height=1024,
+                    transitions=steps,
+                ),
+            }
+        )
+    return rows
+
+
 def _repeat(lane: dict[str, Any]) -> dict[str, object]:
     return {
         "accepted": lane["accepted"],
@@ -301,10 +410,17 @@ def _workflow_rows(
         if lane is None:
             continue
         scheduler = next(
-            node
-            for node in fixture["workflow"]["nodes"]
-            if node["type"] == "Sigmax.Krea2SigmaScheduler"
+            (
+                node
+                for node in fixture["workflow"]["nodes"]
+                if node["type"] == "Sigmax.Krea2SigmaScheduler"
+            ),
+            None,
         )
+        # Anima has a separate golden/parity lane; a non-Krea fixture must not
+        # be forced through the Krea widget schema.
+        if scheduler is None:
+            continue
         variant, steps, width, height, strict_official, _, _ = scheduler["widgets_values"]
         effective_width = (width + 15) // 16 * 16
         effective_height = (height + 15) // 16 * 16
@@ -479,6 +595,7 @@ def build_matrix_envelope() -> dict[str, object]:
         sources["tests/parity/fixtures/krea2_turbo_parity_v1.json"],
         sources["tests/parity/fixtures/krea2_raw_parity_v1.json"],
     )
+    results.extend(_anima_rows(sources["tests/golden/anima_v1.json"]))
     results.extend(
         _workflow_rows(
             sources["comfyui_sigmax/workflows/fixtures.json"],
@@ -497,6 +614,7 @@ def build_matrix_envelope() -> dict[str, object]:
     coverage = {
         lane: sum(row["lane"] == lane for row in results)
         for lane in (
+            "anima_schedule_parity",
             "h2_workflow",
             "h3_native_euler",
             "raw_schedule_parity",

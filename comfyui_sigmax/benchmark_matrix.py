@@ -48,6 +48,7 @@ _SOURCE_PATHS: Final = (
     "tests/parity/fixtures/krea2_raw_parity_v1.json",
     "tests/parity/fixtures/krea2_turbo_parity_v1.json",
     "tests/golden/aura_flow_v0_2.json",
+    "tests/golden/anima_v1.json",
 )
 _SOURCE_SCHEMAS: Final = {
     "comfyui_sigmax/workflows/fixtures.json": ("sigmax.workflow-fixture-bundle/1", None),
@@ -72,11 +73,20 @@ _SOURCE_SCHEMAS: Final = {
         "PASS",
     ),
     "tests/golden/aura_flow_v0_2.json": ("sigmax.aura-flow-golden/1", None),
+    "tests/golden/anima_v1.json": ("sigmax.anima-golden/1", None),
 }
 _SOURCE_IDS: Final = frozenset(
-    {"host.known_good", "parity.native_euler", "parity.raw", "parity.turbo", "workflow.fixtures"}
+    {
+        "host.known_good",
+        "parity.anima",
+        "parity.native_euler",
+        "parity.raw",
+        "parity.turbo",
+        "workflow.fixtures",
+    }
 )
 _LANES: Final = (
+    "anima_schedule_parity",
     "h2_workflow",
     "h3_native_euler",
     "raw_schedule_parity",
@@ -278,9 +288,15 @@ def _validate_row(value: object) -> tuple[str, str]:
         frozenset({"evidence", "id", "recipe", "variant", "version"}),
         name="benchmark profile",
     )
-    if profile["id"] not in {"krea2.raw.official", "krea2.turbo.official"}:
+    if profile["id"] not in {
+        "anima.aesthetic.framework-reference",
+        "anima.base.framework-reference",
+        "anima.turbo.framework-reference",
+        "krea2.raw.official",
+        "krea2.turbo.official",
+    }:
         raise ScheduleContractError("benchmark profile is unsupported")
-    if profile["variant"] not in {"RAW", "Turbo"} or profile["version"] != "1":
+    if profile["variant"] not in {"Aesthetic", "Base", "RAW", "Turbo"} or profile["version"] != "1":
         raise ScheduleContractError("benchmark profile variant/version is invalid")
     if profile["evidence"] not in {"official", "framework_reference", "modified"}:
         raise ScheduleContractError("benchmark profile evidence is invalid")
@@ -409,6 +425,15 @@ def _validate_row(value: object) -> tuple[str, str]:
         )
         for name, metric_set in baseline_map.items():
             _validate_metric_set(metric_set, name=f"baseline {name}")
+    elif lane == "anima_schedule_parity":
+        baseline_map = _object(baselines, name="Anima schedule parity baselines")
+        _exact(
+            baseline_map,
+            frozenset({"anima_float32", "anima_float64"}),
+            name="Anima schedule parity baselines",
+        )
+        for name, metric_set in baseline_map.items():
+            _validate_metric_set(metric_set, name=f"baseline {name}")
     elif lane == "h3_native_euler":
         baseline_map = _object(baselines, name="native Euler baseline")
         _exact(baseline_map, frozenset({"native_euler"}), name="native Euler baseline")
@@ -478,7 +503,7 @@ def _validate_matrix(value: object) -> dict[str, object]:
     results = _array(matrix["results"], name="benchmark results")
     identities_and_lanes = [_validate_row(row) for row in results]
     identities = [item[0] for item in identities_and_lanes]
-    if len(results) != 23 or identities != sorted(identities) or len(set(identities)) != 23:
+    if len(results) != 26 or identities != sorted(identities) or len(set(identities)) != 26:
         raise ScheduleContractError("benchmark result identity/order coverage is invalid")
     observed = {lane: sum(item[1] == lane for item in identities_and_lanes) for lane in _LANES}
     observed["total_verified_results"] = len(results)

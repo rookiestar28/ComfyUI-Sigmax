@@ -79,6 +79,9 @@ def test_builtin_provenance_layers_and_licenses_are_distinct() -> None:
     assert result["status"] == "PASS"
     rows = cast(list[dict[str, Any]], result["profiles"])
     assert [row["profile_key"] for row in rows] == [
+        "anima.aesthetic.framework-reference@1",
+        "anima.base.framework-reference@1",
+        "anima.turbo.framework-reference@1",
         "auraflow.v0-2.official@1",
         "flux1.schnell.official@1",
         "hunyuan-image-2-1.base.official@1",
@@ -156,6 +159,16 @@ def test_builtin_provenance_layers_and_licenses_are_distinct() -> None:
             assert set(row["license_identifiers"]) == {
                 "GPL-3.0-only",
                 "LicenseRef-Tencent-Hunyuan-Community",
+            }
+        elif row["profile_key"].startswith("anima."):
+            assert row["resource_counts"] == {
+                "frameworks": 1,
+                "model_weights": (3 if "aesthetic" in row["profile_key"] else 1),
+                "software_sources": 2,
+            }
+            assert set(row["license_identifiers"]) == {
+                "GPL-3.0-only",
+                "LicenseRef-CircleStone-Labs-Non-Commercial",
             }
         else:
             assert row["profile_key"] == "flux1.schnell.official@1"

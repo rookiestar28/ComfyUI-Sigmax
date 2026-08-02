@@ -113,6 +113,12 @@ class QualityConfigurationTests(unittest.TestCase):
         expected_hash = "024469e0164c7a1285a3177a3ab35c7b110d39b9"  # pragma: allowlist secret
         head_hash = "ba2d9a512ac48100b11ca25836a795bc97546b8a"  # pragma: allowlist secret
         release_hash = "985aa069eea4d28101857c9f25efd3f7574c971c"  # pragma: allowlist secret
+        anima_repository_hash = (
+            "4e88ff4cb19447d3a5423e07847e8f8dab9f0b6b"  # pragma: allowlist secret
+        )
+        anima_diffusers_hash = (
+            "f58458136cb7e75d5ca36d42759b1a3bad4dd74f"  # pragma: allowlist secret
+        )
         self.assertEqual(
             {
                 "comfyui_sigmax/workflows/host_baseline.json": [
@@ -169,6 +175,75 @@ class QualityConfigurationTests(unittest.TestCase):
                         "hashed_secret": release_hash,
                         "is_verified": False,
                         "line_number": 72,
+                    },
+                ],
+                "tests/golden/anima_v1.json": [
+                    {
+                        "type": "Hex High Entropy String",
+                        "filename": "tests/golden/anima_v1.json",
+                        "hashed_secret": anima_repository_hash,
+                        "is_verified": False,
+                        "line_number": 4,
+                    },
+                    {
+                        "type": "Hex High Entropy String",
+                        "filename": "tests/golden/anima_v1.json",
+                        "hashed_secret": anima_diffusers_hash,
+                        "is_verified": False,
+                        "line_number": 5,
+                    },
+                    {
+                        "type": "Hex High Entropy String",
+                        "filename": "tests/golden/anima_v1.json",
+                        "hashed_secret": head_hash,
+                        "is_verified": False,
+                        "line_number": 6,
+                    },
+                ],
+                "tests/golden/test_anima_phase0_goldens.py": [
+                    {
+                        "type": "Hex High Entropy String",
+                        "filename": "tests/golden/test_anima_phase0_goldens.py",
+                        "hashed_secret": anima_repository_hash,
+                        "is_verified": False,
+                        "line_number": 30,
+                    },
+                    {
+                        "type": "Hex High Entropy String",
+                        "filename": "tests/golden/test_anima_phase0_goldens.py",
+                        "hashed_secret": anima_diffusers_hash,
+                        "is_verified": False,
+                        "line_number": 31,
+                    },
+                    {
+                        "type": "Hex High Entropy String",
+                        "filename": "tests/golden/test_anima_phase0_goldens.py",
+                        "hashed_secret": head_hash,
+                        "is_verified": False,
+                        "line_number": 32,
+                    },
+                ],
+                "tests/parity/test_anima_phase0_parity.py": [
+                    {
+                        "type": "Hex High Entropy String",
+                        "filename": "tests/parity/test_anima_phase0_parity.py",
+                        "hashed_secret": anima_repository_hash,
+                        "is_verified": False,
+                        "line_number": 42,
+                    },
+                    {
+                        "type": "Hex High Entropy String",
+                        "filename": "tests/parity/test_anima_phase0_parity.py",
+                        "hashed_secret": anima_diffusers_hash,
+                        "is_verified": False,
+                        "line_number": 43,
+                    },
+                    {
+                        "type": "Hex High Entropy String",
+                        "filename": "tests/parity/test_anima_phase0_parity.py",
+                        "hashed_secret": head_hash,
+                        "is_verified": False,
+                        "line_number": 44,
                     },
                 ],
             },

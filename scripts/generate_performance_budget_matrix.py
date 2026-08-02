@@ -16,10 +16,14 @@ EVIDENCE: Final = (
     "tests/performance/fixtures/wsl_py310_v1.json",
 )
 SOURCES: Final = (
+    "comfyui_sigmax/nodes/anima_sigma_scheduler.py",
     "comfyui_sigmax/performance_budgets.py",
+    "comfyui_sigmax/profiles/anima.py",
+    "scripts/generate_anima_workflow_fixtures.py",
     "scripts/generate_performance_host_startup_evidence.py",
     "scripts/run_comfyui_e2e.py",
     "scripts/run_performance_budget_lane.py",
+    "tests/golden/anima_v1.json",
     *EVIDENCE,
 )
 

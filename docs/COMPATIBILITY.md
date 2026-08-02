@@ -31,6 +31,8 @@ validated baseline.
 | Lumina-Image 2.0 | Fixed unit-flow `6.0` ratio shift, original 50-step recipe | Use `Sigmax.Lumina2SigmaScheduler`; select `Official Fixed (6.0)` explicitly |
 | HunyuanImage 2.1 Base | Fixed unit-flow `5.0` ratio shift, official 50-step recipe; schedule-only | Use `Sigmax.HunyuanImage21SigmaScheduler`; select `Base (5.0)` explicitly |
 | HunyuanImage 2.1 Distilled | Fixed unit-flow `4.0` ratio shift, official 8-step publisher recipe; native host path unqualified | Use `Sigmax.HunyuanImage21SigmaScheduler`; select `Distilled (4.0)` explicitly |
+| Anima Base / Aesthetic | Fixed unit-flow rational `3.0` shift, 30-50 step framework-reference recipe; schedule-only | Use `Sigmax.AnimaSigmaScheduler`; select `Base` or `Aesthetic` explicitly |
+| Anima Turbo | Fixed unit-flow rational `3.0` shift, 8-12 step framework-reference recipe; schedule-only | Use `Sigmax.AnimaSigmaScheduler`; select `Turbo` explicitly |
 
 The experimental `Sigmax.Krea2ConditioningRebalance` node accepts explicit RAW or Turbo
 `CONDITIONING` tensors with shape `(batch, sequence, 30720)`. It preserves standard ComfyUI
@@ -62,6 +64,9 @@ and does not establish compatibility with an arbitrary model.
   at the pinned baseline; Distilled is schedule-only and must not be presented as native host parity.
 - HunyuanImage 2.1 model weights remain under Tencent's community license and are not distributed by
   Sigmax; this package does not include model code, weights, encoders, or conditioning.
+- Anima applies one fixed rational `3.0` shift and rejects already-shifted composition. The node
+  does not load Anima weights, run conditioning, or establish image-quality or prompt-adherence claims;
+  Anima weight files remain under CircleStone Labs and applicable derivative licenses.
 
 ## Not currently claimed
 

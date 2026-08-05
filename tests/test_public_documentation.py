@@ -51,7 +51,7 @@ def test_public_user_documentation_surface_is_intentionally_small() -> None:
     assert sorted(path.name for path in (ROOT / "docs").iterdir() if path.is_file()) == [
         "COMPATIBILITY.md"
     ]
-    assert len(_read(README).splitlines()) <= 140
+    assert len(_read(README).splitlines()) <= 155
     assert len(_read(COMPATIBILITY).splitlines()) <= 100
 
 
@@ -59,6 +59,7 @@ def test_readme_is_limited_to_product_installation_and_use() -> None:
     readme = _read(README)
     headings = re.findall(r"^## .+$", readme, flags=re.MULTILINE)
     assert headings == [
+        "## Table of contents",
         "## Features",
         "## Installation",
         "## Use in ComfyUI",
@@ -90,6 +91,22 @@ def test_readme_is_limited_to_product_installation_and_use() -> None:
         "implementation record",
     ):
         assert secondary.casefold() not in readme.casefold()
+
+
+def test_readme_table_of_contents_covers_the_public_user_flow() -> None:
+    readme = _read(README)
+    for entry in (
+        "[Features](#features)",
+        "[Installation](#installation)",
+        "[ComfyUI Manager](#comfyui-manager)",
+        "[Git](#git)",
+        "[Use in ComfyUI](#use-in-comfyui)",
+        "[Build a model schedule](#build-a-model-schedule)",
+        "[Inspect or modify a schedule](#inspect-or-modify-a-schedule)",
+        "[Update or remove](#update-or-remove)",
+        "[Troubleshooting](#troubleshooting)",
+    ):
+        assert entry in readme
 
 
 def test_readme_matches_the_registered_node_surface() -> None:

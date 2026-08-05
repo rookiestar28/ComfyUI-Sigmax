@@ -1,9 +1,21 @@
 # ComfyUI-Sigmax
-ComfyUI-Sigmax provides model-aware sigma schedules for ComfyUI, with verified Krea 2, Z-Image, FLUX.1-schnell, Qwen Image, SD3, AuraFlow v0.2, Lumina-Image 2.0, HunyuanImage 2.1, MiniMax H3 Base (qualification slice), Anima, Wan 2.1/2.2, and LTX profiles plus editing tools.
+ComfyUI-Sigmax provides model-aware sigma schedules for ComfyUI, with supported Krea 2, Z-Image, FLUX.1-schnell, Qwen Image, SD3, AuraFlow v0.2, Lumina-Image 2.0, HunyuanImage 2.1, MiniMax H3 Base FL2VA/Ref2VA, Anima, Wan 2.1/2.2, and LTX profiles plus editing tools.
+
+## Table of contents
+
+- [Features](#features)
+- [Installation](#installation): [ComfyUI Manager](#comfyui-manager) · [Git](#git)
+- [Use in ComfyUI](#use-in-comfyui)
+  - [Build a model schedule](#build-a-model-schedule)
+  - [Inspect or modify a schedule](#inspect-or-modify-a-schedule)
+- [Update or remove](#update-or-remove)
+- [Troubleshooting](#troubleshooting)
+
 ## Features
 
 - Explicit model and variant selection with no silent generic fallback.
-- Verified Krea 2, Z-Image, FLUX.1-schnell, Qwen Image, SD3, AuraFlow v0.2, Lumina-Image 2.0, HunyuanImage 2.1, MiniMax H3 Base qualification, Anima, Wan 2.1/2.2, and LTX recipes.
+- Supported Krea 2, Z-Image, FLUX.1-schnell, Qwen Image, SD3, AuraFlow v0.2, Lumina-Image 2.0, HunyuanImage 2.1, MiniMax H3 Base FL2VA/Ref2VA, Anima, Wan 2.1/2.2, and LTX recipes.
+- Twenty-four namespaced nodes for schedule construction, model-aware selection, inspection, comparison, editing, checkpoint evidence, and experimental Krea 2 conditioning.
 - Schedule slicing, concatenation, resampling, inspection, and comparison.
 - Experimental Krea 2 `CONDITIONING` tap rebalancing for explicitly selected RAW or Turbo workflows, with fixed RMS preservation and no scheduler/model patching.
 - Checkpoint header inspection without loading model weights.
@@ -79,7 +91,7 @@ The Lumina-Image 2.0 node covers only original Alpha-VLLM text-to-image with fix
 
 The HunyuanImage 2.1 node constructs schedule-only Base and Distilled direct-ratio paths (`5.0`/`4.0`). Base is the pinned ComfyUI-compatible lane; Distilled remains publisher-schedule-only until a native host path is qualified. Refiner, encoders, conditioning, weights, and image quality are outside scope.
 
-The MiniMax H3 node is a narrow Base qualification slice: FL2VA/Ref2VA are explicit, only the Diffusers endpoint-inclusive video lane (shift `12.0`) is exposed, and native `simple` plus model-owned audio mapping (shift `3.0`) remain separate. The model-free workflow helper can preflight the generated graph against a caller-supplied ComfyUI `/object_info` schema, including Ref2VA autogrow inputs, without loading weights or submitting a prompt. Context-IR, Regenerate-2K, sparse attention, hosted/API behavior, weights, samplers, and quality claims are outside scope.
+The MiniMax H3 node is an accepted, narrow Base schedule slice: FL2VA/Ref2VA are explicit, only the Diffusers endpoint-inclusive video lane (shift `12.0`) is exposed, and native `simple` plus model-owned audio mapping (shift `3.0`) remain separate. The model-free workflow helper can preflight the generated graph against a caller-supplied ComfyUI `/object_info` schema, including Ref2VA autogrow inputs, without loading weights or submitting a prompt. Context-IR, Regenerate-2K, sparse attention, hosted/API behavior, weights, samplers, and quality claims are outside scope.
 
 The Wan node constructs schedule-only unit-flow sigmas for the released 2.1/2.2 matrix; 2.1 I2V requires `480P` or `720P`, and 2.2 A14B boundaries are caller-owned metadata (never expert routing).
 Diffusers-reference lanes describe scheduler math only; video execution, weights, and quality parity are outside scope.

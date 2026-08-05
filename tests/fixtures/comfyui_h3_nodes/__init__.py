@@ -1200,6 +1200,8 @@ NODE_CLASS_MAPPINGS = {
     "SigmaxTest.AnimaScheduleProbe": AnimaScheduleProbe,
     "SigmaxTest.WanScheduleProbe": WanScheduleProbe,
     "SigmaxTest.LTXScheduleProbe": LTXScheduleProbe,
+    # IMPORTANT: keep H3 probes exported; defining the class alone does not register it in ComfyUI.
+    "SigmaxTest.MiniMaxH3ScheduleProbe": MiniMaxH3ScheduleProbe,
     "SigmaxTest.CheckpointEvidenceProbe": CheckpointEvidenceProbe,
     "SigmaxTest.Krea2LoraExperimentalProbe": Krea2LoraExperimentalProbe,
     "SigmaxTest.Krea2ConditioningProbe": Krea2ConditioningProbe,
@@ -1218,6 +1220,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "SigmaxTest.AnimaScheduleProbe": "Sigmax Test — Anima Schedule Probe",
     "SigmaxTest.WanScheduleProbe": "Sigmax Test — Wan Schedule Probe",
     "SigmaxTest.LTXScheduleProbe": "Sigmax Test — LTX Schedule Probe",
+    "SigmaxTest.MiniMaxH3ScheduleProbe": "Sigmax Test — MiniMax H3 Schedule Probe",
     "SigmaxTest.CheckpointEvidenceProbe": "Sigmax Test — Checkpoint Evidence Probe",
     "SigmaxTest.Krea2LoraExperimentalProbe": "Sigmax Test — Krea 2 LoRA Experimental Probe",
     "SigmaxTest.Krea2ConditioningProbe": "Sigmax Test — Krea 2 Conditioning Probe",

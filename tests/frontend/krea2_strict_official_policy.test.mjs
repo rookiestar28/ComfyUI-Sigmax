@@ -1,11 +1,14 @@
 import assert from "node:assert/strict";
-import test from "node:test";
-import { pathToFileURL } from "node:url";
+import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import test from "node:test";
 
-const policyUrl = pathToFileURL(
+const policySource = await readFile(
   resolve("web/krea2_strict_official_policy.js"),
-).href;
+  "utf8",
+);
+// IMPORTANT: Node 24 removed the default-type flag; a data URL preserves ESM on Node 18+.
+const policyUrl = `data:text/javascript;base64,${Buffer.from(policySource).toString("base64")}`;
 
 async function policyModule() {
   return import(policyUrl);

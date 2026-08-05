@@ -33,14 +33,18 @@ def main() -> int:
             f"[node.incompatible] Node.js 18+ is required; active version is {version!r}."
         )
     subprocess.run(  # noqa: S603
-        [node, "--experimental-default-type=module", "--test", str(TEST)],
+        [node, "--test", str(TEST)],
         cwd=ROOT,
         check=True,
     )
+    extension_source = EXTENSION.read_text(encoding="utf-8")
+    # IMPORTANT: Node 24 removed --experimental-default-type; validate module syntax via stdin.
     subprocess.run(  # noqa: S603
-        [node, "--experimental-default-type=module", "--check", str(EXTENSION)],
+        [node, "--input-type=module", "--check"],
         cwd=ROOT,
         check=True,
+        input=extension_source,
+        text=True,
     )
     print(f"FRONTEND_POLICY=PASS node={version}")
     return 0

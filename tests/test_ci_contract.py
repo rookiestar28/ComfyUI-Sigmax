@@ -94,11 +94,13 @@ class CiContractTests(unittest.TestCase):
         self.assertIn("[venv.missing]", windows)
         self.assertIn("[venv.missing]", linux)
 
-    def test_frontend_runner_enables_esm_for_javascript_policy_modules(self) -> None:
+    def test_frontend_runner_uses_stable_esm_controls_for_supported_node_versions(self) -> None:
         runner = (REPOSITORY_ROOT / "scripts/run_frontend_policy_tests.py").read_text(
             encoding="utf-8"
         )
-        self.assertIn('"--experimental-default-type=module"', runner)
+        self.assertNotIn('"--experimental-default-type=module"', runner)
+        self.assertIn('"--input-type=module"', runner)
+        self.assertIn("input=extension_source", runner)
 
     def test_canonical_text_resources_checkout_with_lf_on_every_platform(self) -> None:
         resources = (

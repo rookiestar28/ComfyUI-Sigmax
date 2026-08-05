@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import copy
 import importlib.util
 import json
@@ -1030,6 +1031,27 @@ def test_h3_test_pack_is_namespaced_staged_only_and_not_public(
     assert staged.read_bytes() == H3_TEST_PACK.read_bytes()
     assert "SigmaxTest.NativeEulerProbe" not in builtin_node_registry().class_mappings()
     assert "SigmaxTest.MiniMaxH3ScheduleProbe" not in builtin_node_registry().class_mappings()
+
+
+def test_h3_test_pack_exports_minimax_h3_schedule_probe() -> None:
+    fixture_ast = ast.parse(H3_TEST_PACK.read_text(encoding="utf-8"))
+    mapping = next(
+        node.value
+        for node in fixture_ast.body
+        if isinstance(node, ast.Assign)
+        and any(
+            isinstance(target, ast.Name) and target.id == "NODE_CLASS_MAPPINGS"
+            for target in node.targets
+        )
+    )
+
+    assert isinstance(mapping, ast.Dict)
+    exported_ids = {
+        key.value
+        for key in mapping.keys
+        if isinstance(key, ast.Constant) and isinstance(key.value, str)
+    }
+    assert "SigmaxTest.MiniMaxH3ScheduleProbe" in exported_ids
 
 
 def _native_euler_h3_history(*, case: dict[str, Any] | None = None) -> dict[str, Any]:

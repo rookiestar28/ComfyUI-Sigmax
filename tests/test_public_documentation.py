@@ -102,11 +102,41 @@ def test_readme_table_of_contents_covers_the_public_user_flow() -> None:
         "[Git](#git)",
         "[Use in ComfyUI](#use-in-comfyui)",
         "[Build a model schedule](#build-a-model-schedule)",
+        "[Image model families](#image-model-families)",
+        "[Video and audio-video model families](#video-and-audio-video-model-families)",
         "[Inspect or modify a schedule](#inspect-or-modify-a-schedule)",
         "[Update or remove](#update-or-remove)",
         "[Troubleshooting](#troubleshooting)",
     ):
         assert entry in readme
+
+
+def test_readme_groups_normal_use_by_media_type_and_model_family() -> None:
+    readme = _read(README)
+    image_start = readme.index("#### Image model families")
+    video_start = readme.index("#### Video and audio-video model families")
+    inspect_start = readme.index("### Inspect or modify a schedule")
+
+    assert "For normal use:" not in readme
+    assert image_start < readme.index("| Krea 2 Turbo") < video_start
+    assert image_start < readme.index("- **Anima:**") < video_start
+    assert video_start < readme.index("| MiniMax H3 Base") < inspect_start
+    assert video_start < readme.index("- **LTX:**") < inspect_start
+    for family in (
+        "Krea 2",
+        "Z-Image",
+        "FLUX.1-schnell",
+        "Qwen Image",
+        "Stable Diffusion 3",
+        "AuraFlow",
+        "Lumina-Image 2.0",
+        "HunyuanImage 2.1",
+        "Anima",
+        "MiniMax H3",
+        "Wan 2.1/2.2",
+        "LTX",
+    ):
+        assert f"- **{family}:**" in readme
 
 
 def test_readme_matches_the_registered_node_surface() -> None:

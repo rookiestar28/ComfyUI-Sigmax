@@ -7,6 +7,8 @@ ComfyUI-Sigmax provides model-aware sigma schedules for ComfyUI, with supported 
 - [Installation](#installation): [ComfyUI Manager](#comfyui-manager) · [Git](#git)
 - [Use in ComfyUI](#use-in-comfyui)
   - [Build a model schedule](#build-a-model-schedule)
+    - [Image model families](#image-model-families)
+    - [Video and audio-video model families](#video-and-audio-video-model-families)
   - [Inspect or modify a schedule](#inspect-or-modify-a-schedule)
 - [Update or remove](#update-or-remove)
 - [Troubleshooting](#troubleshooting)
@@ -52,6 +54,8 @@ Search the node menu for `Sigmax`. The package registers 24 namespaced nodes.
 
 ### Build a model schedule
 
+#### Image model families
+
 | Model | Node | Recommended settings |
 | --- | --- | --- |
 | Krea 2 Turbo | `Sigmax.Krea2SigmaScheduler` | `Turbo`, 8 steps, Euler, CFG 1.0 |
@@ -65,54 +69,34 @@ Search the node menu for `Sigmax`. The package registers 24 namespaced nodes.
 | Original AuraFlow v0.2 | `Sigmax.AuraFlowSigmaScheduler` | `Official Fixed (1.73)`, 50 steps, CFG 3.5; source mode is explicit |
 | Lumina-Image 2.0 | `Sigmax.Lumina2SigmaScheduler` | `Official Fixed (6.0)`, 50 steps, CFG 4.0; source mode is explicit |
 | HunyuanImage 2.1 | `Sigmax.HunyuanImage21SigmaScheduler` | `Base (5.0)`, 50 steps, CFG 3.5, or `Distilled (4.0)`, 8 steps, CFG 3.25; variant is explicit |
-| MiniMax H3 Base | `Sigmax.MiniMaxH3SigmaScheduler` | Select `H3 Base FL2VA` or `H3 Base Ref2VA`; endpoint-inclusive video sigmas, 20 grid points by default; audio remapping remains model-owned |
 | Anima Base v1.0 / Aesthetic / Turbo | `Sigmax.AnimaSigmaScheduler` | `Base`, 30-50 steps, default 50, CFG 4.5; `Aesthetic` uses the same recipe; `Turbo`, 8-12 steps, CFG 1.0; fixed shift 3.0 |
+
+Connect an image scheduler's `SIGMAS` directly to a custom-sampling path that accepts external sigmas. Keep `strict_official` enabled for official variants and use `schedule_info` to confirm the recipe, dimensions, step range, and warnings. Do not pass the result through another scheduler or apply another time shift.
+
+- **Krea 2:** Select `Turbo` or `RAW` explicitly and enter the actual output width/height. `Sigmax.ModelAwareSigmaScheduler` may identify only the family, so resolve an ambiguous `Auto` result manually. `Sigmax.Krea2ConditioningRebalance` is an optional experimental `CONDITIONING` transform with identity at strength `0`; select `RAW`/`Turbo` and its profile explicitly. The RAW-to-Turbo LoRA schedule modes force `strict_official` off, do not load or scale a LoRA, and are only for a compatible LoRA applied to RAW.
+- **Z-Image:** Select `Base` or `Turbo` explicitly; the node supplies the validated schedule only and does not load a checkpoint or choose a sampler.
+- **FLUX.1-schnell:** Use the dedicated 1-4-step schedule for the schnell family; other FLUX variants are not implied.
+- **Qwen Image:** Only the original text-to-image family is covered. `Comfy Fixed` mirrors `1.15`; `Diffusers Dynamic` requires explicit `image_seq_len`. Later variants and image-quality parity are outside scope.
+- **Stable Diffusion 3:** Only original SD3 Medium is covered. Choose the publisher `1.0` or pinned ComfyUI/Diffusers `3.0` source mode explicitly; SD3.5, Turbo, ControlNet, execution, and quality claims are excluded.
+- **AuraFlow:** Support is limited to original fal AuraFlow v0.2 with fixed ratio `1.73` and 50 steps; other versions, finetunes, dynamic shifts, execution, and quality claims are excluded.
+- **Lumina-Image 2.0:** Support is limited to the original Alpha-VLLM text-to-image schedule with fixed ratio `6.0` and 50 steps; video, mGPT, editing paths, dynamic shifts, execution, and quality claims are excluded.
+- **HunyuanImage 2.1:** Base and Distilled use explicit direct-ratio paths (`5.0`/`4.0`). Base is the pinned ComfyUI-compatible lane; Distilled remains publisher-schedule-only. Refiner, encoders, conditioning, weights, and quality claims are excluded.
+- **Anima:** Select Base, Aesthetic, or Turbo explicitly. Aesthetic shares the Base recipe; all three paths construct schedules only and do not load model components.
+
+#### Video and audio-video model families
+
+| Model | Node | Recommended settings |
+| --- | --- | --- |
+| MiniMax H3 Base | `Sigmax.MiniMaxH3SigmaScheduler` | Select `H3 Base FL2VA` or `H3 Base Ref2VA`; endpoint-inclusive video sigmas, 20 grid points by default; audio remapping remains model-owned |
 | Wan 2.1 T2V / I2V | `Sigmax.WanSigmaScheduler` | Select generation, task, source, and resolution explicitly; official T2V 50 steps (`5.0`), official I2V 480P/720P 40 steps (`3.0`/`5.0`) |
 | Wan 2.2 TI2V 5B / A14B T2V/I2V | `Sigmax.WanSigmaScheduler` | Native or Diffusers-reference source lanes; TI2V 5B uses `5.0`; A14B T2V/I2V use `12.0`/`5.0` with caller-owned boundary metadata |
 | LTXV 0.9.8 / LTX-2 19B / LTX-2.3 22B | `Sigmax.LTXSigmaScheduler` | Dev adaptive token shift (20/40/30 default steps) or explicit LTX-2/LTX-2.3 distilled Stage 1/2 vectors; generation and stage are explicit |
 
-For normal use:
+Connect a video scheduler's `SIGMAS` directly to the matching custom-sampling path. Do not add another scheduler or time shift, and inspect `schedule_info` for the selected generation mode, stage, resolution, boundary ownership, and warnings.
 
-1. Add the scheduler node for the selected model.
-2. Select the exact variant and keep `strict_official` enabled.
-3. For Krea 2, enter the actual output width and height.
-4. Connect the node's `SIGMAS` output directly to a custom-sampling path that accepts external sigmas.
-5. Do not pass the result through another scheduler or apply another time shift.
-6. Read `schedule_info` when checking the selected recipe, dimensions, step range, or warnings.
-
-The Qwen Image node covers the original text-to-image family only: `Comfy Fixed` mirrors `1.15`, while `Diffusers Dynamic` requires `image_seq_len`; later variants and image-quality parity are out of scope.
-
-The SD3 node covers only the original Stability AI SD3 Medium text-to-image schedule. Its two source-qualified modes preserve the publisher 1.0 versus pinned ComfyUI/Diffusers 3.0 conflict;
-SD3.5, Turbo, ControlNet, model execution, and image quality are outside this support claim.
-
-The AuraFlow node covers only original fal AuraFlow v0.2 with fixed ratio `1.73` and 50 steps; other versions, finetunes, dynamic shifts, execution, and image quality are outside scope.
-
-The Lumina-Image 2.0 node covers only original Alpha-VLLM text-to-image with fixed ratio `6.0` and 50 steps; video, mGPT, editing paths, dynamic shifts, execution, and image quality are outside scope.
-
-The HunyuanImage 2.1 node constructs schedule-only Base and Distilled direct-ratio paths (`5.0`/`4.0`). Base is the pinned ComfyUI-compatible lane; Distilled remains publisher-schedule-only until a native host path is qualified. Refiner, encoders, conditioning, weights, and image quality are outside scope.
-
-The MiniMax H3 node is an accepted, narrow Base schedule slice: FL2VA/Ref2VA are explicit, only the Diffusers endpoint-inclusive video lane (shift `12.0`) is exposed, and native `simple` plus model-owned audio mapping (shift `3.0`) remain separate. The model-free workflow helper can preflight the generated graph against a caller-supplied ComfyUI `/object_info` schema, including Ref2VA autogrow inputs, without loading weights or submitting a prompt. Context-IR, Regenerate-2K, sparse attention, hosted/API behavior, weights, samplers, and quality claims are outside scope.
-
-The Wan node constructs schedule-only unit-flow sigmas for the released 2.1/2.2 matrix; 2.1 I2V requires `480P` or `720P`, and 2.2 A14B boundaries are caller-owned metadata (never expert routing).
-Diffusers-reference lanes describe scheduler math only; video execution, weights, and quality parity are outside scope.
-
-The LTX node constructs schedule-only unit-flow sigmas for pinned LTXV 0.9.8, LTX-2 19B, and LTX-2.3 22B lanes. Dev mode derives one token-count shift; distilled modes use immutable
-publisher vectors. It does not load video weights, run encoders, or claim video-quality parity.
-
-`Sigmax.ModelAwareSigmaScheduler` can inspect a connected Krea 2 model, but weak evidence may
-identify only the family; if `Auto` reports ambiguity, select `Turbo` or `RAW` explicitly.
-
-For experimental conditioning, connect Krea 2 `CONDITIONING` to
-`Sigmax.Krea2ConditioningRebalance`, select `RAW`/`Turbo` and a profile; it changes only the primary
-tensor, preserves metadata, and makes no prompt-adherence or image-quality claim. Strength `0` is identity.
-
-For a RAW checkpoint with a compatible RAW-to-Turbo model-difference LoRA, choose
-`LoRA Experimental (RAW mu)` or `LoRA Experimental (Turbo mu)` and set the desired steps. The
-node automatically forces `strict_official` off and disables that widget for either
-Experimental selection. The former derives `mu` from width/height; the latter fixes `mu = 1.15`.
-This path is experimental: the scheduler does not load or scale the LoRA, enforce CFG/sampler
-settings, or claim that 12 steps is official. Apply the LoRA to RAW only; do not stack equivalent
-RAW-to-Turbo LoRAs or apply one to the Turbo checkpoint.
+- **MiniMax H3:** Select Base FL2VA or Ref2VA explicitly. Sigmax exposes only the Diffusers endpoint-inclusive video schedule (shift `12.0`); native `simple` semantics and model-owned audio remapping (shift `3.0`) remain separate. The model-free workflow helper can preflight a graph against ComfyUI `/object_info` without loading weights or submitting a prompt. Context-IR, Regenerate-2K, sparse attention, weights, samplers, hosted/API behavior, and quality claims are excluded.
+- **Wan 2.1/2.2:** Select generation, task, source, and resolution explicitly. Wan 2.1 I2V requires `480P` or `720P`; Wan 2.2 A14B boundaries are caller-owned metadata and never route experts. Diffusers-reference lanes describe scheduler math only; execution, weights, and video-quality parity are excluded.
+- **LTX:** Select LTXV 0.9.8, LTX-2 19B, or LTX-2.3 22B plus generation/stage explicitly. Dev mode derives one token-count shift; distilled modes use immutable publisher vectors. Sigmax does not load video weights, run encoders, or claim video-quality parity.
 
 ### Inspect or modify a schedule
 

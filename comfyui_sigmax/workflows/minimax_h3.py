@@ -347,7 +347,6 @@ def build_minimax_h3_host_workflow(spec: MiniMaxH3WorkflowSpec) -> MiniMaxH3Host
             "grid_points": spec.grid_points,
             "start_step": 0,
             "end_step": -1,
-            "already_shifted": False,
         },
     )
     prompt[_SAMPLER_ID] = _node("KSamplerSelect", {"sampler_name": spec.sampler_name})

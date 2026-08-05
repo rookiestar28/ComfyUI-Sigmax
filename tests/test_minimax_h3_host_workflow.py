@@ -59,6 +59,7 @@ def test_fl2va_graph_is_explicit_and_uses_sigmax_sigmas_once() -> None:
     assert _inputs(prompt, "9")["conditioning"] == ["6", 0]
     assert _inputs(prompt, "5")["shift_video"] == 12.0
     assert _inputs(prompt, "5")["shift_audio"] == 3.0
+    assert "already_shifted" not in _inputs(prompt, "7")
     assert workflow.contract.schedule_ownership == "external_video_only"
     assert workflow.contract.audio_ownership == "model_native"
     assert workflow.contract.external_video_shift_applied_once is True

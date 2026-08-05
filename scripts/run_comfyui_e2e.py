@@ -229,7 +229,6 @@ def build_minimax_h3_h2_api_prompt(variant: str) -> dict[str, object]:
         "1": {
             "class_type": "Sigmax.MiniMaxH3SigmaScheduler",
             "inputs": {
-                "already_shifted": False,
                 "end_step": -1,
                 "grid_points": 20,
                 "start_step": 0,

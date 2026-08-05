@@ -245,7 +245,6 @@ class MiniMaxH3SigmaScheduler:
                     "INT",
                     {"default": -1, "min": -1, "max": MINIMAX_H3_MAX_GRID_POINTS - 1},
                 ),
-                "already_shifted": ("BOOLEAN", {"default": False}),
             }
         }
 
@@ -255,14 +254,12 @@ class MiniMaxH3SigmaScheduler:
         grid_points: object,
         start_step: object,
         end_step: object,
-        already_shifted: object = False,
     ) -> tuple[object, str]:
         result = build_minimax_h3_sigma_schedule(
             variant=variant,
             grid_points=grid_points,
             start_step=start_step,
             end_step=end_step,
-            already_shifted=already_shifted,
         )
         try:
             torch = importlib.import_module("torch")

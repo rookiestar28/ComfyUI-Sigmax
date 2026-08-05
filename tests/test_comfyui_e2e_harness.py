@@ -898,7 +898,6 @@ def test_minimax_h3_h2_prompt_connects_explicit_scheduler_to_probe(variant: str)
         "1": {
             "class_type": "Sigmax.MiniMaxH3SigmaScheduler",
             "inputs": {
-                "already_shifted": False,
                 "end_step": -1,
                 "grid_points": 20,
                 "start_step": 0,

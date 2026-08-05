@@ -28,6 +28,7 @@ def test_minimax_h3_node_schema_requires_explicit_variants() -> None:
     assert MINIMAX_H3_SIGMA_NODE_ID == "Sigmax.MiniMaxH3SigmaScheduler"
     assert NODE_CLASS_MAPPINGS[MINIMAX_H3_SIGMA_NODE_ID] is MiniMaxH3SigmaScheduler
     inputs = MiniMaxH3SigmaScheduler.INPUT_TYPES()["required"]
+    assert tuple(inputs) == ("variant", "grid_points", "start_step", "end_step")
     assert inputs["variant"][0] == ("H3 Base FL2VA", "H3 Base Ref2VA")
     assert MiniMaxH3SigmaScheduler.RETURN_TYPES == ("SIGMAS", "STRING")
     assert MiniMaxH3SigmaScheduler.RETURN_NAMES == ("sigmas", "schedule_info")
@@ -101,7 +102,7 @@ def test_minimax_h3_node_can_execute_with_a_torch_like_float_tensor(
 
     fake_torch = SimpleNamespace(float32=float32, tensor=make_tensor)
     monkeypatch.setitem(sys.modules, "torch", fake_torch)
-    output_tensor, metadata = MiniMaxH3SigmaScheduler().build("H3 Base FL2VA", 20, 0, -1, False)
+    output_tensor, metadata = MiniMaxH3SigmaScheduler().build("H3 Base FL2VA", 20, 0, -1)
     assert isinstance(output_tensor, FakeTensor)
     info = json.loads(metadata)
     assert info["fingerprints"]["output"].startswith("sha256:")

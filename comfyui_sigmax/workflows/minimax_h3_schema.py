@@ -61,7 +61,6 @@ _EXPECTED_INPUT_TYPES: Final = {
         "grid_points": "INT",
         "start_step": "INT",
         "end_step": "INT",
-        "already_shifted": "BOOLEAN",
     },
     "KSamplerSelect": {"sampler_name": "COMBO"},
     "BasicGuider": {"model": "MODEL", "conditioning": "CONDITIONING"},

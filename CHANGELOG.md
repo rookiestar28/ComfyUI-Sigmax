@@ -59,6 +59,11 @@ tracked independently from the frozen profile-schema version.
 
 ### Changed
 
+- Finalized the unreleased `Sigmax.MiniMaxH3SigmaScheduler` input contract by removing the
+  user-visible `already_shifted` option. H3 schedules always enter through the unshifted input
+  path, while the pure core retains its fail-closed double-shift guard. Workflows saved from an
+  earlier development build may need the H3 scheduler node refreshed or recreated; numerical
+  schedule behavior is unchanged.
 - Reduced the public documentation surface to the concise product README, compatibility guide,
   contribution guide, changelog, and test-governance documents. Detailed architecture, schema,
   evidence, and release contracts continue to be enforced by source, generated manifests, tests,

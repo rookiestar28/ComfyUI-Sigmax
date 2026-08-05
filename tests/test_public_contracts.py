@@ -80,6 +80,10 @@ def test_packaged_manifest_freezes_the_complete_m8_01_boundary() -> None:
         {"id": "Sigmax.LTXSigmaScheduler", "schema": "sigmax.ltx-sigma-node/1"},
         {"id": "Sigmax.Lumina2SigmaScheduler", "schema": "sigmax.lumina2-sigma-node/1"},
         {
+            "id": "Sigmax.MiniMaxH3SigmaScheduler",
+            "schema": "sigmax.minimax-h3-sigma-node/1",
+        },
+        {
             "id": "Sigmax.ModelAwareSigmaScheduler",
             "schema": "sigmax.model-aware-sigma-node/1",
         },

@@ -20,9 +20,13 @@ class CiContractTests(unittest.TestCase):
             "scripts/run_frontend_policy_tests.py",
             "scripts/run_krea2_turbo_parity.py",
             "scripts/run_krea2_raw_parity.py",
+            "scripts/run_minimax_h3_diffusers_parity.py",
+            "scripts/run_minimax_h3_comfy_native_parity.py",
             "scripts/run_full_tests_windows.ps1",
             "scripts/run_full_tests_linux.sh",
             "requirements/parity-krea2-turbo.txt",
+            "requirements/parity-minimax-h3-diffusers.txt",
+            "requirements/parity-comfyui-h3-native.txt",
             ".github/workflows/ci.yml",
         ):
             with self.subTest(path=relative_path):
@@ -90,6 +94,12 @@ class CiContractTests(unittest.TestCase):
         self.assertIn("[venv.missing]", windows)
         self.assertIn("[venv.missing]", linux)
 
+    def test_frontend_runner_enables_esm_for_javascript_policy_modules(self) -> None:
+        runner = (REPOSITORY_ROOT / "scripts/run_frontend_policy_tests.py").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn('"--experimental-default-type=module"', runner)
+
     def test_canonical_text_resources_checkout_with_lf_on_every_platform(self) -> None:
         resources = (
             "comfyui_sigmax/benchmarks/numerical_matrix_v1.json",
@@ -153,6 +163,7 @@ class CiContractTests(unittest.TestCase):
         self.assertIn('"comfyui_sigmax/core/validation.py"', runner)
         self.assertIn('"comfyui_sigmax/nodes/__init__.py"', runner)
         self.assertIn('"comfyui_sigmax/nodes/anima_sigma_scheduler.py"', runner)
+        self.assertIn('"comfyui_sigmax/nodes/minimax_h3_sigma_scheduler.py"', runner)
         self.assertIn('"comfyui_sigmax/nodes/wan_sigma_scheduler.py"', runner)
         self.assertIn('"comfyui_sigmax/nodes/krea2_sigma_scheduler.py"', runner)
         self.assertIn('"comfyui_sigmax/nodes/sd3_sigma_scheduler.py"', runner)
@@ -160,6 +171,7 @@ class CiContractTests(unittest.TestCase):
         self.assertIn('"comfyui_sigmax/nodes/raw_workflow_output.py"', runner)
         self.assertIn('"comfyui_sigmax/profiles/__init__.py"', runner)
         self.assertIn('"comfyui_sigmax/profiles/anima.py"', runner)
+        self.assertIn('"comfyui_sigmax/profiles/minimax_h3.py"', runner)
         self.assertIn('"comfyui_sigmax/profiles/wan.py"', runner)
         self.assertIn('"comfyui_sigmax/workflows/fixtures.json"', runner)
         self.assertIn('"comfyui_sigmax/workflows/host_baseline.json"', runner)
@@ -202,6 +214,19 @@ class CiContractTests(unittest.TestCase):
         self.assertIn("requirements/parity-krea2-turbo.txt", workflow)
         self.assertIn("scripts.run_krea2_turbo_parity", workflow)
         self.assertIn("tests/parity/fixtures/krea2_turbo_parity_v1.json", workflow)
+        self.assertIn("minimax-h3-diffusers-parity-pinned:", workflow)
+        self.assertIn("requirements/parity-minimax-h3-diffusers.txt", workflow)
+        self.assertIn("scripts.run_minimax_h3_diffusers_parity", workflow)
+        self.assertIn("h3-diffusers-parity-report.json", workflow)
+        self.assertIn("minimax-h3-comfyui-native-parity-pinned:", workflow)
+        self.assertIn("requirements/parity-comfyui-h3-native.txt", workflow)
+        self.assertIn("scripts.run_minimax_h3_comfy_native_parity", workflow)
+        self.assertIn("tests/parity/fixtures/minimax_h3_comfy_native_parity_v1.json", workflow)
+        self.assertIn(
+            "57500fc5bc92566a63f2046824f522cd55c335ca",  # pragma: allowlist secret
+            workflow,
+        )
+        self.assertIn("minimax_h3_comfy_native_parity_v1.json", workflow)
         self.assertIn("raw-parity-pinned:", workflow)
         self.assertIn("scripts.run_krea2_raw_parity", workflow)
         self.assertIn("tests/parity/fixtures/krea2_raw_parity_v1.json", workflow)
@@ -242,6 +267,33 @@ class CiContractTests(unittest.TestCase):
                     block.index("torch==2.9.0+cpu"),
                     block.index("-r requirements/parity-krea2-turbo.txt"),
                 )
+
+    def test_h3_parity_job_installs_the_pinned_cpu_torch_wheel(self) -> None:
+        workflow = (REPOSITORY_ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+        h3 = workflow.split("  minimax-h3-diffusers-parity-pinned:", maxsplit=1)[1]
+        self.assertIn('python-version: "3.13"', h3)
+        self.assertIn("--no-cache-dir", h3)
+        self.assertIn("--index-url https://download.pytorch.org/whl/cpu", h3)
+        self.assertIn("torch==2.9.0+cpu", h3)
+        self.assertIn("-r requirements/parity-minimax-h3-diffusers.txt", h3)
+        self.assertLess(
+            h3.index("torch==2.9.0+cpu"),
+            h3.index("-r requirements/parity-minimax-h3-diffusers.txt"),
+        )
+
+    def test_h3_native_parity_job_is_pinned_and_isolated(self) -> None:
+        workflow = (REPOSITORY_ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+        h3 = workflow.split("  minimax-h3-comfyui-native-parity-pinned:", maxsplit=1)[1]
+        self.assertIn('python-version: "3.13"', h3)
+        self.assertIn("git init .tmp/ComfyUI-H3", h3)
+        self.assertIn("git -C .tmp/ComfyUI-H3 checkout --detach FETCH_HEAD", h3)
+        self.assertIn("requirements/parity-comfyui-h3-native.txt", h3)
+        self.assertIn("scripts.run_minimax_h3_comfy_native_parity", h3)
+        self.assertIn("tests/parity/fixtures/minimax_h3_comfy_native_parity_v1.json", h3)
+        self.assertLess(
+            h3.index("requirements/parity-comfyui-h3-native.txt"),
+            h3.index("scripts.run_minimax_h3_comfy_native_parity"),
+        )
 
     def test_hash_seed_subprocesses_preserve_the_required_os_environment(self) -> None:
         for relative_path in (

@@ -294,6 +294,10 @@ def builtin_profile_registry() -> ProfileRegistry:
         LTXV_098_PROFILE,
     )
     from comfyui_sigmax.profiles.lumina2 import LUMINA2_SCHEMA
+    from comfyui_sigmax.profiles.minimax_h3 import (
+        MINIMAX_H3_BASE_FL2VA_SCHEMA,
+        MINIMAX_H3_BASE_REF2VA_SCHEMA,
+    )
     from comfyui_sigmax.profiles.qwen_image import (
         QWEN_IMAGE_COMFY_FIXED_SCHEMA,
         QWEN_IMAGE_DIFFUSERS_DYNAMIC_SCHEMA,
@@ -333,6 +337,8 @@ def builtin_profile_registry() -> ProfileRegistry:
                     _builtin_entry(KREA2_RAW_SCHEMA),
                     _builtin_entry(KREA2_TURBO_SCHEMA),
                     _builtin_entry(LUMINA2_SCHEMA),
+                    _builtin_entry(MINIMAX_H3_BASE_FL2VA_SCHEMA),
+                    _builtin_entry(MINIMAX_H3_BASE_REF2VA_SCHEMA),
                     _builtin_entry(LTX2_19B_DISTILLED_STAGE1_PROFILE.schema),
                     _builtin_entry(LTX2_19B_DISTILLED_STAGE2_PROFILE.schema),
                     _builtin_entry(LTX2_19B_PROFILE.schema),

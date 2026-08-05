@@ -33,12 +33,12 @@ def main() -> int:
             f"[node.incompatible] Node.js 18+ is required; active version is {version!r}."
         )
     subprocess.run(  # noqa: S603
-        [node, "--test", str(TEST)],
+        [node, "--experimental-default-type=module", "--test", str(TEST)],
         cwd=ROOT,
         check=True,
     )
     subprocess.run(  # noqa: S603
-        [node, "--check", str(EXTENSION)],
+        [node, "--experimental-default-type=module", "--check", str(EXTENSION)],
         cwd=ROOT,
         check=True,
     )

@@ -26,6 +26,7 @@ _HUNYUAN_IMAGE21_UI_KEY = "sigmax_hunyuan_image21_schedule"
 _ANIMA_UI_KEY = "sigmax_anima_schedule"
 _WAN_UI_KEY = "sigmax_wan_schedule"
 _LTX_UI_KEY = "sigmax_ltx_schedule"
+_MINIMAX_H3_H2_UI_KEY = "sigmax_minimax_h3_h2"
 _KREA2_LORA_UI_KEY = "sigmax_krea2_lora_experimental"
 _KREA2_CONDITIONING_UI_KEY = "sigmax_krea2_conditioning"
 _KREA2_CONDITIONING_FEATURES = 12 * 2560
@@ -143,6 +144,96 @@ class NativeEulerProbe:
         return {
             "ui": {
                 _UI_KEY: [
+                    json.dumps(
+                        trace,
+                        allow_nan=False,
+                        ensure_ascii=False,
+                        separators=(",", ":"),
+                        sort_keys=True,
+                    )
+                ]
+            }
+        }
+
+
+class MiniMaxH3ScheduleProbe:
+    """Return bounded model-free host evidence for one explicit MiniMax H3 variant."""
+
+    CATEGORY = "SigmaxTest"
+    DESCRIPTION = "Test-only MiniMax H3 sigma-node H2 execution probe."
+    FUNCTION = "execute"
+    OUTPUT_NODE = True
+    RETURN_TYPES: tuple[()] = ()
+    RETURN_NAMES: tuple[()] = ()
+
+    @classmethod
+    def INPUT_TYPES(cls) -> dict[str, dict[str, tuple[object, ...]]]:
+        return {
+            "required": {
+                "sigmas": ("SIGMAS",),
+                "schedule_info": ("STRING", {"default": "", "multiline": True}),
+            }
+        }
+
+    def execute(self, sigmas: object, schedule_info: object) -> dict[str, object]:
+        if not isinstance(sigmas, torch.Tensor) or sigmas.device.type != "cpu":
+            raise ValueError("MiniMax H3 H2 sigmas must be a CPU tensor")
+        if sigmas.dtype != torch.float32 or sigmas.ndim != 1 or len(sigmas) != 20:
+            raise ValueError("MiniMax H3 H2 sigmas must be one float32 19-transition schedule")
+        if not isinstance(schedule_info, str):
+            raise ValueError("MiniMax H3 H2 schedule information must be text")
+        info = json.loads(schedule_info)
+        if not isinstance(info, dict):
+            raise ValueError("MiniMax H3 H2 schedule information must be an object")
+        profile = info.get("profile")
+        expected_profiles = {"minimax-h3.base_fl2va", "minimax-h3.base_ref2va"}
+        counts = info.get("counts")
+        audio = info.get("audio")
+        shift = info.get("shift")
+        velocity = info.get("velocity")
+        slicing = info.get("slicing")
+        canonical_info = json.dumps(
+            info,
+            allow_nan=False,
+            ensure_ascii=False,
+            separators=(",", ":"),
+            sort_keys=True,
+        )
+        if (
+            schedule_info != canonical_info
+            or not isinstance(profile, dict)
+            or profile.get("id") not in expected_profiles
+            or info.get("schema") != "sigmax.minimax-h3-sigma-node/1"
+            or info.get("lane") != "diffusers_endpoint_inclusive"
+            or not isinstance(counts, dict)
+            or counts
+            != {
+                "effective_grid_points": 20,
+                "effective_model_evaluations": 19,
+                "effective_transitions": 19,
+                "requested_grid_points": 20,
+                "requested_transitions": 19,
+            }
+            or not isinstance(audio, dict)
+            or audio.get("ownership") != "model_native"
+            or audio.get("derivative") != "model_native"
+            or audio.get("shift") != 3.0
+            or not isinstance(shift, dict)
+            or shift.get("video") != 12.0
+            or shift.get("audio") != 3.0
+            or not isinstance(velocity, dict)
+            or velocity != {"direction": "data_ward", "sign_adapter": "explicit_only"}
+            or not isinstance(slicing, dict)
+            or slicing.get("output_steps") != 19
+            or float(sigmas[0]) != 1.0
+            or float(sigmas[-1]) != 0.0
+            or any(float(left) <= float(right) for left, right in pairwise(sigmas))
+        ):
+            raise ValueError("MiniMax H3 H2 schedule contract drifted")
+        trace = {"schedule_info": info, "sigmas": _vector(sigmas)}
+        return {
+            "ui": {
+                _MINIMAX_H3_H2_UI_KEY: [
                     json.dumps(
                         trace,
                         allow_nan=False,

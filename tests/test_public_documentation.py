@@ -94,14 +94,15 @@ def test_readme_is_limited_to_product_installation_and_use() -> None:
 
 def test_readme_matches_the_registered_node_surface() -> None:
     readme = _read(README)
-    assert len(NODE_CLASS_MAPPINGS) == 23
+    assert len(NODE_CLASS_MAPPINGS) == 24
     assert NODE_CLASS_MAPPINGS.keys() == NODE_DISPLAY_NAME_MAPPINGS.keys()
-    assert "registers 23 namespaced nodes" in readme
+    assert "registers 24 namespaced nodes" in readme
     for node_id in (
         "Sigmax.Krea2SigmaScheduler",
         "Sigmax.ZImageSigmaScheduler",
         "Sigmax.Flux1SchnellSigmaScheduler",
         "Sigmax.HunyuanImage21SigmaScheduler",
+        "Sigmax.MiniMaxH3SigmaScheduler",
         "Sigmax.AnimaSigmaScheduler",
         "Sigmax.ModelAwareSigmaScheduler",
         "Sigmax.AdvancedFlowMatchScheduler",

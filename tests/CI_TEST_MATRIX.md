@@ -21,6 +21,7 @@ Command definitions remain in `tests/TEST_SOP.md`. Real-host lifecycle requireme
 | Krea 2 variant-resolution contracts | Implemented | M3-04 |
 | Framework parity tests | Implemented | M2-03, M3-05 |
 | Native ComfyUI parity tests | Implemented | M2-04 |
+| MiniMax H3 Diffusers/native parity lanes | Contract, source pins, complete 4/8/12/16/20 fixtures, and isolated CI jobs implemented; local CPython 3.13 CPU reports pass, hosted runtime artifacts pending | M6-05 subordinate qualification |
 | Numerical benchmark matrix | Implemented | M7-02 |
 | Optional image benchmark protocol | Implemented; execution unapproved | M7-03 |
 | Dependency compatibility matrix | Local/pinned plus release/HEAD latest-host evidence implemented; official container explicitly unavailable/non-blocking | M7-04 |
@@ -34,9 +35,11 @@ Command definitions remain in `tests/TEST_SOP.md`. Real-host lifecycle requireme
 | Real ComfyUI H1 | Implemented | M2-05 harness |
 | Real ComfyUI H2 | Turbo and RAW/auto implemented | M2-05; M3-06 |
 | Real ComfyUI H3 | M5-01 deterministic native-Euler H3 implemented; partial-denoise execution is rejected | M5-01 |
-| Browser E2E | `NOT_APPLICABLE` | Deliberate web-extension roadmap item |
+| MiniMax H3 model-free host contract | Explicit-variant scheduler/probe/verifier and optional pinned 0.30.0 runner implemented; host execution pending explicit authorization | M6-05 subordinate qualification |
+| Frontend policy | Implemented in the default full gate with Node.js 18+; hosted CI uses Node.js 20 | M4-11 amendment |
+| Browser E2E | Bounded M4-11 item-specific browser evidence accepted; reusable automated Playwright lane `NOT_IMPLEMENTED` | Activate when frontend behavior requires maintained real-browser regression coverage |
 | GPU/real-model tests | Optional and unapproved | Explicit requirement and authorization |
-| CI workflows | Configured; hosted runtime evidence pending | M0-06 |
+| CI workflows | Configured; hosted four-cell full gate and three pinned parity jobs passed at commit `070cb12fe444fed138b8ea601dcde3657a460647` | M0-06 plus accepted hosted evidence |
 
 An unavailable lane is never a pass.
 
@@ -79,7 +82,7 @@ Change-aware selection may accelerate `fast`. It must not remove a required `pr-
 | Registry candidate drift | `.comfyignore` ZIP validator + malicious member tests | Windows/WSL byte identity and renamed-directory import |
 | Platform/process failure | Windows/Linux + Unicode path | Port, readiness, shutdown, and cleanup verification |
 
-## 5. Planned CI Job Matrix
+## 5. CI Job Role Matrix
 
 Exact Python and dependency versions are frozen by M0/M7. This matrix defines roles, not
 unreviewed version numbers.
@@ -170,7 +173,10 @@ ComfyUI Turbo schedule parity are implemented. Complete RAW 28/52-step geometry 
 also implemented, together with pinned authoritative/framework parity over all 14
 recipe/geometry cases. Pure Krea variant-resolution tests enforce strong-evidence conflicts,
 suggestion-only weak signals, and family-only model/tensor signals. Scheduled mutation
-evidence remains mandatory when its roadmap stage activates.
+evidence remains mandatory when its roadmap stage activates. MiniMax H3 keeps its Diffusers
+endpoint-inclusive and native ComfyUI `simple` vectors separate; the source-pinned native
+adapter/report contract is present, but hosted Python 3.13 regeneration and authorized model-host
+evidence remain open.
 
 ## 8. Skip, XFail, Retry, and Quarantine Policy
 
@@ -215,7 +221,8 @@ Every workflow must:
 
 ## 10. CI Self-Tests
 
-CI configuration is executable behavior. Planned contracts verify:
+CI configuration is executable behavior. Current contracts verify or reserve the following
+requirements for their owning lane:
 
 - required workflows and jobs exist;
 - job commands reference canonical repo scripts;
@@ -223,7 +230,8 @@ CI configuration is executable behavior. Planned contracts verify:
 - workflow matrices stay inside supported policy;
 - action refs and permissions comply with policy;
 - host/parity jobs upload diagnostics even on failure;
-- Node/Playwright cannot become a Python-core dependency accidentally;
+- the required Node.js frontend-policy stage remains separate from pure-core and optional
+  Playwright dependencies;
 - required P0 suites cannot be filtered or skipped;
 - scheduled/latest/optional lanes cannot masquerade as known-good evidence;
 - full-gate scripts fail when hooks mutate the worktree or index;

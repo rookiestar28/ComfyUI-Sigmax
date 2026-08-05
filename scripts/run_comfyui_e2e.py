@@ -51,11 +51,23 @@ from comfyui_sigmax.nodes import (  # noqa: E402
     build_krea2_sigma_schedule,
     sigma_output_fingerprint,
 )
+from comfyui_sigmax.nodes.minimax_h3_sigma_scheduler import (  # noqa: E402
+    build_minimax_h3_sigma_schedule,
+)
 from comfyui_sigmax.profiles import KREA2_TURBO_SCHEMA  # noqa: E402
+from comfyui_sigmax.profiles.minimax_h3 import (  # noqa: E402
+    MINIMAX_H3_COMFYUI_REVISION,
+)
 from comfyui_sigmax.workflows import (  # noqa: E402
     WorkflowValidationLane,
     load_canonical_workflow_fixtures,
     validate_live_workflow_fixtures,
+)
+from comfyui_sigmax.workflows.minimax_h3 import (  # noqa: E402
+    MiniMaxH3ModelFiles,
+    MiniMaxH3PublicVariant,
+    MiniMaxH3WorkflowSpec,
+    build_minimax_h3_host_workflow,
 )
 from comfyui_sigmax.workflows.validation import (  # noqa: E402
     CANONICAL_HOST_REVISION,
@@ -78,6 +90,11 @@ _OUTPUT_NODE_ID: Final = "3"
 _H3_OUTPUT_NODE_ID: Final = "4"
 _BUNDLE_KEY: Final = "sigmax_execution_bundle"
 _H3_TRACE_KEY: Final = "sigmax_native_euler_trace"
+_MINIMAX_H3_OUTPUT_NODE_ID: Final = "5"
+_MINIMAX_H3_TRACE_KEY: Final = "sigmax_minimax_h3_h2"
+_MINIMAX_H3_HOST_VERSION: Final = "0.30.0"
+_MINIMAX_H3_MODEL_LANE_SCHEMA: Final = "sigmax.minimax-h3-model-lane/1"
+_MINIMAX_H3_PUBLIC_VARIANTS: Final = ("H3 Base FL2VA", "H3 Base Ref2VA")
 _ALGEBRA_OUTPUT_NODE_ID: Final = "7"
 _ALGEBRA_TRACE_KEY: Final = "sigmax_schedule_algebra"
 _CHECKPOINT_OUTPUT_NODE_ID: Final = "2"
@@ -198,6 +215,32 @@ def build_turbo_api_prompt() -> dict[str, object]:
                 "sigmas": ["1", 0],
                 "schedule_info": ["1", 1],
                 "schedule_report": ["2", 0],
+            },
+        },
+    }
+
+
+def build_minimax_h3_h2_api_prompt(variant: str) -> dict[str, object]:
+    """Return a model-free MiniMax H3 scheduler -> probe graph for one explicit variant."""
+
+    if variant not in {"H3 Base FL2VA", "H3 Base Ref2VA"}:
+        raise ScheduleContractError("MiniMax H3 H2 variant must be selected explicitly")
+    return {
+        "1": {
+            "class_type": "Sigmax.MiniMaxH3SigmaScheduler",
+            "inputs": {
+                "already_shifted": False,
+                "end_step": -1,
+                "grid_points": 20,
+                "start_step": 0,
+                "variant": variant,
+            },
+        },
+        _MINIMAX_H3_OUTPUT_NODE_ID: {
+            "class_type": "SigmaxTest.MiniMaxH3ScheduleProbe",
+            "inputs": {
+                "schedule_info": ["1", 1],
+                "sigmas": ["1", 0],
             },
         },
     }
@@ -1726,6 +1769,86 @@ def execute_verified_host_repeat(
     return first_summary, transition
 
 
+def verify_minimax_h3_h2_history(
+    history: object,
+    *,
+    prompt_id: str,
+    variant: str,
+) -> dict[str, object]:
+    """Verify one model-free host execution of the explicit MiniMax H3 sigma node."""
+
+    if variant not in {"H3 Base FL2VA", "H3 Base Ref2VA"}:
+        raise ScheduleContractError("MiniMax H3 H2 variant must be selected explicitly")
+    expected = build_minimax_h3_sigma_schedule(
+        variant=variant,
+        grid_points=20,
+        start_step=0,
+        end_step=-1,
+    )
+    root = _object(history, label="MiniMax H3 H2 history")
+    entry = _object(root.get(prompt_id), label="MiniMax H3 H2 history entry")
+    status = _object(entry.get("status"), label="MiniMax H3 H2 prompt status")
+    if status.get("completed") is not True or status.get("status_str") != "success":
+        raise ScheduleContractError("MiniMax H3 H2 history does not prove completed success")
+    prompt_tuple = _array(entry.get("prompt"), label="MiniMax H3 H2 retained prompt tuple")
+    if len(prompt_tuple) < 3 or prompt_tuple[2] != build_minimax_h3_h2_api_prompt(variant):
+        raise ScheduleContractError("MiniMax H3 H2 retained API graph or explicit variant is stale")
+    outputs = _object(entry.get("outputs"), label="MiniMax H3 H2 prompt outputs")
+    output = _object(
+        outputs.get(_MINIMAX_H3_OUTPUT_NODE_ID),
+        label="MiniMax H3 H2 probe output",
+    )
+    traces = _array(output.get(_MINIMAX_H3_TRACE_KEY), label="MiniMax H3 H2 probe trace")
+    if len(traces) != 1 or not isinstance(traces[0], str) or len(traces[0]) > 100_000:
+        raise ScheduleContractError("MiniMax H3 H2 probe trace is malformed")
+    trace = _object(
+        _decode_json(traces[0].encode(), label="MiniMax H3 H2 trace"),
+        label="MiniMax H3 H2 decoded trace",
+    )
+    canonical = json.dumps(
+        trace,
+        allow_nan=False,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    )
+    info = _object(trace.get("schedule_info"), label="MiniMax H3 H2 schedule information")
+    sigmas = _array(trace.get("sigmas"), label="MiniMax H3 H2 sigma vector")
+    expected_info = _object(
+        json.loads(expected.schedule_info_json),
+        label="MiniMax H3 H2 expected schedule information",
+    )
+    if (
+        traces[0] != canonical
+        or info != expected_info
+        or len(sigmas) != len(expected.sigmas)
+        or tuple(float(value) for value in sigmas) != expected.sigmas
+        or any(
+            not isinstance(value, int | float)
+            or isinstance(value, bool)
+            or not math.isfinite(value)
+            for value in sigmas
+        )
+    ):
+        raise ScheduleContractError("MiniMax H3 H2 execution evidence drifted")
+    profile = _object(info.get("profile"), label="MiniMax H3 H2 profile")
+    audio = _object(info.get("audio"), label="MiniMax H3 H2 audio ownership")
+    counts = _object(info.get("counts"), label="MiniMax H3 H2 count metadata")
+    return {
+        "audio_ownership": audio.get("ownership"),
+        "effective_transitions": counts.get("effective_transitions"),
+        "lane": info.get("lane"),
+        "numerical_fingerprint": _object(
+            info.get("fingerprints"), label="MiniMax H3 H2 fingerprints"
+        ).get("complete"),
+        "profile_id": profile.get("id"),
+        "requested_grid_points": counts.get("requested_grid_points"),
+        "requested_transitions": counts.get("requested_transitions"),
+        "status": "succeeded",
+        "variant": variant,
+    }
+
+
 def verify_native_euler_h3_history(
     history: object,
     *,
@@ -2950,6 +3073,305 @@ def run_conditioning(args: argparse.Namespace) -> dict[str, object]:
     return evidence
 
 
+def build_minimax_h3_model_lane_plan(
+    *,
+    variant: str,
+    prompt: str,
+    model_artifact: str,
+    allow_model_weights: bool,
+    license_ack: bool,
+    host_revision: str = MINIMAX_H3_COMFYUI_REVISION,
+    host_version: str = _MINIMAX_H3_HOST_VERSION,
+    width: int = 1344,
+    height: int = 768,
+    length: int = 124,
+    grid_points: int = 20,
+    seed: int = 0,
+    first_frame: str | None = None,
+    last_frame: str | None = None,
+    reference_images: tuple[str, ...] = (),
+) -> dict[str, object]:
+    """Build an authorization-gated H3 model workflow plan without executing a host.
+
+    This is the bridge between the accepted model-free H1/H2 contract and a future authorized
+    weight-backed host lane. It deliberately produces a JSON-compatible plan only: no model file
+    is opened, no host process starts, and no network call is made.
+    """
+
+    if license_ack is not True:
+        raise ScheduleContractError(
+            "MiniMax H3 model lane requires an explicit license acknowledgement"
+        )
+    if allow_model_weights is not True:
+        raise ScheduleContractError(
+            "MiniMax H3 model lane requires explicit weight execution authorization"
+        )
+    if host_revision != MINIMAX_H3_COMFYUI_REVISION:
+        raise ScheduleContractError("MiniMax H3 model lane host revision is not pinned")
+    if host_version != _MINIMAX_H3_HOST_VERSION:
+        raise ScheduleContractError("MiniMax H3 model lane host version is not pinned")
+    if variant not in _MINIMAX_H3_PUBLIC_VARIANTS:
+        raise ScheduleContractError("MiniMax H3 model lane variant must be selected explicitly")
+    if not isinstance(reference_images, tuple):
+        raise ScheduleContractError("MiniMax H3 model lane reference_images must be a tuple")
+
+    selected_variant = cast(MiniMaxH3PublicVariant, variant)
+    model_files = MiniMaxH3ModelFiles(diffusion_model=model_artifact)
+    spec = MiniMaxH3WorkflowSpec(
+        variant=selected_variant,
+        prompt=prompt,
+        width=width,
+        height=height,
+        length=length,
+        grid_points=grid_points,
+        seed=seed,
+        first_frame=first_frame,
+        last_frame=last_frame,
+        reference_images=reference_images,
+        model_files=model_files,
+    )
+    workflow = build_minimax_h3_host_workflow(spec)
+    # ComfyUI input names may contain dots (for example ``ref_images.ref_image_0``), while the
+    # pure-core projection intentionally accepts only controlled ASCII identifier keys. The
+    # model-lane receipt therefore fingerprints the JSON-compatible API graph directly and keeps
+    # the native host key unchanged.
+    workflow_projection = json.dumps(
+        workflow.prompt,
+        ensure_ascii=False,
+        allow_nan=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return {
+        "schema": _MINIMAX_H3_MODEL_LANE_SCHEMA,
+        "lane": "H4_MINIMAX_H3_MODEL_M6_05",
+        "status": "authorized_not_executed",
+        "host": {"version": host_version, "revision": host_revision},
+        "variant": variant,
+        "authorization": {
+            "allow_model_weights": True,
+            "license_ack": True,
+            "network": False,
+        },
+        "execution": {"performed": False, "weights_loaded": False},
+        "model_files": {
+            "diffusion_model": workflow.model_files.diffusion_model,
+            "text_encoder": workflow.model_files.text_encoder,
+            "video_vae": workflow.model_files.video_vae,
+            "audio_vae": workflow.model_files.audio_vae,
+        },
+        "workflow": workflow.prompt,
+        "contract": {
+            "schema": workflow.contract.schema,
+            "host_min_version": workflow.contract.host_min_version,
+            "schedule_node_id": workflow.contract.schedule_node_id,
+            "native_shift_node_id": workflow.contract.native_shift_node_id,
+            "sampler_node_id": workflow.contract.sampler_node_id,
+            "schedule_ownership": workflow.contract.schedule_ownership,
+            "audio_ownership": workflow.contract.audio_ownership,
+            "external_video_shift_applied_once": workflow.contract.external_video_shift_applied_once,
+            "external_audio_schedule": workflow.contract.external_audio_schedule,
+        },
+        "workflow_fingerprint": "sha256:" + hashlib.sha256(workflow_projection).hexdigest(),
+    }
+
+
+def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
+    """Execute the model-free MiniMax H3 H1/H2 contract on the pinned H3 host."""
+
+    started = time.time()
+    comfyui_root = Path(args.comfyui_root).resolve()
+    host_python = Path(args.host_python).resolve()
+    if not (comfyui_root / "main.py").is_file():
+        raise ScheduleContractError("COMFYUI_ROOT does not contain main.py")
+    if not host_python.is_file():
+        raise ScheduleContractError("SIGMAX_COMFYUI_PYTHON is not a file")
+    host_revision = _git_revision(comfyui_root)
+    expected_revision = args.minimax_h3_expected_revision
+    if host_revision != expected_revision:
+        raise ScheduleContractError(
+            "selected ComfyUI revision does not match the exact MiniMax H3 host revision"
+        )
+    if args.minimax_h3_host_version != _MINIMAX_H3_HOST_VERSION:
+        raise ScheduleContractError("MiniMax H3 host version must be the pinned 0.30.0 baseline")
+
+    owned_root = Path(args.temp_root).resolve()
+    run_path = require_owned_run_path(
+        repository_root=REPOSITORY_ROOT,
+        owned_root=owned_root,
+        candidate=owned_root / f"minimax-h3-run-{uuid.uuid4().hex}",
+    )
+    run_path.mkdir(parents=True)
+    for name in ("base", "input", "output", "temp", "user"):
+        (run_path / name).mkdir()
+    staged_node = _stage_extension(run_path)
+    _stage_h3_test_pack(run_path)
+    import_probe = _run_import_probe(
+        host_python=host_python,
+        comfyui_root=comfyui_root,
+        staged_node=staged_node,
+    )
+
+    port = _select_free_port()
+    base_url = f"http://{_LOOPBACK}:{port}"
+    log_path = run_path / "comfyui.log"
+    process: subprocess.Popen[bytes] | None = None
+    shutdown: dict[str, object] = {}
+    succeeded = False
+    validation_lane = WorkflowValidationLane.LATEST_HOST
+    evidence: dict[str, object] = {
+        "schema": "sigmax.minimax-h3-host-e2e/1",
+        "lanes": ["H1", "H2_MINIMAX_H3_M6_05"],
+        "host": {
+            "id": "comfyui",
+            "version": args.minimax_h3_host_version,
+            "revision": host_revision,
+        },
+        "sigmax_revision": _git_revision(REPOSITORY_ROOT),
+        "platform": platform.system().casefold(),
+        "listen": _LOOPBACK,
+        "port": port,
+        "import_probe": import_probe,
+        "attempt_transitions": {},
+        "model_execution": "not_loaded",
+    }
+    try:
+        creationflags = (
+            cast(int, getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)) if os.name == "nt" else 0
+        )
+        with log_path.open("wb") as log:
+            process = subprocess.Popen(  # noqa: S603
+                _host_command(
+                    host_python=host_python,
+                    comfyui_root=comfyui_root,
+                    run_path=run_path,
+                    port=port,
+                ),
+                cwd=run_path,
+                stdout=log,
+                stderr=subprocess.STDOUT,
+                creationflags=creationflags,
+                start_new_session=os.name == "posix",
+            )
+            object_info = _readiness(
+                base_url=base_url,
+                process=process,
+                deadline=time.monotonic() + args.readiness_timeout,
+            )
+            registry = builtin_node_registry()
+            expected_ids = tuple(registry.class_mappings())
+            filtered = {
+                node_id: object_info[node_id] for node_id in expected_ids if node_id in object_info
+            }
+            if tuple(sorted(filtered)) != expected_ids:
+                raise ScheduleContractError(
+                    "MiniMax H3 host is missing one or more Sigmax node IDs"
+                )
+            test_ids = {"SigmaxTest.MiniMaxH3ScheduleProbe"}
+            if not test_ids <= set(object_info):
+                raise ScheduleContractError("MiniMax H3 H2 test probe is not registered")
+            live_report = validate_live_workflow_fixtures(
+                object_info=filtered,
+                host_version=args.minimax_h3_host_version,
+                host_revision=host_revision,
+                lane=validation_lane,
+            )
+            if not live_report.gate_passed or live_report.issues:
+                raise ScheduleContractError("MiniMax H3 host H1 live schema validation failed")
+            h1_summary = {
+                "expected_node_ids": list(expected_ids),
+                "live_schema_fingerprint": live_report.report_fingerprint,
+                "registered": True,
+                "status": "succeeded",
+            }
+            repeat_info = _object(
+                _http_json(f"{base_url}/object_info"),
+                label="MiniMax H3 repeat live object_info",
+            )
+            repeat_filtered = {
+                node_id: repeat_info[node_id] for node_id in expected_ids if node_id in repeat_info
+            }
+            repeat_report = validate_live_workflow_fixtures(
+                object_info=repeat_filtered,
+                host_version=args.minimax_h3_host_version,
+                host_revision=host_revision,
+                lane=validation_lane,
+            )
+            repeat_h1_summary = {
+                "expected_node_ids": list(expected_ids),
+                "live_schema_fingerprint": repeat_report.report_fingerprint,
+                "registered": (
+                    tuple(sorted(repeat_filtered)) == expected_ids
+                    and repeat_report.gate_passed
+                    and not repeat_report.issues
+                ),
+                "status": "succeeded",
+            }
+            attempts = cast(dict[str, object], evidence["attempt_transitions"])
+            attempts["h1"] = build_verified_host_repeat_transition(
+                lane="H1",
+                first_summary=h1_summary,
+                repeat_summary=repeat_h1_summary,
+            )
+            h2_results: list[dict[str, object]] = []
+            for variant, variant_id in (
+                ("H3 Base FL2VA", "fl2va"),
+                ("H3 Base Ref2VA", "ref2va"),
+            ):
+
+                def submit_h2(
+                    ordinal: int,
+                    *,
+                    selected_variant: str = variant,
+                    selected_id: str = variant_id,
+                ) -> tuple[str, dict[str, object]]:
+                    return _submit_successful_prompt(
+                        base_url=base_url,
+                        client_id=f"sigmax-m6-05-minimax-h3-{selected_id}-attempt-{ordinal}",
+                        prompt=build_minimax_h3_h2_api_prompt(selected_variant),
+                        execution_timeout=args.execution_timeout,
+                    )
+
+                def verify_h2(
+                    history: object,
+                    prompt_id: str,
+                    *,
+                    selected_variant: str = variant,
+                ) -> dict[str, object]:
+                    return verify_minimax_h3_h2_history(
+                        history,
+                        prompt_id=prompt_id,
+                        variant=selected_variant,
+                    )
+
+                summary, transition = execute_verified_host_repeat(
+                    lane="H2_MINIMAX_H3_M6_05",
+                    submit=submit_h2,
+                    verify=verify_h2,
+                )
+                h2_results.append(summary)
+                attempts[f"h2_minimax_h3.{variant_id}"] = transition
+            evidence["h1"] = h1_summary
+            evidence["h2_minimax_h3"] = h2_results
+            succeeded = True
+    finally:
+        if process is not None:
+            shutdown = _terminate_owned_process(process, base_url=base_url)
+        _wait_for_port_release(port)
+        evidence["shutdown"] = shutdown
+        evidence["duration_seconds"] = round(time.time() - started, 3)
+        if log_path.exists():
+            evidence["host_log_tail"] = redact_text(
+                log_path.read_text(encoding="utf-8", errors="replace"),
+                sensitive_paths=(REPOSITORY_ROOT, comfyui_root, run_path, host_python),
+            )[-8_000:]
+        evidence["cleanup"] = "removed" if succeeded else "retained_failure_artifacts"
+        _write_evidence(Path(args.evidence_file) if args.evidence_file else None, evidence)
+        if succeeded:
+            shutil.rmtree(run_path)
+    return evidence
+
+
 def run(args: argparse.Namespace) -> dict[str, object]:
     """Execute isolated H1, activated H2 workflows, and M5-01 H3."""
 
@@ -3891,6 +4313,68 @@ def _parser() -> argparse.ArgumentParser:
         action="store_true",
         help="run only the M4-12 conditioning H1/H2 lane",
     )
+    parser.add_argument(
+        "--minimax-h3-only",
+        action="store_true",
+        help="run only the model-free MiniMax H3 H1/H2 contract on the pinned 0.30.0 host",
+    )
+    parser.add_argument(
+        "--minimax-h3-model-plan",
+        action="store_true",
+        help="build an authorization-gated H3 model workflow plan without executing weights",
+    )
+    parser.add_argument(
+        "--minimax-h3-model-variant",
+        choices=_MINIMAX_H3_PUBLIC_VARIANTS,
+        default=None,
+        help="explicit H3 variant for --minimax-h3-model-plan",
+    )
+    parser.add_argument(
+        "--minimax-h3-model-prompt",
+        default=None,
+        help="prompt for --minimax-h3-model-plan",
+    )
+    parser.add_argument(
+        "--minimax-h3-model-artifact",
+        default=None,
+        help="host-relative diffusion artifact for --minimax-h3-model-plan",
+    )
+    parser.add_argument(
+        "--minimax-h3-first-frame",
+        default=None,
+        help="host-relative first-frame image for --minimax-h3-model-plan",
+    )
+    parser.add_argument(
+        "--minimax-h3-last-frame",
+        default=None,
+        help="host-relative last-frame image for --minimax-h3-model-plan",
+    )
+    parser.add_argument(
+        "--minimax-h3-reference-image",
+        action="append",
+        default=[],
+        help="repeatable host-relative Ref2VA image for --minimax-h3-model-plan",
+    )
+    parser.add_argument(
+        "--minimax-h3-allow-model-weights",
+        action="store_true",
+        help="explicitly authorize a future weight-backed H3 host lane",
+    )
+    parser.add_argument(
+        "--minimax-h3-license-ack",
+        action="store_true",
+        help="acknowledge the local MiniMax H3 license boundary for a future model lane",
+    )
+    parser.add_argument(
+        "--minimax-h3-expected-revision",
+        default=MINIMAX_H3_COMFYUI_REVISION,
+        help="exact ComfyUI revision required by --minimax-h3-only",
+    )
+    parser.add_argument(
+        "--minimax-h3-host-version",
+        default=_MINIMAX_H3_HOST_VERSION,
+        help="host version required by --minimax-h3-only",
+    )
     parser.add_argument("--comfyui-root", default=os.environ.get("COMFYUI_ROOT"))
     parser.add_argument("--host-python", default=os.environ.get("SIGMAX_COMFYUI_PYTHON"))
     parser.add_argument(
@@ -3919,12 +4403,52 @@ def _parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None) -> int:
     parser = _parser()
     args = parser.parse_args(argv)
+    if args.minimax_h3_model_plan:
+        if args.conditioning_only or args.minimax_h3_only:
+            parser.error(
+                "--minimax-h3-model-plan cannot be combined with --conditioning-only or --minimax-h3-only"
+            )
+        if not args.minimax_h3_model_variant:
+            parser.error("--minimax-h3-model-variant is required with --minimax-h3-model-plan")
+        if not args.minimax_h3_model_prompt:
+            parser.error("--minimax-h3-model-prompt is required with --minimax-h3-model-plan")
+        if not args.minimax_h3_model_artifact:
+            parser.error("--minimax-h3-model-artifact is required with --minimax-h3-model-plan")
+        try:
+            evidence = build_minimax_h3_model_lane_plan(
+                variant=args.minimax_h3_model_variant,
+                prompt=args.minimax_h3_model_prompt,
+                model_artifact=args.minimax_h3_model_artifact,
+                allow_model_weights=args.minimax_h3_allow_model_weights,
+                license_ack=args.minimax_h3_license_ack,
+                first_frame=args.minimax_h3_first_frame,
+                last_frame=args.minimax_h3_last_frame,
+                reference_images=tuple(args.minimax_h3_reference_image),
+            )
+        except Exception as exc:
+            print(
+                redact_text(
+                    f"MiniMax H3 model plan failed: {type(exc).__name__}: {exc}",
+                    sensitive_paths=(REPOSITORY_ROOT,),
+                ),
+                file=sys.stderr,
+            )
+            return 1
+        print(json.dumps(evidence, indent=2, sort_keys=True))
+        return 0
     if not args.comfyui_root:
         parser.error("COMFYUI_ROOT or --comfyui-root is required")
     if not args.host_python:
         parser.error("SIGMAX_COMFYUI_PYTHON or --host-python is required")
     try:
-        evidence = run_conditioning(args) if args.conditioning_only else run(args)
+        if args.conditioning_only and args.minimax_h3_only:
+            parser.error("--conditioning-only and --minimax-h3-only are mutually exclusive")
+        if args.minimax_h3_only:
+            evidence = run_minimax_h3(args)
+        elif args.conditioning_only:
+            evidence = run_conditioning(args)
+        else:
+            evidence = run(args)
     except Exception as exc:
         print(
             redact_text(

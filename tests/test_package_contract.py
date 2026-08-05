@@ -136,7 +136,9 @@ class PackageContractTests(unittest.TestCase):
         self.assertTrue((package_path / "nodes" / "aura_flow_sigma_scheduler.py").is_file())
         self.assertTrue((package_path / "nodes" / "lumina2_sigma_scheduler.py").is_file())
         self.assertTrue((package_path / "nodes" / "hunyuan_image21_sigma_scheduler.py").is_file())
+        self.assertTrue((package_path / "nodes" / "minimax_h3_sigma_scheduler.py").is_file())
         self.assertTrue((package_path / "profiles" / "lumina2.py").is_file())
+        self.assertTrue((package_path / "profiles" / "minimax_h3.py").is_file())
         self.assertTrue((package_path / "profiles" / "qwen_image.py").is_file())
         self.assertTrue((package_path / "nodes" / "raw_workflow_output.py").is_file())
         self.assertTrue((package_path / "nodes" / "schedule_algebra.py").is_file())
@@ -176,6 +178,7 @@ class PackageContractTests(unittest.TestCase):
                 "Sigmax.Krea2SigmaScheduler",
                 "Sigmax.LTXSigmaScheduler",
                 "Sigmax.Lumina2SigmaScheduler",
+                "Sigmax.MiniMaxH3SigmaScheduler",
                 "Sigmax.ModelAwareSigmaScheduler",
                 "Sigmax.ProfileInspector",
                 "Sigmax.QwenImageSigmaScheduler",
@@ -204,6 +207,7 @@ class PackageContractTests(unittest.TestCase):
                 "Sigmax.Krea2SigmaScheduler": "Krea 2 Sigma Scheduler",
                 "Sigmax.LTXSigmaScheduler": "LTX Sigma Scheduler",
                 "Sigmax.Lumina2SigmaScheduler": "Lumina-Image 2.0 Sigma Scheduler",
+                "Sigmax.MiniMaxH3SigmaScheduler": "MiniMax H3 Sigma Scheduler",
                 "Sigmax.ModelAwareSigmaScheduler": "Model-Aware Sigma Scheduler",
                 "Sigmax.ProfileInspector": "Profile Inspector",
                 "Sigmax.QwenImageSigmaScheduler": "Qwen Image Sigma Scheduler",

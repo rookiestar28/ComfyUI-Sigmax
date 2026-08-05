@@ -17,6 +17,11 @@ contract now exist. The canonical package namespace, pytest, Ruff, mypy, pre-com
 detect-secrets, branch coverage, wheel inventory, Windows/WSL wrappers, and Windows/Ubuntu
 Python matrix were established in M0-04 through M0-06.
 
+The repository now also ships a scoped ComfyUI frontend extension for the Krea 2 experimental
+variant policy. The default full gate runs its dependency-free Node.js policy tests and syntax
+check after core-independence validation. This is a deterministic frontend-policy gate, not a
+substitute for real-browser ComfyUI integration evidence.
+
 The pure numerical, artifact, capability, core-independence, deterministic property, Krea 2
 variant-resolution, Turbo golden-vector, Krea 2 RAW golden-vector, and Turbo/RAW framework
 parity lanes now exist. Validated product nodes, adapter/integration tests, the isolated
@@ -25,6 +30,9 @@ The M5-01 deterministic native-Euler H3 proof lane now exists for controlled, mo
 execution, exact transition/evaluation counts, artifact-linked success receipts, and fail-closed
 unsupported features. Partial-denoise execution is rejected; stateful/resumable, stochastic,
 advanced-workflow, real-checkpoint, and image-quality behavior remains unimplemented.
+The activated M6-05 MiniMax H3 slice also has a separate optional pinned-ComfyUI 0.30.0
+model-free H1/H2 contract for explicit FL2VA and Ref2VA node execution; it does not load H3
+weights and does not replace the separately authorized model-host gate.
 Remaining sampler H3 capabilities and GPU H4 remain owned by later roadmap items. Until their
 roadmap owners create them:
 
@@ -133,14 +141,17 @@ For real ComfyUI host tests, also record the exact interpreter used by the host.
 
 ### 7.2 Node.js
 
-Node.js is not part of the default gate while the repository has no web extension.
+Node.js 18 or newer is mandatory for the default full gate because the repository ships a scoped
+ComfyUI frontend extension. Hosted CI selects Node.js 20.
 
-If a browser UI is later added:
+The `frontend-policy` stage runs `scripts/run_frontend_policy_tests.py`, which uses only Node's
+built-in test runner and syntax checker against fixed repository files. It does not run npm,
+require a package lock, launch ComfyUI in a browser, or provide Playwright E2E evidence. The
+preflight report does not own this check; the frontend-policy runner independently fails with an
+actionable message when Node is absent or older than version 18.
 
-- Node.js 18+ becomes mandatory for that lane;
-- package-lock integrity and Playwright instructions must be added to
-  `tests/E2E_TESTING_SOP.md`;
-- the roadmap and implementation plan must explicitly activate the frontend gate.
+Real-browser scope and the distinction between accepted item-specific browser evidence and a
+reusable automated browser lane are defined in `tests/E2E_TESTING_SOP.md`.
 
 ### 7.3 Optional Heavy Dependencies
 
@@ -182,7 +193,7 @@ Run all applicable full-gate stages after the targeted regression passes.
 The record must keep the original failure and corrected rerun. A green full gate without
 reproduction and pinning is insufficient bugfix evidence.
 
-## 9. Planned Full Validation Gate
+## 9. Full Validation Gate
 
 M0 provides equivalent Windows and Linux/WSL entry scripts:
 
@@ -197,7 +208,8 @@ bash scripts/run_full_tests_linux.sh
 Both wrappers call `scripts/run_full_gate.py`, which is the canonical stage ordering. Direct
 commands remain useful for targeted diagnosis, but acceptance uses the OS wrapper.
 
-The common runner executes `core-independence` after static/type checks and before pytest.
+The common runner executes `core-independence` and `frontend-policy` after static/type checks and
+before parity-contract and pytest stages.
 
 Gate classes, triggers, job roles, and artifact requirements are defined in
 `tests/CI_TEST_MATRIX.md`. A targeted `fast` run is never acceptance evidence by itself.
@@ -211,7 +223,7 @@ Validate:
 - supported PyTorch version when installed;
 - optional dependency availability only for selected lanes;
 - supported ComfyUI path/version for host tests;
-- no incompatible Node requirement in a Python-only run.
+- the frontend-policy runner's Node.js 18+ requirement;
 - CI policy/configuration contracts when workflows or launchers exist.
 
 Canonical command:
@@ -245,6 +257,18 @@ python -m mypy comfyui_sigmax tests scripts
 
 The paths, Python floor, lint selection, and strictness are defined in `pyproject.toml`.
 
+### Stage 2A - Core Independence and Frontend Policy
+
+```powershell
+python scripts/check_core_independence.py
+python scripts/run_frontend_policy_tests.py
+```
+
+Core independence blocks accidental ComfyUI or Diffusers imports in the pure layers. Frontend
+policy requires Node.js 18+ and verifies the experimental Krea 2 widget policy plus JavaScript
+syntax without npm or a browser. A real-browser change may require the separate evidence defined
+in `tests/E2E_TESTING_SOP.md`.
+
 ### Stage 3 - Unit, Pure-Core, and Property Tests
 
 The current canonical runner is:
@@ -257,7 +281,6 @@ python -m pytest --cov=comfyui_sigmax --cov-branch
 The pure-core/property-specific command is:
 
 ```powershell
-python scripts/check_core_independence.py
 python -m pytest tests/test_*.py tests/property
 ```
 
@@ -610,6 +633,6 @@ Before workflow acceptance, automated contract tests must verify:
 - canonical local/CI command parity;
 - required OS/Python/host matrices;
 - diagnostic artifact upload on failure;
-- no accidental Node/Playwright dependency in Python-only lanes;
+- no accidental Node/Playwright dependency in pure-core or isolated parity environments;
 - no path filter or condition can bypass a required P0 test seam;
 - unavailable lanes report `NOT_IMPLEMENTED`, never pass.

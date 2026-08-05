@@ -32,9 +32,12 @@ Current implemented scope:
   rejection, and invalid-step prequeue HTTP 400 rejection;
 - M5-01 deterministic native-Euler H3 controlled execution, step/count parity, deterministic
   rerun, artifact-linked succeeded receipt, and explicit partial-denoise rejection.
+- a blocking Node.js frontend-policy gate for the scoped Krea 2 experimental-variant widget
+  behavior, plus the accepted M4-11 item-specific browser evidence.
 
 Remaining H3 capabilities and H4 retain their later activation rules below. A missing later lane
-is never a pass.
+is never a pass. The frontend-policy gate is not H1/H2 and does not substitute for reusable
+real-browser regression coverage.
 
 ## 3. Test Lanes
 
@@ -180,8 +183,9 @@ The scripts must:
 4. expose ComfyUI-Sigmax without modifying the user's normal custom-node installation;
 5. start ComfyUI on loopback with a unique port;
 6. poll a bounded readiness endpoint while also watching for early process exit;
-7. run H1, the implemented M2-05 Turbo plus M3-06 RAW H2 lanes, and the activated M5-01
-   deterministic native-Euler H3 lane; run other later lanes only after activation;
+7. run H1, the implemented M2-05 Turbo plus M3-06 RAW H2 lanes, the activated M5-01
+   deterministic native-Euler H3 lane, and the optional pinned M6-05 MiniMax H3 model-free
+   H1/H2 contract when its host revision is available; run other later lanes only after activation;
 8. collect redacted logs and results;
 9. request graceful shutdown when supported, wait a bounded interval, then terminate the
    verified process tree if required;
@@ -277,16 +281,24 @@ public-safe fixtures intentionally approved for the repository.
 
 ## 11. Browser E2E Policy
 
-Playwright/browser E2E is currently `NOT_APPLICABLE`.
+The repository now has a scoped ComfyUI frontend extension. Its deterministic policy is a
+blocking default-gate stage implemented with Node.js 18+ `node:test` and syntax validation. It
+asserts that both experimental Krea 2 variants force `strict_official=false`, disable the widget,
+and restore official-variant behavior without mutating unrelated widgets.
 
-If a web extension is added:
+M4-11 acceptance also records bounded item-specific browser evidence. The repository does not
+yet provide a reusable automated Playwright lane that launches the supported ComfyUI frontend;
+that general browser-regression lane remains `NOT_IMPLEMENTED`, not passed or silently covered by
+the Node.js policy test.
 
-- create a dedicated browser section or SOP;
-- require Node.js 18+ and a lockfile;
-- test real ComfyUI frontend extension registration;
-- assert user-visible state and payload contracts;
+Any later browser behavior that cannot be completely proved by the pure policy module must:
+
+- add a dedicated Playwright/browser procedure and deterministic environment;
+- test real ComfyUI frontend extension registration and user-visible state;
+- require Node.js 18+ plus an intentional package/lockfile policy when external packages are
+  introduced;
 - keep browser E2E separate from real-host backend/node execution;
-- update `tests/TEST_SOP.md`, this SOP, and the roadmap in the same change.
+- update `tests/TEST_SOP.md`, this SOP, and `tests/CI_TEST_MATRIX.md` in the same change.
 
 ## 12. Compatibility Matrix
 

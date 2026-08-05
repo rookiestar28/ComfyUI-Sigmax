@@ -116,6 +116,106 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+  minimax-h3-diffusers-parity-pinned:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        # actions/checkout v6.0.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # pragma: allowlist secret
+
+      - name: Set up Python
+        # actions/setup-python v6.2.0
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # pragma: allowlist secret
+        with:
+          python-version: "3.13"
+
+      - name: Create isolated MiniMax H3 parity environment
+        shell: bash
+        run: |
+          python -m venv .venv-h3-parity
+          .venv-h3-parity/bin/python -m pip install -e '.[dev]'
+          .venv-h3-parity/bin/python -m pip install --no-cache-dir \
+            --index-url https://download.pytorch.org/whl/cpu \
+            torch==2.9.0+cpu
+          .venv-h3-parity/bin/python -m pip install --no-cache-dir \
+            -r requirements/parity-minimax-h3-diffusers.txt
+
+      - name: Run pinned MiniMax H3 Diffusers parity
+        shell: bash
+        run: |
+          .venv-h3-parity/bin/python -m scripts.run_minimax_h3_diffusers_parity \
+            --output .tmp/h3-diffusers-parity-report.json
+
+      - name: Verify generated MiniMax H3 parity evidence
+        shell: bash
+        run: test -s .tmp/h3-diffusers-parity-report.json
+
+      - name: Publish MiniMax H3 parity evidence
+        if: always()
+        # actions/upload-artifact v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # pragma: allowlist secret
+        with:
+          name: minimax-h3-diffusers-parity-python-3.13
+          path: .tmp/h3-diffusers-parity-report.json
+          if-no-files-found: warn
+          retention-days: 14
+
+  minimax-h3-comfyui-native-parity-pinned:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        # actions/checkout v6.0.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # pragma: allowlist secret
+
+      - name: Set up Python
+        # actions/setup-python v6.2.0
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # pragma: allowlist secret
+        with:
+          python-version: "3.13"
+
+      - name: Fetch pinned ComfyUI H3 source
+        shell: bash
+        run: |
+          git init .tmp/ComfyUI-H3
+          git -C .tmp/ComfyUI-H3 remote add origin https://github.com/Comfy-Org/ComfyUI.git
+          git -C .tmp/ComfyUI-H3 fetch --depth 1 origin \
+            57500fc5bc92566a63f2046824f522cd55c335ca  # pragma: allowlist secret
+          git -C .tmp/ComfyUI-H3 checkout --detach FETCH_HEAD
+
+      - name: Create isolated native H3 parity environment
+        shell: bash
+        run: |
+          python -m venv .venv-h3-comfy-native
+          .venv-h3-comfy-native/bin/python -m pip install -e '.[dev]'
+          .venv-h3-comfy-native/bin/python -m pip install --no-cache-dir \
+            -r requirements/parity-comfyui-h3-native.txt
+
+      - name: Regenerate native ComfyUI H3 parity report
+        shell: bash
+        run: |
+          .venv-h3-comfy-native/bin/python -m scripts.run_minimax_h3_comfy_native_parity \
+            --comfyui-root .tmp/ComfyUI-H3 \
+            --output .tmp/minimax_h3_comfy_native_parity_v1.json
+
+      - name: Verify committed native H3 evidence
+        shell: bash
+        run: |
+          cmp --silent \
+            tests/parity/fixtures/minimax_h3_comfy_native_parity_v1.json \
+            .tmp/minimax_h3_comfy_native_parity_v1.json
+
+      - name: Publish native H3 parity evidence
+        if: always()
+        # actions/upload-artifact v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # pragma: allowlist secret
+        with:
+          name: minimax-h3-comfy-native-parity-python-3.13
+          path: .tmp/minimax_h3_comfy_native_parity_v1.json
+          if-no-files-found: warn
+          retention-days: 14
+
   raw-parity-pinned:
     runs-on: ubuntu-latest
 

@@ -97,6 +97,8 @@ def test_builtin_provenance_layers_and_licenses_are_distinct() -> None:
         "ltx2.3.22b.distilled.stage2@1",
         "ltxv.0.9.8.dev@1",
         "lumina2.v2.official@1",
+        "minimax-h3.base_fl2va@1",
+        "minimax-h3.base_ref2va@1",
         "qwen_image.comfy-fixed.official@1",
         "qwen_image.diffusers-dynamic.framework-reference@1",
         "sd3.comfy-diffusers-fixed.framework-reference@1",
@@ -170,6 +172,17 @@ def test_builtin_provenance_layers_and_licenses_are_distinct() -> None:
                 "software_sources": 1,
             }
             assert set(row["license_identifiers"]) == {"Apache-2.0", "GPL-3.0-only"}
+        elif row["profile_key"].startswith("minimax-h3."):
+            assert row["resource_counts"] == {
+                "frameworks": 2,
+                "model_weights": 2,
+                "software_sources": 1,
+            }
+            assert set(row["license_identifiers"]) == {
+                "Apache-2.0",
+                "GPL-3.0-only",
+                "LicenseRef-MiniMax-H3-Community",
+            }
         elif row["profile_key"].startswith("ltx2."):
             assert row["resource_counts"] == {
                 "frameworks": 2,

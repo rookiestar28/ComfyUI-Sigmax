@@ -94,6 +94,14 @@ from comfyui_sigmax.nodes.lumina2_sigma_scheduler import (
     bind_lumina2_sigma_output_info,
     build_lumina2_sigma_schedule,
 )
+from comfyui_sigmax.nodes.minimax_h3_sigma_scheduler import (
+    MINIMAX_H3_SIGMA_NODE_ID,
+    MINIMAX_H3_SIGMA_NODE_SCHEMA_ID,
+    MiniMaxH3SigmaNodeResult,
+    MiniMaxH3SigmaScheduler,
+    bind_minimax_h3_sigma_output_info,
+    build_minimax_h3_sigma_schedule,
+)
 from comfyui_sigmax.nodes.model_aware_sigma_scheduler import (
     MODEL_AWARE_SIGMA_NODE_ID,
     MODEL_AWARE_SIGMA_NODE_SCHEMA_ID,
@@ -192,6 +200,8 @@ __all__ = [
     "LTX_SIGMA_NODE_SCHEMA_ID",
     "LUMINA2_SIGMA_NODE_ID",
     "LUMINA2_SIGMA_NODE_SCHEMA_ID",
+    "MINIMAX_H3_SIGMA_NODE_ID",
+    "MINIMAX_H3_SIGMA_NODE_SCHEMA_ID",
     "MODEL_AWARE_SIGMA_NODE_ID",
     "MODEL_AWARE_SIGMA_NODE_SCHEMA_ID",
     "MODEL_FAMILY_PROBE_SCHEMA_ID",
@@ -242,6 +252,8 @@ __all__ = [
     "LTXSigmaScheduler",
     "Lumina2SigmaNodeResult",
     "Lumina2SigmaScheduler",
+    "MiniMaxH3SigmaNodeResult",
+    "MiniMaxH3SigmaScheduler",
     "ModelAwareScheduleError",
     "ModelAwareSigmaNodeResult",
     "ModelAwareSigmaScheduler",
@@ -277,6 +289,7 @@ __all__ = [
     "bind_krea2_sigma_output_info",
     "bind_ltx_sigma_output_info",
     "bind_lumina2_sigma_output_info",
+    "bind_minimax_h3_sigma_output_info",
     "bind_qwen_image_sigma_output_info",
     "bind_sd3_sigma_output_info",
     "bind_wan_sigma_output_info",
@@ -289,6 +302,7 @@ __all__ = [
     "build_krea2_sigma_schedule",
     "build_ltx_sigma_schedule",
     "build_lumina2_sigma_schedule",
+    "build_minimax_h3_sigma_schedule",
     "build_model_aware_sigma_schedule",
     "build_profile_inspection",
     "build_qwen_image_sigma_schedule",

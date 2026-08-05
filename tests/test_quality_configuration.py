@@ -127,6 +127,21 @@ class QualityConfigurationTests(unittest.TestCase):
         )
         wan_comfyui_hash = "ba2d9a512ac48100b11ca25836a795bc97546b8a"  # pragma: allowlist secret
         wan_diffusers_hash = "ef2388a309fa35d5401f5952a447ca13a96ee801"  # pragma: allowlist secret
+        ltx_hashes = (
+            "2cedf17c05af3a8b11f738b4746985d81e08ff44",  # pragma: allowlist secret
+            "b1e22121b8440cc48bc6387d84f254188c856108",  # pragma: allowlist secret
+            "63bc0d3b0f7d8c8b475225756a6701797e0122a6",  # pragma: allowlist secret
+            "f80165277d2a802b2db0856b95bf5b014bb712fa",  # pragma: allowlist secret
+            "595b4862674273ee25a07b9c1c2018a68d79874a",  # pragma: allowlist secret
+            "ba2d9a512ac48100b11ca25836a795bc97546b8a",  # pragma: allowlist secret
+            "ef2388a309fa35d5401f5952a447ca13a96ee801",  # pragma: allowlist secret
+        )
+        minimax_h3_hashes = (
+            "6853b500b7ed4f0a6291babd81cd37940c265566",  # pragma: allowlist secret
+            "1f5461784787d4587c48143cf68c637fb1752cd5",  # pragma: allowlist secret
+            "4aba5a3e4afbe9d4fe928623e8cf4e9eb8a25359",  # pragma: allowlist secret
+            "96adb36fe680bfa98858d65570e344b479357358",  # pragma: allowlist secret
+        )
         self.assertEqual(
             {
                 "comfyui_sigmax/workflows/host_baseline.json": [
@@ -207,6 +222,26 @@ class QualityConfigurationTests(unittest.TestCase):
                         "is_verified": False,
                         "line_number": 6,
                     },
+                ],
+                "tests/golden/ltx_v1.json": [
+                    {
+                        "type": "Hex High Entropy String",
+                        "filename": "tests/golden/ltx_v1.json",
+                        "hashed_secret": value,
+                        "is_verified": False,
+                        "line_number": index,
+                    }
+                    for index, value in enumerate(ltx_hashes, start=4)
+                ],
+                "tests/golden/minimax_h3_v1.json": [
+                    {
+                        "type": "Hex High Entropy String",
+                        "filename": "tests/golden/minimax_h3_v1.json",
+                        "hashed_secret": value,
+                        "is_verified": False,
+                        "line_number": index,
+                    }
+                    for index, value in enumerate(minimax_h3_hashes, start=4)
                 ],
                 "tests/golden/test_anima_phase0_goldens.py": [
                     {
@@ -316,6 +351,7 @@ class QualityConfigurationTests(unittest.TestCase):
         )
         self.assertIn("Krea 2 RAW golden-vector", test_sop)
         self.assertIn("M5-01 deterministic native-Euler H3 proof lane now exists", test_sop)
+        self.assertIn("M6-05 MiniMax H3 slice also has a separate optional", test_sop)
         self.assertIn("Partial-denoise execution is rejected", test_sop)
         self.assertIn(
             "Remaining sampler H3 capabilities and GPU H4 remain owned",
@@ -337,6 +373,7 @@ class QualityConfigurationTests(unittest.TestCase):
         self.assertIn(
             "| Real ComfyUI H3 | M5-01 deterministic native-Euler H3 implemented", ci_matrix
         )
+        self.assertIn("| MiniMax H3 model-free host contract | Explicit-variant", ci_matrix)
 
         e2e_sop = (REPOSITORY_ROOT / "tests/E2E_TESTING_SOP.md").read_text(encoding="utf-8")
         self.assertIn("M3-06 RAW square/non-square", e2e_sop)

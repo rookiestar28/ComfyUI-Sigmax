@@ -271,6 +271,83 @@ def test_normalizes_documented_node_definition_v2() -> None:
     assert node.outputs[0].index == 0
 
 
+def test_normalizes_explicit_v1_combo_metadata_and_autogrow_input() -> None:
+    nodes = normalize_object_info(
+        {
+            "MiniMaxH3ReferenceToVideo": {
+                "input": {
+                    "required": {
+                        "ref_image_size": [
+                            "COMBO",
+                            {"options": ["match", "max"]},
+                        ],
+                    },
+                    "optional": {
+                        "ref_images": [
+                            "COMFY_AUTOGROW_V3",
+                            {
+                                "template": {"input": {"required": {"ref_image": ["IMAGE", {}]}}},
+                                "prefix": "ref_image_",
+                                "min": 0,
+                                "max": 9,
+                            },
+                        ]
+                    },
+                },
+                "output": ["CONDITIONING"],
+                "output_is_list": [False],
+                "output_name": ["positive"],
+                "name": "MiniMaxH3ReferenceToVideo",
+            }
+        }
+    )
+
+    assert len(nodes) == 1
+    node = nodes[0]
+    assert node.inputs[0].name == "ref_image_size"
+    assert node.inputs[0].type_name == "COMBO"
+    assert node.inputs[0].options == ("match", "max")
+    assert node.inputs[1].name == "ref_images"
+    assert node.inputs[1].type_name == "COMFY_AUTOGROW_V3"
+    assert node.inputs[1].options == ()
+
+
+def test_normalizes_bare_v1_hidden_input_type() -> None:
+    node = normalize_object_info(
+        {
+            "PreviewImage": {
+                "input": {
+                    "required": {"images": ["IMAGE"]},
+                    "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"},
+                },
+                "output": ["IMAGE"],
+                "name": "PreviewImage",
+            }
+        }
+    )[0]
+
+    assert tuple((item.name, item.type_name, item.section) for item in node.inputs) == (
+        ("images", "IMAGE", "required"),
+        ("extra_pnginfo", "EXTRA_PNGINFO", "hidden"),
+        ("prompt", "PROMPT", "hidden"),
+    )
+
+
+def test_explicit_v1_combo_requires_metadata_options() -> None:
+    with pytest.raises(ComfyAdapterCompatibilityError) as captured:
+        normalize_object_info(
+            {
+                "Node": {
+                    "input": {"required": {"choice": ["COMBO", {}]}},
+                    "output": [],
+                    "name": "Node",
+                }
+            }
+        )
+
+    assert captured.value.reason is ComfyAdapterReason.NODE_SCHEMA_MALFORMED
+
+
 @pytest.mark.parametrize(
     "payload",
     [

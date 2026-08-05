@@ -386,6 +386,13 @@ def _normalize_options(value: object) -> tuple[str, ...]:
 
 def _normalize_v1_input(name: object, value: object, *, section: str) -> ComfyNodeInput:
     input_name = _public_text(name, action="provide a bounded public input name")
+    if isinstance(value, str):
+        return ComfyNodeInput(
+            name=input_name,
+            type_name=_public_text(value, action="provide a bounded public input type"),
+            section=section,
+            optional=section == "optional",
+        )
     declaration = _plain_sequence(value)
     if declaration is None or not declaration:
         _raise(
@@ -399,6 +406,14 @@ def _normalize_v1_input(name: object, value: object, *, section: str) -> ComfyNo
             action="provide a bounded public input type",
         )
         options: tuple[str, ...] = ()
+        if type_name == "COMBO":
+            metadata = declaration[1] if len(declaration) > 1 else None
+            if not isinstance(metadata, Mapping):
+                _raise(
+                    ComfyAdapterReason.NODE_SCHEMA_MALFORMED,
+                    "provide combo options in explicit COMBO input metadata",
+                )
+            options = _normalize_options(metadata.get("options"))
     else:
         type_name = "COMBO"
         options = _normalize_options(declared_type)

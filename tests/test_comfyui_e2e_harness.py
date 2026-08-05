@@ -23,9 +23,13 @@ from comfyui_sigmax.nodes.krea2_sigma_scheduler import (
     sigma_output_fingerprint,
 )
 from comfyui_sigmax.nodes.lumina2_sigma_scheduler import build_lumina2_sigma_schedule
+from comfyui_sigmax.nodes.minimax_h3_sigma_scheduler import (
+    build_minimax_h3_sigma_schedule,
+)
 from comfyui_sigmax.nodes.raw_workflow_output import build_raw_workflow_output
 from comfyui_sigmax.nodes.sd3_sigma_scheduler import build_sd3_sigma_schedule
 from comfyui_sigmax.nodes.turbo_workflow_output import build_turbo_workflow_output
+from comfyui_sigmax.profiles.minimax_h3 import MINIMAX_H3_COMFYUI_REVISION
 
 ROOT = Path(__file__).resolve().parents[1]
 HARNESS_PATH = ROOT / "scripts" / "run_comfyui_e2e.py"
@@ -127,6 +131,15 @@ def test_harness_exposes_a_separate_m4_12_conditioning_lane() -> None:
     arguments = harness._parser().parse_args(["--conditioning-only"])
 
     assert arguments.conditioning_only is True
+
+
+def test_harness_exposes_a_separate_minimax_h3_host_contract_lane() -> None:
+    harness = _harness()
+    arguments = harness._parser().parse_args(["--minimax-h3-only"])
+
+    assert arguments.minimax_h3_only is True
+    assert arguments.minimax_h3_host_version == "0.30.0"
+    assert arguments.minimax_h3_expected_revision == MINIMAX_H3_COMFYUI_REVISION
 
 
 def test_harness_stages_frontend_extension_with_custom_node(tmp_path: Path) -> None:
@@ -876,6 +889,107 @@ def test_h3_prompt_connects_one_schedule_to_native_probe_and_artifact_output() -
     }
 
 
+@pytest.mark.parametrize("variant", ["H3 Base FL2VA", "H3 Base Ref2VA"])
+def test_minimax_h3_h2_prompt_connects_explicit_scheduler_to_probe(variant: str) -> None:
+    prompt = _harness().build_minimax_h3_h2_api_prompt(variant)
+
+    assert prompt == {
+        "1": {
+            "class_type": "Sigmax.MiniMaxH3SigmaScheduler",
+            "inputs": {
+                "already_shifted": False,
+                "end_step": -1,
+                "grid_points": 20,
+                "start_step": 0,
+                "variant": variant,
+            },
+        },
+        "5": {
+            "class_type": "SigmaxTest.MiniMaxH3ScheduleProbe",
+            "inputs": {
+                "schedule_info": ["1", 1],
+                "sigmas": ["1", 0],
+            },
+        },
+    }
+
+
+def _minimax_h3_h2_history(*, variant: str = "H3 Base FL2VA") -> dict[str, Any]:
+    schedule = build_minimax_h3_sigma_schedule(
+        variant=variant,
+        grid_points=20,
+        start_step=0,
+        end_step=-1,
+    )
+    trace = {
+        "schedule_info": json.loads(schedule.schedule_info_json),
+        "sigmas": list(schedule.sigmas),
+    }
+    prompt = _harness().build_minimax_h3_h2_api_prompt(variant)
+    return {
+        "prompt-minimax-h3": {
+            "prompt": [0, "prompt-minimax-h3", prompt, {}, ["5"]],
+            "outputs": {
+                "5": {
+                    "sigmax_minimax_h3_h2": [
+                        json.dumps(
+                            trace,
+                            allow_nan=False,
+                            ensure_ascii=False,
+                            separators=(",", ":"),
+                            sort_keys=True,
+                        )
+                    ]
+                }
+            },
+            "status": {
+                "completed": True,
+                "status_str": "success",
+                "messages": [],
+            },
+        }
+    }
+
+
+@pytest.mark.parametrize("variant", ["H3 Base FL2VA", "H3 Base Ref2VA"])
+def test_minimax_h3_h2_history_verifier_requires_explicit_variant(variant: str) -> None:
+    summary = _harness().verify_minimax_h3_h2_history(
+        _minimax_h3_h2_history(variant=variant),
+        prompt_id="prompt-minimax-h3",
+        variant=variant,
+    )
+
+    assert summary == {
+        "audio_ownership": "model_native",
+        "effective_transitions": 19,
+        "lane": "diffusers_endpoint_inclusive",
+        "numerical_fingerprint": json.loads(
+            build_minimax_h3_sigma_schedule(
+                variant=variant,
+                grid_points=20,
+                start_step=0,
+                end_step=-1,
+            ).schedule_info_json
+        )["fingerprints"]["complete"],
+        "profile_id": "minimax-h3.base_fl2va"
+        if variant == "H3 Base FL2VA"
+        else "minimax-h3.base_ref2va",
+        "requested_grid_points": 20,
+        "requested_transitions": 19,
+        "status": "succeeded",
+        "variant": variant,
+    }
+
+
+def test_minimax_h3_h2_history_verifier_rejects_variant_mismatch() -> None:
+    with pytest.raises(ScheduleContractError, match="variant"):
+        _harness().verify_minimax_h3_h2_history(
+            _minimax_h3_h2_history(variant="H3 Base FL2VA"),
+            prompt_id="prompt-minimax-h3",
+            variant="H3 Base Ref2VA",
+        )
+
+
 def test_h3_partial_schedule_prompt_targets_explicit_runtime_rejection() -> None:
     prompt = _harness().build_native_euler_h3_partial_rejection_prompt()
 
@@ -915,6 +1029,7 @@ def test_h3_test_pack_is_namespaced_staged_only_and_not_public(
     assert staged == (run_path / "base" / "custom_nodes" / "ComfyUI-Sigmax-H3" / "__init__.py")
     assert staged.read_bytes() == H3_TEST_PACK.read_bytes()
     assert "SigmaxTest.NativeEulerProbe" not in builtin_node_registry().class_mappings()
+    assert "SigmaxTest.MiniMaxH3ScheduleProbe" not in builtin_node_registry().class_mappings()
 
 
 def _native_euler_h3_history(*, case: dict[str, Any] | None = None) -> dict[str, Any]:

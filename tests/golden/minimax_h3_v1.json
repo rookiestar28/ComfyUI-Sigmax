@@ -1,0 +1,28 @@
+{
+  "schema": "sigmax.minimax-h3-golden/1",
+  "source_revisions": {
+    "comfyui": "14b05228cef127ce529bc0c08660770d4af3e9a8",
+    "comfyui_h3_implementation": "57500fc5bc92566a63f2046824f522cd55c335ca",
+    "diffusers": "abc5e9bf71fd38f53cd471bc3acaa84bc5ecbfdc",
+    "huggingface": "5d9b308a59ab12e67147f191e184baf704185bd1"
+  },
+  "diffusers_endpoint": {
+    "grid_points": 4,
+    "float64": [1.0, 0.96, 0.8571428571428571, 0.0],
+    "float32": [1.0, 0.9599999189376831, 0.8571428060531616, 0.0],
+    "float64_fingerprint": "sha256:0caee9e409fe146dc5866a13b4012c310d8b5dce42fc7737aaee90bfe033e5cd",
+    "float32_fingerprint": "sha256:2582255ab8e2d01cb69f9b4fa2e2d0df7fe7fff80122f92d07ec3c8b9acea2e3"
+  },
+  "comfyui_simple": {
+    "transitions": 4,
+    "sigmas": [1.0, 0.9729729890823364, 0.9230769276618958, 0.800000011920929, 0.0],
+    "fingerprint": "sha256:2ceef77582dcd21bac3dea5af57e382dca15c393988dbacc1ce5fcee09dd6551"
+  },
+  "audio_mapping_float64": [
+    {"video": 0.0, "base": 0.0, "audio": 0.0, "derivative": 0.25},
+    {"video": 0.25, "base": 0.02702702702702703, "audio": 0.07692307692307694, "derivative": 0.37869822485207116},
+    {"video": 0.5, "base": 0.07692307692307693, "audio": 0.20000000000000004, "derivative": 0.6400000000000003},
+    {"video": 0.75, "base": 0.2, "audio": 0.42857142857142866, "derivative": 1.3061224489795924},
+    {"video": 1.0, "base": 1.0, "audio": 1.0, "derivative": 4.0}
+  ]
+}

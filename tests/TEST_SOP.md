@@ -32,11 +32,16 @@ unsupported features. Partial-denoise execution is rejected; stateful/resumable,
 advanced-workflow, real-checkpoint, and image-quality behavior remains unimplemented.
 The accepted M6-05 MiniMax H3 slice also has a separate pinned-ComfyUI 0.30.0 model-free H1/H2
 contract for explicit FL2VA and Ref2VA node execution; first/repeat H1/H2 evidence passed without
-loading H3 weights. It does not replace the separately authorized model-host gate. M4-13 is now
-requalifying only the public transition-count vocabulary and downstream schema; its post-change
-WSL/Windows full gates and exact pinned-host H1/H2 pass, while hosted CI remains pending.
-Remaining sampler H3 capabilities and GPU H4 remain owned by later roadmap items. Until their
-roadmap owners create them:
+<<<<<<< HEAD
+loading H3 weights. It does not replace the separately authorized model-host gate. M4-13 closed
+its public transition-count vocabulary and downstream schema requalification with passing
+WSL/Windows full gates and exact pinned-host H1/H2. GitHub Actions hosted CI was explicitly
+waived for M4-13 on 2026-08-06 because the user's quota was exhausted; no hosted pass is claimed.
+Remaining sampler H3 capabilities remain owned by later roadmap items. M7-09 owns an explicit,
+local optional-heavy H4 lane under its frozen plan; it is separate from the default CPU/full gate.
+On 2026-08-07 the user waived M7-09 scoring as an acceptance blocker. Its execution/provenance
+receipt may close the local item, but the waiver does not create a prompt-adherence, image-quality,
+or profile-promotion claim. Until later roadmap owners create any other heavy gates:
 
 - the OS-specific full-gate wrapper is mandatory acceptance evidence;
 - direct commands remain available for targeted diagnosis;
@@ -519,6 +524,10 @@ Quantized and BF16 results must be evaluated separately.
 
 Image metrics and blind review are supplemental evidence and must not be described as proof of
 official schedule correctness.
+
+M7-09 additionally requires fixed RAW/Turbo cases, control and identity-ablation arms, model
+component hashes, a randomized blind ballot, independent reviewers, variance/confidence reporting,
+and a predeclared regression decision. Its local H4 receipt is not a hosted-CI result.
 
 ## 12. ComfyUI Compatibility Matrix
 

@@ -38,8 +38,8 @@ Command definitions remain in `tests/TEST_SOP.md`. Real-host lifecycle requireme
 | MiniMax H3 model-free host contract | Exact pinned ComfyUI 0.30.0 first/repeat H1/H2 passed for explicit FL2VA and Ref2VA, including the M4-13 public-steps requalification on native Windows; weight-backed H4 remains separately authorization-gated | M6-05 accepted; M4-13 host gate passed |
 | Frontend policy | Implemented in the default full gate with Node.js 18+; hosted CI uses Node.js 20 | M4-11 amendment |
 | Browser E2E | Bounded M4-11 item-specific browser evidence accepted; reusable automated Playwright lane `NOT_IMPLEMENTED` | Activate when frontend behavior requires maintained real-browser regression coverage |
-| GPU/real-model tests | Optional and unapproved | Explicit requirement and authorization |
-| CI workflows | Configured; hosted four-cell full gate and five pinned parity jobs passed in Foundation CI run `30982915308` for `dev@e55f5a4` | M0-06 plus M6-05 accepted hosted evidence |
+| GPU/real-model tests | M7-09 local H4 execution/provenance lane accepted with an explicit 2026-08-07 scoring waiver; all other heavy lanes remain optional/unapproved | Explicit M7-09 protocol, model hashes, GPU authorization, and recorded waiver; no quality/promotion claim |
+| CI workflows | Configured; hosted four-cell full gate and five pinned parity jobs passed in Foundation CI run `30982915308` for `dev@e55f5a4`; M4-13 uses local CI under an explicit hosted-quota waiver | M0-06 plus M6-05 hosted evidence; M4-13 local acceptance |
 
 An unavailable lane is never a pass.
 

@@ -30,5 +30,12 @@ Rules:
   in `tests/TEST_SOP.md`.
 - Pure prose unrelated to executable behavior must not be made a test contract. Test the
   underlying executable API, schema, workflow, package, or release boundary instead.
+- M4-13 has an explicit 2026-08-06 user waiver for unavailable GitHub Actions hosted CI because
+  the quota was exhausted; its local WSL/native Windows/pinned-host evidence controls closure,
+  without converting the unavailable hosted lane into a pass.
+- M7-09 is separately activated for an explicit local H4 Krea 2 model/GPU lane. Its fixed-case
+  image receipts and blind-review protocol are not substituted by the CPU H1/H2 lanes or by a
+  hosted-CI result. The user may waive the scoring phase as an acceptance blocker; that closes
+  only the local execution/provenance lane and does not support a quality or promotion claim.
 - Bugfixes must reproduce the host-visible failure, pin it with a targeted test, and then run
   the full applicable sweep.

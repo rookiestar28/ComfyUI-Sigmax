@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import FrozenInstanceError, replace
-from typing import Any
+from typing import Any, cast
 
 import pytest
 from comfyui_sigmax.core import (
@@ -222,6 +222,11 @@ def test_execution_receipt_binding_is_spec_and_state_consistent() -> None:
         binding(running, spec, receipt)
     attached = binding(completed, spec, receipt)
     assert attached.execution_receipt_fingerprint == receipt.receipt_fingerprint
+
+    with pytest.raises(ScheduleContractError, match="ExecutionReceipt"):
+        completed.attach_execution_receipt(spec, cast(ExecutionReceipt, _fingerprint("e")))
+    legacy_named_binding = completed.attach_execution_receipt(spec, receipt)
+    assert legacy_named_binding.execution_receipt_fingerprint == receipt.receipt_fingerprint
 
     with pytest.raises(ScheduleContractError, match="sampler RNG ownership"):
         binding(completed, spec, _receipt(spec, sampler_rng="caller"))

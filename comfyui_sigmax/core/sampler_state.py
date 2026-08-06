@@ -373,11 +373,11 @@ class SamplerStateSnapshot:
     def attach_execution_receipt(
         self,
         spec: SamplerExecutionSpec,
-        receipt_fingerprint: str,
+        receipt: ExecutionReceipt,
     ) -> SamplerStateSnapshot:
-        self._require_spec(spec)
-        _require_fingerprint("receipt_fingerprint", receipt_fingerprint)
-        return replace(self, execution_receipt_fingerprint=receipt_fingerprint)
+        """Attach validated receipt evidence through the legacy method name."""
+
+        return self.attach_execution_receipt_evidence(spec, receipt)
 
     def attach_execution_receipt_evidence(
         self,

@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from dataclasses import FrozenInstanceError, replace
 from typing import Any
 
 import pytest
 from comfyui_sigmax.core import (
+    CapabilityDimension,
     ExecutionBehavior,
+    ExecutionReceipt,
     NoiseOwnership,
     PredictionType,
     SamplerCapabilities,
@@ -21,6 +24,7 @@ from comfyui_sigmax.core import (
     ScheduleOwnership,
     SigmaDomain,
     TerminalRequirement,
+    canonical_projection_bytes,
     deserialize_sampler_execution_spec,
     deserialize_sampler_state_snapshot,
     sampler_execution_spec_fingerprint,
@@ -75,6 +79,66 @@ def _step(index: int, *, evaluations: int = 1) -> SamplerStep:
         model_evaluations=evaluations,
         input_state_fingerprint=_fingerprint(input_character),
         output_state_fingerprint=_fingerprint(str(index + 3)),
+    )
+
+
+def _receipt(
+    spec: SamplerExecutionSpec,
+    *,
+    sampler_rng: str = "none",
+) -> ExecutionReceipt:
+    projection: dict[str, object] = {
+        "artifact": {
+            "construction_fingerprint": _fingerprint("a"),
+            "numerical_fingerprint": _fingerprint("b"),
+        },
+        "compatibility": {
+            "considered": [item.value for item in CapabilityDimension],
+            "level": "allow",
+            "reasons": ["compatible"],
+        },
+        "counts": {
+            "effective_model_evaluations": spec.requested_model_evaluations,
+            "effective_transitions": spec.requested_transitions,
+            "requested_model_evaluations": spec.requested_model_evaluations,
+            "requested_transitions": spec.requested_transitions,
+        },
+        "effective_inputs": {
+            "compatibility": {},
+            "height": None,
+            "precision": "float64",
+            "profile": "fixture.profile",
+            "profile_version": "1",
+            "steps": spec.requested_transitions,
+            "width": None,
+        },
+        "execution": {"reason_code": None, "status": "succeeded"},
+        "host": {
+            "api_version": "test",
+            "id": "comfyui",
+            "revision": "test-revision",
+            "version": "0.30.0",
+        },
+        "model": {
+            "fingerprint": _fingerprint("c"),
+            "id": "fixture.model",
+            "version": "1",
+        },
+        "profile": {"id": "fixture.profile", "version": "1"},
+        "rng_ownership": {"model": "none", "sampler": sampler_rng, "schedule": "none"},
+        "sampler": {
+            "fingerprint": _fingerprint("d"),
+            "id": "comfy.euler",
+            "version": "native",
+        },
+        "schema": "sigmax.execution-receipt/1",
+    }
+    payload = canonical_projection_bytes(projection)
+    return ExecutionReceipt(
+        receipt_bytes=payload,
+        receipt_fingerprint=f"sha256:{hashlib.sha256(payload).hexdigest()}",
+        construction_fingerprint=_fingerprint("a"),
+        numerical_fingerprint=_fingerprint("b"),
     )
 
 
@@ -142,6 +206,25 @@ def test_snapshot_fingerprint_is_state_bound_and_round_trip_stable() -> None:
     assert running_fingerprint.startswith("sha256:")
     assert initial_fingerprint != running_fingerprint
     assert running_fingerprint == fingerprint(restored, spec)
+
+
+def test_execution_receipt_binding_is_spec_and_state_consistent() -> None:
+    spec = _spec()
+    running = (
+        SamplerStateSnapshot.initial(spec).append_step(spec, _step(0)).append_step(spec, _step(1))
+    )
+    completed = running.complete(spec)
+    receipt = _receipt(spec)
+    binding = getattr(SamplerStateSnapshot, "attach_execution_receipt_evidence", None)
+
+    assert callable(binding)
+    with pytest.raises(ScheduleContractError, match="running sampler state"):
+        binding(running, spec, receipt)
+    attached = binding(completed, spec, receipt)
+    assert attached.execution_receipt_fingerprint == receipt.receipt_fingerprint
+
+    with pytest.raises(ScheduleContractError, match="sampler RNG ownership"):
+        binding(completed, spec, _receipt(spec, sampler_rng="caller"))
 
 
 def test_state_requires_matching_spec_and_contiguous_steps() -> None:

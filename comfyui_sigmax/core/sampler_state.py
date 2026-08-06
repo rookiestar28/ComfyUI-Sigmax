@@ -25,6 +25,7 @@ from comfyui_sigmax.core.capabilities import (
     SamplerState,
     TerminalRequirement,
 )
+from comfyui_sigmax.core.execution_receipts import ExecutionReceipt, ExecutionStatus
 from comfyui_sigmax.core.fingerprints import canonical_projection_bytes, float_to_ieee_hex
 from comfyui_sigmax.core.schedule_contracts import (
     ScheduleContractError,
@@ -377,6 +378,57 @@ class SamplerStateSnapshot:
         self._require_spec(spec)
         _require_fingerprint("receipt_fingerprint", receipt_fingerprint)
         return replace(self, execution_receipt_fingerprint=receipt_fingerprint)
+
+    def attach_execution_receipt_evidence(
+        self,
+        spec: SamplerExecutionSpec,
+        receipt: ExecutionReceipt,
+    ) -> SamplerStateSnapshot:
+        """Attach a receipt only when its counts, RNG owner, and lifecycle agree."""
+
+        self._require_spec(spec)
+        if not isinstance(receipt, ExecutionReceipt):
+            raise ScheduleContractError("receipt must be an ExecutionReceipt")
+        projection = receipt.projection()
+        counts = projection.get("counts")
+        if not isinstance(counts, dict):
+            raise ScheduleContractError("receipt counts are missing")
+        if counts.get("requested_transitions") != spec.requested_transitions:
+            raise ScheduleContractError("receipt requested transitions do not match sampler spec")
+        if counts.get("requested_model_evaluations") != spec.requested_model_evaluations:
+            raise ScheduleContractError(
+                "receipt requested model evaluations do not match sampler spec"
+            )
+        if counts.get("effective_transitions") != self.effective_transitions:
+            raise ScheduleContractError("receipt effective transitions do not match sampler state")
+        if counts.get("effective_model_evaluations") != self.effective_model_evaluations:
+            raise ScheduleContractError(
+                "receipt effective model evaluations do not match sampler state"
+            )
+        if self.status is SamplerStateStatus.RUNNING:
+            raise ScheduleContractError(
+                "running sampler state must be interrupted or completed before receipt binding"
+            )
+        rng_ownership = projection.get("rng_ownership")
+        if not isinstance(rng_ownership, dict):
+            raise ScheduleContractError("receipt RNG ownership is missing")
+        if rng_ownership.get("sampler") != spec.random_source_ownership.value:
+            raise ScheduleContractError("sampler RNG ownership does not match execution spec")
+        execution = projection.get("execution")
+        if not isinstance(execution, dict):
+            raise ScheduleContractError("receipt execution status is missing")
+        try:
+            status = ExecutionStatus(execution.get("status"))
+        except (TypeError, ValueError) as error:
+            raise ScheduleContractError("receipt execution status is unsupported") from error
+        expected_status = {
+            SamplerStateStatus.READY: ExecutionStatus.NOT_EXECUTED,
+            SamplerStateStatus.INTERRUPTED: ExecutionStatus.INTERRUPTED,
+            SamplerStateStatus.COMPLETED: ExecutionStatus.SUCCEEDED,
+        }.get(self.status)
+        if expected_status is not None and status is not expected_status:
+            raise ScheduleContractError("receipt execution status does not match sampler state")
+        return replace(self, execution_receipt_fingerprint=receipt.receipt_fingerprint)
 
     def projection(self, spec: SamplerExecutionSpec) -> dict[str, object]:
         self._require_spec(spec)

@@ -36,10 +36,11 @@ loading H3 weights. It does not replace the separately authorized model-host gat
 its public transition-count vocabulary and downstream schema requalification with passing
 WSL/Windows full gates and exact pinned-host H1/H2. GitHub Actions hosted CI was explicitly
 waived for M4-13 on 2026-08-06 because the user's quota was exhausted; no hosted pass is claimed.
-Remaining sampler H3 capabilities remain owned by later roadmap items. M7-09 now owns an
-explicit, local optional-heavy H4 lane under its frozen plan; it is separate from the default
-CPU/full gate and remains open until its blind-review thresholds close. Until later roadmap
-owners create any other heavy gates:
+Remaining sampler H3 capabilities remain owned by later roadmap items. M7-09 owns an explicit,
+local optional-heavy H4 lane under its frozen plan; it is separate from the default CPU/full gate.
+On 2026-08-07 the user waived M7-09 scoring as an acceptance blocker. Its execution/provenance
+receipt may close the local item, but the waiver does not create a prompt-adherence, image-quality,
+or profile-promotion claim. Until later roadmap owners create any other heavy gates:
 
 - the OS-specific full-gate wrapper is mandatory acceptance evidence;
 - direct commands remain available for targeted diagnosis;
@@ -525,9 +526,11 @@ Quantized and BF16 results must be evaluated separately.
 Image metrics and blind review are supplemental evidence and must not be described as proof of
 official schedule correctness.
 
-M7-09 additionally requires fixed RAW/Turbo cases, control and identity-ablation arms, model
+M7-09's frozen protocol defines fixed RAW/Turbo cases, control and identity-ablation arms, model
 component hashes, a randomized blind ballot, independent reviewers, variance/confidence reporting,
-and a predeclared regression decision. Its local H4 receipt is not a hosted-CI result.
+and a predeclared regression decision. The user may explicitly waive the scoring phase as an
+acceptance blocker; when waived, record the waiver and retain the execution receipt, while keeping
+quality and promotion claims unmade. Its local H4 receipt is not a hosted-CI result.
 
 ## 12. ComfyUI Compatibility Matrix
 

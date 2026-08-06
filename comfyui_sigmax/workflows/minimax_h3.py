@@ -14,8 +14,8 @@ from typing import Final, Literal
 from comfyui_sigmax.core import ScheduleContractError
 from comfyui_sigmax.profiles.minimax_h3 import (
     MINIMAX_H3_AUDIO_SHIFT,
-    MINIMAX_H3_DEFAULT_GRID_POINTS,
-    MINIMAX_H3_MAX_GRID_POINTS,
+    MINIMAX_H3_DEFAULT_STEPS,
+    MINIMAX_H3_MAX_STEPS,
     MINIMAX_H3_VIDEO_SHIFT,
 )
 
@@ -139,7 +139,7 @@ class MiniMaxH3WorkflowSpec:
     width: int = 1344
     height: int = 768
     length: int = 124
-    grid_points: int = MINIMAX_H3_DEFAULT_GRID_POINTS
+    steps: int = MINIMAX_H3_DEFAULT_STEPS
     seed: int = 0
     sampler_name: str = MINIMAX_H3_SAMPLER
     ref_image_size: str = MINIMAX_H3_REFERENCE_IMAGE_SIZE
@@ -182,10 +182,10 @@ class MiniMaxH3WorkflowSpec:
                 "MiniMax H3 workflow length must follow the 17k+5 frame grid at 24 fps"
             )
         _require_int(
-            self.grid_points,
-            field="grid_points",
-            minimum=2,
-            maximum=MINIMAX_H3_MAX_GRID_POINTS,
+            self.steps,
+            field="steps",
+            minimum=1,
+            maximum=MINIMAX_H3_MAX_STEPS,
         )
         _require_int(self.seed, field="seed", minimum=0, maximum=MINIMAX_H3_MAX_SEED)
         if self.sampler_name != MINIMAX_H3_SAMPLER:
@@ -344,7 +344,7 @@ def build_minimax_h3_host_workflow(spec: MiniMaxH3WorkflowSpec) -> MiniMaxH3Host
         "Sigmax.MiniMaxH3SigmaScheduler",
         {
             "variant": spec.variant,
-            "grid_points": spec.grid_points,
+            "steps": spec.steps,
             "start_step": 0,
             "end_step": -1,
         },
@@ -410,11 +410,13 @@ def build_minimax_h3_host_workflow_prompt(spec: MiniMaxH3WorkflowSpec) -> Workfl
 __all__ = [
     "MINIMAX_H3_AUDIO_VAE",
     "MINIMAX_H3_CANVAS_MULTIPLE",
+    "MINIMAX_H3_DEFAULT_STEPS",
     "MINIMAX_H3_HOST_MIN_VERSION",
     "MINIMAX_H3_MAX_FRAMES",
     "MINIMAX_H3_MAX_PIXELS",
     "MINIMAX_H3_MAX_REFERENCE_IMAGES",
     "MINIMAX_H3_MAX_SEED",
+    "MINIMAX_H3_MAX_STEPS",
     "MINIMAX_H3_REFERENCE_IMAGE_SIZE",
     "MINIMAX_H3_SAMPLER",
     "MINIMAX_H3_TEXT_ENCODER",

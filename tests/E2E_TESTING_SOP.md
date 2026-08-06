@@ -17,6 +17,11 @@ It covers:
 It does not require real Krea 2 model weights for the default host lane. Heavy GPU/model tests
 are separate, explicit lanes.
 
+Strictly documentation-only changes do not run the full gate or any host E2E lane. Pure prose
+unrelated to executable behavior is not an E2E or automated test contract; review it directly
+under the documentation-only exception in `tests/TEST_SOP.md`. When prose describes host-visible
+behavior, validate the underlying node, schema, workflow, or host behavior rather than the prose.
+
 ## 2. Current Status
 
 The cross-platform host E2E harness and canonical entrypoints are implemented.
@@ -32,6 +37,8 @@ Current implemented scope:
   rejection, and invalid-step prequeue HTTP 400 rejection;
 - M5-01 deterministic native-Euler H3 controlled execution, step/count parity, deterministic
   rerun, artifact-linked succeeded receipt, and explicit partial-denoise rejection.
+- M4-13 native Windows requalification of the public H3 `steps` schema on exact pinned ComfyUI
+  0.30.0, including first/repeat H1 and explicit FL2VA/Ref2VA H2 execution.
 - a blocking Node.js frontend-policy gate for the scoped Krea 2 experimental-variant widget
   behavior, plus the accepted M4-11 item-specific browser evidence.
 
@@ -121,6 +128,12 @@ SIGMAX_COMFYUI_REVISION
 These names are authoritative. `COMFYUI_ROOT` selects the reviewed checkout;
 `SIGMAX_COMFYUI_PYTHON` selects its compatible isolated interpreter.
 
+The selected host's installed dependency versions are evidence fields, not hidden gates. In
+particular, `comfy-aimdo` must be recorded but must not be compared with a historical exact
+version; a current ComfyUI-recommended release such as `0.4.13` is valid when host startup,
+registration, schema, and H1/H2 assertions pass. Exact package pins used by isolated parity
+reproduction remain separate lanes and do not replace host compatibility evidence.
+
 ### 4.1 Model-Free Host Fixture Architecture
 
 Adapt the official ComfyUI execution-test pattern:
@@ -184,7 +197,7 @@ The scripts must:
 5. start ComfyUI on loopback with a unique port;
 6. poll a bounded readiness endpoint while also watching for early process exit;
 7. run H1, the implemented M2-05 Turbo plus M3-06 RAW H2 lanes, the activated M5-01
-   deterministic native-Euler H3 lane, and the optional pinned M6-05 MiniMax H3 model-free
+   deterministic native-Euler H3 lane, and the accepted pinned M6-05 MiniMax H3 model-free
    H1/H2 contract when its host revision is available; run other later lanes only after activation;
 8. collect redacted logs and results;
 9. request graceful shutdown when supported, wait a bounded interval, then terminate the

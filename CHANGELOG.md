@@ -64,6 +64,17 @@ tracked independently from the frozen profile-schema version.
   path, while the pure core retains its fail-closed double-shift guard. Workflows saved from an
   earlier development build may need the H3 scheduler node refreshed or recreated; numerical
   schedule behavior is unchanged.
+- Removed pytest contracts for pure prose documents. README, changelog, compatibility, contributor,
+  and test-governance wording can evolve without line-count, heading, link-layout, or narrative
+  string assertions; executable APIs, schemas, CI workflows, packaging, security, and release
+  artifacts remain tested at their source boundaries.
+- MiniMax H3 Base's unreleased public scheduler and workflow contract now names the control
+  `steps`: `steps=N` constructs `N+1` endpoint-inclusive Diffusers video sigmas and reports
+  `N` transitions/model evaluations. Existing development workflows using `grid_points` or the
+  removed `already_shifted` widget must refresh/recreate that node; the source-facing parity
+  builder retains `grid_points` only at its explicit framework boundary. FL2VA/Ref2VA selection,
+  video shift `12.0`, model-owned audio shift `3.0`, native `simple` separation, and the
+  no-double-shift guard are unchanged.
 - Reduced the public documentation surface to the concise product README, compatibility guide,
   contribution guide, changelog, and test-governance documents. Detailed architecture, schema,
   evidence, and release contracts continue to be enforced by source, generated manifests, tests,

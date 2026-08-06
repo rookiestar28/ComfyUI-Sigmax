@@ -87,14 +87,14 @@ Connect an image scheduler's `SIGMAS` directly to a custom-sampling path that ac
 
 | Model | Node | Recommended settings |
 | --- | --- | --- |
-| MiniMax H3 Base | `Sigmax.MiniMaxH3SigmaScheduler` | Select `H3 Base FL2VA` or `H3 Base Ref2VA`; endpoint-inclusive video sigmas, 20 grid points by default; audio remapping remains model-owned |
+| MiniMax H3 Base | `Sigmax.MiniMaxH3SigmaScheduler` | Select `H3 Base FL2VA` or `H3 Base Ref2VA`; `steps=20` produces 21 endpoint-inclusive video sigmas and 20 transitions; audio remapping remains model-owned |
 | Wan 2.1 T2V / I2V | `Sigmax.WanSigmaScheduler` | Select generation, task, source, and resolution explicitly; official T2V 50 steps (`5.0`), official I2V 480P/720P 40 steps (`3.0`/`5.0`) |
 | Wan 2.2 TI2V 5B / A14B T2V/I2V | `Sigmax.WanSigmaScheduler` | Native or Diffusers-reference source lanes; TI2V 5B uses `5.0`; A14B T2V/I2V use `12.0`/`5.0` with caller-owned boundary metadata |
 | LTXV 0.9.8 / LTX-2 19B / LTX-2.3 22B | `Sigmax.LTXSigmaScheduler` | Dev adaptive token shift (20/40/30 default steps) or explicit LTX-2/LTX-2.3 distilled Stage 1/2 vectors; generation and stage are explicit |
 
 Connect a video scheduler's `SIGMAS` directly to the matching custom-sampling path. Do not add another scheduler or time shift, and inspect `schedule_info` for the selected generation mode, stage, resolution, boundary ownership, and warnings.
 
-- **MiniMax H3:** Select Base FL2VA or Ref2VA explicitly. Sigmax exposes only the Diffusers endpoint-inclusive video schedule (shift `12.0`); native `simple` semantics and model-owned audio remapping (shift `3.0`) remain separate. The model-free workflow helper can preflight a graph against ComfyUI `/object_info` without loading weights or submitting a prompt. Context-IR, Regenerate-2K, sparse attention, weights, samplers, hosted/API behavior, and quality claims are excluded.
+- **MiniMax H3:** Select Base FL2VA or Ref2VA explicitly. Public `steps` count executed transitions (`sigma_count = steps + 1`); Sigmax exposes only the Diffusers endpoint-inclusive video schedule (shift `12.0`), while native `simple` semantics and model-owned audio remapping (shift `3.0`) remain separate. The model-free workflow helper can preflight a graph against ComfyUI `/object_info` without loading weights or submitting a prompt. Context-IR, Regenerate-2K, sparse attention, weights, samplers, hosted/API behavior, and quality claims are excluded.
 - **Wan 2.1/2.2:** Select generation, task, source, and resolution explicitly. Wan 2.1 I2V requires `480P` or `720P`; Wan 2.2 A14B boundaries are caller-owned metadata and never route experts. Diffusers-reference lanes describe scheduler math only; execution, weights, and video-quality parity are excluded.
 - **LTX:** Select LTXV 0.9.8, LTX-2 19B, or LTX-2.3 22B plus generation/stage explicitly. Dev mode derives one token-count shift; distilled modes use immutable publisher vectors. Sigmax does not load video weights, run encoders, or claim video-quality parity.
 

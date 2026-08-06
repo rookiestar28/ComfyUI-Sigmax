@@ -11,10 +11,9 @@ This page summarizes the supported user-facing boundary for ComfyUI-Sigmax 1.0.0
 | Validated host baseline | ComfyUI 0.29.0 |
 | Operating systems covered by project gates | Windows and Linux/WSL |
 | Mandatory additional Python packages | None |
+| Host runtime dependency policy | Record the selected host's compatible package versions; current ComfyUI-recommended `comfy-aimdo` versions (including 0.4.13) are accepted without an exact-version gate |
 
-A newer ComfyUI version may work, but it is not automatically promoted to the validated host
-baseline. When behavior changes after a ComfyUI update, first reproduce the workflow on the
-validated baseline.
+A newer ComfyUI version may work, but is not automatically promoted to the validated host baseline; reproduce workflows on that baseline first after an update.
 
 ## Supported model profiles
 
@@ -46,6 +45,10 @@ experimental; this boundary does not claim prompt adherence or image-quality imp
 
 The generic advanced FlowMatch node constructs explicit schedule math only. It is experimental
 and does not establish compatibility with an arbitrary model.
+
+MiniMax H3 Base FL2VA/Ref2VA is an accepted post-v1.0.0 development profile on `dev`, not part
+of the tagged 1.0.0 boundary; public `steps` counts transitions and produces `steps + 1`
+endpoint-inclusive video sigmas, with audio remapping remaining model-owned.
 
 ## Usage boundary
 
@@ -80,6 +83,8 @@ and does not establish compatibility with an arbitrary model.
   claim UniPC solver parity when consumed by an Euler sampler.
 - LTX generation and stage are explicit; Dev token shifting and distilled vectors are separate
   lanes. LTX profiles do not load video weights or claim video-quality parity.
+- Host E2E receipts record ComfyUI, Python, PyTorch, and runtime package versions for diagnosis;
+  historical parity pins are reproducibility metadata, not a blocker for a current recommended host.
 
 ## Not currently claimed
 

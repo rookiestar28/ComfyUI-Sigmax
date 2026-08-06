@@ -125,7 +125,7 @@ def test_workflow_builder_is_deterministic() -> None:
         variant="H3 Base Ref2VA",
         prompt="deterministic graph",
         reference_images=("ref.png",),
-        grid_points=20,
+        steps=20,
         seed=42,
     )
     first = build_minimax_h3_host_workflow_prompt(spec)

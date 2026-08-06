@@ -178,8 +178,8 @@ class MiniMaxH3ScheduleProbe:
     def execute(self, sigmas: object, schedule_info: object) -> dict[str, object]:
         if not isinstance(sigmas, torch.Tensor) or sigmas.device.type != "cpu":
             raise ValueError("MiniMax H3 H2 sigmas must be a CPU tensor")
-        if sigmas.dtype != torch.float32 or sigmas.ndim != 1 or len(sigmas) != 20:
-            raise ValueError("MiniMax H3 H2 sigmas must be one float32 19-transition schedule")
+        if sigmas.dtype != torch.float32 or sigmas.ndim != 1 or len(sigmas) != 21:
+            raise ValueError("MiniMax H3 H2 sigmas must be one float32 20-transition schedule")
         if not isinstance(schedule_info, str):
             raise ValueError("MiniMax H3 H2 schedule information must be text")
         info = json.loads(schedule_info)
@@ -208,11 +208,14 @@ class MiniMaxH3ScheduleProbe:
             or not isinstance(counts, dict)
             or counts
             != {
-                "effective_grid_points": 20,
-                "effective_model_evaluations": 19,
-                "effective_transitions": 19,
-                "requested_grid_points": 20,
-                "requested_transitions": 19,
+                "effective_grid_points": 21,
+                "effective_model_evaluations": 20,
+                "effective_steps": 20,
+                "effective_transitions": 20,
+                "requested_grid_points": 21,
+                "requested_model_evaluations": 20,
+                "requested_steps": 20,
+                "requested_transitions": 20,
             }
             or not isinstance(audio, dict)
             or audio.get("ownership") != "model_native"
@@ -224,7 +227,7 @@ class MiniMaxH3ScheduleProbe:
             or not isinstance(velocity, dict)
             or velocity != {"direction": "data_ward", "sign_adapter": "explicit_only"}
             or not isinstance(slicing, dict)
-            or slicing.get("output_steps") != 19
+            or slicing.get("output_steps") != 20
             or float(sigmas[0]) != 1.0
             or float(sigmas[-1]) != 0.0
             or any(float(left) <= float(right) for left, right in pairwise(sigmas))

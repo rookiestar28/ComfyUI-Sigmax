@@ -58,7 +58,7 @@ _EXPECTED_INPUT_TYPES: Final = {
     },
     "Sigmax.MiniMaxH3SigmaScheduler": {
         "variant": "COMBO",
-        "grid_points": "INT",
+        "steps": "INT",
         "start_step": "INT",
         "end_step": "INT",
     },

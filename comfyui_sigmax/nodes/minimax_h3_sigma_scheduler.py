@@ -19,8 +19,8 @@ from comfyui_sigmax.profiles.minimax_h3 import (
     MINIMAX_H3_AUDIO_SHIFT,
     MINIMAX_H3_BASE_FL2VA_PROFILE,
     MINIMAX_H3_BASE_REF2VA_PROFILE,
-    MINIMAX_H3_DEFAULT_GRID_POINTS,
-    MINIMAX_H3_MAX_GRID_POINTS,
+    MINIMAX_H3_DEFAULT_STEPS,
+    MINIMAX_H3_MAX_STEPS,
     MINIMAX_H3_VIDEO_SHIFT,
     MiniMaxH3Profile,
     MiniMaxH3Variant,
@@ -60,14 +60,14 @@ def _variant(value: object) -> tuple[str, MiniMaxH3Variant, MiniMaxH3Profile]:
     raise ScheduleContractError("MiniMax H3 variant must be selected explicitly")
 
 
-def _grid_points(value: object) -> int:
+def _steps(value: object) -> int:
     if (
         not isinstance(value, int)
         or isinstance(value, bool)
-        or not 2 <= value <= MINIMAX_H3_MAX_GRID_POINTS
+        or not 1 <= value <= MINIMAX_H3_MAX_STEPS
     ):
         raise ScheduleContractError(
-            f"grid_points must be an integer between 2 and {MINIMAX_H3_MAX_GRID_POINTS}"
+            f"steps must be an integer between 1 and {MINIMAX_H3_MAX_STEPS}"
         )
     return value
 
@@ -103,22 +103,23 @@ def _canonical_info(value: dict[str, object]) -> str:
 def build_minimax_h3_sigma_schedule(
     *,
     variant: object,
-    grid_points: object,
+    steps: object,
     start_step: object,
     end_step: object,
-    already_shifted: object = False,
 ) -> MiniMaxH3SigmaNodeResult:
-    """Build and slice the explicit Diffusers endpoint lane without host imports."""
+    """Build and slice the explicit Diffusers endpoint lane without host imports.
+
+    ``steps`` is the number of sigma transitions.  The source-facing parity builder retains its
+    ``grid_points`` vocabulary, so this adapter deliberately maps public ``N`` to ``N + 1``.
+    """
 
     public_variant, selected_variant, profile = _variant(variant)
-    requested_points = _grid_points(grid_points)
-    if not isinstance(already_shifted, bool):
-        raise ScheduleContractError("already_shifted must be boolean")
+    requested_steps = _steps(steps)
+    requested_points = requested_steps + 1
     complete = build_minimax_h3_schedule(
         variant=selected_variant,
         grid_points=requested_points,
         precision="float32",
-        already_shifted=already_shifted,
     )
     available_steps = complete.effective_inputs.steps
     start, end = _slice_bounds(
@@ -139,9 +140,12 @@ def build_minimax_h3_sigma_schedule(
         "counts": {
             "effective_grid_points": len(complete.sigmas),
             "effective_model_evaluations": available_steps,
+            "effective_steps": available_steps,
             "effective_transitions": available_steps,
             "requested_grid_points": requested_points,
-            "requested_transitions": requested_points - 1,
+            "requested_model_evaluations": requested_steps,
+            "requested_steps": requested_steps,
+            "requested_transitions": requested_steps,
         },
         "fingerprints": {
             "complete": numerical_fingerprint(
@@ -228,22 +232,22 @@ class MiniMaxH3SigmaScheduler:
         return {
             "required": {
                 "variant": (_MODES,),
-                "grid_points": (
+                "steps": (
                     "INT",
                     {
-                        "default": MINIMAX_H3_DEFAULT_GRID_POINTS,
-                        "min": 2,
-                        "max": MINIMAX_H3_MAX_GRID_POINTS,
+                        "default": MINIMAX_H3_DEFAULT_STEPS,
+                        "min": 1,
+                        "max": MINIMAX_H3_MAX_STEPS,
                         "step": 1,
                     },
                 ),
                 "start_step": (
                     "INT",
-                    {"default": 0, "min": 0, "max": MINIMAX_H3_MAX_GRID_POINTS - 2},
+                    {"default": 0, "min": 0, "max": MINIMAX_H3_MAX_STEPS - 1},
                 ),
                 "end_step": (
                     "INT",
-                    {"default": -1, "min": -1, "max": MINIMAX_H3_MAX_GRID_POINTS - 1},
+                    {"default": -1, "min": -1, "max": MINIMAX_H3_MAX_STEPS},
                 ),
             }
         }
@@ -251,13 +255,13 @@ class MiniMaxH3SigmaScheduler:
     def build(
         self,
         variant: object,
-        grid_points: object,
+        steps: object,
         start_step: object,
         end_step: object,
     ) -> tuple[object, str]:
         result = build_minimax_h3_sigma_schedule(
             variant=variant,
-            grid_points=grid_points,
+            steps=steps,
             start_step=start_step,
             end_step=end_step,
         )

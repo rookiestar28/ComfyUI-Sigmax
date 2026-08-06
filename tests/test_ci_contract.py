@@ -308,17 +308,6 @@ class CiContractTests(unittest.TestCase):
                 self.assertNotIn('env={"PYTHONHASHSEED": seed}', source)
                 self.assertIn('environment["PYTHONHASHSEED"] = seed', source)
 
-    def test_matrix_records_framework_and_host_parity_separately(self) -> None:
-        matrix = (REPOSITORY_ROOT / "tests/CI_TEST_MATRIX.md").read_text(encoding="utf-8")
-        normalized_matrix = " ".join(matrix.split())
-        self.assertIn("| Framework parity tests | Implemented | M2-03, M3-05 |", matrix)
-        self.assertIn("| Native ComfyUI parity tests | Implemented | M2-04 |", matrix)
-        self.assertIn(
-            "native ComfyUI Turbo schedule parity are implemented",
-            normalized_matrix,
-        )
-        self.assertIn("parity over all 14 recipe/geometry cases", normalized_matrix)
-
 
 if __name__ == "__main__":
     unittest.main()

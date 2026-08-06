@@ -279,6 +279,11 @@ def test_state_rejects_inconsistent_lifecycle_status_on_restore() -> None:
     spec = _spec()
     running = SamplerStateSnapshot.initial(spec).append_step(spec, _step(0))
     payload = json.loads(serialize_sampler_state_snapshot(running, spec))
+
+    payload["status"] = SamplerStateStatus.READY.value
+    with pytest.raises(ScheduleContractError, match="ready state cannot contain executed steps"):
+        deserialize_sampler_state_snapshot(json.dumps(payload), spec)
+
     payload["status"] = SamplerStateStatus.COMPLETED.value
 
     with pytest.raises(ScheduleContractError, match="completed state counts"):

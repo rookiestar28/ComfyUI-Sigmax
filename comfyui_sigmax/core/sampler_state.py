@@ -14,6 +14,7 @@ import re
 import struct
 from dataclasses import dataclass, replace
 from enum import Enum
+from itertools import pairwise
 from typing import Any, cast
 
 from comfyui_sigmax.core.capabilities import (
@@ -253,6 +254,14 @@ class SamplerStep:
         }
 
 
+def _require_history_continuity(history: tuple[SamplerStep, ...]) -> None:
+    for previous, current in pairwise(history):
+        if previous.output_state_fingerprint != current.input_state_fingerprint:
+            raise ScheduleContractError(
+                "history input state fingerprint is not continuous with the previous output"
+            )
+
+
 @dataclass(frozen=True, slots=True, kw_only=True)
 class SamplerStateSnapshot:
     """Immutable cursor/history snapshot that can be resumed by matching spec."""
@@ -280,6 +289,7 @@ class SamplerStateSnapshot:
         for index, step in enumerate(self.history):
             if not isinstance(step, SamplerStep) or step.step_index != index:
                 raise ScheduleContractError("history must contain contiguous SamplerStep values")
+        _require_history_continuity(self.history)
 
     @classmethod
     def initial(cls, spec: SamplerExecutionSpec) -> SamplerStateSnapshot:
@@ -314,6 +324,13 @@ class SamplerStateSnapshot:
         expected_scheduler_index = spec.scheduler_index + step.step_index
         if step.scheduler_index != expected_scheduler_index:
             raise ScheduleContractError("scheduler_index is not contiguous with the snapshot")
+        if (
+            self.history
+            and self.history[-1].output_state_fingerprint != step.input_state_fingerprint
+        ):
+            raise ScheduleContractError(
+                "input state fingerprint is not continuous with the previous output"
+            )
         if self.effective_transitions + 1 > spec.requested_transitions:
             raise ScheduleContractError("step count exceeds requested transitions")
         if (

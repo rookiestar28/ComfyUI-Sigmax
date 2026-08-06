@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import FrozenInstanceError
+from dataclasses import FrozenInstanceError, replace
 from typing import Any
 
 import pytest
@@ -65,13 +65,14 @@ def _fingerprint(character: str) -> str:
 
 
 def _step(index: int, *, evaluations: int = 1) -> SamplerStep:
+    input_character = "1" if index == 0 else str(index + 2)
     return SamplerStep(
         step_index=index,
         scheduler_index=4 + index,
         sigma=1.0 - index * 0.25,
         next_sigma=0.75 - index * 0.25,
         model_evaluations=evaluations,
-        input_state_fingerprint=_fingerprint(str(index + 1)),
+        input_state_fingerprint=_fingerprint(input_character),
         output_state_fingerprint=_fingerprint(str(index + 3)),
     )
 
@@ -140,6 +141,15 @@ def test_state_requires_matching_spec_and_contiguous_steps() -> None:
         state.append_step(different, _step(0))
     with pytest.raises(ScheduleContractError, match="contiguous"):
         state.append_step(spec, _step(1))
+
+
+def test_state_requires_fingerprint_continuity_between_steps() -> None:
+    spec = _spec()
+    running = SamplerStateSnapshot.initial(spec).append_step(spec, _step(0))
+    discontinuous = replace(_step(1), input_state_fingerprint=_fingerprint("9"))
+
+    with pytest.raises(ScheduleContractError, match="input state fingerprint"):
+        running.append_step(spec, discontinuous)
 
 
 def test_state_rejects_inconsistent_counts_and_unknown_fields() -> None:

@@ -32,7 +32,6 @@ unsupported features. Partial-denoise execution is rejected; stateful/resumable,
 advanced-workflow, real-checkpoint, and image-quality behavior remains unimplemented.
 The accepted M6-05 MiniMax H3 slice also has a separate pinned-ComfyUI 0.30.0 model-free H1/H2
 contract for explicit FL2VA and Ref2VA node execution; first/repeat H1/H2 evidence passed without
-<<<<<<< HEAD
 loading H3 weights. It does not replace the separately authorized model-host gate. M4-13 closed
 its public transition-count vocabulary and downstream schema requalification with passing
 WSL/Windows full gates and exact pinned-host H1/H2. GitHub Actions hosted CI was explicitly
@@ -42,6 +41,7 @@ local optional-heavy H4 lane under its frozen plan; it is separate from the defa
 On 2026-08-07 the user waived M7-09 scoring as an acceptance blocker. Its execution/provenance
 receipt may close the local item, but the waiver does not create a prompt-adherence, image-quality,
 or profile-promotion claim. Until later roadmap owners create any other heavy gates:
+Until later roadmap owners create any other heavy gates:
 
 - the OS-specific full-gate wrapper is mandatory acceptance evidence;
 - direct commands remain available for targeted diagnosis;
@@ -66,7 +66,9 @@ Non-documentation work is accepted only when:
 - required parity and host E2E lanes pass;
 - critical no-skip seams execute without skips;
 - CI and local commands exercise the same underlying stage definitions;
-- CI and local verification output is retained for the reviewed change;
+- CI and local verification output is retained for the reviewed change; when a hosted lane is
+  unavailable, an explicit user-authorized item-level waiver may close the item from complete local
+  evidence, but the missing hosted artifact must never be described as a pass;
 - the public PR, issue, or change description maps evidence to each acceptance criterion.
 
 Do not treat a missing, skipped, or unavailable gate as a pass.
@@ -647,4 +649,5 @@ Before workflow acceptance, automated contract tests must verify:
 - diagnostic artifact upload on failure;
 - no accidental Node/Playwright dependency in pure-core or isolated parity environments;
 - no path filter or condition can bypass a required P0 test seam;
-- unavailable lanes report `NOT_IMPLEMENTED`, never pass.
+- unavailable lanes report `NOT_IMPLEMENTED`, never pass, unless an explicit item-level waiver is
+  recorded by the user; a waiver changes the acceptance decision, not the underlying lane result.

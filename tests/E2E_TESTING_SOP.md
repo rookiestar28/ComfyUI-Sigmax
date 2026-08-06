@@ -41,7 +41,12 @@ Current implemented scope:
   0.30.0, including first/repeat H1 and explicit FL2VA/Ref2VA H2 execution.
 - M4-13 is closed from passing local WSL/native Windows and pinned-host evidence. GitHub Actions
   hosted CI was explicitly waived for that item on 2026-08-06 because the quota was exhausted;
-  no hosted result is claimed and the waiver does not authorize model-weight/GPU execution.
+  no hosted result is claimed. This item-level waiver does not authorize model-weight/GPU
+  execution; M7-09 received separate explicit H4/model-weight/GPU authorization on 2026-08-06
+  under its frozen local evaluation plan.
+- M7-09 has an active optional-heavy H4 receipt lane for four fixed Krea 2 RAW/Turbo cases. Its
+  model hashes, control/ablation arms, blind ballot, and threshold review are separate from the
+  default CPU H1/H2/H3 gate; no image-quality claim is accepted before the review receipt closes.
 - a blocking Node.js frontend-policy gate for the scoped Krea 2 experimental-variant widget
   behavior, plus the accepted M4-11 item-specific browser evidence.
 

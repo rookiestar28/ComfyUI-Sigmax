@@ -527,9 +527,11 @@ Quantized and BF16 results must be evaluated separately.
 Image metrics and blind review are supplemental evidence and must not be described as proof of
 official schedule correctness.
 
-M7-09 additionally requires fixed RAW/Turbo cases, control and identity-ablation arms, model
+M7-09's frozen protocol defines fixed RAW/Turbo cases, control and identity-ablation arms, model
 component hashes, a randomized blind ballot, independent reviewers, variance/confidence reporting,
-and a predeclared regression decision. Its local H4 receipt is not a hosted-CI result.
+and a predeclared regression decision. The user may explicitly waive the scoring phase as an
+acceptance blocker; when waived, record the waiver and retain the execution receipt, while keeping
+quality and promotion claims unmade. Its local H4 receipt is not a hosted-CI result.
 
 ## 12. ComfyUI Compatibility Matrix
 

@@ -21,7 +21,7 @@ Command definitions remain in `tests/TEST_SOP.md`. Real-host lifecycle requireme
 | Krea 2 variant-resolution contracts | Implemented | M3-04 |
 | Framework parity tests | Implemented | M2-03, M3-05 |
 | Native ComfyUI parity tests | Implemented | M2-04 |
-| MiniMax H3 Diffusers/native parity lanes | Accepted source pins, complete 4/8/12/16/20 fixtures, isolated jobs, local CPython 3.13 CPU reports, and hosted artifact publication in Foundation CI run `30982915308`; public `steps` requalification is M4-13 | M6-05 accepted; M4-13 active |
+| MiniMax H3 Diffusers/native parity lanes | Accepted source pins, complete 4/8/12/16/20 fixtures, isolated jobs, local CPython 3.13 CPU reports, and hosted artifact publication in Foundation CI run `30982915308`; public `steps` requalification is M4-13 | M6-05 and M4-13 accepted locally |
 | Numerical benchmark matrix | Implemented | M7-02 |
 | Optional image benchmark protocol | Implemented; execution unapproved | M7-03 |
 | Dependency compatibility matrix | Local/pinned plus release/HEAD latest-host evidence implemented; official container explicitly unavailable/non-blocking | M7-04 |
@@ -35,13 +35,19 @@ Command definitions remain in `tests/TEST_SOP.md`. Real-host lifecycle requireme
 | Real ComfyUI H1 | Implemented | M2-05 harness |
 | Real ComfyUI H2 | Turbo and RAW/auto implemented | M2-05; M3-06 |
 | Real ComfyUI H3 | M5-01 deterministic native-Euler H3 implemented; partial-denoise execution is rejected | M5-01 |
-| MiniMax H3 model-free host contract | Exact pinned ComfyUI 0.30.0 first/repeat H1/H2 passed for explicit FL2VA and Ref2VA, including the M4-13 public-steps requalification on native Windows; weight-backed H4 remains separately authorization-gated | M6-05 accepted; M4-13 host gate passed |
+| MiniMax H3 model-free host contract | Exact pinned ComfyUI 0.30.0 first/repeat H1/H2 passed for explicit FL2VA and Ref2VA, including the M4-13 public-steps requalification on native Windows; weight-backed H4 remains separately authorization-gated | M6-05 and M4-13 host gates passed locally |
 | Frontend policy | Implemented in the default full gate with Node.js 18+; hosted CI uses Node.js 20 | M4-11 amendment |
 | Browser E2E | Bounded M4-11 item-specific browser evidence accepted; reusable automated Playwright lane `NOT_IMPLEMENTED` | Activate when frontend behavior requires maintained real-browser regression coverage |
 | GPU/real-model tests | Optional and unapproved | Explicit requirement and authorization |
-| CI workflows | Configured; hosted four-cell full gate and five pinned parity jobs passed in Foundation CI run `30982915308` for `dev@e55f5a4` | M0-06 plus M6-05 accepted hosted evidence |
+| CI workflows | Configured; hosted four-cell full gate and five pinned parity jobs passed in Foundation CI run `30982915308` for `dev@e55f5a4`; M4-13 uses local CI under an explicit hosted-quota waiver | M0-06 plus M6-05 hosted evidence; M4-13 local acceptance |
 
 An unavailable lane is never a pass.
+
+M4-13 exception (2026-08-06): the user reported exhausted GitHub Actions quota and explicitly
+waived hosted CI as a blocker. Local WSL/native Windows full gates, pinned-host H1/H2, parity,
+package, and generated-evidence receipts control M4-13 acceptance. This exception records no
+hosted artifact and does not turn the unavailable lane into a pass; it is an item-level acceptance
+decision only.
 
 ## 3. Gate Classes
 
@@ -183,8 +189,8 @@ evidence remains mandatory when its roadmap stage activates. MiniMax H3 keeps it
 endpoint-inclusive and native ComfyUI `simple` vectors separate; source-pinned Python 3.13
 regeneration, hosted parity artifacts, and exact pinned model-free H1/H2 evidence are accepted.
 Weight-backed model-host H4 evidence remains separately authorization-gated. M4-13's native
-Windows host requalification of the public transition-count vocabulary passes; its post-change
-hosted CI remains pending.
+Windows host requalification of the public transition-count vocabulary passes; its hosted CI is
+explicitly waived under the item-level quota exception above and is not claimed as evidence.
 
 ## 8. Skip, XFail, Retry, and Quarantine Policy
 

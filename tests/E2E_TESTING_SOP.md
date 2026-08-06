@@ -39,6 +39,9 @@ Current implemented scope:
   rerun, artifact-linked succeeded receipt, and explicit partial-denoise rejection.
 - M4-13 native Windows requalification of the public H3 `steps` schema on exact pinned ComfyUI
   0.30.0, including first/repeat H1 and explicit FL2VA/Ref2VA H2 execution.
+- M4-13 is closed from passing local WSL/native Windows and pinned-host evidence. GitHub Actions
+  hosted CI was explicitly waived for that item on 2026-08-06 because the quota was exhausted;
+  no hosted result is claimed and the waiver does not authorize model-weight/GPU execution.
 - a blocking Node.js frontend-policy gate for the scoped Krea 2 experimental-variant widget
   behavior, plus the accepted M4-11 item-specific browser evidence.
 

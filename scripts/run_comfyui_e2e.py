@@ -229,9 +229,8 @@ def build_minimax_h3_h2_api_prompt(variant: str) -> dict[str, object]:
         "1": {
             "class_type": "Sigmax.MiniMaxH3SigmaScheduler",
             "inputs": {
-                "already_shifted": False,
                 "end_step": -1,
-                "grid_points": 20,
+                "steps": 20,
                 "start_step": 0,
                 "variant": variant,
             },
@@ -1781,7 +1780,7 @@ def verify_minimax_h3_h2_history(
         raise ScheduleContractError("MiniMax H3 H2 variant must be selected explicitly")
     expected = build_minimax_h3_sigma_schedule(
         variant=variant,
-        grid_points=20,
+        steps=20,
         start_step=0,
         end_step=-1,
     )
@@ -1836,6 +1835,7 @@ def verify_minimax_h3_h2_history(
     counts = _object(info.get("counts"), label="MiniMax H3 H2 count metadata")
     return {
         "audio_ownership": audio.get("ownership"),
+        "effective_steps": counts.get("effective_steps"),
         "effective_transitions": counts.get("effective_transitions"),
         "lane": info.get("lane"),
         "numerical_fingerprint": _object(
@@ -1843,6 +1843,7 @@ def verify_minimax_h3_h2_history(
         ).get("complete"),
         "profile_id": profile.get("id"),
         "requested_grid_points": counts.get("requested_grid_points"),
+        "requested_steps": counts.get("requested_steps"),
         "requested_transitions": counts.get("requested_transitions"),
         "status": "succeeded",
         "variant": variant,
@@ -3085,7 +3086,7 @@ def build_minimax_h3_model_lane_plan(
     width: int = 1344,
     height: int = 768,
     length: int = 124,
-    grid_points: int = 20,
+    steps: int = 20,
     seed: int = 0,
     first_frame: str | None = None,
     last_frame: str | None = None,
@@ -3123,7 +3124,7 @@ def build_minimax_h3_model_lane_plan(
         width=width,
         height=height,
         length=length,
-        grid_points=grid_points,
+        steps=steps,
         seed=seed,
         first_frame=first_frame,
         last_frame=last_frame,

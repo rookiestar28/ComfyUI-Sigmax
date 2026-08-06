@@ -26,6 +26,9 @@ Rules:
 - A missing host harness is `NOT_IMPLEMENTED`, not a pass.
 - Browser Playwright E2E is `NOT_APPLICABLE` unless the repository deliberately adds a web
   extension.
-- Strictly documentation-only changes may use the exception in `tests/TEST_SOP.md`.
+- Strictly documentation-only changes do not run the full gate or E2E lanes; apply the exception
+  in `tests/TEST_SOP.md`.
+- Pure prose unrelated to executable behavior must not be made a test contract. Test the
+  underlying executable API, schema, workflow, package, or release boundary instead.
 - Bugfixes must reproduce the host-visible failure, pin it with a targeted test, and then run
   the full applicable sweep.

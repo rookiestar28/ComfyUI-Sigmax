@@ -12,7 +12,7 @@ Command definitions remain in `tests/TEST_SOP.md`. Real-host lifecycle requireme
 
 | Capability | State | Activation dependency |
 | --- | --- | --- |
-| Documentation checks | Implemented in pytest | M0-07 public contract |
+| Pure prose review | Not an automated test contract; review text directly and do not run the full gate for documentation-only changes | User policy, 2026-08-06 |
 | CI configuration self-tests | Implemented | M0-06 |
 | Pure-core tests | Implemented | M1-07 |
 | Deterministic property tests | Implemented | M1-07 |
@@ -21,7 +21,7 @@ Command definitions remain in `tests/TEST_SOP.md`. Real-host lifecycle requireme
 | Krea 2 variant-resolution contracts | Implemented | M3-04 |
 | Framework parity tests | Implemented | M2-03, M3-05 |
 | Native ComfyUI parity tests | Implemented | M2-04 |
-| MiniMax H3 Diffusers/native parity lanes | Contract, source pins, complete 4/8/12/16/20 fixtures, and isolated CI jobs implemented; local CPython 3.13 CPU reports pass, hosted runtime artifacts pending | M6-05 subordinate qualification |
+| MiniMax H3 Diffusers/native parity lanes | Accepted source pins, complete 4/8/12/16/20 fixtures, isolated jobs, local CPython 3.13 CPU reports, and hosted artifact publication in Foundation CI run `30982915308`; public `steps` requalification is M4-13 | M6-05 accepted; M4-13 active |
 | Numerical benchmark matrix | Implemented | M7-02 |
 | Optional image benchmark protocol | Implemented; execution unapproved | M7-03 |
 | Dependency compatibility matrix | Local/pinned plus release/HEAD latest-host evidence implemented; official container explicitly unavailable/non-blocking | M7-04 |
@@ -35,11 +35,11 @@ Command definitions remain in `tests/TEST_SOP.md`. Real-host lifecycle requireme
 | Real ComfyUI H1 | Implemented | M2-05 harness |
 | Real ComfyUI H2 | Turbo and RAW/auto implemented | M2-05; M3-06 |
 | Real ComfyUI H3 | M5-01 deterministic native-Euler H3 implemented; partial-denoise execution is rejected | M5-01 |
-| MiniMax H3 model-free host contract | Explicit-variant scheduler/probe/verifier and optional pinned 0.30.0 runner implemented; host execution pending explicit authorization | M6-05 subordinate qualification |
+| MiniMax H3 model-free host contract | Exact pinned ComfyUI 0.30.0 first/repeat H1/H2 passed for explicit FL2VA and Ref2VA, including the M4-13 public-steps requalification on native Windows; weight-backed H4 remains separately authorization-gated | M6-05 accepted; M4-13 host gate passed |
 | Frontend policy | Implemented in the default full gate with Node.js 18+; hosted CI uses Node.js 20 | M4-11 amendment |
 | Browser E2E | Bounded M4-11 item-specific browser evidence accepted; reusable automated Playwright lane `NOT_IMPLEMENTED` | Activate when frontend behavior requires maintained real-browser regression coverage |
 | GPU/real-model tests | Optional and unapproved | Explicit requirement and authorization |
-| CI workflows | Configured; hosted four-cell full gate and three pinned parity jobs passed at commit `070cb12fe444fed138b8ea601dcde3657a460647` | M0-06 plus accepted hosted evidence |
+| CI workflows | Configured; hosted four-cell full gate and five pinned parity jobs passed in Foundation CI run `30982915308` for `dev@e55f5a4` | M0-06 plus M6-05 accepted hosted evidence |
 
 An unavailable lane is never a pass.
 
@@ -55,8 +55,12 @@ An unavailable lane is never a pass.
 | `release` | Release candidate | Full gate, known-good host, clean install, audit, parity | Blocking |
 | `optional-heavy` | Approved GPU/real-model run | Explicit H4 protocol | Blocking only when required |
 
-Change-aware selection may accelerate `fast`. It must not remove a required `pr-core`,
-`pr-host`, `full-local`, or `release` lane.
+Strictly documentation-only changes do not run `full-local`, `pr-host`, or other executable test
+lanes. Pure prose unrelated to executable behavior must not be added as a pytest, CI, or hook
+contract. Review that prose directly under `tests/TEST_SOP.md` Section 5.
+
+For changes with any executable subject, change-aware selection may accelerate `fast`. It must
+not remove a required `pr-core`, `pr-host`, `full-local`, or `release` lane.
 
 ## 4. Regression Risk Matrix
 
@@ -84,8 +88,10 @@ Change-aware selection may accelerate `fast`. It must not remove a required `pr-
 
 ## 5. CI Job Role Matrix
 
-Exact Python and dependency versions are frozen by M0/M7. This matrix defines roles, not
-unreviewed version numbers.
+Exact Python and dependency versions are frozen by M0/M7 for reproducible parity and CI lanes.
+This matrix defines roles, not unreviewed version numbers. Host E2E receipts record the selected
+ComfyUI environment and do not impose a hard-coded `comfy-aimdo` equality gate; current
+ComfyUI-recommended versions such as `0.4.13` are accepted when H1/H2 pass.
 
 | Job | PR | Push | Scheduled | OS/profile | Must produce |
 | --- | --- | --- | --- | --- | --- |
@@ -174,9 +180,11 @@ also implemented, together with pinned authoritative/framework parity over all 1
 recipe/geometry cases. Pure Krea variant-resolution tests enforce strong-evidence conflicts,
 suggestion-only weak signals, and family-only model/tensor signals. Scheduled mutation
 evidence remains mandatory when its roadmap stage activates. MiniMax H3 keeps its Diffusers
-endpoint-inclusive and native ComfyUI `simple` vectors separate; the source-pinned native
-adapter/report contract is present, but hosted Python 3.13 regeneration and authorized model-host
-evidence remain open.
+endpoint-inclusive and native ComfyUI `simple` vectors separate; source-pinned Python 3.13
+regeneration, hosted parity artifacts, and exact pinned model-free H1/H2 evidence are accepted.
+Weight-backed model-host H4 evidence remains separately authorization-gated. M4-13's native
+Windows host requalification of the public transition-count vocabulary passes; its post-change
+hosted CI remains pending.
 
 ## 8. Skip, XFail, Retry, and Quarantine Policy
 

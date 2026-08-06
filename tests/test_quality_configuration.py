@@ -323,65 +323,6 @@ class QualityConfigurationTests(unittest.TestCase):
             normalized_results,
         )
 
-    def test_governance_documents_exist_and_are_current(self) -> None:
-        expected_paths = [
-            "tests/TEST_SOP.md",
-            "tests/E2E_TESTING_NOTICE.md",
-            "tests/E2E_TESTING_SOP.md",
-            "tests/CI_TEST_MATRIX.md",
-        ]
-        for relative_path in expected_paths:
-            with self.subTest(path=relative_path):
-                document = REPOSITORY_ROOT / relative_path
-                self.assertTrue(document.is_file())
-                self.assertIn("ComfyUI-Sigmax", document.read_text(encoding="utf-8"))
-
-        test_sop = (REPOSITORY_ROOT / "tests/TEST_SOP.md").read_text(encoding="utf-8")
-        self.assertIn(
-            "cross-platform full-gate wrappers, and CI workflow",
-            test_sop,
-        )
-        self.assertIn(
-            "real-ComfyUI H1 harness",
-            test_sop,
-        )
-        self.assertIn(
-            "M2-05 strict Turbo and M3-06 RAW H2 workflow lanes now exist",
-            test_sop,
-        )
-        self.assertIn("Krea 2 RAW golden-vector", test_sop)
-        self.assertIn("M5-01 deterministic native-Euler H3 proof lane now exists", test_sop)
-        self.assertIn("M6-05 MiniMax H3 slice also has a separate optional", test_sop)
-        self.assertIn("Partial-denoise execution is rejected", test_sop)
-        self.assertIn(
-            "Remaining sampler H3 capabilities and GPU H4 remain owned",
-            test_sop,
-        )
-        self.assertIn("Validated product nodes, adapter/integration tests", test_sop)
-        self.assertIn("core-independence", test_sop)
-        self.assertIn("Turbo golden-vector", test_sop)
-
-        ci_matrix = (REPOSITORY_ROOT / "tests" / "CI_TEST_MATRIX.md").read_text(encoding="utf-8")
-        self.assertIn("| Pure-core tests | Implemented", ci_matrix)
-        self.assertIn("| Deterministic property tests | Implemented", ci_matrix)
-        self.assertIn("| Krea 2 Turbo golden vectors | Implemented", ci_matrix)
-        self.assertIn("| Real ComfyUI H1 | Implemented", ci_matrix)
-        self.assertIn(
-            "| Real ComfyUI H2 | Turbo and RAW/auto implemented",
-            ci_matrix,
-        )
-        self.assertIn(
-            "| Real ComfyUI H3 | M5-01 deterministic native-Euler H3 implemented", ci_matrix
-        )
-        self.assertIn("| MiniMax H3 model-free host contract | Explicit-variant", ci_matrix)
-
-        e2e_sop = (REPOSITORY_ROOT / "tests/E2E_TESTING_SOP.md").read_text(encoding="utf-8")
-        self.assertIn("M3-06 RAW square/non-square", e2e_sop)
-        self.assertIn("M5-01 deterministic native-Euler H3 controlled execution", e2e_sop)
-        self.assertIn("Remaining H3 capabilities and H4 retain", e2e_sop)
-        self.assertIn("runtime rejection", e2e_sop)
-        self.assertIn("prequeue HTTP 400 rejection", e2e_sop)
-
 
 if __name__ == "__main__":
     unittest.main()

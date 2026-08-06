@@ -131,10 +131,9 @@ def _host_object_info() -> dict[str, object]:
             "Sigmax.MiniMaxH3SigmaScheduler",
             required={
                 "variant": _combo("H3 Base FL2VA", "H3 Base Ref2VA"),
-                "grid_points": _type("INT"),
+                "steps": _type("INT"),
                 "start_step": _type("INT"),
                 "end_step": _type("INT"),
-                "already_shifted": _type("BOOLEAN"),
             },
             outputs=("SIGMAS", "STRING"),
         ),

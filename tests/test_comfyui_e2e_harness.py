@@ -898,9 +898,8 @@ def test_minimax_h3_h2_prompt_connects_explicit_scheduler_to_probe(variant: str)
         "1": {
             "class_type": "Sigmax.MiniMaxH3SigmaScheduler",
             "inputs": {
-                "already_shifted": False,
                 "end_step": -1,
-                "grid_points": 20,
+                "steps": 20,
                 "start_step": 0,
                 "variant": variant,
             },
@@ -918,7 +917,7 @@ def test_minimax_h3_h2_prompt_connects_explicit_scheduler_to_probe(variant: str)
 def _minimax_h3_h2_history(*, variant: str = "H3 Base FL2VA") -> dict[str, Any]:
     schedule = build_minimax_h3_sigma_schedule(
         variant=variant,
-        grid_points=20,
+        steps=20,
         start_step=0,
         end_step=-1,
     )
@@ -962,12 +961,13 @@ def test_minimax_h3_h2_history_verifier_requires_explicit_variant(variant: str) 
 
     assert summary == {
         "audio_ownership": "model_native",
-        "effective_transitions": 19,
+        "effective_steps": 20,
+        "effective_transitions": 20,
         "lane": "diffusers_endpoint_inclusive",
         "numerical_fingerprint": json.loads(
             build_minimax_h3_sigma_schedule(
                 variant=variant,
-                grid_points=20,
+                steps=20,
                 start_step=0,
                 end_step=-1,
             ).schedule_info_json
@@ -975,8 +975,9 @@ def test_minimax_h3_h2_history_verifier_requires_explicit_variant(variant: str) 
         "profile_id": "minimax-h3.base_fl2va"
         if variant == "H3 Base FL2VA"
         else "minimax-h3.base_ref2va",
-        "requested_grid_points": 20,
-        "requested_transitions": 19,
+        "requested_grid_points": 21,
+        "requested_steps": 20,
+        "requested_transitions": 20,
         "status": "succeeded",
         "variant": variant,
     }

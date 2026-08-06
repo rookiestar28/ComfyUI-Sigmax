@@ -53,7 +53,7 @@ Search the node menu for `Sigmax`. The package registers 24 namespaced nodes.
 | Original AuraFlow v0.2 | `Sigmax.AuraFlowSigmaScheduler` | `Official Fixed (1.73)`, 50 steps, CFG 3.5; source mode is explicit |
 | Lumina-Image 2.0 | `Sigmax.Lumina2SigmaScheduler` | `Official Fixed (6.0)`, 50 steps, CFG 4.0; source mode is explicit |
 | HunyuanImage 2.1 | `Sigmax.HunyuanImage21SigmaScheduler` | `Base (5.0)`, 50 steps, CFG 3.5, or `Distilled (4.0)`, 8 steps, CFG 3.25; variant is explicit |
-| MiniMax H3 Base | `Sigmax.MiniMaxH3SigmaScheduler` | Select `H3 Base FL2VA` or `H3 Base Ref2VA`; endpoint-inclusive video sigmas, 20 grid points by default; audio remapping remains model-owned |
+| MiniMax H3 Base | `Sigmax.MiniMaxH3SigmaScheduler` | Select `H3 Base FL2VA` or `H3 Base Ref2VA`; `steps=20` produces 21 endpoint-inclusive video sigmas and 20 transitions; audio remapping remains model-owned |
 | Anima Base v1.0 / Aesthetic / Turbo | `Sigmax.AnimaSigmaScheduler` | `Base`, 30-50 steps, default 50, CFG 4.5; `Aesthetic` uses the same recipe; `Turbo`, 8-12 steps, CFG 1.0; fixed shift 3.0 |
 | Wan 2.1 T2V / I2V | `Sigmax.WanSigmaScheduler` | Select generation, task, source, and resolution explicitly; official T2V 50 steps (`5.0`), official I2V 480P/720P 40 steps (`3.0`/`5.0`) |
 | Wan 2.2 TI2V 5B / A14B T2V/I2V | `Sigmax.WanSigmaScheduler` | Native or Diffusers-reference source lanes; TI2V 5B uses `5.0`; A14B T2V/I2V use `12.0`/`5.0` with caller-owned boundary metadata |
@@ -79,7 +79,7 @@ The Lumina-Image 2.0 node covers only original Alpha-VLLM text-to-image with fix
 
 The HunyuanImage 2.1 node constructs schedule-only Base and Distilled direct-ratio paths (`5.0`/`4.0`). Base is the pinned ComfyUI-compatible lane; Distilled remains publisher-schedule-only until a native host path is qualified. Refiner, encoders, conditioning, weights, and image quality are outside scope.
 
-The MiniMax H3 node is a narrow Base qualification slice: FL2VA/Ref2VA are explicit, only the Diffusers endpoint-inclusive video lane (shift `12.0`) is exposed, and native `simple` plus model-owned audio mapping (shift `3.0`) remain separate. The model-free workflow helper can preflight the generated graph against a caller-supplied ComfyUI `/object_info` schema, including Ref2VA autogrow inputs, without loading weights or submitting a prompt. Context-IR, Regenerate-2K, sparse attention, hosted/API behavior, weights, samplers, and quality claims are outside scope.
+The MiniMax H3 node is a narrow Base qualification slice: FL2VA/Ref2VA are explicit, public `steps` count executed transitions (`sigma_count = steps + 1`), only the Diffusers endpoint-inclusive video lane (shift `12.0`) is exposed, and native `simple` plus model-owned audio mapping (shift `3.0`) remain separate. The model-free workflow helper can preflight the generated graph against a caller-supplied ComfyUI `/object_info` schema, including Ref2VA autogrow inputs, without loading weights or submitting a prompt. Context-IR, Regenerate-2K, sparse attention, hosted/API behavior, weights, samplers, and quality claims are outside scope.
 
 The Wan node constructs schedule-only unit-flow sigmas for the released 2.1/2.2 matrix; 2.1 I2V requires `480P` or `720P`, and 2.2 A14B boundaries are caller-owned metadata (never expert routing).
 Diffusers-reference lanes describe scheduler math only; video execution, weights, and quality parity are outside scope.

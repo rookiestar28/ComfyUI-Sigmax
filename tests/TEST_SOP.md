@@ -30,16 +30,18 @@ The M5-01 deterministic native-Euler H3 proof lane now exists for controlled, mo
 execution, exact transition/evaluation counts, artifact-linked success receipts, and fail-closed
 unsupported features. Partial-denoise execution is rejected; stateful/resumable, stochastic,
 advanced-workflow, real-checkpoint, and image-quality behavior remains unimplemented.
-The activated M6-05 MiniMax H3 slice also has a separate optional pinned-ComfyUI 0.30.0
-model-free H1/H2 contract for explicit FL2VA and Ref2VA node execution; it does not load H3
-weights and does not replace the separately authorized model-host gate.
+The accepted M6-05 MiniMax H3 slice also has a separate pinned-ComfyUI 0.30.0 model-free H1/H2
+contract for explicit FL2VA and Ref2VA node execution; first/repeat H1/H2 evidence passed without
+loading H3 weights. It does not replace the separately authorized model-host gate. M4-13 is now
+requalifying only the public transition-count vocabulary and downstream schema; its post-change
+WSL/Windows full gates and exact pinned-host H1/H2 pass, while hosted CI remains pending.
 Remaining sampler H3 capabilities and GPU H4 remain owned by later roadmap items. Until their
 roadmap owners create them:
 
 - the OS-specific full-gate wrapper is mandatory acceptance evidence;
 - direct commands remain available for targeted diagnosis;
 - missing future gates remain `NOT_IMPLEMENTED`, not passed;
-- documentation-only work may use the exception in Section 5.
+- documentation-only work uses the exception in Section 5 and does not run the full gate.
 
 ## 3. Required Reading Order
 
@@ -66,8 +68,10 @@ Do not treat a missing, skipped, or unavailable gate as a pass.
 
 ## 5. Documentation-Only Exception
 
-The full executable gate is optional when every changed file is prose-only documentation and
-the change does not modify:
+Pure prose that is unrelated to executable behavior is not a test contract. Do not add pytest,
+CI, hook, or other automated acceptance assertions that freeze document wording, headings, line
+counts, link layout, file inventory, or narrative freshness. A documentation-only change does not
+run the full gate and does not require a dedicated test suite when it does not modify:
 
 - Python, JavaScript, or other executable code;
 - test code or fixtures;
@@ -77,16 +81,15 @@ the change does not modify:
 - configuration or generated artifacts;
 - node definitions, workflow JSON, or runtime behavior.
 
-Documentation-only validation must still check:
+Review the touched prose directly. Lightweight hygiene such as `git diff --check`, link/path
+inspection, or Markdown rendering may be used when useful, but it is not promoted into pytest.
+When a document describes an executable API, script, package, schema, or release boundary, test
+that executable subject at its source rather than asserting the prose that describes it.
 
-- referenced paths and names;
-- stale project-specific terms;
-- Markdown whitespace and fence balance;
-- documented acceptance requirements;
-- consistency among public contributor documentation and test SOPs;
-- consistency with `tests/CI_TEST_MATRIX.md`.
+## 6. Documentation Hygiene (Non-contract)
 
-## 6. Documentation Baseline Checks
+These commands help reviewers inspect prose-only changes; they are not automated acceptance
+contracts for document content.
 
 When Git is initialized:
 

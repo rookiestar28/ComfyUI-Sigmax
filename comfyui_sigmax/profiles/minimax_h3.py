@@ -85,8 +85,12 @@ MINIMAX_H3_AUDIO_SHIFT: Final = 3.0
 # sigma direction.  Keep this as an explicit contract; never infer it from a
 # generic flow profile.
 MINIMAX_H3_NATIVE_MODEL_OUTPUT_SIGN: Final = -1.0
+# The source-facing builder names its endpoint grid size ``grid_points``.  Public ComfyUI
+# adapters use transition-count ``steps`` and map ``N`` to ``N + 1`` source points.
 MINIMAX_H3_DEFAULT_GRID_POINTS: Final = 20
 MINIMAX_H3_MAX_GRID_POINTS: Final = 10_000
+MINIMAX_H3_DEFAULT_STEPS: Final = MINIMAX_H3_DEFAULT_GRID_POINTS
+MINIMAX_H3_MAX_STEPS: Final = MINIMAX_H3_MAX_GRID_POINTS - 1
 MINIMAX_H3_COMFY_TIMESTEPS: Final = 1_000
 
 _H3_FLOAT32 = ">f"
@@ -738,8 +742,8 @@ def _schema(
                 steps=StepRangeDeclaration(
                     minimum=1,
                     maximum=MINIMAX_H3_MAX_GRID_POINTS - 1,
-                    default=MINIMAX_H3_DEFAULT_GRID_POINTS - 1,
-                    reference_steps=(MINIMAX_H3_DEFAULT_GRID_POINTS - 1,),
+                    default=MINIMAX_H3_DEFAULT_STEPS,
+                    reference_steps=(MINIMAX_H3_DEFAULT_STEPS,),
                     allow_modified=True,
                 ),
                 guidance=GuidanceDeclaration(
@@ -764,6 +768,9 @@ def _schema(
             ProfileField(name="grid_semantics", value="endpoint_inclusive_diffusers"),
             ProfileField(name="license_boundary", value="code_only_no_weight_redistribution"),
             ProfileField(name="model_time", value="t_equals_one_minus_sigma"),
+            ProfileField(
+                name="public_steps_semantics", value="transitions_to_grid_points_plus_one"
+            ),
             ProfileField(name="variant", value=variant.value),
             ProfileField(
                 name="velocity_direction", value=MiniMaxH3VelocityDirection.DATA_WARD.value
@@ -851,8 +858,10 @@ __all__ = [
     "MINIMAX_H3_COMFYUI_REVISION",
     "MINIMAX_H3_COMFY_ARTIFACT_REVISION",
     "MINIMAX_H3_DEFAULT_GRID_POINTS",
+    "MINIMAX_H3_DEFAULT_STEPS",
     "MINIMAX_H3_DIFFUSERS_REVISION",
     "MINIMAX_H3_HF_REVISION",
+    "MINIMAX_H3_MAX_STEPS",
     "MINIMAX_H3_NATIVE_MODEL_OUTPUT_SIGN",
     "MINIMAX_H3_VIDEO_SHIFT",
     "MiniMaxH3AudioMapping",

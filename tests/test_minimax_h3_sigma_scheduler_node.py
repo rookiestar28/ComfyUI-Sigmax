@@ -28,7 +28,6 @@ def test_minimax_h3_node_schema_requires_explicit_variants() -> None:
     assert MINIMAX_H3_SIGMA_NODE_ID == "Sigmax.MiniMaxH3SigmaScheduler"
     assert NODE_CLASS_MAPPINGS[MINIMAX_H3_SIGMA_NODE_ID] is MiniMaxH3SigmaScheduler
     inputs = MiniMaxH3SigmaScheduler.INPUT_TYPES()["required"]
-    assert tuple(inputs) == ("variant", "grid_points", "start_step", "end_step")
     assert inputs["variant"][0] == ("H3 Base FL2VA", "H3 Base Ref2VA")
     assert tuple(inputs) == ("variant", "steps", "start_step", "end_step")
     assert MiniMaxH3SigmaScheduler.RETURN_TYPES == ("SIGMAS", "STRING")

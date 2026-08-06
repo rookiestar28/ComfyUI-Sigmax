@@ -48,6 +48,10 @@ class SamplerStateStatus(str, Enum):
     COMPLETED = "completed"
 
 
+def _sha256_identity(payload: bytes) -> str:
+    return f"sha256:{hashlib.sha256(payload).hexdigest()}"
+
+
 def _require_non_negative_int(field_name: str, value: object, *, maximum: int = 1_000_000) -> int:
     if not isinstance(value, int) or isinstance(value, bool) or value < 0 or value > maximum:
         raise ScheduleContractError(f"{field_name} must be a bounded non-negative integer")
@@ -218,7 +222,7 @@ def sampler_execution_spec_fingerprint(spec: SamplerExecutionSpec) -> str:
     """Return the deterministic identity of one execution specification."""
 
     payload = canonical_projection_bytes(spec.projection())
-    return f"sha256:{hashlib.sha256(payload).hexdigest()}"
+    return _sha256_identity(payload)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -386,6 +390,19 @@ class SamplerStateSnapshot:
             "spec_fingerprint": self.spec_fingerprint,
             "status": self.status.value,
         }
+
+
+def sampler_state_snapshot_fingerprint(
+    snapshot: SamplerStateSnapshot,
+    spec: SamplerExecutionSpec,
+) -> str:
+    """Return the deterministic identity of one spec-bound state snapshot."""
+
+    if not isinstance(snapshot, SamplerStateSnapshot):
+        raise ScheduleContractError("snapshot must be a SamplerStateSnapshot")
+    if not isinstance(spec, SamplerExecutionSpec):
+        raise ScheduleContractError("spec must be a SamplerExecutionSpec")
+    return _sha256_identity(canonical_projection_bytes(snapshot.projection(spec)))
 
 
 def serialize_sampler_execution_spec(spec: SamplerExecutionSpec) -> bytes:

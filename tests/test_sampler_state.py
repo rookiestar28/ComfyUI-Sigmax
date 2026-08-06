@@ -27,6 +27,7 @@ from comfyui_sigmax.core import (
     serialize_sampler_execution_spec,
     serialize_sampler_state_snapshot,
 )
+from comfyui_sigmax.core import sampler_state as sampler_state_module
 
 
 def _spec() -> SamplerExecutionSpec:
@@ -121,6 +122,26 @@ def test_round_trip_and_fingerprint_are_byte_deterministic() -> None:
     restored = deserialize_sampler_state_snapshot(state_bytes, spec)
     assert state_bytes == serialize_sampler_state_snapshot(restored, spec)
     assert restored == state
+
+
+def test_snapshot_fingerprint_is_state_bound_and_round_trip_stable() -> None:
+    spec = _spec()
+    initial = SamplerStateSnapshot.initial(spec)
+    running = initial.append_step(spec, _step(0))
+    fingerprint = getattr(sampler_state_module, "sampler_state_snapshot_fingerprint", None)
+
+    assert callable(fingerprint)
+    initial_fingerprint = fingerprint(initial, spec)
+    running_fingerprint = fingerprint(running, spec)
+    restored = deserialize_sampler_state_snapshot(
+        serialize_sampler_state_snapshot(running, spec),
+        spec,
+    )
+
+    assert initial_fingerprint.startswith("sha256:")
+    assert running_fingerprint.startswith("sha256:")
+    assert initial_fingerprint != running_fingerprint
+    assert running_fingerprint == fingerprint(restored, spec)
 
 
 def test_state_requires_matching_spec_and_contiguous_steps() -> None:

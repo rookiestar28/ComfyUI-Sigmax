@@ -104,6 +104,7 @@ from comfyui_sigmax.core.sampler_state import (
     deserialize_sampler_execution_spec,
     deserialize_sampler_state_snapshot,
     sampler_execution_spec_fingerprint,
+    sampler_state_snapshot_fingerprint,
     serialize_sampler_execution_spec,
     serialize_sampler_state_snapshot,
 )
@@ -244,6 +245,7 @@ __all__ = [
     "require_compatible",
     "require_single_ownership",
     "sampler_execution_spec_fingerprint",
+    "sampler_state_snapshot_fingerprint",
     "serialize_execution_receipt",
     "serialize_portable_execution_bundle",
     "serialize_sampler_execution_spec",

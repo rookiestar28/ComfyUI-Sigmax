@@ -275,6 +275,27 @@ def test_state_rejects_inconsistent_counts_and_unknown_fields() -> None:
         deserialize_sampler_state_snapshot(json.dumps(payload), spec)
 
 
+def test_state_rejects_inconsistent_lifecycle_status_on_restore() -> None:
+    spec = _spec()
+    running = SamplerStateSnapshot.initial(spec).append_step(spec, _step(0))
+    payload = json.loads(serialize_sampler_state_snapshot(running, spec))
+    payload["status"] = SamplerStateStatus.COMPLETED.value
+
+    with pytest.raises(ScheduleContractError, match="completed state counts"):
+        deserialize_sampler_state_snapshot(json.dumps(payload), spec)
+
+    completed = (
+        running.append_step(spec, _step(1))
+        .complete(spec)
+        .attach_execution_receipt_evidence(spec, _receipt(spec))
+    )
+    payload = json.loads(serialize_sampler_state_snapshot(completed, spec))
+    payload["status"] = SamplerStateStatus.RUNNING.value
+
+    with pytest.raises(ScheduleContractError, match="running state cannot carry receipt"):
+        deserialize_sampler_state_snapshot(json.dumps(payload), spec)
+
+
 @pytest.mark.parametrize(
     ("field", "value"),
     [

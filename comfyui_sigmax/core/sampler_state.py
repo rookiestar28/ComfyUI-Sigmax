@@ -318,6 +318,21 @@ class SamplerStateSnapshot:
         if self.spec_fingerprint != expected:
             raise ScheduleContractError("sampler state does not match execution specification")
 
+    def _validate_lifecycle(self, spec: SamplerExecutionSpec) -> None:
+        if self.status is SamplerStateStatus.READY and (
+            self.effective_transitions != 0 or self.effective_model_evaluations != 0
+        ):
+            raise ScheduleContractError("ready state cannot contain executed steps")
+        if self.status is SamplerStateStatus.COMPLETED and (
+            self.effective_transitions != spec.requested_transitions
+            or self.effective_model_evaluations != spec.requested_model_evaluations
+        ):
+            raise ScheduleContractError("completed state counts must match requested execution")
+        if self.status is SamplerStateStatus.RUNNING and (
+            self.execution_receipt_fingerprint is not None
+        ):
+            raise ScheduleContractError("running state cannot carry receipt evidence")
+
     def append_step(self, spec: SamplerExecutionSpec, step: SamplerStep) -> SamplerStateSnapshot:
         """Return a new running snapshot with one contiguous step appended."""
 
@@ -387,6 +402,7 @@ class SamplerStateSnapshot:
         """Attach a receipt only when its counts, RNG owner, and lifecycle agree."""
 
         self._require_spec(spec)
+        self._validate_lifecycle(spec)
         if not isinstance(receipt, ExecutionReceipt):
             raise ScheduleContractError("receipt must be an ExecutionReceipt")
         projection = receipt.projection()
@@ -432,6 +448,7 @@ class SamplerStateSnapshot:
 
     def projection(self, spec: SamplerExecutionSpec) -> dict[str, object]:
         self._require_spec(spec)
+        self._validate_lifecycle(spec)
         return {
             "effective_model_evaluations": self.effective_model_evaluations,
             "effective_transitions": self.effective_transitions,
@@ -578,6 +595,7 @@ def deserialize_sampler_state_snapshot(
         execution_receipt_fingerprint=cast(str | None, raw["execution_receipt_fingerprint"]),
     )
     snapshot._require_spec(spec)
+    snapshot._validate_lifecycle(spec)
     if snapshot.effective_transitions != raw["effective_transitions"]:
         raise ScheduleContractError("effective transition count is inconsistent")
     if snapshot.effective_model_evaluations != raw["effective_model_evaluations"]:

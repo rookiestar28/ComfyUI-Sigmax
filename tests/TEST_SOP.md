@@ -41,7 +41,6 @@ local optional-heavy H4 lane under its frozen plan; it is separate from the defa
 On 2026-08-07 the user waived M7-09 scoring as an acceptance blocker. Its execution/provenance
 receipt may close the local item, but the waiver does not create a prompt-adherence, image-quality,
 or profile-promotion claim. Until later roadmap owners create any other heavy gates:
-Until later roadmap owners create any other heavy gates:
 
 - the OS-specific full-gate wrapper is mandatory acceptance evidence;
 - direct commands remain available for targeted diagnosis;

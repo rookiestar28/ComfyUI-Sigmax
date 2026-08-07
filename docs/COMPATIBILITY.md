@@ -1,6 +1,7 @@
 # Compatibility
 
-This page summarizes the supported user-facing boundary for ComfyUI-Sigmax 1.0.0.
+This page summarizes the supported user-facing boundary for tagged ComfyUI-Sigmax 1.0.0 and the
+current unreleased development additions described below.
 
 ## Environment
 
@@ -8,7 +9,8 @@ This page summarizes the supported user-facing boundary for ComfyUI-Sigmax 1.0.0
 | --- | --- |
 | Python | 3.10 or newer |
 | ComfyUI package requirement | 0.29.0 or newer |
-| Validated host baseline | ComfyUI 0.29.0 |
+| General validated host baseline | ComfyUI 0.29.0 |
+| MiniMax H3 validated host baseline | ComfyUI 0.30.0 with the upstream H3 nodes |
 | Operating systems covered by project gates | Windows and Linux/WSL |
 | Mandatory additional Python packages | None |
 | Host runtime dependency policy | Record the selected host's compatible package versions; current ComfyUI-recommended `comfy-aimdo` versions (including 0.4.13) are accepted without an exact-version gate |
@@ -30,6 +32,7 @@ A newer ComfyUI version may work, but is not automatically promoted to the valid
 | Lumina-Image 2.0 | Fixed unit-flow `6.0` ratio shift, original 50-step recipe | Use `Sigmax.Lumina2SigmaScheduler`; select `Official Fixed (6.0)` explicitly |
 | HunyuanImage 2.1 Base | Fixed unit-flow `5.0` ratio shift, official 50-step recipe; schedule-only | Use `Sigmax.HunyuanImage21SigmaScheduler`; select `Base (5.0)` explicitly |
 | HunyuanImage 2.1 Distilled | Fixed unit-flow `4.0` ratio shift, official 8-step publisher recipe; native host path unqualified | Use `Sigmax.HunyuanImage21SigmaScheduler`; select `Distilled (4.0)` explicitly |
+| MiniMax H3 Base FL2VA/Ref2VA | Diffusers endpoint-inclusive external video sigmas with shift `12.0`; model-owned audio mapping with shift `3.0`; post-v1.0.0 qualification slice | Use `Sigmax.MiniMaxH3SigmaScheduler` with ComfyUI's upstream `MiniMaxH3SigmaShift`; select FL2VA or Ref2VA explicitly |
 | Anima Base / Aesthetic | Fixed unit-flow rational `3.0` shift, 30-50 step framework-reference recipe; schedule-only | Use `Sigmax.AnimaSigmaScheduler`; select `Base` or `Aesthetic` explicitly |
 | Anima Turbo | Fixed unit-flow rational `3.0` shift, 8-12 step framework-reference recipe; schedule-only | Use `Sigmax.AnimaSigmaScheduler`; select `Turbo` explicitly |
 | Wan 2.1 T2V | Source-qualified unit-flow direct-ratio shift (`5.0` official, `8.0` ComfyUI-native, `3.0` Diffusers reference), 50-step recipes | Use `Sigmax.WanSigmaScheduler`; select generation, task, source, and `None` resolution explicitly |
@@ -47,8 +50,11 @@ The generic advanced FlowMatch node constructs explicit schedule math only. It i
 and does not establish compatibility with an arbitrary model.
 
 MiniMax H3 Base FL2VA/Ref2VA is an accepted post-v1.0.0 development profile on `dev`, not part
-of the tagged 1.0.0 boundary; public `steps` counts transitions and produces `steps + 1`
-endpoint-inclusive video sigmas, with audio remapping remaining model-owned.
+of the tagged 1.0.0 boundary. Public `steps` counts transitions and produces `steps + 1`
+endpoint-inclusive video sigmas. The Sigmax scheduler owns that externally shifted video lane;
+ComfyUI's upstream `MiniMaxH3SigmaShift` supplies the matching video/audio shifts to the model so
+audio remapping remains model-owned. These are complementary responsibilities, not two schedule
+transforms.
 
 ## Usage boundary
 
@@ -72,6 +78,10 @@ endpoint-inclusive video sigmas, with audio remapping remaining model-owned.
   at the pinned baseline; Distilled is schedule-only and must not be presented as native host parity.
 - HunyuanImage 2.1 model weights remain under Tencent's community license and are not distributed by
   Sigmax; this package does not include model code, weights, encoders, or conditioning.
+- MiniMax H3 workflows must keep the Sigmax external video schedule and upstream
+  `MiniMaxH3SigmaShift` values aligned at `12.0`/`3.0`. Do not add `BasicScheduler`, apply another
+  shift, or change only the model-side controls. The current Sigmax profile does not expose
+  arbitrary H3 shift overrides.
 - Anima applies one fixed rational `3.0` shift and rejects already-shifted composition. The node
   does not load Anima weights, run conditioning, or establish image-quality or prompt-adherence claims;
   Anima weight files remain under CircleStone Labs and applicable derivative licenses.
@@ -88,9 +98,12 @@ endpoint-inclusive video sigmas, with audio remapping remaining model-owned.
 
 ## Not currently claimed
 
-- Real-model GPU execution or image-quality parity.
+- General real-model GPU compatibility or image-quality parity. One bounded local Krea 2 H4
+  execution/provenance lane completed, but blind scoring and threshold review were explicitly
+  waived, so it does not support a quality or profile-promotion claim.
 - Stochastic, resumable, or interrupted sampler state.
-- Partial-denoise execution and advanced model-patch workflows.
+- General partial-denoise execution or advanced model-patch compatibility beyond the explicitly
+  documented MiniMax H3 host workflow.
 - Automatic compatibility with unlisted model families.
 - Guaranteed compatibility with every future ComfyUI release.
 - AuraFlow v0.1/v0.3, PonyFlow, Wan derivatives (FLF2V/VACE/Fun-Control and similar), community

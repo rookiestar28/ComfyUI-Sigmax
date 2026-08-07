@@ -251,7 +251,7 @@ def test_registry_metadata_is_a_separate_nonpublishing_section() -> None:
         "display_name": "ComfyUI-Sigmax",
         "findings": [],
         "package_version": "1.0.0",
-        "publisher_id": "rookiestar28",
+        "publisher_id": "rookiestar",
         "publish_performed": False,
         "python_requirement": ">=3.10",
         "status": "PASS",

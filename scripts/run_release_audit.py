@@ -287,7 +287,7 @@ def audit_registry(pyproject: dict[str, Any]) -> dict[str, object]:
         python = project["requires-python"]
     except (KeyError, TypeError) as exc:
         raise ReleaseAuditError("Registry metadata is incomplete") from exc
-    if publisher != "rookiestar28" or display != "ComfyUI-Sigmax":
+    if publisher != "rookiestar" or display != "ComfyUI-Sigmax":
         findings.add("registry.identity_invalid")
     if not isinstance(version, str) or not _VERSION.fullmatch(version):
         findings.add("registry.version_invalid")

@@ -66,7 +66,7 @@ class PackageContractTests(unittest.TestCase):
         )
 
         comfy = metadata["tool"]["comfy"]
-        self.assertEqual("rookiestar28", comfy["PublisherId"])
+        self.assertEqual("rookiestar", comfy["PublisherId"])
         self.assertEqual("ComfyUI-Sigmax", comfy["DisplayName"])
         self.assertEqual(">=0.29.0", comfy["requires-comfyui"])
 

@@ -67,7 +67,7 @@ comfyui_sigmax = ["py.typed"]
 "comfyui_sigmax.workflows" = ["*.json"]
 
 [tool.comfy]
-PublisherId = "rookiestar28"
+PublisherId = "rookiestar"
 DisplayName = "ComfyUI-Sigmax"
 requires-comfyui = ">=0.29.0"
 

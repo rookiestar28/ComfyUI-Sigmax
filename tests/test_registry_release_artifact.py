@@ -28,7 +28,7 @@ def test_source_manifest_binds_frozen_registry_package_node_and_workflow_identit
     assert manifest["registry"] == {
         "display_name": "ComfyUI-Sigmax",
         "node_id": "comfyui-sigmax",
-        "publisher_id": "rookiestar28",
+        "publisher_id": "rookiestar",
         "publication_performed": False,
         "repository": "https://github.com/rookiestar28/ComfyUI-Sigmax",
     }
@@ -165,7 +165,7 @@ def test_registry_observation_is_read_only_and_does_not_infer_ownership() -> Non
 
     result = registry.observe_registry_identity(
         node_id="comfyui-sigmax",
-        publisher_id="rookiestar28",
+        publisher_id="rookiestar",
         fetch=fetch,
     )
 

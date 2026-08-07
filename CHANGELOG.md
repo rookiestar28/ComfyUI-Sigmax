@@ -9,6 +9,30 @@ tracked independently from the frozen profile-schema version.
 
 ### Added
 
+- A MiniMax H3 Base qualification slice with `Sigmax.MiniMaxH3SigmaScheduler`, explicit FL2VA and
+  Ref2VA selection, endpoint-inclusive Diffusers video sigmas, model-free host workflow/schema
+  preflight, and pinned Diffusers/native ComfyUI parity. The Sigmax node owns the external video
+  schedule while the generated workflow configures ComfyUI's upstream `MiniMaxH3SigmaShift` with
+  matching video/audio values `12.0`/`3.0`; audio remapping and derivative correction remain
+  model-owned.
+- Source-qualified Anima Base, Aesthetic, and Turbo schedules with
+  `Sigmax.AnimaSigmaScheduler`. Variants are explicit, use the fixed framework-reference shift
+  `3.0`, and remain schedule-only without weight loading or image-quality claims.
+- Source-qualified Wan 2.1 and 2.2 schedule matrices with `Sigmax.WanSigmaScheduler`, covering
+  explicit T2V/I2V/TI2V generation, source, and resolution lanes. Wan 2.2 A14B boundaries remain
+  caller-owned metadata; Sigmax does not route experts or implement a video sampler.
+- Source-qualified LTXV 0.9.8, LTX-2 19B, and LTX-2.3 22B schedules with
+  `Sigmax.LTXSigmaScheduler`, separating adaptive Dev token shifts from immutable distilled Stage
+  1/2 vectors.
+- Original Qwen Image schedule modes with `Sigmax.QwenImageSigmaScheduler`: pinned ComfyUI fixed
+  shift `1.15` and Diffusers dynamic shift with required `image_seq_len`. Later Qwen variants are
+  outside this support claim.
+- HunyuanImage 2.1 Base and Distilled schedules with `Sigmax.HunyuanImage21SigmaScheduler`,
+  explicit fixed shifts `5.0`/`4.0`, separate recipes, and fail-closed variant selection. The
+  Distilled lane remains publisher-schedule-only without native-host qualification.
+- A Lumina-Image 2.0 schedule slice with `Sigmax.Lumina2SigmaScheduler`, preserving the
+  source-qualified fixed unit-flow ratio `6.0`, original 50-step recipe, independent goldens, and
+  model-free host validation.
 - An original AuraFlow v0.2 schedule slice with `Sigmax.AuraFlowSigmaScheduler`. It exposes the
   source-qualified fixed unit-flow ratio `1.73`, an explicit 50-step recipe, independent golden
   and parity vectors, canonical workflow metadata, and pinned-host model-free validation. Other
@@ -64,6 +88,9 @@ tracked independently from the frozen profile-schema version.
   path, while the pure core retains its fail-closed double-shift guard. Workflows saved from an
   earlier development build may need the H3 scheduler node refreshed or recreated; numerical
   schedule behavior is unchanged.
+- A bounded local Krea 2 H4 lane completed model execution and artifact-provenance verification.
+  Blind scoring and threshold review were explicitly waived, so this creates no prompt-adherence,
+  image-quality, or profile-promotion claim.
 - Removed pytest contracts for pure prose documents. README, changelog, compatibility, contributor,
   and test-governance wording can evolve without line-count, heading, link-layout, or narrative
   string assertions; executable APIs, schemas, CI workflows, packaging, security, and release
@@ -86,6 +113,8 @@ tracked independently from the frozen profile-schema version.
 
 - Stabilized Windows and Linux/WSL foundation gates around Comfy Registry artifacts, subprocess
   environment inheritance, local tool isolation, and current post-release contract inventories.
+- Bounded the mounted-workspace WSL startup probe so host filesystem latency is measured without
+  turning transient machine load into a schedule or profile behavior change.
 
 ## [1.0.0] - 2026-08-01
 

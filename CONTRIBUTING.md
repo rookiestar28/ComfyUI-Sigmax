@@ -43,8 +43,9 @@ Python or `pre-commit`; follow the reported local command and rerun.
 - Cite authoritative sources and numerical tolerances for parity claims.
 - Label non-authoritative behavior as framework-reference, community, or experimental.
 - Keep the Krea 2 conditioning rebalance isolated to its `CONDITIONING` adapter; do not turn
-  diagnostics into default runtime telemetry or imply prompt-adherence improvement without the
-  separately deferred image-evaluation protocol.
+  diagnostics into default runtime telemetry or imply prompt-adherence improvement. The bounded
+  H4 execution/provenance lane closed without blind scoring and does not establish a quality
+  claim.
 - Keep changes focused and preserve source attribution.
 
 ## Change workflow
@@ -88,9 +89,14 @@ Linux or WSL:
 bash scripts/run_full_tests_linux.sh
 ```
 
-Run the complete gate before requesting review. A hook that modifies files is not a pass;
-review the change and rerun until the repository is clean. The detailed workflow is documented
-in the [test SOP](tests/TEST_SOP.md).
+For non-documentation changes, run the complete applicable gate before requesting review. A hook
+that modifies files is not a pass; review the change and rerun until the repository is clean. The
+detailed workflow is documented in the [test SOP](tests/TEST_SOP.md).
+
+Strictly documentation-only prose changes use the test-SOP exception: review Markdown structure,
+commands, paths, links, and changed claims directly, but do not run the full gate or host E2E.
+Changes to executable examples, generated manifests, workflows, CI behavior, package metadata, or
+security/release contracts are not pure-prose changes and still require their applicable gates.
 
 ## Release-facing validation
 

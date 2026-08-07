@@ -251,6 +251,30 @@ class CiContractTests(unittest.TestCase):
             with self.subTest(forbidden=forbidden):
                 self.assertNotIn(forbidden, lowered)
 
+    def test_registry_publish_workflow_is_guarded_and_commit_pinned(self) -> None:
+        workflow = (REPOSITORY_ROOT / ".github/workflows/publish.yml").read_text(encoding="utf-8")
+        self.assertIn("workflow_dispatch:", workflow)
+        self.assertIn("branches:\n      - main", workflow)
+        self.assertIn('paths:\n      - "pyproject.toml"', workflow)
+        self.assertIn("permissions:\n  contents: read", workflow)
+        self.assertIn("github.repository == 'rookiestar28/ComfyUI-Sigmax'", workflow)
+        self.assertIn("github.event.repository.fork == false", workflow)
+        self.assertIn(
+            "actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd",  # pragma: allowlist secret
+            workflow,
+        )
+        self.assertIn(
+            "Comfy-Org/publish-node-action@d2366e7abb6ab16f3bb03e3520ae25c8cf749bc9",  # pragma: allowlist secret
+            workflow,
+        )
+        self.assertIn("persist-credentials: false", workflow)
+        self.assertIn("personal_access_token: ${{ secrets.REGISTRY_ACCESS_TOKEN }}", workflow)
+        self.assertIn("skip_checkout: true", workflow)
+        self.assertIn("group: comfy-registry-publish", workflow)
+        self.assertIn("cancel-in-progress: false", workflow)
+        self.assertNotIn("permissions: write-all", workflow.lower())
+        self.assertNotIn("publish-node-action@main", workflow)
+
     def test_framework_parity_jobs_install_the_pinned_cpu_torch_wheel(self) -> None:
         workflow = (REPOSITORY_ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
         turbo = workflow.split("  parity-pinned:", maxsplit=1)[1].split(

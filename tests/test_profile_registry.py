@@ -34,14 +34,18 @@ from comfyui_sigmax.profiles import (
     SD3_COMFY_DIFFUSERS_SCHEMA,
     SD3_PUBLISHER_REFERENCE_SCHEMA,
     WAN21_COMFY_NATIVE_SCHEMA,
+    WAN21_FLF2V_14B_720P_OFFICIAL_SCHEMA,
     WAN21_I2V_480P_DIFFUSERS_SCHEMA,
     WAN21_I2V_480P_OFFICIAL_SCHEMA,
     WAN21_I2V_720P_DIFFUSERS_SCHEMA,
     WAN21_I2V_720P_OFFICIAL_SCHEMA,
     WAN21_T2V_DIFFUSERS_SCHEMA,
     WAN21_T2V_OFFICIAL_SCHEMA,
+    WAN21_VACE_1_3B_OFFICIAL_SCHEMA,
+    WAN21_VACE_14B_OFFICIAL_SCHEMA,
     WAN22_I2V_A14B_DIFFUSERS_SCHEMA,
     WAN22_I2V_A14B_NATIVE_SCHEMA,
+    WAN22_S2V_14B_OFFICIAL_SCHEMA,
     WAN22_T2V_A14B_DIFFUSERS_SCHEMA,
     WAN22_T2V_A14B_NATIVE_SCHEMA,
     WAN22_TI2V_5B_DIFFUSERS_SCHEMA,
@@ -175,6 +179,7 @@ def test_builtin_registry_is_deterministic_exact_and_immutable() -> None:
         ProfileKey.from_schema(QWEN_IMAGE_DIFFUSERS_DYNAMIC_SCHEMA),
         ProfileKey.from_schema(SD3_COMFY_DIFFUSERS_SCHEMA),
         ProfileKey.from_schema(SD3_PUBLISHER_REFERENCE_SCHEMA),
+        ProfileKey.from_schema(WAN21_FLF2V_14B_720P_OFFICIAL_SCHEMA),
         ProfileKey.from_schema(WAN21_I2V_480P_DIFFUSERS_SCHEMA),
         ProfileKey.from_schema(WAN21_I2V_480P_OFFICIAL_SCHEMA),
         ProfileKey.from_schema(WAN21_I2V_720P_DIFFUSERS_SCHEMA),
@@ -182,8 +187,11 @@ def test_builtin_registry_is_deterministic_exact_and_immutable() -> None:
         ProfileKey.from_schema(WAN21_COMFY_NATIVE_SCHEMA),
         ProfileKey.from_schema(WAN21_T2V_DIFFUSERS_SCHEMA),
         ProfileKey.from_schema(WAN21_T2V_OFFICIAL_SCHEMA),
+        ProfileKey.from_schema(WAN21_VACE_1_3B_OFFICIAL_SCHEMA),
+        ProfileKey.from_schema(WAN21_VACE_14B_OFFICIAL_SCHEMA),
         ProfileKey.from_schema(WAN22_I2V_A14B_DIFFUSERS_SCHEMA),
         ProfileKey.from_schema(WAN22_I2V_A14B_NATIVE_SCHEMA),
+        ProfileKey.from_schema(WAN22_S2V_14B_OFFICIAL_SCHEMA),
         ProfileKey.from_schema(WAN22_T2V_A14B_DIFFUSERS_SCHEMA),
         ProfileKey.from_schema(WAN22_T2V_A14B_NATIVE_SCHEMA),
         ProfileKey.from_schema(WAN22_TI2V_5B_NATIVE_SCHEMA),
@@ -220,8 +228,8 @@ def test_external_registration_returns_a_new_canonical_snapshot() -> None:
     entry = updated.resolve(ProfileKey.from_schema(schema))
 
     assert updated is not registry
-    assert len(registry.entries) == 39
-    assert len(updated.entries) == 40
+    assert len(registry.entries) == 43
+    assert len(updated.entries) == 44
     assert entry.origin is ProfileOrigin.EXTERNAL
     assert entry.schema is schema
     assert entry.inheritance == _turbo_inheritance()

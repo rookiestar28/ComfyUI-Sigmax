@@ -89,6 +89,18 @@ WAN22_I2V_MODEL_REVISION: Final = (
 WAN22_TI2V_MODEL_REVISION: Final = (
     "b8fff7315c768468a5333511427288870b2e9635"  # pragma: allowlist secret
 )
+WAN21_FLF2V_MODEL_REVISION: Final = (
+    "c8db168d95d3ebeb63430b3b6d264885cb8a0df3"  # pragma: allowlist secret
+)
+WAN21_VACE_1_3B_MODEL_REVISION: Final = (
+    "574e6a744642ce3bee319afc31496b88bde8aac4"  # pragma: allowlist secret
+)
+WAN21_VACE_14B_MODEL_REVISION: Final = (
+    "539c162b1387eac9dc4c20bd3f74671309e76a4c"  # pragma: allowlist secret
+)
+WAN22_S2V_MODEL_REVISION: Final = (
+    "dab4e9c55bbe4c8c4d03db1c2c98c7f0ac9c454b"  # pragma: allowlist secret
+)
 
 _WAN21_T2V_SHA256: Final = (
     "38071ab59bd94681c686fa51d75a1968f64e470262043be31f7a094e442fd981"  # pragma: allowlist secret
@@ -107,6 +119,18 @@ _WAN22_I2V_SHA256: Final = (
 )
 _WAN22_TI2V_SHA256: Final = (
     "511bec832a201caa410d09c5ce7dbbf8ad2708c345d82038f684fc74cce982be"  # pragma: allowlist secret
+)
+_WAN21_FLF2V_SHA256: Final = (
+    "c8644162efd3f6f7407daeff84f2e54f285cd3b2553e4c7282c0c7299c896df6"  # pragma: allowlist secret
+)
+_WAN21_VACE_1_3B_SHA256: Final = (
+    "c46a6f5f7d32c453c3983bbc59761ea41cd02ad584fb55d1a7ee2b76145847a2"  # pragma: allowlist secret
+)
+_WAN21_VACE_14B_SHA256: Final = (
+    "569d54a07279b89f8281421fccf27ee2459ea853ce6845d3536b8664b0070078"  # pragma: allowlist secret
+)
+_WAN22_S2V_SHA256: Final = (
+    "5fb54febf10b729a6da7da222625d6ecaedde78becda01efbc13f6bebaeb6d43"  # pragma: allowlist secret
 )
 
 _COMMIT_PATTERN: Final = re.compile(r"^[0-9a-f]{40}$")
@@ -128,6 +152,9 @@ class WanTask(str, Enum):
     T2V = "t2v"
     I2V = "i2v"
     TI2V = "ti2v"
+    FLF2V = "flf2v"
+    VACE = "vace"
+    S2V = "s2v"
 
 
 class WanSource(str, Enum):
@@ -162,6 +189,20 @@ class WanProfileId(str, Enum):
     WAN22_TI2V_5B_DIFFUSERS = "wan2.2.ti2v.5b.diffusers-reference"
     WAN22_T2V_A14B_DIFFUSERS = "wan2.2.t2v-a14b.diffusers-reference"
     WAN22_I2V_A14B_DIFFUSERS = "wan2.2.i2v-a14b.diffusers-reference"
+    WAN21_FLF2V_14B_720P_OFFICIAL = "wan2.1.flf2v.14b.720p.official-native"
+    WAN21_VACE_1_3B_OFFICIAL = "wan2.1.vace.1.3b.official-native"
+    WAN21_VACE_14B_OFFICIAL = "wan2.1.vace.14b.official-native"
+    WAN22_S2V_14B_OFFICIAL = "wan2.2.s2v.14b.official-native"
+
+
+_M6_10_PROFILE_IDS: Final = frozenset(
+    {
+        WanProfileId.WAN21_FLF2V_14B_720P_OFFICIAL,
+        WanProfileId.WAN21_VACE_1_3B_OFFICIAL,
+        WanProfileId.WAN21_VACE_14B_OFFICIAL,
+        WanProfileId.WAN22_S2V_14B_OFFICIAL,
+    }
+)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -269,6 +310,10 @@ _WAN21_I2V_720_HF_URL: Final = "https://huggingface.co/Wan-AI/Wan2.1-I2V-14B-720
 _WAN22_T2V_HF_URL: Final = "https://huggingface.co/Wan-AI/Wan2.2-T2V-A14B-Diffusers"
 _WAN22_I2V_HF_URL: Final = "https://huggingface.co/Wan-AI/Wan2.2-I2V-A14B-Diffusers"
 _WAN22_TI2V_HF_URL: Final = "https://huggingface.co/Wan-AI/Wan2.2-TI2V-5B-Diffusers"
+_WAN21_FLF2V_HF_URL: Final = "https://huggingface.co/Wan-AI/Wan2.1-FLF2V-14B-720P"
+_WAN21_VACE_1_3B_HF_URL: Final = "https://huggingface.co/Wan-AI/Wan2.1-VACE-1.3B"
+_WAN21_VACE_14B_HF_URL: Final = "https://huggingface.co/Wan-AI/Wan2.1-VACE-14B"
+_WAN22_S2V_HF_URL: Final = "https://huggingface.co/Wan-AI/Wan2.2-S2V-14B"
 
 _WAN21_SOURCE = SoftwareSourceProvenance(
     record_version="1",
@@ -287,6 +332,24 @@ _WAN22_SOURCE = SoftwareSourceProvenance(
     url=_WAN22_URL,
     license=_APACHE_2,
     locators=("LICENSE", "README.md", "wan/configs/wan_t2v_A14B.py"),
+)
+_WAN21_M6_10_SOURCE = SoftwareSourceProvenance(
+    record_version="1",
+    source_id="wan.video.wan2-1.task-profiles.m6-10",
+    resource_version="2.1",
+    revision=WAN21_REPOSITORY_REVISION,
+    url=_WAN21_URL,
+    license=_APACHE_2,
+    locators=("LICENSE", "generate.py"),
+)
+_WAN22_M6_10_SOURCE = SoftwareSourceProvenance(
+    record_version="1",
+    source_id="wan.video.wan2-2.task-profiles.m6-10",
+    resource_version="2.2",
+    revision=WAN22_REPOSITORY_REVISION,
+    url=_WAN22_URL,
+    license=_APACHE_2,
+    locators=("LICENSE", "generate.py", "wan/configs/wan_s2v_14B.py"),
 )
 _COMFYUI_FRAMEWORK = FrameworkProvenance(
     record_version="1",
@@ -308,6 +371,24 @@ _DIFFUSERS_FRAMEWORK = FrameworkProvenance(
         "src/diffusers/schedulers/scheduling_flow_match_euler_discrete.py",
         "src/diffusers/schedulers/scheduling_unipc_multistep.py",
     ),
+)
+_WAN21_NATIVE_FRAMEWORK = FrameworkProvenance(
+    record_version="1",
+    framework_id="wan.video.wan2-1.native-inference.m6-10",
+    resource_version="2.1",
+    revision=WAN21_REPOSITORY_REVISION,
+    url=_WAN21_URL,
+    license=_APACHE_2,
+    locators=("generate.py", "wan/utils/fm_solvers.py"),
+)
+_WAN22_NATIVE_FRAMEWORK = FrameworkProvenance(
+    record_version="1",
+    framework_id="wan.video.wan2-2.native-inference.m6-10",
+    resource_version="2.2",
+    revision=WAN22_REPOSITORY_REVISION,
+    url=_WAN22_URL,
+    license=_APACHE_2,
+    locators=("generate.py", "wan/configs/wan_s2v_14B.py", "wan/utils/fm_solvers.py"),
 )
 
 
@@ -371,6 +452,34 @@ _WAN22_TI2V_WEIGHT = _weight(
     revision=WAN22_TI2V_MODEL_REVISION,
     sha256=_WAN22_TI2V_SHA256,
     url=_WAN22_TI2V_HF_URL,
+)
+_WAN21_FLF2V_WEIGHT = _weight(
+    weight_id="wan-ai.wan2-1.flf2v-14b-720p.transformer-01",
+    resource_version="diffusion_pytorch_model-00001-of-00007.safetensors",
+    revision=WAN21_FLF2V_MODEL_REVISION,
+    sha256=_WAN21_FLF2V_SHA256,
+    url=_WAN21_FLF2V_HF_URL,
+)
+_WAN21_VACE_1_3B_WEIGHT = _weight(
+    weight_id="wan-ai.wan2-1.vace-1-3b.transformer",
+    resource_version="diffusion_pytorch_model.safetensors",
+    revision=WAN21_VACE_1_3B_MODEL_REVISION,
+    sha256=_WAN21_VACE_1_3B_SHA256,
+    url=_WAN21_VACE_1_3B_HF_URL,
+)
+_WAN21_VACE_14B_WEIGHT = _weight(
+    weight_id="wan-ai.wan2-1.vace-14b.transformer-01",
+    resource_version="diffusion_pytorch_model-00001-of-00007.safetensors",
+    revision=WAN21_VACE_14B_MODEL_REVISION,
+    sha256=_WAN21_VACE_14B_SHA256,
+    url=_WAN21_VACE_14B_HF_URL,
+)
+_WAN22_S2V_WEIGHT = _weight(
+    weight_id="wan-ai.wan2-2.s2v-14b.transformer-01",
+    resource_version="diffusion_pytorch_model-00001-of-00004.safetensors",
+    revision=WAN22_S2V_MODEL_REVISION,
+    sha256=_WAN22_S2V_SHA256,
+    url=_WAN22_S2V_HF_URL,
 )
 
 _ARTIFACT_VERSIONS = ArtifactVersionDeclaration(
@@ -703,6 +812,70 @@ _DEFINITIONS: tuple[_WanDefinition, ...] = (
         boundary=0.9,
         weight=_WAN22_I2V_WEIGHT,
     ),
+    _definition(
+        WanProfileId.WAN21_FLF2V_14B_720P_OFFICIAL,
+        WanGeneration.WAN21,
+        WanTask.FLF2V,
+        WanSource.OFFICIAL_NATIVE,
+        WanResolution.P720,
+        16.0,
+        50,
+        "14b",
+        "Wan 2.1 FLF2V 14B 720P Official Native Shift",
+        EvidenceLevel.OFFICIAL,
+        _WAN21_M6_10_SOURCE.source_id,
+        _UNIPC_SAMPLER_ID,
+        5.0,
+        weight=_WAN21_FLF2V_WEIGHT,
+    ),
+    _definition(
+        WanProfileId.WAN21_VACE_1_3B_OFFICIAL,
+        WanGeneration.WAN21,
+        WanTask.VACE,
+        WanSource.OFFICIAL_NATIVE,
+        WanResolution.NONE,
+        16.0,
+        50,
+        "1.3b",
+        "Wan 2.1 VACE 1.3B Official Native Shift",
+        EvidenceLevel.OFFICIAL,
+        _WAN21_M6_10_SOURCE.source_id,
+        _UNIPC_SAMPLER_ID,
+        5.0,
+        weight=_WAN21_VACE_1_3B_WEIGHT,
+    ),
+    _definition(
+        WanProfileId.WAN21_VACE_14B_OFFICIAL,
+        WanGeneration.WAN21,
+        WanTask.VACE,
+        WanSource.OFFICIAL_NATIVE,
+        WanResolution.NONE,
+        16.0,
+        50,
+        "14b",
+        "Wan 2.1 VACE 14B Official Native Shift",
+        EvidenceLevel.OFFICIAL,
+        _WAN21_M6_10_SOURCE.source_id,
+        _UNIPC_SAMPLER_ID,
+        5.0,
+        weight=_WAN21_VACE_14B_WEIGHT,
+    ),
+    _definition(
+        WanProfileId.WAN22_S2V_14B_OFFICIAL,
+        WanGeneration.WAN22,
+        WanTask.S2V,
+        WanSource.OFFICIAL_NATIVE,
+        WanResolution.NONE,
+        3.0,
+        40,
+        "14b",
+        "Wan 2.2 S2V 14B Official Native Shift",
+        EvidenceLevel.OFFICIAL,
+        _WAN22_M6_10_SOURCE.source_id,
+        _UNIPC_SAMPLER_ID,
+        4.5,
+        weight=_WAN22_S2V_WEIGHT,
+    ),
 )
 
 
@@ -787,10 +960,23 @@ def _schema(definition: _WanDefinition) -> ProfileSchemaV1:
         supports_per_token_timesteps=False,
         reference_sampler_ids=(definition.sampler_id,),
     )
-    source_ids = (
-        (_WAN21_SOURCE,) if definition.generation is WanGeneration.WAN21 else (_WAN22_SOURCE,)
-    )
-    frameworks = (_COMFYUI_FRAMEWORK, _DIFFUSERS_FRAMEWORK)
+    frameworks: tuple[FrameworkProvenance, ...]
+    if definition.profile in _M6_10_PROFILE_IDS:
+        source_ids = (
+            (_WAN21_M6_10_SOURCE,)
+            if definition.generation is WanGeneration.WAN21
+            else (_WAN22_M6_10_SOURCE,)
+        )
+        frameworks = (
+            (_WAN21_NATIVE_FRAMEWORK,)
+            if definition.generation is WanGeneration.WAN21
+            else (_WAN22_NATIVE_FRAMEWORK,)
+        )
+    else:
+        source_ids = (
+            (_WAN21_SOURCE,) if definition.generation is WanGeneration.WAN21 else (_WAN22_SOURCE,)
+        )
+        frameworks = (_COMFYUI_FRAMEWORK, _DIFFUSERS_FRAMEWORK)
     parameters: list[ProfileField] = [
         ProfileField(name="generation", value=definition.generation.value),
         ProfileField(name="resolution_class", value=definition.resolution.value),
@@ -806,6 +992,8 @@ def _schema(definition: _WanDefinition) -> ProfileSchemaV1:
         parameters.append(ProfileField(name="cfg_high", value=definition.cfg_high))
     if definition.cfg_low is not None:
         parameters.append(ProfileField(name="cfg_low", value=definition.cfg_low))
+    if definition.profile in _M6_10_PROFILE_IDS:
+        parameters.append(ProfileField(name="solver_options", value="dpm++,unipc"))
     parameters = sorted(parameters, key=lambda field: field.name)
     limitations = [
         "Only the exact released Wan generation/task/source matrix is qualified; derivative wrappers and weak-name aliases fail closed.",
@@ -824,9 +1012,14 @@ def _schema(definition: _WanDefinition) -> ProfileSchemaV1:
         limitations.append(
             "The resolution class is required because the official Wan I2V shift is resolution-sensitive."
         )
-    limitations.append(
-        "Shift-16 FLF2V/VACE and all other derivatives remain a named Phase 1 defer condition pending independent evidence."
-    )
+    if definition.profile in _M6_10_PROFILE_IDS:
+        limitations.append(
+            "The official CLI defaults to UniPC and also permits DPM++; this profile constructs sigmas but implements neither solver."
+        )
+    else:
+        limitations.append(
+            "Shift-16 FLF2V/VACE and all other derivatives remain a named Phase 1 defer condition pending independent evidence."
+        )
     guidance = GuidanceDeclaration(
         model_convention="cfg_scale",
         host_convention="cfg_scale",
@@ -906,6 +1099,12 @@ WAN22_I2V_A14B_NATIVE_SCHEMA: Final = _SCHEMAS_BY_PROFILE[WanProfileId.WAN22_I2V
 WAN22_TI2V_5B_DIFFUSERS_SCHEMA: Final = _SCHEMAS_BY_PROFILE[WanProfileId.WAN22_TI2V_5B_DIFFUSERS]
 WAN22_T2V_A14B_DIFFUSERS_SCHEMA: Final = _SCHEMAS_BY_PROFILE[WanProfileId.WAN22_T2V_A14B_DIFFUSERS]
 WAN22_I2V_A14B_DIFFUSERS_SCHEMA: Final = _SCHEMAS_BY_PROFILE[WanProfileId.WAN22_I2V_A14B_DIFFUSERS]
+WAN21_FLF2V_14B_720P_OFFICIAL_SCHEMA: Final = _SCHEMAS_BY_PROFILE[
+    WanProfileId.WAN21_FLF2V_14B_720P_OFFICIAL
+]
+WAN21_VACE_1_3B_OFFICIAL_SCHEMA: Final = _SCHEMAS_BY_PROFILE[WanProfileId.WAN21_VACE_1_3B_OFFICIAL]
+WAN21_VACE_14B_OFFICIAL_SCHEMA: Final = _SCHEMAS_BY_PROFILE[WanProfileId.WAN21_VACE_14B_OFFICIAL]
+WAN22_S2V_14B_OFFICIAL_SCHEMA: Final = _SCHEMAS_BY_PROFILE[WanProfileId.WAN22_S2V_14B_OFFICIAL]
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -950,6 +1149,12 @@ WAN22_I2V_A14B_NATIVE_PROFILE: Final = _PROFILES_BY_ID[WanProfileId.WAN22_I2V_A1
 WAN22_TI2V_5B_DIFFUSERS_PROFILE: Final = _PROFILES_BY_ID[WanProfileId.WAN22_TI2V_5B_DIFFUSERS]
 WAN22_T2V_A14B_DIFFUSERS_PROFILE: Final = _PROFILES_BY_ID[WanProfileId.WAN22_T2V_A14B_DIFFUSERS]
 WAN22_I2V_A14B_DIFFUSERS_PROFILE: Final = _PROFILES_BY_ID[WanProfileId.WAN22_I2V_A14B_DIFFUSERS]
+WAN21_FLF2V_14B_720P_OFFICIAL_PROFILE: Final = _PROFILES_BY_ID[
+    WanProfileId.WAN21_FLF2V_14B_720P_OFFICIAL
+]
+WAN21_VACE_1_3B_OFFICIAL_PROFILE: Final = _PROFILES_BY_ID[WanProfileId.WAN21_VACE_1_3B_OFFICIAL]
+WAN21_VACE_14B_OFFICIAL_PROFILE: Final = _PROFILES_BY_ID[WanProfileId.WAN21_VACE_14B_OFFICIAL]
+WAN22_S2V_14B_OFFICIAL_PROFILE: Final = _PROFILES_BY_ID[WanProfileId.WAN22_S2V_14B_OFFICIAL]
 
 
 def _coerce_profile(value: object) -> WanProfileId:
@@ -1117,6 +1322,9 @@ def build_wan_schedule(
 __all__ = [
     "WAN21_COMFY_NATIVE_PROFILE",
     "WAN21_COMFY_NATIVE_SCHEMA",
+    "WAN21_FLF2V_14B_720P_OFFICIAL_PROFILE",
+    "WAN21_FLF2V_14B_720P_OFFICIAL_SCHEMA",
+    "WAN21_FLF2V_MODEL_REVISION",
     "WAN21_I2V_480P_DIFFUSERS_PROFILE",
     "WAN21_I2V_480P_DIFFUSERS_SCHEMA",
     "WAN21_I2V_480P_OFFICIAL_PROFILE",
@@ -1130,11 +1338,20 @@ __all__ = [
     "WAN21_T2V_DIFFUSERS_SCHEMA",
     "WAN21_T2V_OFFICIAL_PROFILE",
     "WAN21_T2V_OFFICIAL_SCHEMA",
+    "WAN21_VACE_1_3B_MODEL_REVISION",
+    "WAN21_VACE_1_3B_OFFICIAL_PROFILE",
+    "WAN21_VACE_1_3B_OFFICIAL_SCHEMA",
+    "WAN21_VACE_14B_MODEL_REVISION",
+    "WAN21_VACE_14B_OFFICIAL_PROFILE",
+    "WAN21_VACE_14B_OFFICIAL_SCHEMA",
     "WAN22_I2V_A14B_DIFFUSERS_PROFILE",
     "WAN22_I2V_A14B_DIFFUSERS_SCHEMA",
     "WAN22_I2V_A14B_NATIVE_PROFILE",
     "WAN22_I2V_A14B_NATIVE_SCHEMA",
     "WAN22_REPOSITORY_REVISION",
+    "WAN22_S2V_14B_OFFICIAL_PROFILE",
+    "WAN22_S2V_14B_OFFICIAL_SCHEMA",
+    "WAN22_S2V_MODEL_REVISION",
     "WAN22_T2V_A14B_DIFFUSERS_PROFILE",
     "WAN22_T2V_A14B_DIFFUSERS_SCHEMA",
     "WAN22_T2V_A14B_NATIVE_PROFILE",

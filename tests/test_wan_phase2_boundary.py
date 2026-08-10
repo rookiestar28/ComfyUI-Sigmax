@@ -121,6 +121,7 @@ def test_wan_schedule_vectors_remain_finite_and_strictly_descending() -> None:
                 WanResolution.P720
                 if profile
                 in {
+                    WanProfileId.WAN21_FLF2V_14B_720P_OFFICIAL,
                     WanProfileId.WAN21_I2V_720P_OFFICIAL,
                     WanProfileId.WAN21_I2V_720P_DIFFUSERS,
                 }

@@ -32,7 +32,14 @@ def test_wan_axes_are_explicit_and_not_derivative_aliases() -> None:
     resolution = _api("WanResolution")
     assert issubclass(generation, Enum)
     assert tuple(item.value for item in generation) == ("wan2.1", "wan2.2")
-    assert tuple(item.value for item in task) == ("t2v", "i2v", "ti2v")
+    assert tuple(item.value for item in task) == (
+        "t2v",
+        "i2v",
+        "ti2v",
+        "flf2v",
+        "vace",
+        "s2v",
+    )
     assert tuple(item.value for item in source) == (
         "comfy_native",
         "official_native",

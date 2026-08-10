@@ -296,6 +296,22 @@ class QualityConfigurationTests(unittest.TestCase):
                         "line_number": 1,
                     },
                 ],
+                "tests/golden/wan_m6_10_v1.json": [
+                    {
+                        "type": "Hex High Entropy String",
+                        "filename": "tests/golden/wan_m6_10_v1.json",
+                        "hashed_secret": wan21_repository_hash,
+                        "is_verified": False,
+                        "line_number": 1,
+                    },
+                    {
+                        "type": "Hex High Entropy String",
+                        "filename": "tests/golden/wan_m6_10_v1.json",
+                        "hashed_secret": wan22_repository_hash,
+                        "is_verified": False,
+                        "line_number": 1,
+                    },
+                ],
                 "tests/parity/test_anima_phase0_parity.py": [
                     {
                         "type": "Hex High Entropy String",

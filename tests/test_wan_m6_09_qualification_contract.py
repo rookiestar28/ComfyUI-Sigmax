@@ -326,17 +326,28 @@ def test_every_planned_wan_profile_has_explicit_identity_and_ownership(
     assert profile.runtime_registered is False
 
 
-def test_planned_profiles_are_not_registered_or_exposed_by_the_public_wan_runtime() -> None:
+def test_successor_items_register_only_their_owned_planned_profiles() -> None:
     module = _module()
     from comfyui_sigmax.profiles.registry import builtin_profile_registry
     from comfyui_sigmax.profiles.wan import WanProfileId
 
-    planned = {profile.profile_id for profile in module.WAN_PLANNED_PROFILES}
+    planned_m6_10 = {
+        profile.profile_id
+        for profile in module.WAN_PLANNED_PROFILES
+        if profile.implementation_item == "M6-10"
+    }
+    planned_m6_11 = {
+        profile.profile_id
+        for profile in module.WAN_PLANNED_PROFILES
+        if profile.implementation_item == "M6-11"
+    }
     runtime_enum = {profile.value for profile in WanProfileId}
     runtime_registry = {entry.schema.profile_id for entry in builtin_profile_registry().entries}
-    assert len(planned) == len(_EXPECTED_PROFILES)
-    assert planned.isdisjoint(runtime_enum)
-    assert planned.isdisjoint(runtime_registry)
+    assert len(planned_m6_10 | planned_m6_11) == len(_EXPECTED_PROFILES)
+    assert planned_m6_10 <= runtime_enum
+    assert planned_m6_10 <= runtime_registry
+    assert planned_m6_11.isdisjoint(runtime_enum)
+    assert planned_m6_11.isdisjoint(runtime_registry)
 
 
 def test_current_comfyui_inheritance_and_nested_workflow_observations_are_distinct() -> None:

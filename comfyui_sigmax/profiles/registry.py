@@ -317,6 +317,7 @@ def builtin_profile_registry() -> ProfileRegistry:
         WAN21_T2V_OFFICIAL_SCHEMA,
         WAN21_VACE_1_3B_OFFICIAL_SCHEMA,
         WAN21_VACE_14B_OFFICIAL_SCHEMA,
+        WAN22_ANIMATE_14B_OFFICIAL_SCHEMA,
         WAN22_I2V_A14B_DIFFUSERS_SCHEMA,
         WAN22_I2V_A14B_NATIVE_SCHEMA,
         WAN22_S2V_14B_OFFICIAL_SCHEMA,
@@ -324,6 +325,8 @@ def builtin_profile_registry() -> ProfileRegistry:
         WAN22_T2V_A14B_NATIVE_SCHEMA,
         WAN22_TI2V_5B_DIFFUSERS_SCHEMA,
         WAN22_TI2V_5B_NATIVE_SCHEMA,
+        WAN_ANIMATE2_BASE_14B_OFFICIAL_SCHEMA,
+        WAN_ANIMATE2_DISTILLED_14B_OFFICIAL_SCHEMA,
     )
     from comfyui_sigmax.profiles.z_image import Z_IMAGE_BASE_SCHEMA, Z_IMAGE_TURBO_SCHEMA
 
@@ -371,10 +374,13 @@ def builtin_profile_registry() -> ProfileRegistry:
                     _builtin_entry(WAN22_I2V_A14B_DIFFUSERS_SCHEMA),
                     _builtin_entry(WAN22_I2V_A14B_NATIVE_SCHEMA),
                     _builtin_entry(WAN22_S2V_14B_OFFICIAL_SCHEMA),
+                    _builtin_entry(WAN22_ANIMATE_14B_OFFICIAL_SCHEMA),
                     _builtin_entry(WAN22_T2V_A14B_DIFFUSERS_SCHEMA),
                     _builtin_entry(WAN22_T2V_A14B_NATIVE_SCHEMA),
                     _builtin_entry(WAN22_TI2V_5B_DIFFUSERS_SCHEMA),
                     _builtin_entry(WAN22_TI2V_5B_NATIVE_SCHEMA),
+                    _builtin_entry(WAN_ANIMATE2_BASE_14B_OFFICIAL_SCHEMA),
+                    _builtin_entry(WAN_ANIMATE2_DISTILLED_14B_OFFICIAL_SCHEMA),
                 ),
                 key=lambda entry: entry.key.canonical,
             )

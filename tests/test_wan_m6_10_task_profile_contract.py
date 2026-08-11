@@ -140,7 +140,7 @@ def test_four_exact_m6_10_profile_identities_exist() -> None:
     assert module.WanTask.FLF2V.value == "flf2v"
     assert module.WanTask.VACE.value == "vace"
     assert module.WanTask.S2V.value == "s2v"
-    assert len(module.WanProfileId) == 17
+    assert len(module.WanProfileId) == 20
 
 
 @pytest.mark.parametrize("member_name", _NEW_PROFILE_NAMES)

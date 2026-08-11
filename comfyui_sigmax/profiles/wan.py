@@ -67,6 +67,9 @@ WAN21_REPOSITORY_REVISION: Final = (
 WAN22_REPOSITORY_REVISION: Final = (
     "42bf4cfaa384bc21833865abc2f9e6c0e67233dc"  # pragma: allowlist secret
 )
+WAN_ANIMATE2_REPOSITORY_REVISION: Final = (
+    "3ad2fef7d61d6200c9c653e0fe47be7616b323f3"  # pragma: allowlist secret
+)
 WAN_COMFYUI_REVISION: Final = "5cc026f5b81b3f01fe7a1438a0fd4131d2ebda25"  # pragma: allowlist secret
 WAN_DIFFUSERS_REVISION: Final = (
     "3c468926ffd12b69baa4316e27b09306b8da19a6"  # pragma: allowlist secret
@@ -101,6 +104,12 @@ WAN21_VACE_14B_MODEL_REVISION: Final = (
 WAN22_S2V_MODEL_REVISION: Final = (
     "dab4e9c55bbe4c8c4d03db1c2c98c7f0ac9c454b"  # pragma: allowlist secret
 )
+WAN22_ANIMATE_MODEL_REVISION: Final = (
+    "cb93a225fbaf1ca100f54e79da8f994995b689b3"  # pragma: allowlist secret
+)
+WAN_ANIMATE2_MODEL_REVISION: Final = (
+    "6e8f1973bf0abc2aafd517992e8b6d88c3c46e69"  # pragma: allowlist secret
+)
 
 _WAN21_T2V_SHA256: Final = (
     "38071ab59bd94681c686fa51d75a1968f64e470262043be31f7a094e442fd981"  # pragma: allowlist secret
@@ -132,6 +141,15 @@ _WAN21_VACE_14B_SHA256: Final = (
 _WAN22_S2V_SHA256: Final = (
     "5fb54febf10b729a6da7da222625d6ecaedde78becda01efbc13f6bebaeb6d43"  # pragma: allowlist secret
 )
+_WAN22_ANIMATE_SHA256: Final = (
+    "575c2dba750c3b40240fb742a4224453aa97dfbd3c5f5a0086be431cdefdd69c"  # pragma: allowlist secret
+)
+_WAN_ANIMATE2_BASE_SHA256: Final = (
+    "48abc389b8d9bba17a7f54a1cd7f1286fd3e3e0e292ddf756721aee324aede09"  # pragma: allowlist secret
+)
+_WAN_ANIMATE2_DISTILLED_SHA256: Final = (
+    "66161359fc58a1d6c46e14fe2d81c881ccaca440757b1905e01a91902bff29d2"  # pragma: allowlist secret
+)
 
 _COMMIT_PATTERN: Final = re.compile(r"^[0-9a-f]{40}$")
 _MAX_STEPS: Final = 10_000
@@ -144,6 +162,7 @@ class WanGeneration(str, Enum):
 
     WAN21 = "wan2.1"
     WAN22 = "wan2.2"
+    WAN_ANIMATE2 = "wan-animate2"
 
 
 class WanTask(str, Enum):
@@ -155,6 +174,7 @@ class WanTask(str, Enum):
     FLF2V = "flf2v"
     VACE = "vace"
     S2V = "s2v"
+    ANIMATE = "animate"
 
 
 class WanSource(str, Enum):
@@ -193,6 +213,9 @@ class WanProfileId(str, Enum):
     WAN21_VACE_1_3B_OFFICIAL = "wan2.1.vace.1.3b.official-native"
     WAN21_VACE_14B_OFFICIAL = "wan2.1.vace.14b.official-native"
     WAN22_S2V_14B_OFFICIAL = "wan2.2.s2v.14b.official-native"
+    WAN22_ANIMATE_14B_OFFICIAL = "wan2.2.animate.14b.official-native"
+    WAN_ANIMATE2_BASE_14B_OFFICIAL = "wan-animate2.14b.base.official-native"
+    WAN_ANIMATE2_DISTILLED_14B_OFFICIAL = "wan-animate2.14b.distilled.official-native"
 
 
 _M6_10_PROFILE_IDS: Final = frozenset(
@@ -201,6 +224,14 @@ _M6_10_PROFILE_IDS: Final = frozenset(
         WanProfileId.WAN21_VACE_1_3B_OFFICIAL,
         WanProfileId.WAN21_VACE_14B_OFFICIAL,
         WanProfileId.WAN22_S2V_14B_OFFICIAL,
+    }
+)
+
+_M6_11_PROFILE_IDS: Final = frozenset(
+    {
+        WanProfileId.WAN22_ANIMATE_14B_OFFICIAL,
+        WanProfileId.WAN_ANIMATE2_BASE_14B_OFFICIAL,
+        WanProfileId.WAN_ANIMATE2_DISTILLED_14B_OFFICIAL,
     }
 )
 
@@ -220,6 +251,7 @@ class WanEvidenceReference:
             "diffusers_framework",
             "official_wan21",
             "official_wan22",
+            "official_wan_animate2",
         }:
             raise ScheduleContractError("Wan evidence lane is unsupported")
         if not isinstance(self.url, str) or not self.url.startswith("https://"):
@@ -302,6 +334,7 @@ _GPL_3_ONLY = LicenseDeclaration(
 )
 _WAN21_URL: Final = "https://github.com/Wan-Video/Wan2.1"
 _WAN22_URL: Final = "https://github.com/Wan-Video/Wan2.2"
+_WAN_ANIMATE2_URL: Final = "https://github.com/Wan-Video/Wan-Animate-2"
 _COMFYUI_URL: Final = "https://github.com/Comfy-Org/ComfyUI"
 _DIFFUSERS_URL: Final = "https://github.com/huggingface/diffusers"
 _WAN21_HF_URL: Final = "https://huggingface.co/Wan-AI/Wan2.1-T2V-1.3B"
@@ -314,6 +347,8 @@ _WAN21_FLF2V_HF_URL: Final = "https://huggingface.co/Wan-AI/Wan2.1-FLF2V-14B-720
 _WAN21_VACE_1_3B_HF_URL: Final = "https://huggingface.co/Wan-AI/Wan2.1-VACE-1.3B"
 _WAN21_VACE_14B_HF_URL: Final = "https://huggingface.co/Wan-AI/Wan2.1-VACE-14B"
 _WAN22_S2V_HF_URL: Final = "https://huggingface.co/Wan-AI/Wan2.2-S2V-14B"
+_WAN22_ANIMATE_HF_URL: Final = "https://huggingface.co/Wan-AI/Wan2.2-Animate-14B"
+_WAN_ANIMATE2_HF_URL: Final = "https://huggingface.co/Wan-AI/Wan2.2-Animate-2-14B"
 
 _WAN21_SOURCE = SoftwareSourceProvenance(
     record_version="1",
@@ -350,6 +385,31 @@ _WAN22_M6_10_SOURCE = SoftwareSourceProvenance(
     url=_WAN22_URL,
     license=_APACHE_2,
     locators=("LICENSE", "generate.py", "wan/configs/wan_s2v_14B.py"),
+)
+_WAN22_M6_11_SOURCE = SoftwareSourceProvenance(
+    record_version="1",
+    source_id="wan.video.wan2-2.animate.task-profiles.m6-11",
+    resource_version="2.2-Animate",
+    revision=WAN22_REPOSITORY_REVISION,
+    url=_WAN22_URL,
+    license=_APACHE_2,
+    locators=("LICENSE", "generate.py", "wan/animate.py", "wan/configs/wan_animate_14B.py"),
+)
+_WAN_ANIMATE2_SOURCE = SoftwareSourceProvenance(
+    record_version="1",
+    source_id="wan.video.wan-animate-2.task-profiles.m6-11",
+    resource_version="2.0",
+    revision=WAN_ANIMATE2_REPOSITORY_REVISION,
+    url=_WAN_ANIMATE2_URL,
+    license=_APACHE_2,
+    locators=(
+        "LICENSE",
+        "README.md",
+        "infer/wan_animate_2.yaml",
+        "infer/wan_animate_2_demo.py",
+        "infer/wan_animate_2_distillation.yaml",
+        "pipelines/wan_animate_2_pipeline.py",
+    ),
 )
 _COMFYUI_FRAMEWORK = FrameworkProvenance(
     record_version="1",
@@ -389,6 +449,30 @@ _WAN22_NATIVE_FRAMEWORK = FrameworkProvenance(
     url=_WAN22_URL,
     license=_APACHE_2,
     locators=("generate.py", "wan/configs/wan_s2v_14B.py", "wan/utils/fm_solvers.py"),
+)
+_WAN22_ANIMATE_NATIVE_FRAMEWORK = FrameworkProvenance(
+    record_version="1",
+    framework_id="wan.video.wan2-2.animate.native-inference.m6-11",
+    resource_version="2.2-Animate",
+    revision=WAN22_REPOSITORY_REVISION,
+    url=_WAN22_URL,
+    license=_APACHE_2,
+    locators=("generate.py", "wan/animate.py", "wan/configs/wan_animate_14B.py"),
+)
+_WAN_ANIMATE2_NATIVE_FRAMEWORK = FrameworkProvenance(
+    record_version="1",
+    framework_id="wan.video.wan-animate-2.native-inference.m6-11",
+    resource_version="2.0",
+    revision=WAN_ANIMATE2_REPOSITORY_REVISION,
+    url=_WAN_ANIMATE2_URL,
+    license=_APACHE_2,
+    locators=(
+        "README.md",
+        "infer/wan_animate_2.yaml",
+        "infer/wan_animate_2_demo.py",
+        "infer/wan_animate_2_distillation.yaml",
+        "pipelines/wan_animate_2_pipeline.py",
+    ),
 )
 
 
@@ -481,6 +565,27 @@ _WAN22_S2V_WEIGHT = _weight(
     sha256=_WAN22_S2V_SHA256,
     url=_WAN22_S2V_HF_URL,
 )
+_WAN22_ANIMATE_WEIGHT = _weight(
+    weight_id="wan-ai.wan2-2.animate-14b.transformer-01",
+    resource_version="diffusion_pytorch_model-00001-of-00004.safetensors",
+    revision=WAN22_ANIMATE_MODEL_REVISION,
+    sha256=_WAN22_ANIMATE_SHA256,
+    url=_WAN22_ANIMATE_HF_URL,
+)
+_WAN_ANIMATE2_BASE_WEIGHT = _weight(
+    weight_id="wan-ai.wan-animate-2.14b.base",
+    resource_version="wan_animate_2/wan_animate_2_bf16.safetensors",
+    revision=WAN_ANIMATE2_MODEL_REVISION,
+    sha256=_WAN_ANIMATE2_BASE_SHA256,
+    url=_WAN_ANIMATE2_HF_URL,
+)
+_WAN_ANIMATE2_DISTILLED_WEIGHT = _weight(
+    weight_id="wan-ai.wan-animate-2.14b.distilled",
+    resource_version="wan_animate_2/wan_animate_2_bf16_distillation.safetensors",
+    revision=WAN_ANIMATE2_MODEL_REVISION,
+    sha256=_WAN_ANIMATE2_DISTILLED_SHA256,
+    url=_WAN_ANIMATE2_HF_URL,
+)
 
 _ARTIFACT_VERSIONS = ArtifactVersionDeclaration(
     numerical_schema="sigmax.numerical-schedule/1",
@@ -531,6 +636,7 @@ def _sampler(sampler_id: str, revision: str) -> SamplerCapabilities:
 
 _COMFY_SAMPLER_ID: Final = "flowmatch.euler"
 _UNIPC_SAMPLER_ID: Final = "unipc.multistep"
+_FLOW_DPM_SAMPLER_ID: Final = "flow_dpm.multistep"
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -548,6 +654,7 @@ class _WanDefinition:
     primary_source_id: str
     sampler_id: str
     guidance: float
+    guidance_mode: str = "cfg"
     cfg_low: float | None = None
     cfg_high: float | None = None
     boundary: float | None = None
@@ -569,6 +676,7 @@ def _definition(
     sampler_id: str,
     guidance: float,
     *,
+    guidance_mode: str = "cfg",
     cfg_low: float | None = None,
     cfg_high: float | None = None,
     boundary: float | None = None,
@@ -588,6 +696,7 @@ def _definition(
         primary_source_id=primary_source_id,
         sampler_id=sampler_id,
         guidance=guidance,
+        guidance_mode=guidance_mode,
         cfg_low=cfg_low,
         cfg_high=cfg_high,
         boundary=boundary,
@@ -876,11 +985,61 @@ _DEFINITIONS: tuple[_WanDefinition, ...] = (
         4.5,
         weight=_WAN22_S2V_WEIGHT,
     ),
+    _definition(
+        WanProfileId.WAN22_ANIMATE_14B_OFFICIAL,
+        WanGeneration.WAN22,
+        WanTask.ANIMATE,
+        WanSource.OFFICIAL_NATIVE,
+        WanResolution.NONE,
+        5.0,
+        20,
+        "14b",
+        "Wan 2.2 Animate 14B Official Native Shift",
+        EvidenceLevel.OFFICIAL,
+        _WAN22_M6_11_SOURCE.source_id,
+        _UNIPC_SAMPLER_ID,
+        1.0,
+        guidance_mode="no_cfg",
+        weight=_WAN22_ANIMATE_WEIGHT,
+    ),
+    _definition(
+        WanProfileId.WAN_ANIMATE2_BASE_14B_OFFICIAL,
+        WanGeneration.WAN_ANIMATE2,
+        WanTask.ANIMATE,
+        WanSource.OFFICIAL_NATIVE,
+        WanResolution.NONE,
+        5.0,
+        40,
+        "base-14b",
+        "Wan Animate 2 Base 14B Official Native Shift",
+        EvidenceLevel.OFFICIAL,
+        _WAN_ANIMATE2_SOURCE.source_id,
+        _FLOW_DPM_SAMPLER_ID,
+        3.0,
+        weight=_WAN_ANIMATE2_BASE_WEIGHT,
+    ),
+    _definition(
+        WanProfileId.WAN_ANIMATE2_DISTILLED_14B_OFFICIAL,
+        WanGeneration.WAN_ANIMATE2,
+        WanTask.ANIMATE,
+        WanSource.OFFICIAL_NATIVE,
+        WanResolution.NONE,
+        5.0,
+        10,
+        "distilled-14b",
+        "Wan Animate 2 Distilled 14B Official Native Shift",
+        EvidenceLevel.OFFICIAL,
+        _WAN_ANIMATE2_SOURCE.source_id,
+        _FLOW_DPM_SAMPLER_ID,
+        1.0,
+        guidance_mode="no_cfg",
+        weight=_WAN_ANIMATE2_DISTILLED_WEIGHT,
+    ),
 )
 
 
-def _references() -> tuple[WanEvidenceReference, ...]:
-    return (
+def _references(*, include_animate2: bool = False) -> tuple[WanEvidenceReference, ...]:
+    references = [
         WanEvidenceReference(
             lane="comfyui_implementation",
             url=_COMFYUI_URL,
@@ -908,10 +1067,28 @@ def _references() -> tuple[WanEvidenceReference, ...]:
             revision=WAN22_REPOSITORY_REVISION,
             locators=("LICENSE", "README.md", "wan/configs/wan_t2v_A14B.py"),
         ),
-    )
+    ]
+    if include_animate2:
+        references.append(
+            WanEvidenceReference(
+                lane="official_wan_animate2",
+                url=_WAN_ANIMATE2_URL,
+                revision=WAN_ANIMATE2_REPOSITORY_REVISION,
+                locators=(
+                    "LICENSE",
+                    "README.md",
+                    "infer/wan_animate_2.yaml",
+                    "infer/wan_animate_2_demo.py",
+                    "infer/wan_animate_2_distillation.yaml",
+                    "pipelines/wan_animate_2_pipeline.py",
+                ),
+            )
+        )
+    return tuple(references)
 
 
 _REFERENCES = _references()
+_ANIMATE2_REFERENCES = _references(include_animate2=True)
 
 
 def _source_for(definition: _WanDefinition) -> str:
@@ -919,7 +1096,11 @@ def _source_for(definition: _WanDefinition) -> str:
         return _COMFYUI_URL
     if definition.source is WanSource.DIFFUSERS_REFERENCE:
         return _DIFFUSERS_URL
-    return _WAN21_URL if definition.generation is WanGeneration.WAN21 else _WAN22_URL
+    if definition.generation is WanGeneration.WAN21:
+        return _WAN21_URL
+    if definition.generation is WanGeneration.WAN22:
+        return _WAN22_URL
+    return _WAN_ANIMATE2_URL
 
 
 def _revision_for(definition: _WanDefinition) -> str:
@@ -927,11 +1108,11 @@ def _revision_for(definition: _WanDefinition) -> str:
         return WAN_COMFYUI_REVISION
     if definition.source is WanSource.DIFFUSERS_REFERENCE:
         return WAN_DIFFUSERS_REVISION
-    return (
-        WAN21_REPOSITORY_REVISION
-        if definition.generation is WanGeneration.WAN21
-        else WAN22_REPOSITORY_REVISION
-    )
+    if definition.generation is WanGeneration.WAN21:
+        return WAN21_REPOSITORY_REVISION
+    if definition.generation is WanGeneration.WAN22:
+        return WAN22_REPOSITORY_REVISION
+    return WAN_ANIMATE2_REPOSITORY_REVISION
 
 
 def _schema(definition: _WanDefinition) -> ProfileSchemaV1:
@@ -972,6 +1153,13 @@ def _schema(definition: _WanDefinition) -> ProfileSchemaV1:
             if definition.generation is WanGeneration.WAN21
             else (_WAN22_NATIVE_FRAMEWORK,)
         )
+    elif definition.profile in _M6_11_PROFILE_IDS:
+        if definition.profile is WanProfileId.WAN22_ANIMATE_14B_OFFICIAL:
+            source_ids = (_WAN22_M6_11_SOURCE,)
+            frameworks = (_WAN22_ANIMATE_NATIVE_FRAMEWORK,)
+        else:
+            source_ids = (_WAN_ANIMATE2_SOURCE,)
+            frameworks = (_WAN_ANIMATE2_NATIVE_FRAMEWORK,)
     else:
         source_ids = (
             (_WAN21_SOURCE,) if definition.generation is WanGeneration.WAN21 else (_WAN22_SOURCE,)
@@ -994,6 +1182,18 @@ def _schema(definition: _WanDefinition) -> ProfileSchemaV1:
         parameters.append(ProfileField(name="cfg_low", value=definition.cfg_low))
     if definition.profile in _M6_10_PROFILE_IDS:
         parameters.append(ProfileField(name="solver_options", value="dpm++,unipc"))
+    if definition.profile in _M6_11_PROFILE_IDS:
+        parameters.append(ProfileField(name="guidance_mode", value=definition.guidance_mode))
+        parameters.append(
+            ProfileField(
+                name="solver_options",
+                value=(
+                    "dpm++,unipc"
+                    if definition.profile is WanProfileId.WAN22_ANIMATE_14B_OFFICIAL
+                    else "flow_dpm"
+                ),
+            )
+        )
     parameters = sorted(parameters, key=lambda field: field.name)
     limitations = [
         "Only the exact released Wan generation/task/source matrix is qualified; derivative wrappers and weak-name aliases fail closed.",
@@ -1016,13 +1216,23 @@ def _schema(definition: _WanDefinition) -> ProfileSchemaV1:
         limitations.append(
             "The official CLI defaults to UniPC and also permits DPM++; this profile constructs sigmas but implements neither solver."
         )
+    elif definition.profile in _M6_11_PROFILE_IDS:
+        if definition.profile is WanProfileId.WAN22_ANIMATE_14B_OFFICIAL:
+            limitations.append(
+                "Wan 2.2 Animate's native CLI defaults to UniPC and permits DPM++; Sigmax constructs sigmas but implements neither solver."
+            )
+        else:
+            limitations.append(
+                "The native Animate-2 pipeline owns FlowDPM and constructs its reciprocal shifted sigmas; Sigmax records that ownership but does not implement the solver."
+            )
     else:
         limitations.append(
             "Shift-16 FLF2V/VACE and all other derivatives remain a named Phase 1 defer condition pending independent evidence."
         )
+    guidance_convention = "cfg_scale" if definition.guidance_mode == "cfg" else "none"
     guidance = GuidanceDeclaration(
-        model_convention="cfg_scale",
-        host_convention="cfg_scale",
+        model_convention=guidance_convention,
+        host_convention=guidance_convention,
         model_value=definition.guidance,
         host_value=definition.guidance,
     )
@@ -1105,11 +1315,20 @@ WAN21_FLF2V_14B_720P_OFFICIAL_SCHEMA: Final = _SCHEMAS_BY_PROFILE[
 WAN21_VACE_1_3B_OFFICIAL_SCHEMA: Final = _SCHEMAS_BY_PROFILE[WanProfileId.WAN21_VACE_1_3B_OFFICIAL]
 WAN21_VACE_14B_OFFICIAL_SCHEMA: Final = _SCHEMAS_BY_PROFILE[WanProfileId.WAN21_VACE_14B_OFFICIAL]
 WAN22_S2V_14B_OFFICIAL_SCHEMA: Final = _SCHEMAS_BY_PROFILE[WanProfileId.WAN22_S2V_14B_OFFICIAL]
+WAN22_ANIMATE_14B_OFFICIAL_SCHEMA: Final = _SCHEMAS_BY_PROFILE[
+    WanProfileId.WAN22_ANIMATE_14B_OFFICIAL
+]
+WAN_ANIMATE2_BASE_14B_OFFICIAL_SCHEMA: Final = _SCHEMAS_BY_PROFILE[
+    WanProfileId.WAN_ANIMATE2_BASE_14B_OFFICIAL
+]
+WAN_ANIMATE2_DISTILLED_14B_OFFICIAL_SCHEMA: Final = _SCHEMAS_BY_PROFILE[
+    WanProfileId.WAN_ANIMATE2_DISTILLED_14B_OFFICIAL
+]
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class WanProfile:
-    """Immutable Wan profile plus four pinned evidence lanes."""
+    """Immutable Wan profile plus its pinned evidence lanes."""
 
     profile: WanProfileId
     schema: ProfileSchemaV1
@@ -1127,12 +1346,31 @@ class WanProfile:
         if _SCHEMAS_BY_PROFILE.get(self.profile) is not self.schema:
             raise ScheduleContractError("Wan profile/schema mismatch")
         lanes = tuple(reference.lane for reference in self.references)
-        if lanes != tuple(sorted(set(lanes))) or len(lanes) != 4:
-            raise ScheduleContractError("Wan requires four pinned evidence lanes")
+        required_lanes = (
+            5
+            if self.profile
+            in {
+                WanProfileId.WAN_ANIMATE2_BASE_14B_OFFICIAL,
+                WanProfileId.WAN_ANIMATE2_DISTILLED_14B_OFFICIAL,
+            }
+            else 4
+        )
+        if lanes != tuple(sorted(set(lanes))) or len(lanes) != required_lanes:
+            raise ScheduleContractError(f"Wan requires {required_lanes} pinned evidence lanes")
 
 
 _PROFILES_BY_ID = {
-    profile: WanProfile(profile=profile, schema=schema, references=_REFERENCES)
+    profile: WanProfile(
+        profile=profile,
+        schema=schema,
+        references=_ANIMATE2_REFERENCES
+        if profile
+        in {
+            WanProfileId.WAN_ANIMATE2_BASE_14B_OFFICIAL,
+            WanProfileId.WAN_ANIMATE2_DISTILLED_14B_OFFICIAL,
+        }
+        else _REFERENCES,
+    )
     for profile, schema in _SCHEMAS_BY_PROFILE.items()
 }
 
@@ -1155,6 +1393,13 @@ WAN21_FLF2V_14B_720P_OFFICIAL_PROFILE: Final = _PROFILES_BY_ID[
 WAN21_VACE_1_3B_OFFICIAL_PROFILE: Final = _PROFILES_BY_ID[WanProfileId.WAN21_VACE_1_3B_OFFICIAL]
 WAN21_VACE_14B_OFFICIAL_PROFILE: Final = _PROFILES_BY_ID[WanProfileId.WAN21_VACE_14B_OFFICIAL]
 WAN22_S2V_14B_OFFICIAL_PROFILE: Final = _PROFILES_BY_ID[WanProfileId.WAN22_S2V_14B_OFFICIAL]
+WAN22_ANIMATE_14B_OFFICIAL_PROFILE: Final = _PROFILES_BY_ID[WanProfileId.WAN22_ANIMATE_14B_OFFICIAL]
+WAN_ANIMATE2_BASE_14B_OFFICIAL_PROFILE: Final = _PROFILES_BY_ID[
+    WanProfileId.WAN_ANIMATE2_BASE_14B_OFFICIAL
+]
+WAN_ANIMATE2_DISTILLED_14B_OFFICIAL_PROFILE: Final = _PROFILES_BY_ID[
+    WanProfileId.WAN_ANIMATE2_DISTILLED_14B_OFFICIAL
+]
 
 
 def _coerce_profile(value: object) -> WanProfileId:
@@ -1344,6 +1589,9 @@ __all__ = [
     "WAN21_VACE_14B_MODEL_REVISION",
     "WAN21_VACE_14B_OFFICIAL_PROFILE",
     "WAN21_VACE_14B_OFFICIAL_SCHEMA",
+    "WAN22_ANIMATE_14B_OFFICIAL_PROFILE",
+    "WAN22_ANIMATE_14B_OFFICIAL_SCHEMA",
+    "WAN22_ANIMATE_MODEL_REVISION",
     "WAN22_I2V_A14B_DIFFUSERS_PROFILE",
     "WAN22_I2V_A14B_DIFFUSERS_SCHEMA",
     "WAN22_I2V_A14B_NATIVE_PROFILE",
@@ -1360,6 +1608,12 @@ __all__ = [
     "WAN22_TI2V_5B_DIFFUSERS_SCHEMA",
     "WAN22_TI2V_5B_NATIVE_PROFILE",
     "WAN22_TI2V_5B_NATIVE_SCHEMA",
+    "WAN_ANIMATE2_BASE_14B_OFFICIAL_PROFILE",
+    "WAN_ANIMATE2_BASE_14B_OFFICIAL_SCHEMA",
+    "WAN_ANIMATE2_DISTILLED_14B_OFFICIAL_PROFILE",
+    "WAN_ANIMATE2_DISTILLED_14B_OFFICIAL_SCHEMA",
+    "WAN_ANIMATE2_MODEL_REVISION",
+    "WAN_ANIMATE2_REPOSITORY_REVISION",
     "WAN_COMFYUI_REVISION",
     "WAN_DIFFUSERS_REVISION",
     "WanBoundary",

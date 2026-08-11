@@ -103,6 +103,8 @@ def test_builtin_provenance_layers_and_licenses_are_distinct() -> None:
         "qwen_image.diffusers-dynamic.framework-reference@1",
         "sd3.comfy-diffusers-fixed.framework-reference@1",
         "sd3.publisher-reference.official@1",
+        "wan-animate2.14b.base.official-native@1",
+        "wan-animate2.14b.distilled.official-native@1",
         "wan2.1.flf2v.14b.720p.official-native@1",
         "wan2.1.i2v.480p.diffusers-reference@1",
         "wan2.1.i2v.480p.official-native@1",
@@ -113,6 +115,7 @@ def test_builtin_provenance_layers_and_licenses_are_distinct() -> None:
         "wan2.1.t2v.official-native@1",
         "wan2.1.vace.1.3b.official-native@1",
         "wan2.1.vace.14b.official-native@1",
+        "wan2.2.animate.14b.official-native@1",
         "wan2.2.i2v-a14b.diffusers-reference@1",
         "wan2.2.i2v-a14b.official-native@1",
         "wan2.2.s2v.14b.official-native@1",
@@ -208,9 +211,16 @@ def test_builtin_provenance_layers_and_licenses_are_distinct() -> None:
                 "GPL-3.0-only",
                 "LicenseRef-Tencent-Hunyuan-Community",
             }
+        elif row["profile_key"].startswith("wan-animate2."):
+            assert row["resource_counts"] == {
+                "frameworks": 1,
+                "model_weights": 1,
+                "software_sources": 1,
+            }
+            assert set(row["license_identifiers"]) == {"Apache-2.0"}
         elif row["profile_key"].startswith("wan2."):
             official_task_profile = any(
-                task in row["profile_key"] for task in (".flf2v.", ".vace.", ".s2v.")
+                task in row["profile_key"] for task in (".animate.", ".flf2v.", ".vace.", ".s2v.")
             )
             assert row["resource_counts"] == {
                 "frameworks": 1 if official_task_profile else 2,

@@ -89,7 +89,7 @@ _EXPECTED_PROFILES = (
         5.0,
         20,
         1.0,
-        "cfg",
+        "no_cfg",
         "unipc",
         ("dpm++", "unipc"),
         "Wan-AI/Wan2.2-Animate-14B",
@@ -104,11 +104,11 @@ _EXPECTED_PROFILES = (
         "official_native",
         "none",
         5.0,
-        20,
-        0.0,
-        "no_cfg",
-        "euler",
-        ("euler",),
+        40,
+        3.0,
+        "cfg",
+        "flow_dpm",
+        ("flow_dpm",),
         "Wan-AI/Wan2.2-Animate-2-14B",
         "M6-11",
         (),
@@ -123,9 +123,9 @@ _EXPECTED_PROFILES = (
         5.0,
         10,
         1.0,
-        "example_override",
-        "euler",
-        ("euler",),
+        "no_cfg",
+        "flow_dpm",
+        ("flow_dpm",),
         "Wan-AI/Wan2.2-Animate-2-14B",
         "M6-11",
         (),
@@ -146,9 +146,10 @@ _EXPECTED_PROFILES = (
         "Wan-AI/Wan2.2-Animate-2-14B-Diffusers",
         "M6-11",
         (
-            "framework_guidance_default_unpinned",
-            "framework_revision_unpinned",
-            "solver_metadata_conflict",
+            "framework_release_unpinned",
+            "framework_schedule_ownership_unresolved",
+            "framework_support_pr_unmerged",
+            "scheduler_metadata_conflict",
         ),
     ),
     (
@@ -166,7 +167,11 @@ _EXPECTED_PROFILES = (
         ("euler",),
         "Wan-AI/Wan2.2-Animate-2-14B-Distilled-Diffusers",
         "M6-11",
-        ("framework_revision_unpinned",),
+        (
+            "framework_release_unpinned",
+            "framework_schedule_ownership_unresolved",
+            "framework_support_pr_unmerged",
+        ),
     ),
 )
 
@@ -238,7 +243,9 @@ def test_wan_source_pins_separate_software_and_weight_license_scopes() -> None:
                 "LICENSE",
                 "README.md",
                 "infer/wan_animate_2.yaml",
+                "infer/wan_animate_2_demo.py",
                 "infer/wan_animate_2_distillation.yaml",
+                "pipelines/wan_animate_2_pipeline.py",
             ),
         ),
         "wan2.1.repository": (
@@ -346,8 +353,16 @@ def test_successor_items_register_only_their_owned_planned_profiles() -> None:
     assert len(planned_m6_10 | planned_m6_11) == len(_EXPECTED_PROFILES)
     assert planned_m6_10 <= runtime_enum
     assert planned_m6_10 <= runtime_registry
-    assert planned_m6_11.isdisjoint(runtime_enum)
-    assert planned_m6_11.isdisjoint(runtime_registry)
+    implemented_m6_11 = {
+        "wan2.2.animate.14b.official-native",
+        "wan-animate2.14b.base.official-native",
+        "wan-animate2.14b.distilled.official-native",
+    }
+    blocked_m6_11 = planned_m6_11 - implemented_m6_11
+    assert implemented_m6_11 <= runtime_enum
+    assert implemented_m6_11 <= runtime_registry
+    assert blocked_m6_11.isdisjoint(runtime_enum)
+    assert blocked_m6_11.isdisjoint(runtime_registry)
 
 
 def test_current_comfyui_inheritance_and_nested_workflow_observations_are_distinct() -> None:

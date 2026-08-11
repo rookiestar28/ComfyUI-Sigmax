@@ -23,6 +23,7 @@ from comfyui_sigmax.core import (
     numerical_fingerprint,
 )
 from comfyui_sigmax.profiles.anima import AnimaVariant, build_anima_schedule
+from comfyui_sigmax.version import VERSION
 
 
 def _json(value: object) -> str:
@@ -73,7 +74,7 @@ def _fixture(*, variant: AnimaVariant, steps: int, label: str) -> dict[str, obje
         identifier=profile_id, version=result.request.provenance.profile_version or ""
     )
     metadata = WorkflowMetadata(
-        package=WorkflowRequirement(identifier="comfyui-sigmax", version="1.0.0"),
+        package=WorkflowRequirement(identifier="comfyui-sigmax", version=VERSION),
         nodes=(node,),
         host=WorkflowHostRequirement(
             identifier="comfyui", version="0.29.0", api_version="legacy_v1"
@@ -138,7 +139,7 @@ def _fixture(*, variant: AnimaVariant, steps: int, label: str) -> dict[str, obje
             }
         ],
         "nodes": [node.projection()],
-        "package": {"id": "comfyui-sigmax", "version": "1.0.0"},
+        "package": {"id": "comfyui-sigmax", "version": VERSION},
         "profile": profile.projection(),
         "variant": variant_name,
         "workflow": workflow,

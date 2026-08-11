@@ -26,6 +26,7 @@ from comfyui_sigmax.profiles.hunyuan_image21 import (
     HunyuanImage21Variant,
     build_hunyuan_image21_schedule,
 )
+from comfyui_sigmax.version import VERSION
 
 
 def _json(value: object) -> str:
@@ -67,7 +68,7 @@ def _fixture(*, variant: HunyuanImage21Variant, steps: int, label: str) -> dict[
         identifier=profile_id, version=result.request.provenance.profile_version or ""
     )
     metadata = WorkflowMetadata(
-        package=WorkflowRequirement(identifier="comfyui-sigmax", version="1.0.0"),
+        package=WorkflowRequirement(identifier="comfyui-sigmax", version=VERSION),
         nodes=(node,),
         host=WorkflowHostRequirement(
             identifier="comfyui", version="0.29.0", api_version="legacy_v1"
@@ -127,7 +128,7 @@ def _fixture(*, variant: HunyuanImage21Variant, steps: int, label: str) -> dict[
             }
         ],
         "nodes": [node.projection()],
-        "package": {"id": "comfyui-sigmax", "version": "1.0.0"},
+        "package": {"id": "comfyui-sigmax", "version": VERSION},
         "profile": profile.projection(),
         "variant": variant_name,
         "workflow": workflow,

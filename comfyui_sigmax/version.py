@@ -2,6 +2,6 @@
 
 from typing import Final
 
-VERSION: Final = "1.0.0"
+VERSION: Final = "1.0.2"
 
 __all__ = ["VERSION"]

@@ -438,7 +438,7 @@ the wheel clean-install check or authorize publishing.
 For a Comfy Registry candidate, stage the intended files and validate the exact Git-indexed ZIP:
 
 ```powershell
-python scripts/validate_registry_artifact.py --archive .tmp/comfy-registry/comfyui-sigmax-1.0.0.zip --check-manifest --observe-registry --output .tmp/comfy-registry/report.json
+python scripts/validate_registry_artifact.py --archive .tmp/comfy-registry/comfyui-sigmax-1.0.2.zip --check-manifest --observe-registry --output .tmp/comfy-registry/report.json
 ```
 
 The `sigmax.registry-artifact-report/1` must bind the canonical

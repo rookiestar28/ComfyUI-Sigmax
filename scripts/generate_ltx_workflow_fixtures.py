@@ -24,6 +24,7 @@ from comfyui_sigmax.core import (
 )
 from comfyui_sigmax.nodes.ltx_sigma_scheduler import build_ltx_sigma_schedule
 from comfyui_sigmax.profiles.ltx import LTXProfileId, build_ltx_schedule
+from comfyui_sigmax.version import VERSION
 
 
 def _json(value: object) -> str:
@@ -66,7 +67,7 @@ def _fixture(
             "parameters": {"steps": steps},
         },
         "effective": {"steps": steps},
-        "engine": {"version": "1.0.0"},
+        "engine": {"version": VERSION},
         "evidence": {"level": schedule.request.provenance.evidence.value},
         "numerical_fingerprint": numerical,
         "overrides": [],
@@ -92,7 +93,7 @@ def _fixture(
     node = WorkflowRequirement(identifier=node_type, version="1")
     profile = WorkflowRequirement(identifier=profile_id, version="1")
     metadata = WorkflowMetadata(
-        package=WorkflowRequirement(identifier="comfyui-sigmax", version="1.0.0"),
+        package=WorkflowRequirement(identifier="comfyui-sigmax", version=VERSION),
         nodes=(node,),
         host=WorkflowHostRequirement(
             identifier="comfyui", version="0.29.0", api_version="legacy_v1"
@@ -165,7 +166,7 @@ def _fixture(
             }
         ],
         "nodes": [node.projection()],
-        "package": {"id": "comfyui-sigmax", "version": "1.0.0"},
+        "package": {"id": "comfyui-sigmax", "version": VERSION},
         "profile": profile.projection(),
         "variant": variant,
         "workflow": workflow,

@@ -48,7 +48,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.0"
+        "version": "1.0.2"
       },
       "profile": {
         "id": "anima.aesthetic.framework-reference",
@@ -107,7 +107,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:1f5888305144d24467bff685f022077a94e1c687dc2eb27643ef617afbc3276d",
+                "construction_fingerprint": "sha256:15e4cc235b9269218e86232cfb94701437a7b618a751bc5e7fafb354184d0932",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:de0cff68e0b219fae873cd6beb4d7468e7fdc0d472381ddaf225edb97804e406",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -150,12 +150,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.0"
+                  "version": "1.0.2"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:4e7992755a3b99443d042d8feb9bee9b200f7cd32a8f186f3492419b05db5e55",
+            "metadata_fingerprint": "sha256:d061f2d9d3d1f4e3cdcefd5582889d57ba768206c3f5bf502ecfb1b2cbd70e8c",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -209,7 +209,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.0"
+        "version": "1.0.2"
       },
       "profile": {
         "id": "anima.base.framework-reference",
@@ -268,7 +268,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:bf81213aee117c44c8844b3af5b77c11e9c7073f87f01d9458b32f12166c273e",
+                "construction_fingerprint": "sha256:713d63edf1606684feebe5caab01ff3f138d4bfdf7fbefbedea13a1cd1ddf521",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:de0cff68e0b219fae873cd6beb4d7468e7fdc0d472381ddaf225edb97804e406",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -311,12 +311,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.0"
+                  "version": "1.0.2"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:99aa011136d55d8e44ac727420e37825b175a9e6b0281b18cc12467b35336caa",
+            "metadata_fingerprint": "sha256:73d9595e8ac42d5059624ed5b29cc9b0f025c8c8dfc2f89884cff766cef8641a",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -370,7 +370,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.0"
+        "version": "1.0.2"
       },
       "profile": {
         "id": "anima.turbo.framework-reference",
@@ -429,7 +429,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:177d4d1a56868bd4764b5c84f64c285163a556561543a71e1e870bc116b47ca2",
+                "construction_fingerprint": "sha256:c54bb637103bc7e951f13f88acd2480cf32e4a9de400e5c6a5c388792fd85bb9",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:a8a2d4dc7ff9001bdf7ef8fe931ebe1c7116a2da3d9d12f56da4ce7b65e68835",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -472,12 +472,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.0"
+                  "version": "1.0.2"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:ceaf34501852270be24299b7e47f7e2127707c45c0fd6d00b460ab2509a938c1",
+            "metadata_fingerprint": "sha256:e065e473fec2f3fa539ffa11838f6bb2a24730deca54673df5f692a69d07c6dc",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -531,7 +531,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.0"
+        "version": "1.0.2"
       },
       "profile": {
         "id": "auraflow.v0-2.official",
@@ -590,7 +590,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:580e06d481f00d975360c357167f57d951a3c84515d718ed2a4df2d057425718",
+                "construction_fingerprint": "sha256:bba9e701f2dbaef26727b66b32af7d6007cdd320858efd938fecaf776812dbe9",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:03cc59724ee62b15c28bfeb4fdab6c2cba56574ff3559b086df9c41bda439cde",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -633,12 +633,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.0"
+                  "version": "1.0.2"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:2a1c966bc2891475118d0859ae2069eba101d6fd4266866d2d609ea4743b4cc1",
+            "metadata_fingerprint": "sha256:8c23417ac1f413ca8c002389df3e1e14bc1cd22ca382759276938d8901174fd7",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -683,7 +683,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.0"
+        "version": "1.0.2"
       },
       "profile": {
         "id": "flux1.schnell.official",
@@ -740,7 +740,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:2d7180d04d8c8d6eb98736b53fc674ded7d13289f22154ca601993565b4f9325",
+                "construction_fingerprint": "sha256:a7f15760eb1fe3bcc33b980dd09ebb8c6c5ea174cc4076e9ad532a06c7208b75",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:958cbb51e05aa008f8786fbd363b6542afab2056e304b7a5655ad54384d62beb",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -783,12 +783,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.0"
+                  "version": "1.0.2"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:5f706c7f98161f0e47d5bd8b1eed4c6a4d8751edfded8527f8e09fcc061696a0",
+            "metadata_fingerprint": "sha256:d9bf1a4019590131833a7647290a035f03f5b90fdf7d50a2d538ff18c7729181",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -842,7 +842,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.0"
+        "version": "1.0.2"
       },
       "profile": {
         "id": "hunyuan-image-2-1.base.official",
@@ -901,7 +901,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:c5d04b39dc493dce817665dd4b7d5835cb416c41f14ca0b7e6c04f6e44f28bdb",
+                "construction_fingerprint": "sha256:6eaa324d91122b1fa094be51a47e2ecfd77f77418526fd72a918f0fb11521732",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:63640d1f280b8208ef399d45bd14a3ef6eecd651431cc12c3e25be45eeea7739",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -944,12 +944,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.0"
+                  "version": "1.0.2"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:910a09c9bdcda7d849da86532cdcd4af1263f0c692613e546198ce53d4b83fe3",
+            "metadata_fingerprint": "sha256:4aa258a265771bd3341ff0f1a8cec49ac7d903136d7aad67a695b8ee0243c4d8",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -1003,7 +1003,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.0"
+        "version": "1.0.2"
       },
       "profile": {
         "id": "hunyuan-image-2-1.distilled.official",
@@ -1062,7 +1062,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:1f733a35a921e7dd166d4442f2d5a0956c745f0faff124ae8a1d7c67b8c4e7e0",
+                "construction_fingerprint": "sha256:52236bbb704833c2f2b0bd1ae1b6a97fa3ff6b52500b0816ff56a63beb12c012",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:1e441977aa4d99acfc1fa81c7ddf1c66e1336dfa05af348e87b6bd71103d6f8e",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -1105,12 +1105,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.0"
+                  "version": "1.0.2"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:d67a533ec0a143a66db48e80b1221a8adb87adc599078ddf3a42cb858d216b80",
+            "metadata_fingerprint": "sha256:08ebda7c0fe3e34ed485714e96de94233254721e450b194871bc44c7f734557e",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -1186,7 +1186,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.0"
+        "version": "1.0.2"
       },
       "profile": {
         "id": "krea2.raw.official",
@@ -1195,78 +1195,6 @@
       "variant": "RAW",
       "workflow": {
         "config": {},
-        "extra": {
-          "comfyui_sigmax": {
-            "metadata": {
-              "artifact": {
-                "construction_fingerprint": "sha256:efdbdb1aeebf42a3489ba8c13ae4faaa5a1aa2e189f61614f4c8b9c054996ed2",
-                "construction_schema": "sigmax.schedule-artifact/1",
-                "numerical_fingerprint": "sha256:52208c5fa3780c95cce399b1f842f3fea56503e76fdf5ef4abc3069cf3108f01",
-                "receipt_schema": "sigmax.execution-receipt-envelope/1"
-              },
-              "compatibility": {
-                "considered": [
-                  "model_identity",
-                  "prediction_type",
-                  "sigma_domain",
-                  "schedule_ownership",
-                  "terminal_sigma",
-                  "execution_behavior",
-                  "noise_ownership",
-                  "sampler_state",
-                  "partial_denoise",
-                  "per_token_timesteps",
-                  "reference_sampler"
-                ],
-                "level": "allow",
-                "reasons": [
-                  "compatible"
-                ]
-              },
-              "profile": {
-                "id": "krea2.raw.official",
-                "version": "1"
-              },
-              "receipts": [
-                {
-                  "construction_fingerprint": "sha256:efdbdb1aeebf42a3489ba8c13ae4faaa5a1aa2e189f61614f4c8b9c054996ed2",
-                  "numerical_fingerprint": "sha256:52208c5fa3780c95cce399b1f842f3fea56503e76fdf5ef4abc3069cf3108f01",
-                  "receipt_fingerprint": "sha256:f87209e30081f3d2678f740235435309c4dfecf54662ecdde02e82c09c815d59",
-                  "schema": "sigmax.execution-receipt-envelope/1",
-                  "status": "not_executed"
-                }
-              ],
-              "requirements": {
-                "host": {
-                  "api_version": "legacy_v1",
-                  "id": "comfyui",
-                  "version": "0.29.0"
-                },
-                "nodes": [
-                  {
-                    "id": "Sigmax.Krea2SigmaScheduler",
-                    "version": "1"
-                  },
-                  {
-                    "id": "Sigmax.RawWorkflowOutput",
-                    "version": "1"
-                  },
-                  {
-                    "id": "Sigmax.ScheduleInspector",
-                    "version": "1"
-                  }
-                ],
-                "package": {
-                  "id": "comfyui-sigmax",
-                  "version": "1.0.0"
-                }
-              },
-              "schema": "sigmax.workflow-metadata/1"
-            },
-            "metadata_fingerprint": "sha256:f090c369062263b111b7f9c33e579d99447eb7a3ef6316fbce280c080fb6639f",
-            "schema": "sigmax.workflow-metadata-envelope/1"
-          }
-        },
         "groups": [],
         "last_link_id": 5,
         "last_node_id": 3,
@@ -1442,7 +1370,79 @@
             "widgets_values": []
           }
         ],
-        "version": 0.4
+        "version": 0.4,
+        "extra": {
+          "comfyui_sigmax": {
+            "metadata": {
+              "artifact": {
+                "construction_fingerprint": "sha256:efdbdb1aeebf42a3489ba8c13ae4faaa5a1aa2e189f61614f4c8b9c054996ed2",
+                "construction_schema": "sigmax.schedule-artifact/1",
+                "numerical_fingerprint": "sha256:52208c5fa3780c95cce399b1f842f3fea56503e76fdf5ef4abc3069cf3108f01",
+                "receipt_schema": "sigmax.execution-receipt-envelope/1"
+              },
+              "compatibility": {
+                "considered": [
+                  "model_identity",
+                  "prediction_type",
+                  "sigma_domain",
+                  "schedule_ownership",
+                  "terminal_sigma",
+                  "execution_behavior",
+                  "noise_ownership",
+                  "sampler_state",
+                  "partial_denoise",
+                  "per_token_timesteps",
+                  "reference_sampler"
+                ],
+                "level": "allow",
+                "reasons": [
+                  "compatible"
+                ]
+              },
+              "profile": {
+                "id": "krea2.raw.official",
+                "version": "1"
+              },
+              "receipts": [
+                {
+                  "construction_fingerprint": "sha256:efdbdb1aeebf42a3489ba8c13ae4faaa5a1aa2e189f61614f4c8b9c054996ed2",
+                  "numerical_fingerprint": "sha256:52208c5fa3780c95cce399b1f842f3fea56503e76fdf5ef4abc3069cf3108f01",
+                  "receipt_fingerprint": "sha256:f87209e30081f3d2678f740235435309c4dfecf54662ecdde02e82c09c815d59",
+                  "schema": "sigmax.execution-receipt-envelope/1",
+                  "status": "not_executed"
+                }
+              ],
+              "requirements": {
+                "host": {
+                  "api_version": "legacy_v1",
+                  "id": "comfyui",
+                  "version": "0.29.0"
+                },
+                "nodes": [
+                  {
+                    "id": "Sigmax.Krea2SigmaScheduler",
+                    "version": "1"
+                  },
+                  {
+                    "id": "Sigmax.RawWorkflowOutput",
+                    "version": "1"
+                  },
+                  {
+                    "id": "Sigmax.ScheduleInspector",
+                    "version": "1"
+                  }
+                ],
+                "package": {
+                  "id": "comfyui-sigmax",
+                  "version": "1.0.2"
+                }
+              },
+              "schema": "sigmax.workflow-metadata/1"
+            },
+            "metadata_fingerprint": "sha256:5a04d1c05c9adb03b10b51d26ee398ead327d8f85861c63448990df760c1d4f2",
+            "schema": "sigmax.workflow-metadata-envelope/1"
+          }
+        }
       }
     },
     {
@@ -1515,7 +1515,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.0"
+        "version": "1.0.2"
       },
       "profile": {
         "id": "krea2.raw.official",
@@ -1524,78 +1524,6 @@
       "variant": "RAW",
       "workflow": {
         "config": {},
-        "extra": {
-          "comfyui_sigmax": {
-            "metadata": {
-              "artifact": {
-                "construction_fingerprint": "sha256:820a25b81409c07e9ea64e0f6cb9cc971efa5e488e5f20888d8f80523dcd0748",
-                "construction_schema": "sigmax.schedule-artifact/1",
-                "numerical_fingerprint": "sha256:01352f42660bd3b31bbaf7548a9891273899afd375adeb68c7f7c93fd2a4f0d4",
-                "receipt_schema": "sigmax.execution-receipt-envelope/1"
-              },
-              "compatibility": {
-                "considered": [
-                  "model_identity",
-                  "prediction_type",
-                  "sigma_domain",
-                  "schedule_ownership",
-                  "terminal_sigma",
-                  "execution_behavior",
-                  "noise_ownership",
-                  "sampler_state",
-                  "partial_denoise",
-                  "per_token_timesteps",
-                  "reference_sampler"
-                ],
-                "level": "allow",
-                "reasons": [
-                  "compatible"
-                ]
-              },
-              "profile": {
-                "id": "krea2.raw.official",
-                "version": "1"
-              },
-              "receipts": [
-                {
-                  "construction_fingerprint": "sha256:820a25b81409c07e9ea64e0f6cb9cc971efa5e488e5f20888d8f80523dcd0748",
-                  "numerical_fingerprint": "sha256:01352f42660bd3b31bbaf7548a9891273899afd375adeb68c7f7c93fd2a4f0d4",
-                  "receipt_fingerprint": "sha256:0eb2e6923463615ac29dd8b95745c59e51cfebe9243fb92dd627877da208f576",
-                  "schema": "sigmax.execution-receipt-envelope/1",
-                  "status": "not_executed"
-                }
-              ],
-              "requirements": {
-                "host": {
-                  "api_version": "legacy_v1",
-                  "id": "comfyui",
-                  "version": "0.29.0"
-                },
-                "nodes": [
-                  {
-                    "id": "Sigmax.Krea2SigmaScheduler",
-                    "version": "1"
-                  },
-                  {
-                    "id": "Sigmax.RawWorkflowOutput",
-                    "version": "1"
-                  },
-                  {
-                    "id": "Sigmax.ScheduleInspector",
-                    "version": "1"
-                  }
-                ],
-                "package": {
-                  "id": "comfyui-sigmax",
-                  "version": "1.0.0"
-                }
-              },
-              "schema": "sigmax.workflow-metadata/1"
-            },
-            "metadata_fingerprint": "sha256:b7b596c468357c78a8470a8d61505c2cd049fd517351dca9585fb48ad3d04944",
-            "schema": "sigmax.workflow-metadata-envelope/1"
-          }
-        },
         "groups": [],
         "last_link_id": 5,
         "last_node_id": 3,
@@ -1771,7 +1699,79 @@
             "widgets_values": []
           }
         ],
-        "version": 0.4
+        "version": 0.4,
+        "extra": {
+          "comfyui_sigmax": {
+            "metadata": {
+              "artifact": {
+                "construction_fingerprint": "sha256:820a25b81409c07e9ea64e0f6cb9cc971efa5e488e5f20888d8f80523dcd0748",
+                "construction_schema": "sigmax.schedule-artifact/1",
+                "numerical_fingerprint": "sha256:01352f42660bd3b31bbaf7548a9891273899afd375adeb68c7f7c93fd2a4f0d4",
+                "receipt_schema": "sigmax.execution-receipt-envelope/1"
+              },
+              "compatibility": {
+                "considered": [
+                  "model_identity",
+                  "prediction_type",
+                  "sigma_domain",
+                  "schedule_ownership",
+                  "terminal_sigma",
+                  "execution_behavior",
+                  "noise_ownership",
+                  "sampler_state",
+                  "partial_denoise",
+                  "per_token_timesteps",
+                  "reference_sampler"
+                ],
+                "level": "allow",
+                "reasons": [
+                  "compatible"
+                ]
+              },
+              "profile": {
+                "id": "krea2.raw.official",
+                "version": "1"
+              },
+              "receipts": [
+                {
+                  "construction_fingerprint": "sha256:820a25b81409c07e9ea64e0f6cb9cc971efa5e488e5f20888d8f80523dcd0748",
+                  "numerical_fingerprint": "sha256:01352f42660bd3b31bbaf7548a9891273899afd375adeb68c7f7c93fd2a4f0d4",
+                  "receipt_fingerprint": "sha256:0eb2e6923463615ac29dd8b95745c59e51cfebe9243fb92dd627877da208f576",
+                  "schema": "sigmax.execution-receipt-envelope/1",
+                  "status": "not_executed"
+                }
+              ],
+              "requirements": {
+                "host": {
+                  "api_version": "legacy_v1",
+                  "id": "comfyui",
+                  "version": "0.29.0"
+                },
+                "nodes": [
+                  {
+                    "id": "Sigmax.Krea2SigmaScheduler",
+                    "version": "1"
+                  },
+                  {
+                    "id": "Sigmax.RawWorkflowOutput",
+                    "version": "1"
+                  },
+                  {
+                    "id": "Sigmax.ScheduleInspector",
+                    "version": "1"
+                  }
+                ],
+                "package": {
+                  "id": "comfyui-sigmax",
+                  "version": "1.0.2"
+                }
+              },
+              "schema": "sigmax.workflow-metadata/1"
+            },
+            "metadata_fingerprint": "sha256:2f43926907af0fd72cb28cb9bdfe6246e127d7e2916c8f7b817021ca7e155b0f",
+            "schema": "sigmax.workflow-metadata-envelope/1"
+          }
+        }
       }
     },
     {
@@ -1844,7 +1844,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.0"
+        "version": "1.0.2"
       },
       "profile": {
         "id": "krea2.raw.official",
@@ -1853,78 +1853,6 @@
       "variant": "RAW",
       "workflow": {
         "config": {},
-        "extra": {
-          "comfyui_sigmax": {
-            "metadata": {
-              "artifact": {
-                "construction_fingerprint": "sha256:3a369fd90106bc3446de77a29fd1cdb75a015e3f42e217fa155c0e2458a492ec",
-                "construction_schema": "sigmax.schedule-artifact/1",
-                "numerical_fingerprint": "sha256:5ff69c30df41c7f37eae14502155b31f23724d32427180f69118cabcd6a3ac61",
-                "receipt_schema": "sigmax.execution-receipt-envelope/1"
-              },
-              "compatibility": {
-                "considered": [
-                  "model_identity",
-                  "prediction_type",
-                  "sigma_domain",
-                  "schedule_ownership",
-                  "terminal_sigma",
-                  "execution_behavior",
-                  "noise_ownership",
-                  "sampler_state",
-                  "partial_denoise",
-                  "per_token_timesteps",
-                  "reference_sampler"
-                ],
-                "level": "allow",
-                "reasons": [
-                  "compatible"
-                ]
-              },
-              "profile": {
-                "id": "krea2.raw.official",
-                "version": "1"
-              },
-              "receipts": [
-                {
-                  "construction_fingerprint": "sha256:3a369fd90106bc3446de77a29fd1cdb75a015e3f42e217fa155c0e2458a492ec",
-                  "numerical_fingerprint": "sha256:5ff69c30df41c7f37eae14502155b31f23724d32427180f69118cabcd6a3ac61",
-                  "receipt_fingerprint": "sha256:41845e65717745752829126d31cf91a866a60c4f9a21b300d548ebd545776f46",
-                  "schema": "sigmax.execution-receipt-envelope/1",
-                  "status": "not_executed"
-                }
-              ],
-              "requirements": {
-                "host": {
-                  "api_version": "legacy_v1",
-                  "id": "comfyui",
-                  "version": "0.29.0"
-                },
-                "nodes": [
-                  {
-                    "id": "Sigmax.Krea2SigmaScheduler",
-                    "version": "1"
-                  },
-                  {
-                    "id": "Sigmax.RawWorkflowOutput",
-                    "version": "1"
-                  },
-                  {
-                    "id": "Sigmax.ScheduleInspector",
-                    "version": "1"
-                  }
-                ],
-                "package": {
-                  "id": "comfyui-sigmax",
-                  "version": "1.0.0"
-                }
-              },
-              "schema": "sigmax.workflow-metadata/1"
-            },
-            "metadata_fingerprint": "sha256:6a2a4753b659c1ff1c7d3beeba39199ee9fca228af4bf4dd817651ee0145e3be",
-            "schema": "sigmax.workflow-metadata-envelope/1"
-          }
-        },
         "groups": [],
         "last_link_id": 5,
         "last_node_id": 3,
@@ -2100,7 +2028,79 @@
             "widgets_values": []
           }
         ],
-        "version": 0.4
+        "version": 0.4,
+        "extra": {
+          "comfyui_sigmax": {
+            "metadata": {
+              "artifact": {
+                "construction_fingerprint": "sha256:3a369fd90106bc3446de77a29fd1cdb75a015e3f42e217fa155c0e2458a492ec",
+                "construction_schema": "sigmax.schedule-artifact/1",
+                "numerical_fingerprint": "sha256:5ff69c30df41c7f37eae14502155b31f23724d32427180f69118cabcd6a3ac61",
+                "receipt_schema": "sigmax.execution-receipt-envelope/1"
+              },
+              "compatibility": {
+                "considered": [
+                  "model_identity",
+                  "prediction_type",
+                  "sigma_domain",
+                  "schedule_ownership",
+                  "terminal_sigma",
+                  "execution_behavior",
+                  "noise_ownership",
+                  "sampler_state",
+                  "partial_denoise",
+                  "per_token_timesteps",
+                  "reference_sampler"
+                ],
+                "level": "allow",
+                "reasons": [
+                  "compatible"
+                ]
+              },
+              "profile": {
+                "id": "krea2.raw.official",
+                "version": "1"
+              },
+              "receipts": [
+                {
+                  "construction_fingerprint": "sha256:3a369fd90106bc3446de77a29fd1cdb75a015e3f42e217fa155c0e2458a492ec",
+                  "numerical_fingerprint": "sha256:5ff69c30df41c7f37eae14502155b31f23724d32427180f69118cabcd6a3ac61",
+                  "receipt_fingerprint": "sha256:41845e65717745752829126d31cf91a866a60c4f9a21b300d548ebd545776f46",
+                  "schema": "sigmax.execution-receipt-envelope/1",
+                  "status": "not_executed"
+                }
+              ],
+              "requirements": {
+                "host": {
+                  "api_version": "legacy_v1",
+                  "id": "comfyui",
+                  "version": "0.29.0"
+                },
+                "nodes": [
+                  {
+                    "id": "Sigmax.Krea2SigmaScheduler",
+                    "version": "1"
+                  },
+                  {
+                    "id": "Sigmax.RawWorkflowOutput",
+                    "version": "1"
+                  },
+                  {
+                    "id": "Sigmax.ScheduleInspector",
+                    "version": "1"
+                  }
+                ],
+                "package": {
+                  "id": "comfyui-sigmax",
+                  "version": "1.0.2"
+                }
+              },
+              "schema": "sigmax.workflow-metadata/1"
+            },
+            "metadata_fingerprint": "sha256:6de0ec3b8b158f9e7bc0dae01f28eff3922c6ab956bcd270ae5c710d69d6b584",
+            "schema": "sigmax.workflow-metadata-envelope/1"
+          }
+        }
       }
     },
     {
@@ -2173,7 +2173,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.0"
+        "version": "1.0.2"
       },
       "profile": {
         "id": "krea2.turbo.official",
@@ -2182,78 +2182,6 @@
       "variant": "Turbo",
       "workflow": {
         "config": {},
-        "extra": {
-          "comfyui_sigmax": {
-            "metadata": {
-              "artifact": {
-                "construction_fingerprint": "sha256:e9577bb2e885b5d23fc12f66327f0dad882bd4a60bcba41daf72722b352a0910",
-                "construction_schema": "sigmax.schedule-artifact/1",
-                "numerical_fingerprint": "sha256:24984ad4412a3c47103a52cfe3af16bb9df8789f98401d9fc281b3f6ca0892ac",
-                "receipt_schema": "sigmax.execution-receipt-envelope/1"
-              },
-              "compatibility": {
-                "considered": [
-                  "model_identity",
-                  "prediction_type",
-                  "sigma_domain",
-                  "schedule_ownership",
-                  "terminal_sigma",
-                  "execution_behavior",
-                  "noise_ownership",
-                  "sampler_state",
-                  "partial_denoise",
-                  "per_token_timesteps",
-                  "reference_sampler"
-                ],
-                "level": "allow",
-                "reasons": [
-                  "compatible"
-                ]
-              },
-              "profile": {
-                "id": "krea2.turbo.official",
-                "version": "1"
-              },
-              "receipts": [
-                {
-                  "construction_fingerprint": "sha256:e9577bb2e885b5d23fc12f66327f0dad882bd4a60bcba41daf72722b352a0910",
-                  "numerical_fingerprint": "sha256:24984ad4412a3c47103a52cfe3af16bb9df8789f98401d9fc281b3f6ca0892ac",
-                  "receipt_fingerprint": "sha256:d2cab6b0717d67f85bed50fdc58b906b53b875af4bd7d051ad79e8fa9acfa664",
-                  "schema": "sigmax.execution-receipt-envelope/1",
-                  "status": "not_executed"
-                }
-              ],
-              "requirements": {
-                "host": {
-                  "api_version": "legacy_v1",
-                  "id": "comfyui",
-                  "version": "0.29.0"
-                },
-                "nodes": [
-                  {
-                    "id": "Sigmax.Krea2SigmaScheduler",
-                    "version": "1"
-                  },
-                  {
-                    "id": "Sigmax.ScheduleInspector",
-                    "version": "1"
-                  },
-                  {
-                    "id": "Sigmax.TurboWorkflowOutput",
-                    "version": "1"
-                  }
-                ],
-                "package": {
-                  "id": "comfyui-sigmax",
-                  "version": "1.0.0"
-                }
-              },
-              "schema": "sigmax.workflow-metadata/1"
-            },
-            "metadata_fingerprint": "sha256:9c1f879564ca591387b595da2ba52332aa1906ec8ed709fefd6bb03b6fc03e29",
-            "schema": "sigmax.workflow-metadata-envelope/1"
-          }
-        },
         "groups": [],
         "last_link_id": 5,
         "last_node_id": 3,
@@ -2429,7 +2357,79 @@
             "widgets_values": []
           }
         ],
-        "version": 0.4
+        "version": 0.4,
+        "extra": {
+          "comfyui_sigmax": {
+            "metadata": {
+              "artifact": {
+                "construction_fingerprint": "sha256:e9577bb2e885b5d23fc12f66327f0dad882bd4a60bcba41daf72722b352a0910",
+                "construction_schema": "sigmax.schedule-artifact/1",
+                "numerical_fingerprint": "sha256:24984ad4412a3c47103a52cfe3af16bb9df8789f98401d9fc281b3f6ca0892ac",
+                "receipt_schema": "sigmax.execution-receipt-envelope/1"
+              },
+              "compatibility": {
+                "considered": [
+                  "model_identity",
+                  "prediction_type",
+                  "sigma_domain",
+                  "schedule_ownership",
+                  "terminal_sigma",
+                  "execution_behavior",
+                  "noise_ownership",
+                  "sampler_state",
+                  "partial_denoise",
+                  "per_token_timesteps",
+                  "reference_sampler"
+                ],
+                "level": "allow",
+                "reasons": [
+                  "compatible"
+                ]
+              },
+              "profile": {
+                "id": "krea2.turbo.official",
+                "version": "1"
+              },
+              "receipts": [
+                {
+                  "construction_fingerprint": "sha256:e9577bb2e885b5d23fc12f66327f0dad882bd4a60bcba41daf72722b352a0910",
+                  "numerical_fingerprint": "sha256:24984ad4412a3c47103a52cfe3af16bb9df8789f98401d9fc281b3f6ca0892ac",
+                  "receipt_fingerprint": "sha256:d2cab6b0717d67f85bed50fdc58b906b53b875af4bd7d051ad79e8fa9acfa664",
+                  "schema": "sigmax.execution-receipt-envelope/1",
+                  "status": "not_executed"
+                }
+              ],
+              "requirements": {
+                "host": {
+                  "api_version": "legacy_v1",
+                  "id": "comfyui",
+                  "version": "0.29.0"
+                },
+                "nodes": [
+                  {
+                    "id": "Sigmax.Krea2SigmaScheduler",
+                    "version": "1"
+                  },
+                  {
+                    "id": "Sigmax.ScheduleInspector",
+                    "version": "1"
+                  },
+                  {
+                    "id": "Sigmax.TurboWorkflowOutput",
+                    "version": "1"
+                  }
+                ],
+                "package": {
+                  "id": "comfyui-sigmax",
+                  "version": "1.0.2"
+                }
+              },
+              "schema": "sigmax.workflow-metadata/1"
+            },
+            "metadata_fingerprint": "sha256:d9c372ed80e6962bbe1679b77a8581ec75411a137c251a59d18b851bc436f5fd",
+            "schema": "sigmax.workflow-metadata-envelope/1"
+          }
+        }
       }
     },
     {
@@ -2493,7 +2493,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.0"
+        "version": "1.0.2"
       },
       "profile": {
         "id": "ltx2.19b.dev",
@@ -2555,7 +2555,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:ad8ce9b2e18215bb335d7eacf10c91df1a793859271eeeaf74020b3899d7dd07",
+                "construction_fingerprint": "sha256:0ddb3733bb3fd62ebe2e793effa8783a48fa3503887086c9a316a0e41d1ebb1a",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:676dd3a673777862209e2eb4a222e6da8bf73b907da65a6c853111fd0d978942",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -2598,12 +2598,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.0"
+                  "version": "1.0.2"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:b5a02c0f5fc86aaa633ebd68ff1068715c3259c121be1121985f87d4c0eaa095",
+            "metadata_fingerprint": "sha256:f330abb28b311e8d1839eebb59cc1ab2619ec60ab9591b297b22d6b741318e40",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -2670,7 +2670,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.0"
+        "version": "1.0.2"
       },
       "profile": {
         "id": "ltx2.19b.distilled.stage1",
@@ -2732,7 +2732,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:4787369a3b23e581794b0b86317aae2e16531588452af40b524d54799a623bc6",
+                "construction_fingerprint": "sha256:535ac250fba5ac90b0103001100dcb8bee1073241166e90fa17c64254dbf6445",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:b05d62a55c706700dffe15da9270c07bf95e775559aaccc13563e404a1b264ad",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -2775,12 +2775,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.0"
+                  "version": "1.0.2"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:a86481545d07e800e555277d67a67762bef6bb05511b3acd464c71ea10cf9abb",
+            "metadata_fingerprint": "sha256:2f780be63d4bd8cd8e9c8671b4159f60cf519ee7b47a07738ba8fac373b90a0f",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -2847,7 +2847,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.0"
+        "version": "1.0.2"
       },
       "profile": {
         "id": "ltx2.3.22b.dev",
@@ -2909,7 +2909,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:00daf5e99393725d44d6059721c5133f8f08dc8e49ec81eeea504ad459a859fd",
+                "construction_fingerprint": "sha256:65fb26733efbbd2d1bc3dd9d2c1ce35be8bb3a361b540a383486c328ce7a9695",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:08aab65059e1b4f5c086d08f2983a7b5a1f7d1c1d5029e1eacef91b41ace2c8f",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -2952,12 +2952,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.0"
+                  "version": "1.0.2"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:5cd392fa7aaf9cc3d7384ad022db455055223ab5e64e9da74ae74e1376ca4564",
+            "metadata_fingerprint": "sha256:34d64ca375d7189871b56e128b00e8af54bc97ebec257e3313705d04a56a7fdb",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -3024,7 +3024,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.0"
+        "version": "1.0.2"
       },
       "profile": {
         "id": "ltx2.3.22b.distilled.stage2",
@@ -3086,7 +3086,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:7431d8a58070675d4e5f7c75a9ce1ea7b9718463f89e0c393f2a4a0cb9a1314b",
+                "construction_fingerprint": "sha256:69f2ae304a691c84a2d2a3e4be3077bf3a842efb890a1930724cec1ee98b2bb4",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:c3f2609287314ab0b4f944929490e7f35da7beca4179be0f8440c20d125040b4",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -3129,12 +3129,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.0"
+                  "version": "1.0.2"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:fc630d371d3d8e3acb13e9e04db1de6ce940cf2f38a83e2c7fb40001b1fc6029",
+            "metadata_fingerprint": "sha256:f10bd6d68bf7045b30ffab57352f12f0cebfe5a95e492d6f115055bf46c19278",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -3201,7 +3201,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.0"
+        "version": "1.0.2"
       },
       "profile": {
         "id": "ltxv.0.9.8.dev",
@@ -3263,7 +3263,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:188cb1caf828a92fe917d07ae7ab81b6f7900bc070fcfdfdbec68e22a50eb864",
+                "construction_fingerprint": "sha256:457f77bc4e47d6a4bababb3faf272440a085e1c5210f42424caf901977ebc52d",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:a8d35f69b72de301f28a8345107ad82b7756a1fad8cae7055b094c648561b91a",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -3306,12 +3306,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.0"
+                  "version": "1.0.2"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:71ea775a7b1eb38700d5ed80d6c2a7931491f536cbe355387fbefa83aae2baf6",
+            "metadata_fingerprint": "sha256:3d0326cec22c5138e47273746916819c6baa188e3e2f50e5de3812f0623888aa",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -3365,7 +3365,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.0"
+        "version": "1.0.2"
       },
       "profile": {
         "id": "lumina2.v2.official",
@@ -3424,7 +3424,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:d6cfe0e00c34a7a3d6a8f691489cd8f5943e7211219fcf23655eb5cc5d718728",
+                "construction_fingerprint": "sha256:052097f0ac2cc4798208122726900bdc7485064763d5eb0557cd1a9f667ddc8b",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:9fda2fba7c87d0182786ccf4c5dc1fb236bbfe592a35d2b173f21447abc38729",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -3467,12 +3467,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.0"
+                  "version": "1.0.2"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:e4f2387a274ec641872215c74a0a584aa1843b7b0ca2f178c05381b9f29839a9",
+            "metadata_fingerprint": "sha256:5297cc5f07acc562872fec9d57a2a967c988473408a6e12e246e14656bce51c8",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -3525,7 +3525,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.0"
+        "version": "1.0.2"
       },
       "profile": {
         "id": "qwen_image.comfy-fixed.official",
@@ -3627,12 +3627,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.0"
+                  "version": "1.0.2"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:24aa9bf32150125c017ebbc89d020894041ac33cd717c359710412c618286e76",
+            "metadata_fingerprint": "sha256:9e282f73acbfb1bc6440cb4e2c4b9a1938bd7653720d90b1f2697274f30ebbc0",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -3686,7 +3686,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.0"
+        "version": "1.0.2"
       },
       "profile": {
         "id": "sd3.comfy-diffusers-fixed.framework-reference",
@@ -3745,7 +3745,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:911bfb5eb9d8b4140ffcd2ebfabc7016254ea454f8baaf07c4f30f91e8b49041",
+                "construction_fingerprint": "sha256:9a8558dea86787c5eb2cd31728ea1efb32236feedd7e95a69ffb1be0b172703f",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:edb818de6b9a4717dc0a276855ebc22500a1e508e60881e95a9e56018f9a8776",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -3788,12 +3788,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.0"
+                  "version": "1.0.2"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:f1733b726a303dbdba25b51a67a92559873afc616c60b4a3ae9b1606d33072ce",
+            "metadata_fingerprint": "sha256:903fc6df240221c663039b98a6c1ba942968321131363cd486b366d241aa35ae",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -3847,7 +3847,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.0"
+        "version": "1.0.2"
       },
       "profile": {
         "id": "sd3.publisher-reference.official",
@@ -3906,7 +3906,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:d9de8acedb23f922d52ee93fba38a4cc00b25e84a8ec78fb4221df4985630d5f",
+                "construction_fingerprint": "sha256:e3f27e328b9b3ffe3b5c568a14bd52bf5eff61e4c9e1c0680ba6517dee07a1cd",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:289550b18520211eba7bc25bb99857a73527de13e121156a6c6a193de0525805",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -3949,12 +3949,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.0"
+                  "version": "1.0.2"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:8e82b1165847734a32108f70501e256db53bc8484323d23f4d795b9bfe03cb5b",
+            "metadata_fingerprint": "sha256:ceb099bede034b29f73477efaabd501bebcf567b6c833cdf39fb8fbeaaa0c572",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -4023,7 +4023,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.0"
+        "version": "1.0.2"
       },
       "profile": {
         "id": "wan-animate2.14b.base.official-native",
@@ -4091,7 +4091,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:145a85c4c0ee60e20dbdef7c98d5c92684cd9a2c8e84e0eb4a7805d25baa32b2",
+                "construction_fingerprint": "sha256:56bfdd30560803e574e24ec583d1de3cbdad39ea8d9315c90eb309219b743f62",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:b63061f223fb88503755a788e198bb2ce2501880c4fbe3d92f5bda3aa0f757b3",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -4134,12 +4134,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.0"
+                  "version": "1.0.2"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:cce00e61d4b53c633cf02fee70aa26a3ff4b037614a0a8b804f35cbe74db91a0",
+            "metadata_fingerprint": "sha256:58357fa4f0220d88c19aa1a41a5c1f01e2531fbc6d6fb7ab5871a4ea1c1e9e06",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -4208,7 +4208,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.0"
+        "version": "1.0.2"
       },
       "profile": {
         "id": "wan-animate2.14b.distilled.official-native",
@@ -4276,7 +4276,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:79e28a150df9aa9254fb189f213fba7fbd4e1aa3a86cfecf37abba42cd8d601b",
+                "construction_fingerprint": "sha256:2d74b2a492d387437635f98b0565a31049562f2e3971472fa0b98233bf396ca3",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:049be0cb724103f3ea898d52b5dbef060635afc2d5250ced0f365190c23aa5ff",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -4319,12 +4319,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.0"
+                  "version": "1.0.2"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:e4e4b843254bd0d0bdb5e10d57126e48e221baf7f5be5cfbcdbc9f0f8ae10510",
+            "metadata_fingerprint": "sha256:be5d7e54d3e8057a0efdcfbe8dd494d68e40bbe73715372b382fc3cb57fcd14a",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -4393,7 +4393,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.0"
+        "version": "1.0.2"
       },
       "profile": {
         "id": "wan2.1.flf2v.14b.720p.official-native",
@@ -4461,7 +4461,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:3f4739277112e6ce2d72bfc634e6acae1607bd3fabd35248b821345d13677b51",
+                "construction_fingerprint": "sha256:d733d3960859cc3f344add9beac7ec60fe0c89afe1c9184fad1b8cf5e5992391",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:67ed8a87707583b5c9076ee413c6f42954d7e7928291fc3430036720a277e1a5",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -4504,12 +4504,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.0"
+                  "version": "1.0.2"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:576855ae48831a5108ce5a4c41525d9b479eb3658dc745a7d4bce8194a2be149",
+            "metadata_fingerprint": "sha256:79edb713f895f0f783fb582a1328f70577fc4b1dd11d5e932695594204a677d9",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -4578,7 +4578,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.0"
+        "version": "1.0.2"
       },
       "profile": {
         "id": "wan2.1.i2v.480p.official-native",
@@ -4646,7 +4646,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:5765ce0efc6fd488ff42c2c3ad6a91cb42434528a7cfa0cdc6d21f61ef7856f9",
+                "construction_fingerprint": "sha256:a88cd64efbe4662878215149d1297a364f889ce4c11addc72780aecdf8cd7a83",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:200b7ff3ca8c7a5fc5dd8149617cf831383967f11977aa3ead14b710bf891332",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -4689,12 +4689,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.0"
+                  "version": "1.0.2"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:7d794ca03d25a05b7e4473ec9ab873d09f3b32324a10f9948dc3987fc5f21714",
+            "metadata_fingerprint": "sha256:a117bb52747f46b0561493d659dad887e5cc08ace631deb873772008f7e35340",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -4763,7 +4763,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.0"
+        "version": "1.0.2"
       },
       "profile": {
         "id": "wan2.1.t2v.official-native",
@@ -4831,7 +4831,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:02ec99c12c2bfca93a797e7c01b20918a4fa0177162d6af56580925c3292055e",
+                "construction_fingerprint": "sha256:bd80289bce7476d806ea3ebba3055de9d9337e97fb3d38617afaa6bb8d8f82dc",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:63640d1f280b8208ef399d45bd14a3ef6eecd651431cc12c3e25be45eeea7739",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -4874,12 +4874,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.0"
+                  "version": "1.0.2"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:7e3e832e5f1c1c72d9dd87c6fb5be8cb405b0924679126ce52f96f7eebdc6ac5",
+            "metadata_fingerprint": "sha256:3e09292131d3d097fcf62b9413325c72a56d9dc9095ff24e8658232b937a134b",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -4948,7 +4948,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.0"
+        "version": "1.0.2"
       },
       "profile": {
         "id": "wan2.1.vace.1.3b.official-native",
@@ -5016,7 +5016,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:ca693c519318036c88f9a081ab440e42e0cb11be6b2a8ffbfc742e1ea2bf164c",
+                "construction_fingerprint": "sha256:8890128de0c44584c1d2fe757ba03f9ad498ce9433fb6dda39a4b489cc4662ef",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:67ed8a87707583b5c9076ee413c6f42954d7e7928291fc3430036720a277e1a5",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -5059,12 +5059,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.0"
+                  "version": "1.0.2"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:8df52c84ac0231408a21a386e3595b25437e7122610222de174b600147b4682f",
+            "metadata_fingerprint": "sha256:bd4328c6b17b1d6d10f74c4bb09a9abb60bfafda561ad8b79556b6b52e3b06de",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -5133,7 +5133,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.0"
+        "version": "1.0.2"
       },
       "profile": {
         "id": "wan2.1.vace.14b.official-native",
@@ -5201,7 +5201,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:7eff71381584d66a19df1cdab15a36dbb67c79a1342e0877271a7f3bef17029c",
+                "construction_fingerprint": "sha256:f05a7c6bca7497a7a167cd145adc8cf18eb5d79860a0fd37e98d928af33b060c",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:67ed8a87707583b5c9076ee413c6f42954d7e7928291fc3430036720a277e1a5",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -5244,12 +5244,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.0"
+                  "version": "1.0.2"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:28867228a7bc3d045be0c98abb559eca9878b715f19b05369d3d2c73a4c978be",
+            "metadata_fingerprint": "sha256:b279344d4328ddd700b758c7595660844436ccfd889bc4f55b429f3d3513bc20",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -5318,7 +5318,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.0"
+        "version": "1.0.2"
       },
       "profile": {
         "id": "wan2.2.animate.14b.official-native",
@@ -5386,7 +5386,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:5974b7d518f0f0d6d14fe3ced51b8403583235c5b979edd4b2f3e4518152fd73",
+                "construction_fingerprint": "sha256:ddb2e42c5990e71a2c52dda6ea45384f2dae91e242f58c3e9fb30d006a220262",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:72eb672e152833922f0e314f8934a5348371014af9077f6cdb2338f8299b06e0",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -5429,12 +5429,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.0"
+                  "version": "1.0.2"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:a8b12a94045140bb57454b467c98c39f1c6b368561e9f942fff6e5e85b89ecc6",
+            "metadata_fingerprint": "sha256:3a19c741f3a336cd2e631375b724c4e5a250c1bb9747a02eddc37d0abb1573d6",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -5503,7 +5503,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.0"
+        "version": "1.0.2"
       },
       "profile": {
         "id": "wan2.2.s2v.14b.official-native",
@@ -5571,7 +5571,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:4db0f266759c8ac279ce7d7d8907e80cfe0a15efc90080b7602193f4ea7100da",
+                "construction_fingerprint": "sha256:128749ffd58151a895ec884fd6061748a138cd040d7e816e4486d82479e25ce9",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:200b7ff3ca8c7a5fc5dd8149617cf831383967f11977aa3ead14b710bf891332",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -5614,12 +5614,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.0"
+                  "version": "1.0.2"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:4ce5bccb748aa6aa8e5b880411e75f27b86e5ac1ac0c491808040053854d05de",
+            "metadata_fingerprint": "sha256:59fcae7fa7dce9213543093f0775ac2ce28d0cd9e1e8f9267eb96c070c0eb440",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -5688,7 +5688,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.0"
+        "version": "1.0.2"
       },
       "profile": {
         "id": "wan2.2.t2v-a14b.official-native",
@@ -5756,7 +5756,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:bc502700ee1198f535528a16a691e16cc230f0363d294a273d7c31d1a0ab0d14",
+                "construction_fingerprint": "sha256:060c11ad528830d075ae12efaa7c67ea9ab2fc42236655a3eab2c1ee3acabfc4",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:42b6524db8e2f827a84480d5ec4aff8336a3e2615f6456ea4780c4eeae0b7e31",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -5799,12 +5799,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.0"
+                  "version": "1.0.2"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:96f740a3856a29ee7b0f5bf154f0e2a40a54ee8fbfe293da69d2716fa3f80a6a",
+            "metadata_fingerprint": "sha256:964732446c6814af591102fc13e0637405df3f23f0121980db94d684ee5778b6",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -5873,7 +5873,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.0"
+        "version": "1.0.2"
       },
       "profile": {
         "id": "wan2.2.ti2v.5b.comfy-native",
@@ -5941,7 +5941,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:7f60c67ae927f816713a84c113462362a9e4bb6651f000edf6203dfeb809075d",
+                "construction_fingerprint": "sha256:50488f39b8bed30709f6a5f45b6d3d6156be9b0b99bdb9df66ae920eafce74d1",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:63640d1f280b8208ef399d45bd14a3ef6eecd651431cc12c3e25be45eeea7739",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -5984,12 +5984,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.0"
+                  "version": "1.0.2"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:99dcae2d292aea82a28d0773c6d222afb60b10b9b8440f16f93e418bf3fbb856",
+            "metadata_fingerprint": "sha256:e1a0880ed5a663cf4308c7eed70566d58a1cade30c383b2c69865f934b713107",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -6039,7 +6039,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.0"
+        "version": "1.0.2"
       },
       "profile": {
         "id": "z_image.base.official",
@@ -6097,7 +6097,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:640cc75cf0d8c3cf556abed3129ec1087d8a081bc08fb10ac58ea4006e183231",
+                "construction_fingerprint": "sha256:705f17e19642d484cbd6f97514d25fdfbf81c0b8bc90f52e691be7c7bdbba61c",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:9fda2fba7c87d0182786ccf4c5dc1fb236bbfe592a35d2b173f21447abc38729",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -6140,12 +6140,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.0"
+                  "version": "1.0.2"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:0959b7a5f759706ca6e76c2f0938e338d44492a2233d1a0415011e4868acd6b2",
+            "metadata_fingerprint": "sha256:68ffa439e5013e00c83ea3eafdf3b262ae3756a5473215af000eb209f3e616e6",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -6195,7 +6195,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.0"
+        "version": "1.0.2"
       },
       "profile": {
         "id": "z_image.turbo.official",
@@ -6253,7 +6253,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:709d27531a99f722e0ec1a020850b38e25e97fa013f6bffa6dac480f909c7551",
+                "construction_fingerprint": "sha256:5fedebf97d27274d2f780c0a2ad522384fc1d3682abccd7a05625ae70fc3de1b",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:a8a2d4dc7ff9001bdf7ef8fe931ebe1c7116a2da3d9d12f56da4ce7b65e68835",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -6296,12 +6296,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.0"
+                  "version": "1.0.2"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:5d4f796e2cb2462804badaaf9f5cedb07bc2aa095ff20c60b3478d62730954b2",
+            "metadata_fingerprint": "sha256:c010ed13bb717810227905c1a0902ee6d724feafa6901f43e6a2db45af3e3fe5",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }

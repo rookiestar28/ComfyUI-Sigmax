@@ -23,6 +23,7 @@ from comfyui_sigmax.core import (
     numerical_fingerprint,
 )
 from comfyui_sigmax.profiles import ZImageVariant, build_z_image_schedule
+from comfyui_sigmax.version import VERSION
 
 
 def _canonical(value: object) -> str:
@@ -70,7 +71,7 @@ def _fixture(variant: ZImageVariant, steps: int, ratio: int) -> dict[str, object
     node = WorkflowRequirement(identifier="Sigmax.ZImageSigmaScheduler", version="1")
     profile = WorkflowRequirement(identifier=f"z_image.{variant.value}.official", version="1")
     metadata = WorkflowMetadata(
-        package=WorkflowRequirement(identifier="comfyui-sigmax", version="1.0.0"),
+        package=WorkflowRequirement(identifier="comfyui-sigmax", version=VERSION),
         nodes=(node,),
         host=WorkflowHostRequirement(
             identifier="comfyui", version="0.29.0", api_version="legacy_v1"
@@ -133,7 +134,7 @@ def _fixture(variant: ZImageVariant, steps: int, ratio: int) -> dict[str, object
             }
         ],
         "nodes": [node.projection()],
-        "package": {"id": "comfyui-sigmax", "version": "1.0.0"},
+        "package": {"id": "comfyui-sigmax", "version": VERSION},
         "profile": profile.projection(),
         "variant": f"Z-Image {public_variant}",
         "workflow": workflow,

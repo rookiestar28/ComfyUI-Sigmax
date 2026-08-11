@@ -23,6 +23,7 @@ from comfyui_sigmax.core import (
     numerical_fingerprint,
 )
 from comfyui_sigmax.profiles.lumina2 import Lumina2ShiftMode, build_lumina2_schedule
+from comfyui_sigmax.version import VERSION
 
 
 def _json(value: object, *, indent: int | None = 2) -> str:
@@ -70,7 +71,7 @@ def _fixture() -> dict[str, object]:
         version=result.request.provenance.profile_version or "",
     )
     metadata = WorkflowMetadata(
-        package=WorkflowRequirement(identifier="comfyui-sigmax", version="1.0.0"),
+        package=WorkflowRequirement(identifier="comfyui-sigmax", version=VERSION),
         nodes=(node,),
         host=WorkflowHostRequirement(
             identifier="comfyui", version="0.29.0", api_version="legacy_v1"
@@ -139,7 +140,7 @@ def _fixture() -> dict[str, object]:
             }
         ],
         "nodes": [node.projection()],
-        "package": {"id": "comfyui-sigmax", "version": "1.0.0"},
+        "package": {"id": "comfyui-sigmax", "version": VERSION},
         "profile": profile.projection(),
         "variant": "Lumina-Image 2.0",
         "workflow": workflow,

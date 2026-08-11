@@ -944,7 +944,7 @@ class WanScheduleProbe:
     """Return model-free H2 evidence for explicit Wan profiles."""
 
     CATEGORY = "SigmaxTest"
-    DESCRIPTION = "Test-only Wan 2.1/2.2 schedule H2 execution probe."
+    DESCRIPTION = "Test-only Wan 2.1/2.2 and Wan Animate 2 schedule H2 execution probe."
     FUNCTION = "execute"
     OUTPUT_NODE = True
     RETURN_TYPES: tuple[()] = ()
@@ -980,6 +980,13 @@ class WanScheduleProbe:
             "wan2.1.i2v.480p.official-native": ("official", 3.0, 40, None),
             "wan2.2.ti2v.5b.comfy-native": ("framework_reference", 5.0, 50, None),
             "wan2.2.t2v-a14b.official-native": ("official", 12.0, 40, 0.875),
+            "wan2.1.flf2v.14b.720p.official-native": ("official", 16.0, 50, None),
+            "wan2.1.vace.1.3b.official-native": ("official", 16.0, 50, None),
+            "wan2.1.vace.14b.official-native": ("official", 16.0, 50, None),
+            "wan2.2.s2v.14b.official-native": ("official", 3.0, 40, None),
+            "wan2.2.animate.14b.official-native": ("official", 5.0, 20, None),
+            "wan-animate2.14b.base.official-native": ("official", 5.0, 40, None),
+            "wan-animate2.14b.distilled.official-native": ("official", 5.0, 10, None),
         }.get(profile.get("id"))
         steps = slicing.get("output_steps")
         float_sigmas = _vector(sigmas)

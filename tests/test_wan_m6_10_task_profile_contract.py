@@ -175,7 +175,7 @@ def test_new_profiles_match_m6_09_identity_recipe_and_exact_artifact(member_name
     assert any("DPM++" in item for item in schema.known_limitations)
 
 
-def test_new_profiles_are_exported_and_registered_without_entering_wan_node_v1() -> None:
+def test_new_profiles_are_exported_and_registered_in_the_successor_wan_node_v1() -> None:
     module = _wan()
     public = importlib.import_module("comfyui_sigmax.profiles")
     registry = builtin_profile_registry()
@@ -188,11 +188,20 @@ def test_new_profiles_are_exported_and_registered_without_entering_wan_node_v1()
 
     node = importlib.import_module("comfyui_sigmax.nodes.wan_sigma_scheduler")
     assert node.WAN_SIGMA_NODE_SCHEMA_ID == "sigmax.wan-sigma-node/1"
-    assert node._TASKS == ("T2V", "I2V", "TI2V", "T2V A14B", "I2V A14B")
-    new_ids = {getattr(module.WanProfileId, name) for name in _NEW_PROFILE_NAMES}
-    assert not new_ids.intersection(
-        profile_id for profile_id, _resolution in node._PROFILES.values()
+    assert node._TASKS[:5] == ("T2V", "I2V", "TI2V", "T2V A14B", "I2V A14B")
+    assert node._TASKS[5:] == (
+        "FLF2V",
+        "VACE 1.3B",
+        "VACE 14B",
+        "S2V",
+        "Animate",
+        "Animate Base",
+        "Animate Distilled",
     )
+    new_ids = {getattr(module.WanProfileId, name) for name in _NEW_PROFILE_NAMES}
+    assert new_ids == {
+        profile_id for profile_id, _resolution in node._PROFILES.values() if profile_id in new_ids
+    }
 
 
 @pytest.mark.parametrize("member_name", _NEW_PROFILE_NAMES)

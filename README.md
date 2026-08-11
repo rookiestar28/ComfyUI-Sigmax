@@ -90,13 +90,16 @@ Connect an image scheduler's `SIGMAS` directly to a custom-sampling path that ac
 | --- | --- | --- |
 | MiniMax H3 Base | `Sigmax.MiniMaxH3SigmaScheduler` | Select `H3 Base FL2VA` or `H3 Base Ref2VA`; `steps=20` produces 21 endpoint-inclusive video sigmas and 20 transitions; audio remapping remains model-owned |
 | Wan 2.1 T2V / I2V | `Sigmax.WanSigmaScheduler` | Select generation, task, source, and resolution explicitly; official T2V 50 steps (`5.0`), official I2V 480P/720P 40 steps (`3.0`/`5.0`) |
+| Wan 2.1 FLF2V / VACE | `Sigmax.WanSigmaScheduler` | Official-native FLF2V 14B 720P uses 50 steps (`16.0`); VACE 1.3B/14B use 50 steps (`16.0`) |
 | Wan 2.2 TI2V 5B / A14B T2V/I2V | `Sigmax.WanSigmaScheduler` | Native or Diffusers-reference source lanes; TI2V 5B uses `5.0`; A14B T2V/I2V use `12.0`/`5.0` with caller-owned boundary metadata |
+| Wan 2.2 S2V / Animate | `Sigmax.WanSigmaScheduler` | Official-native S2V 14B uses 40 steps (`3.0`); Animate 14B uses 20 steps (`5.0`) |
+| Wan Animate 2 Base / Distilled | `Sigmax.WanSigmaScheduler` | Official-native Base uses 40 steps (`5.0`); Distilled uses 10 steps (`5.0`); select the task explicitly |
 | LTXV 0.9.8 / LTX-2 19B / LTX-2.3 22B | `Sigmax.LTXSigmaScheduler` | Dev adaptive token shift (20/40/30 default steps) or explicit LTX-2/LTX-2.3 distilled Stage 1/2 vectors; generation and stage are explicit |
 
 Connect a video scheduler's `SIGMAS` directly to the matching custom-sampling path. Do not add another scheduler or time shift, and inspect `schedule_info` for the selected generation mode, stage, resolution, boundary ownership, and warnings.
 
 - **MiniMax H3:** Select Base FL2VA or Ref2VA explicitly. Public `steps` count executed transitions (`sigma_count = steps + 1`). Sigmax owns the Diffusers endpoint-inclusive external video schedule with shift `12.0`; ComfyUI's upstream `MiniMaxH3SigmaShift` supplies matching video/audio values `12.0`/`3.0` for model-owned audio mapping. Keep the two nodes aligned, and do not add `BasicScheduler` or another time shift. Native `simple` remains a separate lane. The model-free workflow helper can preflight a graph against ComfyUI `/object_info` without loading weights or submitting a prompt. Context-IR, Regenerate-2K, sparse attention, weights, samplers, hosted/API behavior, and quality claims are excluded.
-- **Wan 2.1/2.2:** Select generation, task, source, and resolution explicitly. Wan 2.1 I2V requires `480P` or `720P`; Wan 2.2 A14B boundaries are caller-owned metadata and never route experts. Diffusers-reference lanes describe scheduler math only; execution, weights, and video-quality parity are excluded.
+- **Wan 2.1/2.2 and Wan Animate 2:** Select generation, task, source, and resolution explicitly. Wan 2.1 I2V requires `480P` or `720P`; Wan 2.2 A14B boundaries are caller-owned metadata and never route experts. FLF2V, VACE, S2V, Animate, and Wan Animate 2 rows are official-native schedule math only; Diffusers-reference lanes describe scheduler construction only. Execution, weights, expert routing, conditioning, and video-quality parity are excluded.
 - **LTX:** Select LTXV 0.9.8, LTX-2 19B, or LTX-2.3 22B plus generation/stage explicitly. Dev mode derives one token-count shift; distilled modes use immutable publisher vectors. Sigmax does not load video weights, run encoders, or claim video-quality parity.
 
 ### Inspect or modify a schedule

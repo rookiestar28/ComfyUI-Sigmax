@@ -17,18 +17,25 @@ from comfyui_sigmax.core import (
 from comfyui_sigmax.nodes.krea2_sigma_scheduler import sigma_output_fingerprint
 from comfyui_sigmax.profiles.wan import (
     WAN21_COMFY_NATIVE_PROFILE,
+    WAN21_FLF2V_14B_720P_OFFICIAL_PROFILE,
     WAN21_I2V_480P_DIFFUSERS_PROFILE,
     WAN21_I2V_480P_OFFICIAL_PROFILE,
     WAN21_I2V_720P_DIFFUSERS_PROFILE,
     WAN21_I2V_720P_OFFICIAL_PROFILE,
     WAN21_T2V_DIFFUSERS_PROFILE,
     WAN21_T2V_OFFICIAL_PROFILE,
+    WAN21_VACE_1_3B_OFFICIAL_PROFILE,
+    WAN21_VACE_14B_OFFICIAL_PROFILE,
+    WAN22_ANIMATE_14B_OFFICIAL_PROFILE,
     WAN22_I2V_A14B_DIFFUSERS_PROFILE,
     WAN22_I2V_A14B_NATIVE_PROFILE,
+    WAN22_S2V_14B_OFFICIAL_PROFILE,
     WAN22_T2V_A14B_DIFFUSERS_PROFILE,
     WAN22_T2V_A14B_NATIVE_PROFILE,
     WAN22_TI2V_5B_DIFFUSERS_PROFILE,
     WAN22_TI2V_5B_NATIVE_PROFILE,
+    WAN_ANIMATE2_BASE_14B_OFFICIAL_PROFILE,
+    WAN_ANIMATE2_DISTILLED_14B_OFFICIAL_PROFILE,
     WanProfile,
     WanProfileId,
     WanResolution,
@@ -39,8 +46,21 @@ from comfyui_sigmax.profiles.wan import (
 WAN_SIGMA_NODE_ID: Final = "Sigmax.WanSigmaScheduler"
 WAN_SIGMA_NODE_SCHEMA_ID: Final = "sigmax.wan-sigma-node/1"
 _MAX_STEPS: Final = 10_000
-_GENERATIONS: Final = ("Wan 2.1", "Wan 2.2")
-_TASKS: Final = ("T2V", "I2V", "TI2V", "T2V A14B", "I2V A14B")
+_GENERATIONS: Final = ("Wan 2.1", "Wan 2.2", "Wan Animate 2")
+_TASKS: Final = (
+    "T2V",
+    "I2V",
+    "TI2V",
+    "T2V A14B",
+    "I2V A14B",
+    "FLF2V",
+    "VACE 1.3B",
+    "VACE 14B",
+    "S2V",
+    "Animate",
+    "Animate Base",
+    "Animate Distilled",
+)
 _SOURCES: Final = ("ComfyUI native", "Official native", "Diffusers reference")
 _RESOLUTIONS: Final = ("None", "480P", "720P")
 
@@ -97,22 +117,57 @@ _PROFILES: dict[tuple[str, str, str, str], tuple[WanProfileId, WanResolution]] =
         WanProfileId.WAN22_I2V_A14B_DIFFUSERS,
         WanResolution.NONE,
     ),
+    ("Wan 2.1", "FLF2V", "Official native", "720P"): (
+        WanProfileId.WAN21_FLF2V_14B_720P_OFFICIAL,
+        WanResolution.P720,
+    ),
+    ("Wan 2.1", "VACE 1.3B", "Official native", "None"): (
+        WanProfileId.WAN21_VACE_1_3B_OFFICIAL,
+        WanResolution.NONE,
+    ),
+    ("Wan 2.1", "VACE 14B", "Official native", "None"): (
+        WanProfileId.WAN21_VACE_14B_OFFICIAL,
+        WanResolution.NONE,
+    ),
+    ("Wan 2.2", "S2V", "Official native", "None"): (
+        WanProfileId.WAN22_S2V_14B_OFFICIAL,
+        WanResolution.NONE,
+    ),
+    ("Wan 2.2", "Animate", "Official native", "None"): (
+        WanProfileId.WAN22_ANIMATE_14B_OFFICIAL,
+        WanResolution.NONE,
+    ),
+    ("Wan Animate 2", "Animate Base", "Official native", "None"): (
+        WanProfileId.WAN_ANIMATE2_BASE_14B_OFFICIAL,
+        WanResolution.NONE,
+    ),
+    ("Wan Animate 2", "Animate Distilled", "Official native", "None"): (
+        WanProfileId.WAN_ANIMATE2_DISTILLED_14B_OFFICIAL,
+        WanResolution.NONE,
+    ),
 }
 
 _PROFILE_OBJECTS: dict[WanProfileId, WanProfile] = {
     WanProfileId.WAN21_COMFY_NATIVE: WAN21_COMFY_NATIVE_PROFILE,
+    WanProfileId.WAN21_FLF2V_14B_720P_OFFICIAL: WAN21_FLF2V_14B_720P_OFFICIAL_PROFILE,
     WanProfileId.WAN21_T2V_OFFICIAL: WAN21_T2V_OFFICIAL_PROFILE,
     WanProfileId.WAN21_I2V_480P_OFFICIAL: WAN21_I2V_480P_OFFICIAL_PROFILE,
     WanProfileId.WAN21_I2V_720P_OFFICIAL: WAN21_I2V_720P_OFFICIAL_PROFILE,
     WanProfileId.WAN21_T2V_DIFFUSERS: WAN21_T2V_DIFFUSERS_PROFILE,
+    WanProfileId.WAN21_VACE_1_3B_OFFICIAL: WAN21_VACE_1_3B_OFFICIAL_PROFILE,
+    WanProfileId.WAN21_VACE_14B_OFFICIAL: WAN21_VACE_14B_OFFICIAL_PROFILE,
     WanProfileId.WAN21_I2V_480P_DIFFUSERS: WAN21_I2V_480P_DIFFUSERS_PROFILE,
     WanProfileId.WAN21_I2V_720P_DIFFUSERS: WAN21_I2V_720P_DIFFUSERS_PROFILE,
     WanProfileId.WAN22_TI2V_5B_NATIVE: WAN22_TI2V_5B_NATIVE_PROFILE,
+    WanProfileId.WAN22_S2V_14B_OFFICIAL: WAN22_S2V_14B_OFFICIAL_PROFILE,
+    WanProfileId.WAN22_ANIMATE_14B_OFFICIAL: WAN22_ANIMATE_14B_OFFICIAL_PROFILE,
     WanProfileId.WAN22_T2V_A14B_NATIVE: WAN22_T2V_A14B_NATIVE_PROFILE,
     WanProfileId.WAN22_I2V_A14B_NATIVE: WAN22_I2V_A14B_NATIVE_PROFILE,
     WanProfileId.WAN22_TI2V_5B_DIFFUSERS: WAN22_TI2V_5B_DIFFUSERS_PROFILE,
     WanProfileId.WAN22_T2V_A14B_DIFFUSERS: WAN22_T2V_A14B_DIFFUSERS_PROFILE,
     WanProfileId.WAN22_I2V_A14B_DIFFUSERS: WAN22_I2V_A14B_DIFFUSERS_PROFILE,
+    WanProfileId.WAN_ANIMATE2_BASE_14B_OFFICIAL: WAN_ANIMATE2_BASE_14B_OFFICIAL_PROFILE,
+    WanProfileId.WAN_ANIMATE2_DISTILLED_14B_OFFICIAL: WAN_ANIMATE2_DISTILLED_14B_OFFICIAL_PROFILE,
 }
 
 

@@ -1,4 +1,4 @@
-"""Add deterministic Wan 2.1/2.2 workflow fixtures and host schema evidence."""
+"""Add deterministic Wan family workflow fixtures and host schema evidence."""
 
 from __future__ import annotations
 
@@ -209,6 +209,76 @@ def main(arguments: Sequence[str] | None = None) -> int:
                 steps=40,
                 profile_id="wan2.2.t2v-a14b.official-native",
             ),
+            _fixture(
+                identifier="wan21-flf2v-720p-official-50",
+                variant="Wan 2.1 FLF2V 14B 720P",
+                generation="Wan 2.1",
+                task="FLF2V",
+                source="Official native",
+                resolution="720P",
+                steps=50,
+                profile_id="wan2.1.flf2v.14b.720p.official-native",
+            ),
+            _fixture(
+                identifier="wan21-vace-1-3b-official-50",
+                variant="Wan 2.1 VACE 1.3B",
+                generation="Wan 2.1",
+                task="VACE 1.3B",
+                source="Official native",
+                resolution="None",
+                steps=50,
+                profile_id="wan2.1.vace.1.3b.official-native",
+            ),
+            _fixture(
+                identifier="wan21-vace-14b-official-50",
+                variant="Wan 2.1 VACE 14B",
+                generation="Wan 2.1",
+                task="VACE 14B",
+                source="Official native",
+                resolution="None",
+                steps=50,
+                profile_id="wan2.1.vace.14b.official-native",
+            ),
+            _fixture(
+                identifier="wan22-s2v-14b-official-40",
+                variant="Wan 2.2 S2V 14B",
+                generation="Wan 2.2",
+                task="S2V",
+                source="Official native",
+                resolution="None",
+                steps=40,
+                profile_id="wan2.2.s2v.14b.official-native",
+            ),
+            _fixture(
+                identifier="wan22-animate-14b-official-20",
+                variant="Wan 2.2 Animate 14B",
+                generation="Wan 2.2",
+                task="Animate",
+                source="Official native",
+                resolution="None",
+                steps=20,
+                profile_id="wan2.2.animate.14b.official-native",
+            ),
+            _fixture(
+                identifier="wan-animate2-base-14b-official-40",
+                variant="Wan Animate 2 Base 14B",
+                generation="Wan Animate 2",
+                task="Animate Base",
+                source="Official native",
+                resolution="None",
+                steps=40,
+                profile_id="wan-animate2.14b.base.official-native",
+            ),
+            _fixture(
+                identifier="wan-animate2-distilled-14b-official-10",
+                variant="Wan Animate 2 Distilled 14B",
+                generation="Wan Animate 2",
+                task="Animate Distilled",
+                source="Official native",
+                resolution="None",
+                steps=10,
+                profile_id="wan-animate2.14b.distilled.official-native",
+            ),
         )
     )
     bundle["fixtures"] = sorted(retained, key=lambda item: item["id"])
@@ -223,6 +293,7 @@ def main(arguments: Sequence[str] | None = None) -> int:
         "Sigmax.HunyuanImage21SigmaScheduler",
         "Sigmax.Krea2ConditioningRebalance",
         "Sigmax.Krea2SigmaScheduler",
+        "Sigmax.LTXSigmaScheduler",
         "Sigmax.Lumina2SigmaScheduler",
         "Sigmax.QwenImageSigmaScheduler",
         "Sigmax.RawWorkflowOutput",

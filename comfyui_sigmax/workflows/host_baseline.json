@@ -707,7 +707,8 @@
           "isOptional": false,
           "options": [
             "Wan 2.1",
-            "Wan 2.2"
+            "Wan 2.2",
+            "Wan Animate 2"
           ]
         },
         "task": {
@@ -719,7 +720,14 @@
             "I2V",
             "TI2V",
             "T2V A14B",
-            "I2V A14B"
+            "I2V A14B",
+            "FLF2V",
+            "VACE 1.3B",
+            "VACE 14B",
+            "S2V",
+            "Animate",
+            "Animate Base",
+            "Animate Distilled"
           ]
         },
         "source": {
@@ -1672,7 +1680,8 @@
           "generation": [
             [
               "Wan 2.1",
-              "Wan 2.2"
+              "Wan 2.2",
+              "Wan Animate 2"
             ]
           ],
           "task": [
@@ -1681,7 +1690,14 @@
               "I2V",
               "TI2V",
               "T2V A14B",
-              "I2V A14B"
+              "I2V A14B",
+              "FLF2V",
+              "VACE 1.3B",
+              "VACE 14B",
+              "S2V",
+              "Animate",
+              "Animate Base",
+              "Animate Distilled"
             ]
           ],
           "source": [

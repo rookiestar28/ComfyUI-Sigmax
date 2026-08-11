@@ -14,6 +14,13 @@ _CASES = (
     ("Wan 2.1", "I2V", "Official native", "480P", 40),
     ("Wan 2.2", "TI2V", "ComfyUI native", "None", 50),
     ("Wan 2.2", "T2V A14B", "Official native", "None", 40),
+    ("Wan 2.1", "FLF2V", "Official native", "720P", 50),
+    ("Wan 2.1", "VACE 1.3B", "Official native", "None", 50),
+    ("Wan 2.1", "VACE 14B", "Official native", "None", 50),
+    ("Wan 2.2", "S2V", "Official native", "None", 40),
+    ("Wan 2.2", "Animate", "Official native", "None", 20),
+    ("Wan Animate 2", "Animate Base", "Official native", "None", 40),
+    ("Wan Animate 2", "Animate Distilled", "Official native", "None", 10),
 )
 
 

@@ -39,6 +39,11 @@ A newer ComfyUI version may work, but is not automatically promoted to the valid
 | Wan 2.1 I2V | Resolution-qualified official/Diffusers-reference paths: 480P `3.0` and 720P `5.0`, 40-step recipes | Use `Sigmax.WanSigmaScheduler`; select `I2V` and the actual `480P` or `720P` class |
 | Wan 2.2 TI2V 5B | Native and Diffusers-reference unit-flow `5.0` shift, 50-step recipes | Use `Sigmax.WanSigmaScheduler`; select `TI2V` and the source explicitly |
 | Wan 2.2 A14B T2V/I2V | Source-qualified unit-flow paths with caller-owned boundaries; native T2V/I2V `12.0`/`5.0`, Diffusers references `3.0` | Use `Sigmax.WanSigmaScheduler`; boundary output is metadata only and never routes experts |
+| Wan 2.1 FLF2V 14B 720P | Official-native unit-flow `16.0` shift, 50-step recipe | Use `Sigmax.WanSigmaScheduler`; select `FLF2V`, `Official native`, and `720P` explicitly |
+| Wan 2.1 VACE 1.3B / 14B | Official-native unit-flow `16.0` shift, 50-step recipes | Use `Sigmax.WanSigmaScheduler`; select the VACE model size and `Official native` explicitly |
+| Wan 2.2 S2V 14B | Official-native unit-flow `3.0` shift, 40-step recipe | Use `Sigmax.WanSigmaScheduler`; select `S2V` and `Official native` explicitly |
+| Wan 2.2 Animate 14B | Official-native unit-flow `5.0` shift, 20-step recipe | Use `Sigmax.WanSigmaScheduler`; select `Animate` and `Official native` explicitly |
+| Wan Animate 2 Base / Distilled 14B | Official-native unit-flow `5.0` shift, 40-step Base or 10-step Distilled recipes | Use `Sigmax.WanSigmaScheduler`; select `Wan Animate 2` and the explicit Base/Distilled task |
 | LTXV 0.9.8 / LTX-2 19B / LTX-2.3 22B | Dev token-count adaptive shift; LTX-2/LTX-2.3 distilled Stage 1/2 immutable vectors; schedule-only | Use `Sigmax.LTXSigmaScheduler`; select generation and stage explicitly |
 
 The experimental `Sigmax.Krea2ConditioningRebalance` node accepts explicit RAW or Turbo
@@ -87,6 +92,9 @@ transforms.
   Anima weight files remain under CircleStone Labs and applicable derivative licenses.
 - Wan profiles keep ComfyUI-native, official-native, and Diffusers-reference shift ownership
   separate. A Wan 2.1 I2V resolution is mandatory, and unsupported derivatives fail closed.
+  The released FLF2V, VACE, S2V, Wan 2.2 Animate, and Wan Animate 2 rows are official-native
+  schedule lanes only; they do not imply model loading, conditioning, expert routing, or quality
+  parity.
 - Wan 2.2 A14B boundaries are descriptive caller-owned split metadata; Sigmax does not select high
   or low experts, load video weights, patch the model, or implement a video sampler.
 - Wan Diffusers-reference rows document scheduler sigma/timestep construction only; they do not
@@ -106,8 +114,8 @@ transforms.
   documented MiniMax H3 host workflow.
 - Automatic compatibility with unlisted model families.
 - Guaranteed compatibility with every future ComfyUI release.
-- AuraFlow v0.1/v0.3, PonyFlow, Wan derivatives (FLF2V/VACE/Fun-Control and similar), community
-  finetunes, or real-model image-quality parity.
+- AuraFlow v0.1/v0.3, PonyFlow, unsupported Wan derivatives (including Fun-Control and community
+  finetunes), or real-model image-quality parity.
 
 If a workflow falls outside these boundaries, treat it as unvalidated rather than silently
 substituting another profile or schedule.

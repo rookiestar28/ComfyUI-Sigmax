@@ -234,7 +234,7 @@ def test_m6_11_diffusers_candidates_remain_unregistered_with_stable_blockers() -
         assert planned[profile_id].runtime_registered is False
 
 
-def test_m6_11_native_profiles_are_exported_registered_and_not_in_wan_node_v1() -> None:
+def test_m6_11_native_profiles_are_exported_registered_in_the_successor_wan_node_v1() -> None:
     module = _wan()
     public = importlib.import_module("comfyui_sigmax.profiles")
     registry = builtin_profile_registry()
@@ -247,10 +247,13 @@ def test_m6_11_native_profiles_are_exported_registered_and_not_in_wan_node_v1() 
         assert getattr(public, f"{member_name}_SCHEMA") is profile.schema
         assert ProfileKey.from_schema(profile.schema) in keys
     node = importlib.import_module("comfyui_sigmax.nodes.wan_sigma_scheduler")
-    assert node._TASKS == ("T2V", "I2V", "TI2V", "T2V A14B", "I2V A14B")
-    assert not {module.WanProfileId(profile_id) for profile_id in _EXPECTED_NATIVE}.intersection(
-        profile_id for profile_id, _resolution in node._PROFILES.values()
-    )
+    assert node._TASKS[:5] == ("T2V", "I2V", "TI2V", "T2V A14B", "I2V A14B")
+    native_ids = {module.WanProfileId(profile_id) for profile_id in _EXPECTED_NATIVE}
+    assert native_ids == {
+        profile_id
+        for profile_id, _resolution in node._PROFILES.values()
+        if profile_id in native_ids
+    }
     assert len(registry.entries) == 46
 
 

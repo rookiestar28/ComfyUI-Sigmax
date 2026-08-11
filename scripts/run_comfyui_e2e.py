@@ -1143,6 +1143,13 @@ def build_wan_h2_api_prompt(
         ("Wan 2.1", "I2V", "Official native", "480P", 40),
         ("Wan 2.2", "TI2V", "ComfyUI native", "None", 50),
         ("Wan 2.2", "T2V A14B", "Official native", "None", 40),
+        ("Wan 2.1", "FLF2V", "Official native", "720P", 50),
+        ("Wan 2.1", "VACE 1.3B", "Official native", "None", 50),
+        ("Wan 2.1", "VACE 14B", "Official native", "None", 50),
+        ("Wan 2.2", "S2V", "Official native", "None", 40),
+        ("Wan 2.2", "Animate", "Official native", "None", 20),
+        ("Wan Animate 2", "Animate Base", "Official native", "None", 40),
+        ("Wan Animate 2", "Animate Distilled", "Official native", "None", 10),
     }
     if (generation, task, source, resolution, steps) not in allowed:
         raise ScheduleContractError("Wan H2 selection must be one of the pinned dense cases")
@@ -1206,6 +1213,48 @@ def verify_wan_h2_history(
             "official",
             12.0,
             0.875,
+        ),
+        ("Wan 2.1", "FLF2V", "Official native", "720P", 50): (
+            "wan2.1.flf2v.14b.720p.official-native",
+            "official",
+            16.0,
+            None,
+        ),
+        ("Wan 2.1", "VACE 1.3B", "Official native", "None", 50): (
+            "wan2.1.vace.1.3b.official-native",
+            "official",
+            16.0,
+            None,
+        ),
+        ("Wan 2.1", "VACE 14B", "Official native", "None", 50): (
+            "wan2.1.vace.14b.official-native",
+            "official",
+            16.0,
+            None,
+        ),
+        ("Wan 2.2", "S2V", "Official native", "None", 40): (
+            "wan2.2.s2v.14b.official-native",
+            "official",
+            3.0,
+            None,
+        ),
+        ("Wan 2.2", "Animate", "Official native", "None", 20): (
+            "wan2.2.animate.14b.official-native",
+            "official",
+            5.0,
+            None,
+        ),
+        ("Wan Animate 2", "Animate Base", "Official native", "None", 40): (
+            "wan-animate2.14b.base.official-native",
+            "official",
+            5.0,
+            None,
+        ),
+        ("Wan Animate 2", "Animate Distilled", "Official native", "None", 10): (
+            "wan-animate2.14b.distilled.official-native",
+            "official",
+            5.0,
+            None,
         ),
     }
     selection = expected.get((generation, task, source, resolution, steps))
@@ -3436,6 +3485,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
             "H2_LUMINA2_M6_05",
             "H2_HUNYUAN_IMAGE21_M6_05",
             "H2_ANIMA_M6_05",
+            "H2_WAN_M4_14",
             "H2_LTX_M6_05",
             "H3_EULER_M5_01",
         ],
@@ -3981,6 +4031,62 @@ def run(args: argparse.Namespace) -> dict[str, object]:
                     "resolution": "None",
                     "steps": 40,
                 },
+                {
+                    "id": "wan21-flf2v-720p-official-50",
+                    "generation": "Wan 2.1",
+                    "task": "FLF2V",
+                    "source": "Official native",
+                    "resolution": "720P",
+                    "steps": 50,
+                },
+                {
+                    "id": "wan21-vace-1-3b-official-50",
+                    "generation": "Wan 2.1",
+                    "task": "VACE 1.3B",
+                    "source": "Official native",
+                    "resolution": "None",
+                    "steps": 50,
+                },
+                {
+                    "id": "wan21-vace-14b-official-50",
+                    "generation": "Wan 2.1",
+                    "task": "VACE 14B",
+                    "source": "Official native",
+                    "resolution": "None",
+                    "steps": 50,
+                },
+                {
+                    "id": "wan22-s2v-14b-official-40",
+                    "generation": "Wan 2.2",
+                    "task": "S2V",
+                    "source": "Official native",
+                    "resolution": "None",
+                    "steps": 40,
+                },
+                {
+                    "id": "wan22-animate-14b-official-20",
+                    "generation": "Wan 2.2",
+                    "task": "Animate",
+                    "source": "Official native",
+                    "resolution": "None",
+                    "steps": 20,
+                },
+                {
+                    "id": "wan-animate2-base-14b-official-40",
+                    "generation": "Wan Animate 2",
+                    "task": "Animate Base",
+                    "source": "Official native",
+                    "resolution": "None",
+                    "steps": 40,
+                },
+                {
+                    "id": "wan-animate2-distilled-14b-official-10",
+                    "generation": "Wan Animate 2",
+                    "task": "Animate Distilled",
+                    "source": "Official native",
+                    "resolution": "None",
+                    "steps": 10,
+                },
             ):
                 case_id = cast(str, case["id"])
                 wan_fixture = fixtures.get(case_id)
@@ -4039,7 +4145,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
                     )
 
                 wan_summary, wan_transition = execute_verified_host_repeat(
-                    lane="H2_WAN_M6_05",
+                    lane="H2_WAN_M4_14",
                     submit=submit_wan,
                     verify=verify_wan,
                 )

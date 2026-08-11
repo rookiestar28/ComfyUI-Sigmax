@@ -21,6 +21,14 @@ tracked independently from the frozen profile-schema version.
 - Source-qualified Wan 2.1 and 2.2 schedule matrices with `Sigmax.WanSigmaScheduler`, covering
   explicit T2V/I2V/TI2V generation, source, and resolution lanes. Wan 2.2 A14B boundaries remain
   caller-owned metadata; Sigmax does not route experts or implement a video sampler.
+- Extended `Sigmax.WanSigmaScheduler` with official-native FLF2V, VACE, S2V, Wan 2.2 Animate,
+  and Wan Animate 2 Base/Distilled task profiles. Each profile preserves explicit source, task,
+  resolution, and documented shift/step recipe ownership; A14B boundary metadata remains
+  caller-owned, with no expert-routing, model-execution, or video-quality claim.
+- Completed model-free Wan compatibility and release qualification on the pinned ComfyUI 0.29.0
+  known-good lane and the current ComfyUI 0.31.0 lane, covering first/repeat registration,
+  schema, schedule/metadata, package, and co-installation checks. These lanes do not establish
+  real-model execution or video-quality parity.
 - Source-qualified LTXV 0.9.8, LTX-2 19B, and LTX-2.3 22B schedules with
   `Sigmax.LTXSigmaScheduler`, separating adaptive Dev token shifts from immutable distilled Stage
   1/2 vectors.

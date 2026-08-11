@@ -9,13 +9,17 @@ current unreleased development additions described below.
 | --- | --- |
 | Python | 3.10 or newer |
 | ComfyUI package requirement | 0.29.0 or newer |
-| General validated host baseline | ComfyUI 0.29.0 |
+| General validated host baseline | ComfyUI 0.29.0 (pinned known-good lane) |
+| Current Wan qualification lane | ComfyUI 0.31.0 on Windows (model-free H1/H2 registration, schema, schedule, and metadata checks) |
 | MiniMax H3 validated host baseline | ComfyUI 0.30.0 with the upstream H3 nodes |
 | Operating systems covered by project gates | Windows and Linux/WSL |
 | Mandatory additional Python packages | None |
 | Host runtime dependency policy | Record the selected host's compatible package versions; current ComfyUI-recommended `comfy-aimdo` versions (including 0.4.13) are accepted without an exact-version gate |
 
 A newer ComfyUI version may work, but is not automatically promoted to the validated host baseline; reproduce workflows on that baseline first after an update.
+
+The current ComfyUI 0.31.0 lane is limited to model-free Wan qualification and does not establish
+real-model execution or video-quality parity.
 
 ## Supported model profiles
 
@@ -97,6 +101,8 @@ transforms.
   parity.
 - Wan 2.2 A14B boundaries are descriptive caller-owned split metadata; Sigmax does not select high
   or low experts, load video weights, patch the model, or implement a video sampler.
+- Automatic Wan 2.2 A14B expert dispatch and controlled shift/quality experiments remain outside
+  the current supported schedule-only boundary.
 - Wan Diffusers-reference rows document scheduler sigma/timestep construction only; they do not
   claim UniPC solver parity when consumed by an Euler sampler.
 - LTX generation and stage are explicit; Dev token shifting and distilled vectors are separate

@@ -125,6 +125,9 @@ class QualityConfigurationTests(unittest.TestCase):
         wan22_repository_hash = (
             "82646227edf451d1da04d45e198a1071c461a6c1"  # pragma: allowlist secret
         )
+        wan22_animate_repository_hash = (
+            "d82bef7b9bbd264a45dcfb6bd6651645ded29a7e"  # pragma: allowlist secret
+        )
         wan_comfyui_hash = "ba2d9a512ac48100b11ca25836a795bc97546b8a"  # pragma: allowlist secret
         wan_diffusers_hash = "ef2388a309fa35d5401f5952a447ca13a96ee801"  # pragma: allowlist secret
         ltx_hashes = (
@@ -308,6 +311,22 @@ class QualityConfigurationTests(unittest.TestCase):
                         "type": "Hex High Entropy String",
                         "filename": "tests/golden/wan_m6_10_v1.json",
                         "hashed_secret": wan22_repository_hash,
+                        "is_verified": False,
+                        "line_number": 1,
+                    },
+                ],
+                "tests/golden/wan_m6_11_v1.json": [
+                    {
+                        "type": "Hex High Entropy String",
+                        "filename": "tests/golden/wan_m6_11_v1.json",
+                        "hashed_secret": wan22_repository_hash,
+                        "is_verified": False,
+                        "line_number": 1,
+                    },
+                    {
+                        "type": "Hex High Entropy String",
+                        "filename": "tests/golden/wan_m6_11_v1.json",
+                        "hashed_secret": wan22_animate_repository_hash,
                         "is_verified": False,
                         "line_number": 1,
                     },

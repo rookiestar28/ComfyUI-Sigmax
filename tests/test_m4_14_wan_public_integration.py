@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib
 import json
+from typing import Any, cast
 
 import pytest
 from comfyui_sigmax.core import ScheduleContractError
@@ -174,7 +175,9 @@ def test_m4_14_new_workflow_fixtures_and_host_options_exist(
     fixture = fixtures[fixture_id]
     assert fixture.variant.startswith("Wan")
     assert fixture.profile.identifier == profile_id
-    scheduler = next(node for node in fixture.workflow["nodes"] if node["id"] == 1)
+    workflow = cast(dict[str, object], fixture.workflow)
+    nodes = cast(list[dict[str, Any]], workflow["nodes"])
+    scheduler = next(node for node in nodes if node["id"] == 1)
     assert scheduler["widgets_values"] == [
         generation,
         task,
@@ -188,6 +191,7 @@ def test_m4_14_new_workflow_fixtures_and_host_options_exist(
     ]
 
     baseline = load_pinned_host_baseline()
-    required = baseline.object_info["Sigmax.WanSigmaScheduler"]["input"]["required"]
+    object_info = cast(dict[str, Any], baseline.object_info)
+    required = object_info["Sigmax.WanSigmaScheduler"]["input"]["required"]
     assert generation in required["generation"][0]
     assert task in required["task"][0]

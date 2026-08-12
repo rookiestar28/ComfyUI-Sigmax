@@ -1,5 +1,8 @@
 # ComfyUI-Sigmax
+
 ComfyUI-Sigmax provides model-aware sigma schedules for ComfyUI, with supported Krea 2, Z-Image, FLUX.1-schnell, Qwen Image, SD3, AuraFlow v0.2, Lumina-Image 2.0, HunyuanImage 2.1, MiniMax H3 Base FL2VA/Ref2VA, Anima, Wan 2.1/2.2, Wan Animate 2, and LTX profiles plus editing tools.
+
+![Model-aware sigma schedules, sampler compatibility validation, and versioned inference profiles for ComfyUI.](assets/overview.png)
 
 ## Table of contents
 

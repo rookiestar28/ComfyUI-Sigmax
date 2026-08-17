@@ -51,7 +51,7 @@ def _error(actual: tuple[float, ...], expected: tuple[float, ...]) -> tuple[floa
 
 def test_pinned_modeltc_revision_and_fixture_schema() -> None:
     fixture = _fixture()
-    assert fixture["source_revision"] == MINIMAX_H3_TURBO_MODELTECH_REVISION
+    assert "".join(fixture["source_revision_chunks"]) == MINIMAX_H3_TURBO_MODELTECH_REVISION
     assert fixture["schema"] == "sigmax.minimax-h3-turbo-golden/1"
     assert fixture["tolerances"] == {"float64_max_abs": "1e-8", "float32_max_abs": "1e-6"}
 

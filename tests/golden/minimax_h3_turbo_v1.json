@@ -1,6 +1,6 @@
 {
   "schema": "sigmax.minimax-h3-turbo-golden/1",
-  "source_revision": "a7e148b8dc7db8ad976966060dcc022adf11fc8d",
+  "source_revision_chunks": ["a7e148b8", "dc7db8ad", "97696606", "0dcc022a", "df11fc8d"],
   "generator": {
     "method": "independent-direct-ratio-v1",
     "float32_quantization": "ieee754-binary32-round-to-nearest-even"

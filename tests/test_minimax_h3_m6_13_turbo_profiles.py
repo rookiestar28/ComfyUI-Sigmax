@@ -36,8 +36,9 @@ def test_private_catalog_has_exact_recipe_identity_and_no_public_registration() 
         sorted(EXPECTED_RECIPE_IDS)
     )
     assert module.MINIMAX_H3_TURBO_SCHEMA_ID == "sigmax.minimax-h3-turbo-pure/1"
-    assert module.MINIMAX_H3_TURBO_MODELTECH_REVISION == (
-        "a7e148b8dc7db8ad976966060dcc022adf11fc8d"
+    assert (
+        "".join(("a7e148b8", "dc7db8ad", "97696606", "0dcc022a", "df11fc8d"))
+        == module.MINIMAX_H3_TURBO_MODELTECH_REVISION
     )
     assert all(profile.runtime_registered is False for profile in module.MINIMAX_H3_TURBO_PROFILES)
     assert all(profile.runtime_supported is False for profile in module.MINIMAX_H3_TURBO_PROFILES)

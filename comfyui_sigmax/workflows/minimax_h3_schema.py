@@ -61,6 +61,7 @@ _EXPECTED_INPUT_TYPES: Final = {
         "steps": "INT",
         "start_step": "INT",
         "end_step": "INT",
+        "recipe_id": "COMBO",
     },
     "KSamplerSelect": {"sampler_name": "COMBO"},
     "BasicGuider": {"model": "MODEL", "conditioning": "CONDITIONING"},

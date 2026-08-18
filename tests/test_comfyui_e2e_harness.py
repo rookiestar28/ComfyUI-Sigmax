@@ -166,7 +166,7 @@ def test_minimax_h3_host_identity_guard_keeps_pinned_and_latest_lanes_fail_close
     harness = _harness()
     latest = harness.WorkflowValidationLane.LATEST_HOST
     known_good = harness.WorkflowValidationLane.KNOWN_GOOD
-    current_revision = "b323a345bbbfb2f3a95b5b73b68eb7919a26515e"
+    current_revision = "b323a345bbbfb2f3a95b5b73b68eb7919a26515e"  # pragma: allowlist secret
 
     harness._validate_minimax_h3_host_identity(
         lane=latest,

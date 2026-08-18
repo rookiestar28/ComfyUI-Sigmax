@@ -153,7 +153,7 @@ def test_minimax_h3_latest_alias_is_explicit_and_separate() -> None:
             "--minimax-h3-host-version",
             "0.32.0",
             "--minimax-h3-expected-revision",
-            "b323a345bbbfb2f3a95b5b73b68eb7919a26515e",
+            "b323a345bbbfb2f3a95b5b73b68eb7919a26515e",  # pragma: allowlist secret
         ]
     )
 

@@ -93,6 +93,8 @@ _H3_TRACE_KEY: Final = "sigmax_native_euler_trace"
 _MINIMAX_H3_OUTPUT_NODE_ID: Final = "5"
 _MINIMAX_H3_TRACE_KEY: Final = "sigmax_minimax_h3_h2"
 _MINIMAX_H3_HOST_VERSION: Final = "0.30.0"
+_MINIMAX_H3_MIN_LATEST_HOST_VERSION: Final = (0, 31, 0)
+_MINIMAX_H3_LATEST_LANE: Final = "latest"
 _MINIMAX_H3_MODEL_LANE_SCHEMA: Final = "sigmax.minimax-h3-model-lane/1"
 _MINIMAX_H3_PUBLIC_VARIANTS: Final = ("H3 Base FL2VA", "H3 Base Ref2VA")
 _ALGEBRA_OUTPUT_NODE_ID: Final = "7"
@@ -2564,6 +2566,72 @@ def _git_revision(root: Path) -> str:
     return revision
 
 
+def _minimax_h3_validation_lane(value: object) -> WorkflowValidationLane:
+    """Resolve the H3-specific latest alias without changing other lane semantics."""
+
+    if value == _MINIMAX_H3_LATEST_LANE:
+        return WorkflowValidationLane.LATEST_HOST
+    try:
+        return WorkflowValidationLane(value)
+    except (TypeError, ValueError) as exc:
+        raise ScheduleContractError("MiniMax H3 validation lane is unsupported") from exc
+
+
+def _minimax_h3_host_version(value: object) -> tuple[int, int, int]:
+    if not isinstance(value, str) or not re.fullmatch(r"\d+\.\d+\.\d+", value):
+        raise ScheduleContractError("MiniMax H3 host version must be semantic X.Y.Z text")
+    parts = tuple(int(item) for item in value.split("."))
+    if len(parts) != 3:
+        raise ScheduleContractError("MiniMax H3 host version must contain three components")
+    return parts
+
+
+def _validate_minimax_h3_host_identity(
+    *,
+    lane: WorkflowValidationLane,
+    host_version: object,
+    expected_revision: object,
+    actual_revision: object,
+) -> None:
+    """Fail closed on caller/checkout identity before an H3 host process starts."""
+
+    if not isinstance(expected_revision, str) or not re.fullmatch(r"[0-9a-f]{40}", expected_revision):
+        raise ScheduleContractError("MiniMax H3 expected host revision must be a 40-digit SHA")
+    if not isinstance(actual_revision, str) or not re.fullmatch(r"[0-9a-f]{40}", actual_revision):
+        raise ScheduleContractError("MiniMax H3 selected host revision is invalid")
+    if expected_revision != actual_revision:
+        raise ScheduleContractError(
+            "selected ComfyUI revision does not match the exact MiniMax H3 host revision"
+        )
+    version = _minimax_h3_host_version(host_version)
+    if lane is WorkflowValidationLane.KNOWN_GOOD:
+        if version != _minimax_h3_host_version(_MINIMAX_H3_HOST_VERSION):
+            raise ScheduleContractError("MiniMax H3 known-good host version is not pinned")
+        if expected_revision != MINIMAX_H3_COMFYUI_REVISION:
+            raise ScheduleContractError("MiniMax H3 known-good host revision is not pinned")
+        return
+    if lane is not WorkflowValidationLane.LATEST_HOST:
+        raise ScheduleContractError("MiniMax H3 host lane must be known_good or latest")
+    if version < _MINIMAX_H3_MIN_LATEST_HOST_VERSION:
+        raise ScheduleContractError(
+            "MiniMax H3 latest host lane requires ComfyUI 0.31.0 or newer"
+        )
+
+
+def _verify_minimax_h3_live_host_version(
+    system_stats: object, *, expected_version: object
+) -> str:
+    """Verify the version reported by the running host without retaining private stats."""
+
+    expected = _minimax_h3_host_version(expected_version)
+    root = _object(system_stats, label="MiniMax H3 live system stats")
+    system = _object(root.get("system"), label="MiniMax H3 live system identity")
+    reported = system.get("comfyui_version")
+    if _minimax_h3_host_version(reported) != expected:
+        raise ScheduleContractError("running ComfyUI version does not match the exact H3 host version")
+    return cast(str, reported)
+
+
 def _stage_extension(run_path: Path) -> Path:
     custom_node = run_path / "base" / "custom_nodes" / "ComfyUI-Sigmax"
     custom_node.mkdir(parents=True)
@@ -3227,7 +3295,7 @@ def build_minimax_h3_model_lane_plan(
 
 
 def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
-    """Execute the model-free MiniMax H3 H1/H2 contract on the pinned H3 host."""
+    """Execute the model-free MiniMax H3 H1/H2 contract on an exact reviewed host."""
 
     started = time.time()
     comfyui_root = Path(args.comfyui_root).resolve()
@@ -3237,13 +3305,13 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
     if not host_python.is_file():
         raise ScheduleContractError("SIGMAX_COMFYUI_PYTHON is not a file")
     host_revision = _git_revision(comfyui_root)
-    expected_revision = args.minimax_h3_expected_revision
-    if host_revision != expected_revision:
-        raise ScheduleContractError(
-            "selected ComfyUI revision does not match the exact MiniMax H3 host revision"
-        )
-    if args.minimax_h3_host_version != _MINIMAX_H3_HOST_VERSION:
-        raise ScheduleContractError("MiniMax H3 host version must be the pinned 0.30.0 baseline")
+    validation_lane = _minimax_h3_validation_lane(args.validation_lane)
+    _validate_minimax_h3_host_identity(
+        lane=validation_lane,
+        host_version=args.minimax_h3_host_version,
+        expected_revision=args.minimax_h3_expected_revision,
+        actual_revision=host_revision,
+    )
 
     owned_root = Path(args.temp_root).resolve()
     run_path = require_owned_run_path(
@@ -3268,10 +3336,10 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
     process: subprocess.Popen[bytes] | None = None
     shutdown: dict[str, object] = {}
     succeeded = False
-    validation_lane = WorkflowValidationLane.LATEST_HOST
     evidence: dict[str, object] = {
         "schema": "sigmax.minimax-h3-host-e2e/1",
         "lanes": ["H1", "H2_MINIMAX_H3_M6_05"],
+        "validation_lane": validation_lane.value,
         "host": {
             "id": "comfyui",
             "version": args.minimax_h3_host_version,
@@ -3308,6 +3376,11 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
                 process=process,
                 deadline=time.monotonic() + args.readiness_timeout,
             )
+            reported_host_version = _verify_minimax_h3_live_host_version(
+                _http_json(f"{base_url}/system_stats"),
+                expected_version=args.minimax_h3_host_version,
+            )
+            cast(dict[str, object], evidence["host"])["reported_version"] = reported_host_version
             registry = builtin_node_registry()
             expected_ids = tuple(registry.class_mappings())
             filtered = {
@@ -4494,7 +4567,7 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--validation-lane",
-        choices=[item.value for item in WorkflowValidationLane],
+        choices=[item.value for item in WorkflowValidationLane] + [_MINIMAX_H3_LATEST_LANE],
         default=WorkflowValidationLane.KNOWN_GOOD.value,
     )
     parser.add_argument(
@@ -4547,6 +4620,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         parser.error("COMFYUI_ROOT or --comfyui-root is required")
     if not args.host_python:
         parser.error("SIGMAX_COMFYUI_PYTHON or --host-python is required")
+    if args.validation_lane == _MINIMAX_H3_LATEST_LANE and not args.minimax_h3_only:
+        parser.error("--validation-lane latest is reserved for --minimax-h3-only")
     try:
         if args.conditioning_only and args.minimax_h3_only:
             parser.error("--conditioning-only and --minimax-h3-only are mutually exclusive")

@@ -143,6 +143,80 @@ def test_harness_exposes_a_separate_minimax_h3_host_contract_lane() -> None:
     assert arguments.minimax_h3_expected_revision == MINIMAX_H3_COMFYUI_REVISION
 
 
+def test_minimax_h3_latest_alias_is_explicit_and_separate() -> None:
+    harness = _harness()
+    arguments = harness._parser().parse_args(
+        [
+            "--minimax-h3-only",
+            "--validation-lane",
+            "latest",
+            "--minimax-h3-host-version",
+            "0.32.0",
+            "--minimax-h3-expected-revision",
+            "b323a345bbbfb2f3a95b5b73b68eb7919a26515e",
+        ]
+    )
+
+    assert harness._minimax_h3_validation_lane(arguments.validation_lane) is (
+        harness.WorkflowValidationLane.LATEST_HOST
+    )
+
+
+def test_minimax_h3_host_identity_guard_keeps_pinned_and_latest_lanes_fail_closed() -> None:
+    harness = _harness()
+    latest = harness.WorkflowValidationLane.LATEST_HOST
+    known_good = harness.WorkflowValidationLane.KNOWN_GOOD
+    current_revision = "b323a345bbbfb2f3a95b5b73b68eb7919a26515e"
+
+    harness._validate_minimax_h3_host_identity(
+        lane=latest,
+        host_version="0.32.0",
+        expected_revision=current_revision,
+        actual_revision=current_revision,
+    )
+    harness._validate_minimax_h3_host_identity(
+        lane=known_good,
+        host_version="0.30.0",
+        expected_revision=MINIMAX_H3_COMFYUI_REVISION,
+        actual_revision=MINIMAX_H3_COMFYUI_REVISION,
+    )
+    with pytest.raises(ScheduleContractError, match="semantic"):
+        harness._validate_minimax_h3_host_identity(
+            lane=latest,
+            host_version="0.32",
+            expected_revision=current_revision,
+            actual_revision=current_revision,
+        )
+    with pytest.raises(ScheduleContractError, match="revision"):
+        harness._validate_minimax_h3_host_identity(
+            lane=latest,
+            host_version="0.32.0",
+            expected_revision=current_revision,
+            actual_revision="0" * 40,
+        )
+    with pytest.raises(ScheduleContractError, match=r"0\.31\.0"):
+        harness._validate_minimax_h3_host_identity(
+            lane=latest,
+            host_version="0.30.0",
+            expected_revision=current_revision,
+            actual_revision=current_revision,
+        )
+
+
+def test_minimax_h3_live_host_version_is_verified_without_retaining_system_stats() -> None:
+    harness = _harness()
+
+    assert harness._verify_minimax_h3_live_host_version(
+        {"system": {"comfyui_version": "0.32.0", "argv": ["private"]}},
+        expected_version="0.32.0",
+    ) == "0.32.0"
+    with pytest.raises(ScheduleContractError, match="version"):
+        harness._verify_minimax_h3_live_host_version(
+            {"system": {"comfyui_version": "0.31.0"}},
+            expected_version="0.32.0",
+        )
+
+
 def test_harness_stages_frontend_extension_with_custom_node(tmp_path: Path) -> None:
     staged = _harness()._stage_extension(tmp_path / "run")
 

@@ -283,4 +283,5 @@ def test_port_receipt_and_temp_root_are_bounded_and_owned(tmp_path: Path) -> Non
     owned.mkdir()
     (owned / "marker").write_text("private", encoding="utf-8")
     receipt = _temp_root_receipt(owned, owned_root=tmp_path, remove=False)
-    assert receipt["owned"] is False
+    assert receipt["owned"] is True
+    assert receipt["cleanup_status"] == "retained"

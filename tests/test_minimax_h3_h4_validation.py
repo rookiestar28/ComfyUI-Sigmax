@@ -41,7 +41,9 @@ def test_h4_prompt_has_one_sigmax_schedule_and_no_second_shift_node() -> None:
         shift_video=12.0,
         shift_audio=3.0,
     )
-    assert [node["class_type"] for node in prompt.values()].count("Sigmax.MiniMaxH3SigmaScheduler") == 1
+    assert [node["class_type"] for node in prompt.values()].count(
+        "Sigmax.MiniMaxH3SigmaScheduler"
+    ) == 1
     assert "MiniMaxH3SigmaShift" not in {node["class_type"] for node in prompt.values()}
     node = prompt["11"]
     inputs = cast(dict[str, object], node["inputs"])

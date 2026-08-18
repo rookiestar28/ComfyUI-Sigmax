@@ -58,42 +58,38 @@ H4_SCHEMA: Final = "sigmax.minimax-h3-h4-private-validation/1"
 PROTOCOL_STATUS: Final = "ACTIVE_PENDING_PREFLIGHT"
 AUTHORIZATION_MARKER: Final = "M7-13-H4-AUTHORIZED-2026-08-18"
 _DEFAULT_PROTOCOL: Final = (
-    REPOSITORY_ROOT
-    / ".planning"
-    / "260818-M7-13_MINIMAX_H3_ACCELERATED_VALIDATION_PROTOCOL.md"
+    REPOSITORY_ROOT / ".planning" / "260818-M7-13_MINIMAX_H3_ACCELERATED_VALIDATION_PROTOCOL.md"
 )
-_DEFAULT_AUTHORIZATION: Final = (
-    REPOSITORY_ROOT / ".planning" / "260818-M7-13_H4_AUTHORIZATION.md"
-)
+_DEFAULT_AUTHORIZATION: Final = REPOSITORY_ROOT / ".planning" / "260818-M7-13_H4_AUTHORIZATION.md"
 
 _PUBLISHER_ARTIFACTS: Final = {
     "h3.fl2va.lightx2v-turbo-4-v1.0-768p": (
         0,
-        "c396a9a06f58399e9df9754b18299818d84a2ddd371724ba48fe4a41221437dc",
+        "c396a9a06f58399e9df9754b18299818d84a2ddd371724ba48fe4a41221437dc",  # pragma: allowlist secret
     ),
     "h3.fl2va.lightx2v-turbo-8-v1.0-544p": (
         0,
-        "2339acdf19bfe123f46b971ea35d367a84adb85de43627e1eceafa5a5b2b111e",
+        "2339acdf19bfe123f46b971ea35d367a84adb85de43627e1eceafa5a5b2b111e",  # pragma: allowlist secret
     ),
     "h3.fl2va.lightx2v-turbo-4-v0.1-544p": (
         0,
-        "2339acdf19bfe123f46b971ea35d367a84adb85de43627e1eceafa5a5b2b111e",
+        "2339acdf19bfe123f46b971ea35d367a84adb85de43627e1eceafa5a5b2b111e",  # pragma: allowlist secret
     ),
     "h3.ref2va.lightx2v-turbo-4-v0.1-544p": (
         0,
-        "5b9ab5ade15d0775676d01a907268a69a1468dc6033b3b0d3ded5502f3ebb84c",
+        "5b9ab5ade15d0775676d01a907268a69a1468dc6033b3b0d3ded5502f3ebb84c",  # pragma: allowlist secret
     ),
 }
 
 _BLOCKED_REDUCED: Final = {
-    "9515eee9f642aa0e7fcc401f56d408ef2d6388f81881fe50bddded8220870a4d",
-    "8e05b7b982c3aff7deb692a188c8a8d8acaeff8a12abfe1aeac822fb8ee3f0b7",
-    "9ea3bd3a6aac22994153e294cf1ecab0a8766fc0f8d056ace645a01d1a6a4daf",
+    "9515eee9f642aa0e7fcc401f56d408ef2d6388f81881fe50bddded8220870a4d",  # pragma: allowlist secret
+    "8e05b7b982c3aff7deb692a188c8a8d8acaeff8a12abfe1aeac822fb8ee3f0b7",  # pragma: allowlist secret
+    "9ea3bd3a6aac22994153e294cf1ecab0a8766fc0f8d056ace645a01d1a6a4daf",  # pragma: allowlist secret
 }
 _REJECTED_LOCAL: Final = {
-    "1b85da614014024a0c9507f12558917dcc69b6adb564e716324594f401723115",
-    "a3208be61329c27a6754c53db9a21a3c86e2a285381700adf2d97e279c062840",
-    "2c6abb194cff3e26c2295c87892913adf0c92d8f784f305238246759f9b333d0",
+    "1b85da614014024a0c9507f12558917dcc69b6adb564e716324594f401723115",  # pragma: allowlist secret
+    "a3208be61329c27a6754c53db9a21a3c86e2a285381700adf2d97e279c062840",  # pragma: allowlist secret
+    "2c6abb194cff3e26c2295c87892913adf0c92d8f784f305238246759f9b333d0",  # pragma: allowlist secret
 }
 
 
@@ -264,7 +260,9 @@ def classify_turbo_artifact(
     if base.sha256 is None:
         return base
     if base.sha256 in _REJECTED_LOCAL or source == "local-modified":
-        return replace(base, disposition=RowDisposition.REJECTED, reason_code="artifact.local_modified")
+        return replace(
+            base, disposition=RowDisposition.REJECTED, reason_code="artifact.local_modified"
+        )
     if base.sha256 in _BLOCKED_REDUCED or source == "kijai-reduced":
         return base
     expected = _PUBLISHER_ARTIFACTS.get(artifact_id)
@@ -355,7 +353,12 @@ def build_h4_prompt(
     host_video_vae_name = video_vae_name.replace("/", "\\")
     host_audio_vae_name = audio_vae_name.replace("/", "\\")
     host_lora_name = None if lora_name is None else lora_name.replace("/", "\\")
-    if not isinstance(prompt, str) or not prompt or _PRIVATE_PATH.search(prompt) or _SECRET.search(prompt):
+    if (
+        not isinstance(prompt, str)
+        or not prompt
+        or _PRIVATE_PATH.search(prompt)
+        or _SECRET.search(prompt)
+    ):
         _fail("H4 prompt is private and may not contain path or secret text")
     # The preregistered protocol intentionally sends 17 as a negative-shape probe; native H3
     # may snap it to 22.  All other accepted lengths must already be on the 17k+5 grid.
@@ -383,26 +386,84 @@ def build_h4_prompt(
         _safe_relative_name(lora_name, field="lora_name")
         model_link = [model_sampling_id, 0]
     return {
-        model_id: {"class_type": "UNETLoader", "inputs": {"unet_name": host_model_name, "weight_dtype": "default"}},
-        clip_id: {"class_type": "CLIPLoader", "inputs": {"clip_name": host_clip_name, "type": "minimax", "device": "default"}},
+        model_id: {
+            "class_type": "UNETLoader",
+            "inputs": {"unet_name": host_model_name, "weight_dtype": "default"},
+        },
+        clip_id: {
+            "class_type": "CLIPLoader",
+            "inputs": {"clip_name": host_clip_name, "type": "minimax", "device": "default"},
+        },
         video_vae_id: {"class_type": "VAELoader", "inputs": {"vae_name": host_video_vae_name}},
         audio_vae_id: {"class_type": "VAELoader", "inputs": {"vae_name": host_audio_vae_name}},
-        **({model_sampling_id: {"class_type": "LoraLoaderModelOnly", "inputs": {"model": [model_id, 0], "lora_name": host_lora_name, "strength_model": 1.0}}} if lora_name is not None else {}),
+        **(
+            {
+                model_sampling_id: {
+                    "class_type": "LoraLoaderModelOnly",
+                    "inputs": {
+                        "model": [model_id, 0],
+                        "lora_name": host_lora_name,
+                        "strength_model": 1.0,
+                    },
+                }
+            }
+            if lora_name is not None
+            else {}
+        ),
         condition_id: {
             "class_type": "MiniMaxH3ImageToVideo",
-            "inputs": {"clip": [clip_id, 0], "vae": [video_vae_id, 0], "prompt": prompt, "width": width, "height": height, "length": length},
+            "inputs": {
+                "clip": [clip_id, 0],
+                "vae": [video_vae_id, 0],
+                "prompt": prompt,
+                "width": width,
+                "height": height,
+                "length": length,
+            },
         },
         # ModelSamplingAV already carries 12/3.  Do not insert MiniMaxH3SigmaShift here:
         # CRITICAL: Sigmax's schedule is already video-shifted; a second shift changes parity.
-        schedule_id: {"class_type": "Sigmax.MiniMaxH3SigmaScheduler", "inputs": {"variant": variant, "steps": steps, "start_step": 0, "end_step": -1}},
+        schedule_id: {
+            "class_type": "Sigmax.MiniMaxH3SigmaScheduler",
+            "inputs": {"variant": variant, "steps": steps, "start_step": 0, "end_step": -1},
+        },
         sampler_id: {"class_type": "KSamplerSelect", "inputs": {"sampler_name": "euler"}},
-        guider_id: {"class_type": "BasicGuider", "inputs": {"model": model_link, "conditioning": [condition_id, 0]}},
+        guider_id: {
+            "class_type": "BasicGuider",
+            "inputs": {"model": model_link, "conditioning": [condition_id, 0]},
+        },
         noise_id: {"class_type": "RandomNoise", "inputs": {"noise_seed": seed}},
-        sample_id: {"class_type": "SamplerCustomAdvanced", "inputs": {"noise": [noise_id, 0], "guider": [guider_id, 0], "sampler": [sampler_id, 0], "sigmas": [schedule_id, 0], "latent_image": [condition_id, 1]}},
-        video_decode_id: {"class_type": "VAEDecode", "inputs": {"samples": [sample_id, 0], "vae": [video_vae_id, 0]}},
-        audio_decode_id: {"class_type": "VAEDecodeAudio", "inputs": {"samples": [sample_id, 0], "vae": [audio_vae_id, 0]}},
-        video_id: {"class_type": "CreateVideo", "inputs": {"images": [video_decode_id, 0], "fps": 24.0, "audio": [audio_decode_id, 0]}},
-        save_id: {"class_type": "SaveVideo", "inputs": {"video": [video_id, 0], "filename_prefix": "m7_13_h3", "format": "mp4", "codec": "auto"}},
+        sample_id: {
+            "class_type": "SamplerCustomAdvanced",
+            "inputs": {
+                "noise": [noise_id, 0],
+                "guider": [guider_id, 0],
+                "sampler": [sampler_id, 0],
+                "sigmas": [schedule_id, 0],
+                "latent_image": [condition_id, 1],
+            },
+        },
+        video_decode_id: {
+            "class_type": "VAEDecode",
+            "inputs": {"samples": [sample_id, 0], "vae": [video_vae_id, 0]},
+        },
+        audio_decode_id: {
+            "class_type": "VAEDecodeAudio",
+            "inputs": {"samples": [sample_id, 0], "vae": [audio_vae_id, 0]},
+        },
+        video_id: {
+            "class_type": "CreateVideo",
+            "inputs": {"images": [video_decode_id, 0], "fps": 24.0, "audio": [audio_decode_id, 0]},
+        },
+        save_id: {
+            "class_type": "SaveVideo",
+            "inputs": {
+                "video": [video_id, 0],
+                "filename_prefix": "m7_13_h3",
+                "format": "mp4",
+                "codec": "auto",
+            },
+        },
     }
 
 
@@ -430,16 +491,31 @@ def _loopback_url(url: str) -> str:
         port = parsed.port
     except ValueError as exc:
         raise ScheduleContractError("host URL is malformed") from exc
-    if parsed.scheme != "http" or parsed.hostname != _LOOPBACK or port is None or parsed.username or parsed.password or parsed.fragment:
+    if (
+        parsed.scheme != "http"
+        or parsed.hostname != _LOOPBACK
+        or port is None
+        or parsed.username
+        or parsed.password
+        or parsed.fragment
+    ):
         _fail("host URL must be credential-free loopback HTTP")
     return url
 
 
-def _http_json(url: str, *, method: str = "GET", body: Mapping[str, object] | None = None, timeout: float = 10.0) -> object:
+def _http_json(
+    url: str,
+    *,
+    method: str = "GET",
+    body: Mapping[str, object] | None = None,
+    timeout: float = 10.0,
+) -> object:
     payload = None
     headers = {"Accept": "application/json"}
     if body is not None:
-        payload = json.dumps(dict(body), ensure_ascii=False, allow_nan=False, separators=(",", ":")).encode("utf-8")
+        payload = json.dumps(
+            dict(body), ensure_ascii=False, allow_nan=False, separators=(",", ":")
+        ).encode("utf-8")
         headers["Content-Type"] = "application/json"
     request = Request(_loopback_url(url), data=payload, headers=headers, method=method)  # noqa: S310
     try:
@@ -459,13 +535,51 @@ def _stage_extension(run_path: Path) -> Path:
     target = run_path / "base" / "custom_nodes" / "ComfyUI-Sigmax"
     target.mkdir(parents=True)
     shutil.copy2(REPOSITORY_ROOT / "__init__.py", target / "__init__.py")
-    shutil.copytree(REPOSITORY_ROOT / "comfyui_sigmax", target / "comfyui_sigmax", ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+    shutil.copytree(
+        REPOSITORY_ROOT / "comfyui_sigmax",
+        target / "comfyui_sigmax",
+        ignore=shutil.ignore_patterns("__pycache__", "*.pyc"),
+    )
     shutil.copytree(REPOSITORY_ROOT / "web", target / "web")
     return target
 
 
-def _host_command(*, host_python: Path, comfyui_root: Path, models_root: Path, run_path: Path, port: int, use_ck_attention: bool, enable_triton: bool) -> list[str]:
-    command = [str(host_python), str(comfyui_root / "main.py"), "--listen", _LOOPBACK, "--port", str(port), "--base-directory", str(run_path / "base"), "--models-directory", str(models_root), "--output-directory", str(run_path / "output"), "--input-directory", str(run_path / "input"), "--temp-directory", str(run_path / "temp"), "--user-directory", str(run_path / "user"), "--database-url", "sqlite:///:memory:", "--cache-none", "--disable-all-custom-nodes", "--whitelist-custom-nodes", "ComfyUI-Sigmax"]
+def _host_command(
+    *,
+    host_python: Path,
+    comfyui_root: Path,
+    models_root: Path,
+    run_path: Path,
+    port: int,
+    use_ck_attention: bool,
+    enable_triton: bool,
+) -> list[str]:
+    command = [
+        str(host_python),
+        str(comfyui_root / "main.py"),
+        "--listen",
+        _LOOPBACK,
+        "--port",
+        str(port),
+        "--base-directory",
+        str(run_path / "base"),
+        "--models-directory",
+        str(models_root),
+        "--output-directory",
+        str(run_path / "output"),
+        "--input-directory",
+        str(run_path / "input"),
+        "--temp-directory",
+        str(run_path / "temp"),
+        "--user-directory",
+        str(run_path / "user"),
+        "--database-url",
+        "sqlite:///:memory:",
+        "--cache-none",
+        "--disable-all-custom-nodes",
+        "--whitelist-custom-nodes",
+        "ComfyUI-Sigmax",
+    ]
     if use_ck_attention:
         command.append("--use-ck-attention")
     if enable_triton:
@@ -473,7 +587,9 @@ def _host_command(*, host_python: Path, comfyui_root: Path, models_root: Path, r
     return command
 
 
-def _readiness(*, base_url: str, process: subprocess.Popen[bytes], deadline: float) -> dict[str, object]:
+def _readiness(
+    *, base_url: str, process: subprocess.Popen[bytes], deadline: float
+) -> dict[str, object]:
     last = "not attempted"
     while time.monotonic() < deadline:
         if process.poll() is not None:
@@ -524,14 +640,23 @@ def _history_summary(history: Mapping[str, object], prompt_id: str) -> dict[str,
     return {"completed": status.get("completed"), "status_str": status.get("status_str")}
 
 
-def _submit(*, base_url: str, prompt: Mapping[str, object], timeout: float) -> tuple[str, dict[str, object]]:
-    value = _http_json(f"{base_url}/prompt", method="POST", body={"client_id": f"sigmax-m7-13-{uuid.uuid4().hex}", "prompt": dict(prompt)}, timeout=30)
+def _submit(
+    *, base_url: str, prompt: Mapping[str, object], timeout: float
+) -> tuple[str, dict[str, object]]:
+    value = _http_json(
+        f"{base_url}/prompt",
+        method="POST",
+        body={"client_id": f"sigmax-m7-13-{uuid.uuid4().hex}", "prompt": dict(prompt)},
+        timeout=30,
+    )
     if not isinstance(value, dict) or not isinstance(value.get("prompt_id"), str):
         _fail("H4 prompt did not return a prompt ID")
     if value.get("node_errors") not in ({}, None):
         _fail("H4 prompt validation returned node errors")
     prompt_id = cast(str, value["prompt_id"])
-    return prompt_id, _wait_history(base_url=base_url, prompt_id=prompt_id, deadline=time.monotonic() + timeout)
+    return prompt_id, _wait_history(
+        base_url=base_url, prompt_id=prompt_id, deadline=time.monotonic() + timeout
+    )
 
 
 def _terminate(process: subprocess.Popen[bytes], *, base_url: str) -> dict[str, object]:
@@ -552,7 +677,12 @@ def _terminate(process: subprocess.Popen[bytes], *, base_url: str) -> dict[str, 
             if os.name == "nt":
                 taskkill = shutil.which("taskkill")
                 if taskkill is not None:
-                    subprocess.run([taskkill, "/PID", str(process.pid), "/T", "/F"], check=False, capture_output=True, timeout=15)  # noqa: S603
+                    subprocess.run(  # noqa: S603
+                        [taskkill, "/PID", str(process.pid), "/T", "/F"],
+                        check=False,
+                        capture_output=True,
+                        timeout=15,
+                    )
             else:
                 killpg = getattr(os, "killpg", None)
                 sigkill = getattr(signal, "SIGKILL", None)
@@ -596,13 +726,26 @@ def _media_summary(run_path: Path) -> dict[str, object]:
     """Capture bounded video/audio stream facts without retaining private filenames."""
 
     ffprobe = shutil.which("ffprobe")
-    files = sorted(item for item in (run_path / "output").rglob("*") if item.is_file() and item.suffix.casefold() == ".mp4")
+    files = sorted(
+        item
+        for item in (run_path / "output").rglob("*")
+        if item.is_file() and item.suffix.casefold() == ".mp4"
+    )
     if ffprobe is None:
         return {"status": "unavailable", "reason_code": "ffprobe_unavailable"}
     if not files:
         return {"status": "unavailable", "reason_code": "video_output_missing"}
     result = subprocess.run(  # noqa: S603
-        [ffprobe, "-v", "error", "-show_entries", "stream=codec_type,codec_name,nb_frames,sample_rate,channels,avg_frame_rate", "-of", "json", str(files[-1])],
+        [
+            ffprobe,
+            "-v",
+            "error",
+            "-show_entries",
+            "stream=codec_type,codec_name,nb_frames,sample_rate,channels,avg_frame_rate",
+            "-of",
+            "json",
+            str(files[-1]),
+        ],
         check=False,
         capture_output=True,
         text=True,
@@ -617,8 +760,14 @@ def _media_summary(run_path: Path) -> dict[str, object]:
     streams = decoded.get("streams") if isinstance(decoded, dict) else None
     if not isinstance(streams, list):
         return {"status": "unavailable", "reason_code": "ffprobe_streams_missing"}
-    video = next((item for item in streams if isinstance(item, dict) and item.get("codec_type") == "video"), None)
-    audio = next((item for item in streams if isinstance(item, dict) and item.get("codec_type") == "audio"), None)
+    video = next(
+        (item for item in streams if isinstance(item, dict) and item.get("codec_type") == "video"),
+        None,
+    )
+    audio = next(
+        (item for item in streams if isinstance(item, dict) and item.get("codec_type") == "audio"),
+        None,
+    )
     if not isinstance(video, dict) or not isinstance(audio, dict):
         return {"status": "failed", "reason_code": "native_audio_or_video_stream_missing"}
     return {
@@ -636,7 +785,13 @@ def _gpu_memory_snapshot() -> int | None:
     executable = shutil.which("nvidia-smi")
     if executable is None:
         return None
-    result = subprocess.run([executable, "--query-gpu=memory.used", "--format=csv,noheader,nounits"], check=False, capture_output=True, text=True, timeout=10)  # noqa: S603
+    result = subprocess.run(  # noqa: S603
+        [executable, "--query-gpu=memory.used", "--format=csv,noheader,nounits"],
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
     values: list[int] = []
     for line in result.stdout.splitlines():
         with suppress(ValueError):
@@ -648,7 +803,13 @@ def _host_revision(root: Path) -> str:
     git = shutil.which("git")
     if git is None:
         _fail("git executable is unavailable")
-    result = subprocess.run([git, "-C", str(root), "rev-parse", "HEAD"], check=False, capture_output=True, text=True, timeout=15)  # noqa: S603
+    result = subprocess.run(  # noqa: S603
+        [git, "-C", str(root), "rev-parse", "HEAD"],
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=15,
+    )
     revision = result.stdout.strip()
     if result.returncode != 0 or _REVISION.fullmatch(revision) is None:
         _fail("selected host is not an exact Git checkout")
@@ -657,7 +818,10 @@ def _host_revision(root: Path) -> str:
 
 def _private_path(path: Path, *, label: str) -> Path:
     resolved = path.resolve()
-    if label in {"protocol", "authorization", "evidence"} and REPOSITORY_ROOT.resolve() not in resolved.parents:
+    if (
+        label in {"protocol", "authorization", "evidence"}
+        and REPOSITORY_ROOT.resolve() not in resolved.parents
+    ):
         _fail(f"{label} file must stay inside the repository")
     return resolved
 
@@ -675,7 +839,9 @@ def _authorization(path: Path) -> None:
 def _redacted_diagnostic(value: object, *, sensitive: Sequence[Path] = ()) -> str:
     rendered = str(value)
     for path in sorted((str(item.resolve()) for item in sensitive), key=len, reverse=True):
-        rendered = rendered.replace(path, "<redacted-path>").replace(path.replace("\\", "/"), "<redacted-path>")
+        rendered = rendered.replace(path, "<redacted-path>").replace(
+            path.replace("\\", "/"), "<redacted-path>"
+        )
     rendered = _SECRET.sub("<redacted-secret>", rendered)
     return rendered[-_MAX_LOG_BYTES:]
 
@@ -690,14 +856,39 @@ def _row_artifact(
     license_ack: bool,
 ) -> ArtifactObservation | None:
     if row.startswith("B-"):
-        model_name = "H3/minimax_h3_fl2va_bf16.safetensors" if row == "B-BF16" else "H3/minimax_h3_fl2va_int8_convrot.safetensors"
+        model_name = (
+            "H3/minimax_h3_fl2va_bf16.safetensors"
+            if row == "B-BF16"
+            else "H3/minimax_h3_fl2va_int8_convrot.safetensors"
+        )
         path = models_root / "diffusion_models" / Path(model_name)
-        expected = "907d4add438438ec1544f5240c3b38532ed934fe6be75677a6bbda2a6fdd6182" if row == "B-BF16" else "7ad4c73e6e378b822ffd1629f27f632d3787d95f5e468e3af958f98c58df96a5"
-        return _artifact_observation(path=path, artifact_id=row.casefold(), disposition=RowDisposition.ACCEPTED, expected_sha256=expected, reason_code=None)
+        expected = (
+            "907d4add438438ec1544f5240c3b38532ed934fe6be75677a6bbda2a6fdd6182"  # pragma: allowlist secret
+            if row == "B-BF16"
+            else "7ad4c73e6e378b822ffd1629f27f632d3787d95f5e468e3af958f98c58df96a5"  # pragma: allowlist secret
+        )  # pragma: allowlist secret
+        return _artifact_observation(
+            path=path,
+            artifact_id=row.casefold(),
+            disposition=RowDisposition.ACCEPTED,
+            expected_sha256=expected,
+            reason_code=None,
+        )
     if turbo_artifact is None or turbo_artifact_id is None:
-        return ArtifactObservation(artifact_id=row.casefold(), disposition=RowDisposition.BLOCKED, reason_code="artifact.publisher_full_not_supplied", file_bytes=None, sha256=None, header_bytes=None, tensor_count=None, dtype_counts=())
+        return ArtifactObservation(
+            artifact_id=row.casefold(),
+            disposition=RowDisposition.BLOCKED,
+            reason_code="artifact.publisher_full_not_supplied",
+            file_bytes=None,
+            sha256=None,
+            header_bytes=None,
+            tensor_count=None,
+            dtype_counts=(),
+        )
     path = models_root / "loras" / Path(_safe_relative_name(turbo_artifact, field="turbo_artifact"))
-    return classify_turbo_artifact(path=path, artifact_id=turbo_artifact_id, source=turbo_source, license_ack=license_ack)
+    return classify_turbo_artifact(
+        path=path, artifact_id=turbo_artifact_id, source=turbo_source, license_ack=license_ack
+    )
 
 
 def _preflight_rows(args: argparse.Namespace, models_root: Path) -> dict[str, object]:
@@ -706,7 +897,14 @@ def _preflight_rows(args: argparse.Namespace, models_root: Path) -> dict[str, ob
     for row in rows:
         if row not in {"B-BF16", "B-INT8", "T4-768", "T8-544", "T4-544", "R4-544"}:
             _fail("H4 row is not in the frozen protocol matrix")
-        observation = _row_artifact(row=row, models_root=models_root, turbo_artifact=args.turbo_artifact, turbo_artifact_id=args.turbo_artifact_id, turbo_source=args.turbo_source, license_ack=args.license_ack)
+        observation = _row_artifact(
+            row=row,
+            models_root=models_root,
+            turbo_artifact=args.turbo_artifact,
+            turbo_artifact_id=args.turbo_artifact_id,
+            turbo_source=args.turbo_source,
+            license_ack=args.license_ack,
+        )
         if observation is None:
             _fail("H4 row has no artifact observation")
         observations[row] = observation.projection()
@@ -753,19 +951,56 @@ def _run_rows(args: argparse.Namespace, models_root: Path, run_path: Path) -> di
     process: subprocess.Popen[bytes] | None = None
     results: dict[str, object] = {}
     with log_path.open("wb") as log:
-        process = subprocess.Popen(_host_command(host_python=Path(args.host_python).resolve(), comfyui_root=Path(args.comfyui_root).resolve(), models_root=models_root, run_path=run_path, port=port, use_ck_attention=args.use_ck_attention, enable_triton=args.enable_triton), cwd=run_path, stdout=log, stderr=subprocess.STDOUT, creationflags=cast(int, getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)) if os.name == "nt" else 0, start_new_session=os.name == "posix")  # noqa: S603
+        process = subprocess.Popen(  # noqa: S603
+            _host_command(
+                host_python=Path(args.host_python).resolve(),
+                comfyui_root=Path(args.comfyui_root).resolve(),
+                models_root=models_root,
+                run_path=run_path,
+                port=port,
+                use_ck_attention=args.use_ck_attention,
+                enable_triton=args.enable_triton,
+            ),
+            cwd=run_path,
+            stdout=log,
+            stderr=subprocess.STDOUT,
+            creationflags=cast(int, getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0))
+            if os.name == "nt"
+            else 0,
+            start_new_session=os.name == "posix",
+        )
         try:
-            _readiness(base_url=base_url, process=process, deadline=time.monotonic() + args.readiness_timeout)
+            _readiness(
+                base_url=base_url,
+                process=process,
+                deadline=time.monotonic() + args.readiness_timeout,
+            )
             live_version = _verify_live_host_version(base_url=base_url, expected=args.host_version)
             for row in args.rows:
-                observation = _row_artifact(row=row, models_root=models_root, turbo_artifact=args.turbo_artifact, turbo_artifact_id=args.turbo_artifact_id, turbo_source=args.turbo_source, license_ack=args.license_ack)
+                observation = _row_artifact(
+                    row=row,
+                    models_root=models_root,
+                    turbo_artifact=args.turbo_artifact,
+                    turbo_artifact_id=args.turbo_artifact_id,
+                    turbo_source=args.turbo_source,
+                    license_ack=args.license_ack,
+                )
                 if observation is None:
                     _fail("H4 row artifact preflight returned no observation")
                 if observation.disposition is not RowDisposition.ACCEPTED:
-                    results[row] = {"artifact": observation.projection(), "disposition": observation.disposition.value, "status": "not_executed"}
+                    results[row] = {
+                        "artifact": observation.projection(),
+                        "disposition": observation.disposition.value,
+                        "status": "not_executed",
+                    }
                     continue
                 if not row.startswith("B-"):
-                    results[row] = {"artifact": observation.projection(), "disposition": RowDisposition.NO_PROMOTION.value, "status": "not_executed", "reason_code": "turbo.artifact_not_eligible"}
+                    results[row] = {
+                        "artifact": observation.projection(),
+                        "disposition": RowDisposition.NO_PROMOTION.value,
+                        "status": "not_executed",
+                        "reason_code": "turbo.artifact_not_eligible",
+                    }
                     continue
                 steps = 20
                 model_name = _safe_relative_name(
@@ -773,23 +1008,73 @@ def _run_rows(args: argparse.Namespace, models_root: Path, run_path: Path) -> di
                     field="diffusion_model",
                 )
                 before = _gpu_memory_snapshot()
-                prompt = build_h4_prompt(variant="H3 Base FL2VA", model_name=model_name, clip_name=clip_name, video_vae_name=video_vae, audio_vae_name=audio_vae, prompt=args.prompt, width=args.width, height=args.height, length=args.length, steps=steps, seed=args.seed, shift_video=12.0, shift_audio=3.0)
-                warmup_prompt_id, _warmup_history = _submit(base_url=base_url, prompt=prompt, timeout=args.execution_timeout)
+                prompt = build_h4_prompt(
+                    variant="H3 Base FL2VA",
+                    model_name=model_name,
+                    clip_name=clip_name,
+                    video_vae_name=video_vae,
+                    audio_vae_name=audio_vae,
+                    prompt=args.prompt,
+                    width=args.width,
+                    height=args.height,
+                    length=args.length,
+                    steps=steps,
+                    seed=args.seed,
+                    shift_video=12.0,
+                    shift_audio=3.0,
+                )
+                warmup_prompt_id, _warmup_history = _submit(
+                    base_url=base_url, prompt=prompt, timeout=args.execution_timeout
+                )
                 warmup_outputs = _output_fingerprints(run_path)
                 started = time.perf_counter()
-                first_prompt_id, first_history = _submit(base_url=base_url, prompt=prompt, timeout=args.execution_timeout)
+                first_prompt_id, first_history = _submit(
+                    base_url=base_url, prompt=prompt, timeout=args.execution_timeout
+                )
                 first_latency = int((time.perf_counter() - started) * 1_000_000)
                 first_all_outputs = _output_fingerprints(run_path)
                 first_outputs = _new_output_fingerprints(warmup_outputs, first_all_outputs)
                 first_media = _media_summary(run_path)
                 started = time.perf_counter()
-                second_prompt_id, second_history = _submit(base_url=base_url, prompt=prompt, timeout=args.execution_timeout)
+                second_prompt_id, second_history = _submit(
+                    base_url=base_url, prompt=prompt, timeout=args.execution_timeout
+                )
                 repeat_latency = int((time.perf_counter() - started) * 1_000_000)
                 second_all_outputs = _output_fingerprints(run_path)
                 repeat_outputs = _new_output_fingerprints(first_all_outputs, second_all_outputs)
                 repeat_media = _media_summary(run_path)
                 after = _gpu_memory_snapshot()
-                results[row] = {"artifact": observation.projection(), "disposition": RowDisposition.NO_PROMOTION.value, "status": "succeeded", "warmup_prompt_id": warmup_prompt_id, "first_prompt_id": first_prompt_id, "repeat_prompt_id": second_prompt_id, "first_history_status": _history_summary(first_history, first_prompt_id), "repeat_history_status": _history_summary(second_history, second_prompt_id), "first_latency_us": first_latency, "repeat_latency_us": repeat_latency, "first_output_fingerprints": list(first_outputs), "repeat_output_fingerprints": list(repeat_outputs), "repeat_stable": first_outputs == repeat_outputs, "first_media": first_media, "repeat_media": repeat_media, "gpu_memory_before": before, "gpu_memory_after": after, "backend": {"requested_operation_backend": "unavailable", "requested_attention_backend": "ck_int8" if args.use_ck_attention else "pytorch", "actual_operation_backend": "not_observed", "actual_attention_backend": "not_observed", "observation_source": "not_observed", "launch_flags_are_not_proof": True}, "host_version": live_version, "reason_code": "backend_observation_not_supplied"}
+                results[row] = {
+                    "artifact": observation.projection(),
+                    "disposition": RowDisposition.NO_PROMOTION.value,
+                    "status": "succeeded",
+                    "warmup_prompt_id": warmup_prompt_id,
+                    "first_prompt_id": first_prompt_id,
+                    "repeat_prompt_id": second_prompt_id,
+                    "first_history_status": _history_summary(first_history, first_prompt_id),
+                    "repeat_history_status": _history_summary(second_history, second_prompt_id),
+                    "first_latency_us": first_latency,
+                    "repeat_latency_us": repeat_latency,
+                    "first_output_fingerprints": list(first_outputs),
+                    "repeat_output_fingerprints": list(repeat_outputs),
+                    "repeat_stable": first_outputs == repeat_outputs,
+                    "first_media": first_media,
+                    "repeat_media": repeat_media,
+                    "gpu_memory_before": before,
+                    "gpu_memory_after": after,
+                    "backend": {
+                        "requested_operation_backend": "unavailable",
+                        "requested_attention_backend": "ck_int8"
+                        if args.use_ck_attention
+                        else "pytorch",
+                        "actual_operation_backend": "not_observed",
+                        "actual_attention_backend": "not_observed",
+                        "observation_source": "not_observed",
+                        "launch_flags_are_not_proof": True,
+                    },
+                    "host_version": live_version,
+                    "reason_code": "backend_observation_not_supplied",
+                }
         finally:
             shutdown = _terminate(process, base_url=base_url)
             results["shutdown"] = shutdown
@@ -810,7 +1095,11 @@ def run(args: argparse.Namespace) -> dict[str, object]:
     host_root = Path(args.comfyui_root).resolve()
     host_python = Path(args.host_python).resolve()
     models_root = Path(args.models_directory).resolve()
-    if not (host_root / "main.py").is_file() or not host_python.is_file() or not models_root.is_dir():
+    if (
+        not (host_root / "main.py").is_file()
+        or not host_python.is_file()
+        or not models_root.is_dir()
+    ):
         _fail("H4 host/python/models inputs are not valid explicit paths")
     expected_host_revision = args.expected_host_revision
     actual_host_revision = _host_revision(host_root)
@@ -818,7 +1107,15 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         _fail("selected H4 host revision does not match the exact expected revision")
     preflight = _preflight_rows(args, models_root)
     components = _preflight_components(args, models_root)
-    evidence: dict[str, object] = {"schema": H4_SCHEMA, "candidate": {"commit": commit, "tree": tree}, "host": {"version": args.host_version, "revision": actual_host_revision}, "components": components, "rows": preflight, "authorization": "private_non_redistribution", "gpu_execution_requested": True}
+    evidence: dict[str, object] = {
+        "schema": H4_SCHEMA,
+        "candidate": {"commit": commit, "tree": tree},
+        "host": {"version": args.host_version, "revision": actual_host_revision},
+        "components": components,
+        "rows": preflight,
+        "authorization": "private_non_redistribution",
+        "gpu_execution_requested": True,
+    }
     if args.preflight_only:
         evidence["status"] = "preflight_complete"
         return evidence
@@ -846,7 +1143,9 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--host-version", default="0.32.0")
     parser.add_argument("--temp-root", type=Path, default=REPOSITORY_ROOT / ".tmp" / "h4")
     parser.add_argument("--evidence-file", type=Path)
-    parser.add_argument("--rows", nargs="+", default=["B-BF16", "B-INT8", "T4-768", "T8-544", "T4-544", "R4-544"])
+    parser.add_argument(
+        "--rows", nargs="+", default=["B-BF16", "B-INT8", "T4-768", "T8-544", "T4-544", "R4-544"]
+    )
     parser.add_argument("--allow-gpu-execution", action="store_true")
     parser.add_argument("--license-ack", action="store_true")
     parser.add_argument("--preflight-only", action="store_true")
@@ -854,9 +1153,15 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--enable-triton", action="store_true")
     parser.add_argument("--turbo-artifact")
     parser.add_argument("--turbo-artifact-id")
-    parser.add_argument("--turbo-source", choices=["publisher-full", "kijai-reduced", "local-modified"], default="publisher-full")
+    parser.add_argument(
+        "--turbo-source",
+        choices=["publisher-full", "kijai-reduced", "local-modified"],
+        default="publisher-full",
+    )
     parser.add_argument("--diffusion-model", default="H3/minimax_h3_fl2va_bf16.safetensors")
-    parser.add_argument("--int8-diffusion-model", default="H3/minimax_h3_fl2va_int8_convrot.safetensors")
+    parser.add_argument(
+        "--int8-diffusion-model", default="H3/minimax_h3_fl2va_int8_convrot.safetensors"
+    )
     parser.add_argument("--text-encoder", default="qwen3vl_32b_minimax_h3_int8_convrot.safetensors")
     parser.add_argument("--text-encoder-sha256")
     parser.add_argument("--video-vae", default="minimax_h3_video_vae_fp16.safetensors")
@@ -880,7 +1185,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.evidence_file is not None:
             target = _private_path(args.evidence_file, label="evidence")
             target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+            target.write_text(
+                json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
         print(json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True))
         return 0
     except (ScheduleContractError, OSError, ValueError) as exc:

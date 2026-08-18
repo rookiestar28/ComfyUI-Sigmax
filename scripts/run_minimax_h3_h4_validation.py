@@ -46,6 +46,7 @@ from comfyui_sigmax.core.safetensors_header import (  # noqa: E402
 _LOOPBACK: Final = "127.0.0.1"
 _MAX_HTTP_BYTES: Final = 4_000_000
 _MAX_LOG_BYTES: Final = 1_000_000
+_MAX_DISPATCH_TRACE_BYTES: Final = 64 * 1024
 _SHA256: Final = re.compile(r"^[0-9a-f]{64}$")
 _REVISION: Final = re.compile(r"^[0-9a-f]{40}$")
 _SEMVER: Final = re.compile(r"^\d+\.\d+\.\d+$")
@@ -53,6 +54,23 @@ _PRIVATE_PATH: Final = re.compile(r"(?:[A-Za-z]:[\\/]|\\\\|/(?:home|users|mnt)/)
 _SECRET: Final = re.compile(
     r"(?i)(?:api[_-]?key|access[_-]?key|private[_-]?key|secret|password|token|cookie|authorization)"
 )
+_DISPATCH_TRACE_SCHEMA: Final = "sigmax.h4-dispatch-observation/1"
+_DISPATCH_ATTENTION_BACKENDS: Final = frozenset(
+    {"ck_int8", "flash", "pytorch", "sage", "sage3", "split", "sub_quad", "xformers"}
+)
+_DISPATCH_OPERATION_BACKENDS: Final = frozenset({"cuda", "eager", "hip", "triton"})
+_DISPATCH_OPERATION_NAMES: Final = frozenset(
+    {
+        "convrot_w4a4_linear",
+        "gemv_awq_w4a16",
+        "int8_linear",
+        "scaled_mm_mxfp8",
+        "scaled_mm_nvfp4",
+        "scaled_mm_svdquant_w4a4",
+        "w4a8_int8_linear",
+    }
+)
+_DISPATCH_ADAPTER_VERSION: Final = "m7-13-h4-dispatch-observer/1"
 
 H4_SCHEMA: Final = "sigmax.minimax-h3-h4-private-validation/1"
 PROTOCOL_STATUS: Final = "ACTIVE_PENDING_PREFLIGHT"
@@ -332,6 +350,9 @@ def build_h4_prompt(
     shift_video: float,
     shift_audio: float,
     lora_name: str | None = None,
+    trace_file: str | None = None,
+    requested_attention_backend: str = "pytorch",
+    requested_operation_backend: str = "auto",
 ) -> dict[str, dict[str, object]]:
     """Build a native H3 graph with one external Sigmax schedule and no double shift."""
 
@@ -366,6 +387,18 @@ def build_h4_prompt(
         _fail("H4 length must use the frozen 17k+5 grid or the explicit 17-frame probe")
     if width < 32 or height < 32 or width % 32 or height % 32:
         _fail("H4 dimensions must be positive multiples of 32")
+    if requested_attention_backend not in _DISPATCH_ATTENTION_BACKENDS:
+        _fail("H4 attention backend request is not allowlisted")
+    if requested_operation_backend != "auto":
+        _fail("H4 operation backend request must remain auto")
+    if trace_file is not None:
+        trace_path = Path(trace_file)
+        if (
+            not trace_path.is_absolute()
+            or "\x00" in trace_file
+            or ".." in trace_path.parts
+        ):
+            _fail("H4 dispatch trace file must be absolute and traversal-free")
     model_id = "1"
     clip_id = "2"
     video_vae_id = "3"
@@ -381,6 +414,8 @@ def build_h4_prompt(
     audio_decode_id = "13"
     video_id = "14"
     save_id = "15"
+    observer_id = "16"
+    finalizer_id = "17"
     model_link = [model_id, 0]
     if lora_name is not None:
         _safe_relative_name(lora_name, field="lora_name")
@@ -410,6 +445,21 @@ def build_h4_prompt(
             if lora_name is not None
             else {}
         ),
+        **(
+            {
+                observer_id: {
+                    "class_type": "Sigmax.H4DispatchObserver",
+                    "inputs": {
+                        "model": model_link,
+                        "trace_file": trace_file,
+                        "requested_attention_backend": requested_attention_backend,
+                        "requested_operation_backend": requested_operation_backend,
+                    },
+                }
+            }
+            if trace_file is not None
+            else {}
+        ),
         condition_id: {
             "class_type": "MiniMaxH3ImageToVideo",
             "inputs": {
@@ -430,7 +480,10 @@ def build_h4_prompt(
         sampler_id: {"class_type": "KSamplerSelect", "inputs": {"sampler_name": "euler"}},
         guider_id: {
             "class_type": "BasicGuider",
-            "inputs": {"model": model_link, "conditioning": [condition_id, 0]},
+            "inputs": {
+                "model": [observer_id, 0] if trace_file is not None else model_link,
+                "conditioning": [condition_id, 0],
+            },
         },
         noise_id: {"class_type": "RandomNoise", "inputs": {"noise_seed": seed}},
         sample_id: {
@@ -464,6 +517,16 @@ def build_h4_prompt(
                 "codec": "auto",
             },
         },
+        **(
+            {
+                finalizer_id: {
+                    "class_type": "Sigmax.H4DispatchFinalize",
+                    "inputs": {"video": [save_id, 0], "trace_file": trace_file},
+                }
+            }
+            if trace_file is not None
+            else {}
+        ),
     }
 
 
@@ -541,6 +604,9 @@ def _stage_extension(run_path: Path) -> Path:
         ignore=shutil.ignore_patterns("__pycache__", "*.pyc"),
     )
     shutil.copytree(REPOSITORY_ROOT / "web", target / "web")
+    observer_target = run_path / "base" / "custom_nodes" / "SigmaxH4Observer"
+    observer_target.mkdir(parents=True)
+    shutil.copy2(REPOSITORY_ROOT / "scripts" / "h4_dispatch_observer.py", observer_target / "__init__.py")
     return target
 
 
@@ -579,6 +645,7 @@ def _host_command(
         "--disable-all-custom-nodes",
         "--whitelist-custom-nodes",
         "ComfyUI-Sigmax",
+        "SigmaxH4Observer",
     ]
     if use_ck_attention:
         command.append("--use-ck-attention")
@@ -799,6 +866,252 @@ def _gpu_memory_snapshot() -> int | None:
     return max(values, default=0) * 1024 * 1024 if result.returncode == 0 else None
 
 
+def _dispatch_unavailable(reason_code: str, *, requested_attention_backend: str) -> dict[str, object]:
+    return {
+        "actual_attention_backend": "not_observed",
+        "actual_operation_backend": "not_observed",
+        "attention_calls": 0,
+        "dispatch_trace": {},
+        "observation_source": "not_observed",
+        "operation_calls": 0,
+        "reason_code": reason_code,
+        "requested_attention_backend": requested_attention_backend,
+        "requested_operation_backend": "auto",
+        "status": "unavailable",
+    }
+
+
+def _contains_private_dispatch_value(value: object) -> bool:
+    if isinstance(value, str):
+        return bool(_PRIVATE_PATH.search(value) or _SECRET.search(value))
+    if isinstance(value, Mapping):
+        return any(
+            _contains_private_dispatch_value(key) or _contains_private_dispatch_value(item)
+            for key, item in value.items()
+        )
+    if isinstance(value, (list, tuple)):
+        return any(_contains_private_dispatch_value(item) for item in value)
+    return False
+
+
+def _dispatch_count(value: object) -> int | None:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0 or value > 1_000_000_000:
+        return None
+    return value
+
+
+def _dispatch_backend_counts(
+    value: object, *, allowed: frozenset[str], calls: int
+) -> dict[str, int] | None:
+    if not isinstance(value, Mapping) or len(value) > len(allowed):
+        return None
+    result: dict[str, int] = {}
+    for key, item in value.items():
+        if not isinstance(key, str) or key not in allowed:
+            return None
+        count = _dispatch_count(item)
+        if count is None or count == 0:
+            return None
+        result[key] = count
+    if sum(result.values()) != calls:
+        return None
+    return result
+
+
+def _dispatch_events(
+    value: object, *, kind: str
+) -> list[dict[str, object]] | None:
+    if not isinstance(value, list) or len(value) > 32:
+        return None
+    result: list[dict[str, object]] = []
+    for item in value:
+        if not isinstance(item, Mapping):
+            return None
+        expected_keys = (
+            {"backend", "operation", "ordinal", "outcome"}
+            if kind == "operation"
+            else {"backend", "ordinal", "outcome"}
+        )
+        if set(item) != expected_keys:
+            return None
+        backend = item.get("backend")
+        ordinal = item.get("ordinal")
+        outcome = item.get("outcome")
+        if not isinstance(backend, str) or backend not in (
+            _DISPATCH_OPERATION_BACKENDS
+            if kind == "operation"
+            else _DISPATCH_ATTENTION_BACKENDS
+        ):
+            return None
+        if _dispatch_count(ordinal) is None or ordinal == 0:
+            return None
+        if outcome not in {"raised", "returned"}:
+            return None
+        event: dict[str, object] = {
+            "backend": backend,
+            "ordinal": ordinal,
+            "outcome": outcome,
+        }
+        if kind == "operation":
+            operation = item.get("operation")
+            if not isinstance(operation, str) or operation not in _DISPATCH_OPERATION_NAMES:
+                return None
+            event["operation"] = operation
+        result.append(event)
+    return result
+
+
+def _read_dispatch_trace(path: Path, *, expected_attention_backend: str) -> dict[str, object]:
+    """Read and validate only the adapter's bounded, path-free private projection."""
+
+    if expected_attention_backend not in _DISPATCH_ATTENTION_BACKENDS:
+        return _dispatch_unavailable(
+            "dispatch_request_not_allowlisted", requested_attention_backend=expected_attention_backend
+        )
+    try:
+        payload = path.read_bytes()
+    except (OSError, PermissionError):
+        return _dispatch_unavailable(
+            "dispatch_trace_missing", requested_attention_backend=expected_attention_backend
+        )
+    if not payload or len(payload) > _MAX_DISPATCH_TRACE_BYTES:
+        return _dispatch_unavailable(
+            "dispatch_trace_size_invalid", requested_attention_backend=expected_attention_backend
+        )
+    try:
+        decoded = json.loads(payload, object_pairs_hook=_json_unique_pairs)
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return _dispatch_unavailable(
+            "dispatch_trace_invalid_json", requested_attention_backend=expected_attention_backend
+        )
+    if not isinstance(decoded, Mapping) or _contains_private_dispatch_value(decoded):
+        return _dispatch_unavailable(
+            "dispatch_trace_redaction_failed", requested_attention_backend=expected_attention_backend
+        )
+    if decoded.get("schema") != _DISPATCH_TRACE_SCHEMA:
+        return _dispatch_unavailable(
+            "dispatch_trace_schema_mismatch", requested_attention_backend=expected_attention_backend
+        )
+    if decoded.get("adapter_version") != _DISPATCH_ADAPTER_VERSION:
+        return _dispatch_unavailable(
+            "dispatch_trace_adapter_mismatch", requested_attention_backend=expected_attention_backend
+        )
+    if decoded.get("status") != "DISARMED":
+        return _dispatch_unavailable(
+            "dispatch_trace_not_disarmed", requested_attention_backend=expected_attention_backend
+        )
+    requested_attention = decoded.get("requested_attention_backend")
+    if requested_attention != expected_attention_backend:
+        return _dispatch_unavailable(
+            "dispatch_trace_request_mismatch", requested_attention_backend=expected_attention_backend
+        )
+    if decoded.get("requested_operation_backend") != "auto":
+        return _dispatch_unavailable(
+            "dispatch_trace_operation_request_mismatch",
+            requested_attention_backend=expected_attention_backend,
+        )
+
+    operation = decoded.get("operation")
+    attention = decoded.get("attention")
+    if not isinstance(operation, Mapping) or not isinstance(attention, Mapping):
+        return _dispatch_unavailable(
+            "dispatch_trace_axis_missing", requested_attention_backend=expected_attention_backend
+        )
+    operation_calls = _dispatch_count(operation.get("calls"))
+    attention_calls = _dispatch_count(attention.get("calls"))
+    if operation_calls is None or attention_calls is None:
+        return _dispatch_unavailable(
+            "dispatch_trace_call_count_invalid", requested_attention_backend=expected_attention_backend
+        )
+    operation_counts = _dispatch_backend_counts(
+        operation.get("backend_counts"),
+        allowed=_DISPATCH_OPERATION_BACKENDS,
+        calls=operation_calls,
+    )
+    attention_counts = _dispatch_backend_counts(
+        attention.get("backend_counts"),
+        allowed=_DISPATCH_ATTENTION_BACKENDS,
+        calls=attention_calls,
+    )
+    if operation_counts is None and operation_calls != 0:
+        return _dispatch_unavailable(
+            "dispatch_trace_operation_counts_invalid",
+            requested_attention_backend=expected_attention_backend,
+        )
+    if attention_counts is None and attention_calls != 0:
+        return _dispatch_unavailable(
+            "dispatch_trace_attention_counts_invalid",
+            requested_attention_backend=expected_attention_backend,
+        )
+    operation_events = _dispatch_events(operation.get("events"), kind="operation")
+    attention_events = _dispatch_events(attention.get("events"), kind="attention")
+    if operation_events is None or attention_events is None:
+        return _dispatch_unavailable(
+            "dispatch_trace_events_invalid", requested_attention_backend=expected_attention_backend
+        )
+    expected_operation = (
+        next(iter(operation_counts)) if operation_counts is not None and len(operation_counts) == 1 else "not_observed"
+    )
+    expected_attention = (
+        next(iter(attention_counts)) if attention_counts is not None and len(attention_counts) == 1 else "not_observed"
+    )
+    actual_operation = decoded.get("actual_operation_backend")
+    actual_attention = decoded.get("actual_attention_backend")
+    if actual_operation not in _DISPATCH_OPERATION_BACKENDS | {"not_observed"}:
+        return _dispatch_unavailable(
+            "dispatch_trace_operation_backend_invalid",
+            requested_attention_backend=expected_attention_backend,
+        )
+    if actual_attention not in _DISPATCH_ATTENTION_BACKENDS | {"not_observed"}:
+        return _dispatch_unavailable(
+            "dispatch_trace_attention_backend_invalid",
+            requested_attention_backend=expected_attention_backend,
+        )
+    if actual_operation != expected_operation or actual_attention != expected_attention:
+        return _dispatch_unavailable(
+            "dispatch_trace_backend_mismatch", requested_attention_backend=expected_attention_backend
+        )
+    expected_source = (
+        "authorized_host_dispatch"
+        if actual_operation != "not_observed" or actual_attention != "not_observed"
+        else "not_observed"
+    )
+    if decoded.get("observation_source") != expected_source:
+        return _dispatch_unavailable(
+            "dispatch_trace_source_invalid", requested_attention_backend=expected_attention_backend
+        )
+    reason_codes = decoded.get("reason_codes")
+    if (
+        not isinstance(reason_codes, list)
+        or len(reason_codes) > 16
+        or any(not isinstance(item, str) for item in reason_codes)
+    ):
+        return _dispatch_unavailable(
+            "dispatch_trace_reasons_invalid", requested_attention_backend=expected_attention_backend
+        )
+    return {
+        "actual_attention_backend": actual_attention,
+        "actual_operation_backend": actual_operation,
+        "attention_calls": attention_calls,
+        "dispatch_trace": {
+            "adapter_version": _DISPATCH_ADAPTER_VERSION,
+            "attention_backend_counts": dict(attention_counts or {}),
+            "attention_events": attention_events,
+            "operation_backend_counts": dict(operation_counts or {}),
+            "operation_events": operation_events,
+            "reason_codes": list(reason_codes),
+            "schema": _DISPATCH_TRACE_SCHEMA,
+            "status": "DISARMED",
+        },
+        "observation_source": decoded.get("observation_source"),
+        "operation_calls": operation_calls,
+        "reason_code": "dispatch_trace_valid",
+        "requested_attention_backend": requested_attention,
+        "requested_operation_backend": "auto",
+        "status": "valid",
+    }
+
+
 def _host_revision(root: Path) -> str:
     git = shutil.which("git")
     if git is None:
@@ -1007,6 +1320,10 @@ def _run_rows(args: argparse.Namespace, models_root: Path, run_path: Path) -> di
                     args.int8_diffusion_model if row == "B-INT8" else args.diffusion_model,
                     field="diffusion_model",
                 )
+                if re.fullmatch(r"[A-Za-z0-9-]+", row) is None:
+                    _fail("H4 row identifier is not safe for a private trace filename")
+                trace_path = run_path / f"{row.casefold()}_dispatch_trace.json"
+                requested_attention_backend = "ck_int8" if args.use_ck_attention else "pytorch"
                 before = _gpu_memory_snapshot()
                 prompt = build_h4_prompt(
                     variant="H3 Base FL2VA",
@@ -1022,6 +1339,9 @@ def _run_rows(args: argparse.Namespace, models_root: Path, run_path: Path) -> di
                     seed=args.seed,
                     shift_video=12.0,
                     shift_audio=3.0,
+                    trace_file=str(trace_path),
+                    requested_attention_backend=requested_attention_backend,
+                    requested_operation_backend="auto",
                 )
                 warmup_prompt_id, _warmup_history = _submit(
                     base_url=base_url, prompt=prompt, timeout=args.execution_timeout
@@ -1044,6 +1364,9 @@ def _run_rows(args: argparse.Namespace, models_root: Path, run_path: Path) -> di
                 repeat_outputs = _new_output_fingerprints(first_all_outputs, second_all_outputs)
                 repeat_media = _media_summary(run_path)
                 after = _gpu_memory_snapshot()
+                dispatch = _read_dispatch_trace(
+                    trace_path, expected_attention_backend=requested_attention_backend
+                )
                 results[row] = {
                     "artifact": observation.projection(),
                     "disposition": RowDisposition.NO_PROMOTION.value,
@@ -1063,17 +1386,16 @@ def _run_rows(args: argparse.Namespace, models_root: Path, run_path: Path) -> di
                     "gpu_memory_before": before,
                     "gpu_memory_after": after,
                     "backend": {
-                        "requested_operation_backend": "unavailable",
-                        "requested_attention_backend": "ck_int8"
-                        if args.use_ck_attention
-                        else "pytorch",
-                        "actual_operation_backend": "not_observed",
-                        "actual_attention_backend": "not_observed",
-                        "observation_source": "not_observed",
+                        "requested_operation_backend": dispatch["requested_operation_backend"],
+                        "requested_attention_backend": dispatch["requested_attention_backend"],
+                        "actual_operation_backend": dispatch["actual_operation_backend"],
+                        "actual_attention_backend": dispatch["actual_attention_backend"],
+                        "observation_source": dispatch["observation_source"],
                         "launch_flags_are_not_proof": True,
+                        "dispatch_trace": dispatch["dispatch_trace"],
                     },
                     "host_version": live_version,
-                    "reason_code": "backend_observation_not_supplied",
+                    "reason_code": dispatch["reason_code"],
                 }
         finally:
             shutdown = _terminate(process, base_url=base_url)

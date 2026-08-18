@@ -1054,7 +1054,9 @@ class _GpuMemorySampler:
         if self._thread is not None:
             raise RuntimeError("GPU memory sampler already started")
         self._record()
-        self._thread = threading.Thread(target=self._poll, name="sigmax-h4-gpu-sampler", daemon=True)
+        self._thread = threading.Thread(
+            target=self._poll, name="sigmax-h4-gpu-sampler", daemon=True
+        )
         self._thread.start()
 
     def stop(self) -> dict[str, object]:
@@ -1094,9 +1096,7 @@ def _submit_measured(
     return prompt_id, history, int((time.perf_counter() - started) * 1_000_000), memory
 
 
-def _temp_root_receipt(
-    run_path: Path, *, owned_root: Path, remove: bool
-) -> dict[str, object]:
+def _temp_root_receipt(run_path: Path, *, owned_root: Path, remove: bool) -> dict[str, object]:
     """Remove only the exact harness-owned run directory when finalization permits it."""
 
     resolved_run = run_path.resolve()
@@ -1163,18 +1163,13 @@ def _cleanup_projection(
     host_ok = host_readback.get("status") == "pass"
     if termination_ok and port_ok and temp_ok and host_ok:
         status = "pass"
-    elif any(
-        item.get("status") == "unavailable"
-        for item in (port_release, host_readback)
-    ):
+    elif any(item.get("status") == "unavailable" for item in (port_release, host_readback)):
         status = "unavailable"
     else:
         status = "fail"
     return {
         "host_readback": dict(host_readback),
-        "host_mutation": dict(
-            cast(Mapping[str, object], host_readback.get("host_mutation", {}))
-        ),
+        "host_mutation": dict(cast(Mapping[str, object], host_readback.get("host_mutation", {}))),
         "port_release": dict(port_release),
         "process_exited": process_exited,
         "reason_code": "cleanup_complete" if status == "pass" else "cleanup_incomplete",
@@ -1532,9 +1527,7 @@ def _host_readback_projection(
     else:
         revision_unchanged = tree_unchanged = worktree_unchanged = artifacts_unchanged = None
     checkout_unchanged = (
-        bool(revision_unchanged and tree_unchanged and worktree_unchanged)
-        if complete
-        else None
+        bool(revision_unchanged and tree_unchanged and worktree_unchanged) if complete else None
     )
     if not complete:
         status = "unavailable"
@@ -1702,17 +1695,37 @@ def _selected_artifact_paths(
             name = args.int8_diffusion_model
         else:
             continue
-        rows.append((row.casefold(), models_root / "diffusion_models" / Path(_safe_relative_name(name, field="diffusion_model"))))
+        rows.append(
+            (
+                row.casefold(),
+                models_root
+                / "diffusion_models"
+                / Path(_safe_relative_name(name, field="diffusion_model")),
+            )
+        )
     if args.turbo_artifact is not None:
-        turbo_path = models_root / "loras" / Path(
-            _safe_relative_name(args.turbo_artifact, field="turbo_artifact")
+        turbo_path = (
+            models_root
+            / "loras"
+            / Path(_safe_relative_name(args.turbo_artifact, field="turbo_artifact"))
         )
         rows.append(("turbo_artifact", turbo_path))
     rows.extend(
         (
-            ("text_encoder", models_root / "clip" / Path(_safe_relative_name(args.text_encoder, field="text_encoder"))),
-            ("video_vae", models_root / "vae" / Path(_safe_relative_name(args.video_vae, field="video_vae"))),
-            ("audio_vae", models_root / "vae" / Path(_safe_relative_name(args.audio_vae, field="audio_vae"))),
+            (
+                "text_encoder",
+                models_root
+                / "clip"
+                / Path(_safe_relative_name(args.text_encoder, field="text_encoder")),
+            ),
+            (
+                "video_vae",
+                models_root / "vae" / Path(_safe_relative_name(args.video_vae, field="video_vae")),
+            ),
+            (
+                "audio_vae",
+                models_root / "vae" / Path(_safe_relative_name(args.audio_vae, field="audio_vae")),
+            ),
         )
     )
     return tuple(rows)
@@ -1827,8 +1840,10 @@ def _run_rows(
                         requested_attention_backend=requested_attention_backend,
                         requested_operation_backend="auto",
                     )
-                    warmup_prompt_id, _warmup_history, warmup_latency, warmup_memory = _submit_measured(
-                        base_url=base_url, prompt=prompt, timeout=args.execution_timeout
+                    warmup_prompt_id, _warmup_history, warmup_latency, warmup_memory = (
+                        _submit_measured(
+                            base_url=base_url, prompt=prompt, timeout=args.execution_timeout
+                        )
                     )
                     warmup_outputs = _output_fingerprints(run_path)
                     first_prompt_id, first_history, first_latency, first_memory = _submit_measured(
@@ -1837,8 +1852,10 @@ def _run_rows(
                     first_all_outputs = _output_fingerprints(run_path)
                     first_outputs = _new_output_fingerprints(warmup_outputs, first_all_outputs)
                     first_media = _media_summary(run_path)
-                    second_prompt_id, second_history, repeat_latency, repeat_memory = _submit_measured(
-                        base_url=base_url, prompt=prompt, timeout=args.execution_timeout
+                    second_prompt_id, second_history, repeat_latency, repeat_memory = (
+                        _submit_measured(
+                            base_url=base_url, prompt=prompt, timeout=args.execution_timeout
+                        )
                     )
                     second_all_outputs = _output_fingerprints(run_path)
                     repeat_outputs = _new_output_fingerprints(first_all_outputs, second_all_outputs)
@@ -1946,9 +1963,7 @@ def _run_rows(
             and host_readback.get("status") == "pass"
         )
         temp_root = _temp_root_receipt(run_path, owned_root=run_path.parent, remove=safe_remove)
-        results["cleanup"] = _cleanup_projection(
-            shutdown, port_release, temp_root, host_readback
-        )
+        results["cleanup"] = _cleanup_projection(shutdown, port_release, temp_root, host_readback)
         results["shutdown"] = shutdown
         results["port_release"] = port_release
     results["host_revision"] = host_revision

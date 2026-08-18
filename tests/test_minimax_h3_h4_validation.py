@@ -250,9 +250,7 @@ def test_host_readback_projection_detects_revision_tree_and_artifact_drift() -> 
 
 
 def test_gpu_sampler_retains_unavailable_reason_without_fabricating_peak() -> None:
-    sampler = _GpuMemorySampler(
-        snapshot=lambda: (None, "gpu_memory_timeout"), interval_seconds=5.0
-    )
+    sampler = _GpuMemorySampler(snapshot=lambda: (None, "gpu_memory_timeout"), interval_seconds=5.0)
     sampler.start()
     result = sampler.stop()
     assert result["status"] == "unavailable"

@@ -348,6 +348,13 @@ def build_h4_prompt(
         ("audio_vae_name", audio_vae_name),
     ):
         _safe_relative_name(value, field=field)
+    # ComfyUI's Windows loader choices are serialized with backslashes; preserve the
+    # caller-relative boundary while matching that exact host schema spelling.
+    host_model_name = model_name.replace("/", "\\")
+    host_clip_name = clip_name.replace("/", "\\")
+    host_video_vae_name = video_vae_name.replace("/", "\\")
+    host_audio_vae_name = audio_vae_name.replace("/", "\\")
+    host_lora_name = None if lora_name is None else lora_name.replace("/", "\\")
     if not isinstance(prompt, str) or not prompt or _PRIVATE_PATH.search(prompt) or _SECRET.search(prompt):
         _fail("H4 prompt is private and may not contain path or secret text")
     # The preregistered protocol intentionally sends 17 as a negative-shape probe; native H3
@@ -376,11 +383,11 @@ def build_h4_prompt(
         _safe_relative_name(lora_name, field="lora_name")
         model_link = [model_sampling_id, 0]
     return {
-        model_id: {"class_type": "UNETLoader", "inputs": {"unet_name": model_name, "weight_dtype": "default"}},
-        clip_id: {"class_type": "CLIPLoader", "inputs": {"clip_name": clip_name, "type": "minimax", "device": "default"}},
-        video_vae_id: {"class_type": "VAELoader", "inputs": {"vae_name": video_vae_name}},
-        audio_vae_id: {"class_type": "VAELoader", "inputs": {"vae_name": audio_vae_name}},
-        **({model_sampling_id: {"class_type": "LoraLoaderModelOnly", "inputs": {"model": [model_id, 0], "lora_name": lora_name, "strength_model": 1.0}}} if lora_name is not None else {}),
+        model_id: {"class_type": "UNETLoader", "inputs": {"unet_name": host_model_name, "weight_dtype": "default"}},
+        clip_id: {"class_type": "CLIPLoader", "inputs": {"clip_name": host_clip_name, "type": "minimax", "device": "default"}},
+        video_vae_id: {"class_type": "VAELoader", "inputs": {"vae_name": host_video_vae_name}},
+        audio_vae_id: {"class_type": "VAELoader", "inputs": {"vae_name": host_audio_vae_name}},
+        **({model_sampling_id: {"class_type": "LoraLoaderModelOnly", "inputs": {"model": [model_id, 0], "lora_name": host_lora_name, "strength_model": 1.0}}} if lora_name is not None else {}),
         condition_id: {
             "class_type": "MiniMaxH3ImageToVideo",
             "inputs": {"clip": [clip_id, 0], "vae": [video_vae_id, 0], "prompt": prompt, "width": width, "height": height, "length": length},

@@ -465,7 +465,7 @@ def _stage_extension(run_path: Path) -> Path:
 
 
 def _host_command(*, host_python: Path, comfyui_root: Path, models_root: Path, run_path: Path, port: int, use_ck_attention: bool, enable_triton: bool) -> list[str]:
-    command = [str(host_python), str(comfyui_root / "main.py"), "--listen", _LOOPBACK, "--port", str(port), "--base-directory", str(run_path / "base"), "--models-directory", str(models_root), "--output-directory", str(run_path / "output"), "--input-directory", str(run_path / "input"), "--temp-directory", str(run_path / "temp"), "--user-directory", str(run_path / "user"), "--database-url", "sqlite:///:memory:", "--disable-all-custom-nodes", "--whitelist-custom-nodes", "ComfyUI-Sigmax"]
+    command = [str(host_python), str(comfyui_root / "main.py"), "--listen", _LOOPBACK, "--port", str(port), "--base-directory", str(run_path / "base"), "--models-directory", str(models_root), "--output-directory", str(run_path / "output"), "--input-directory", str(run_path / "input"), "--temp-directory", str(run_path / "temp"), "--user-directory", str(run_path / "user"), "--database-url", "sqlite:///:memory:", "--cache-none", "--disable-all-custom-nodes", "--whitelist-custom-nodes", "ComfyUI-Sigmax"]
     if use_ck_attention:
         command.append("--use-ck-attention")
     if enable_triton:
@@ -584,6 +584,52 @@ def _output_fingerprints(run_path: Path) -> tuple[str, ...]:
         if path.is_file():
             results.append("sha256:" + _sha256_file(path))
     return tuple(results)
+
+
+def _new_output_fingerprints(before: Sequence[str], after: Sequence[str]) -> tuple[str, ...]:
+    """Return the multiset of files created by one queue, retaining duplicate hashes."""
+
+    return tuple(sorted((Counter(after) - Counter(before)).elements()))
+
+
+def _media_summary(run_path: Path) -> dict[str, object]:
+    """Capture bounded video/audio stream facts without retaining private filenames."""
+
+    ffprobe = shutil.which("ffprobe")
+    files = sorted(item for item in (run_path / "output").rglob("*") if item.is_file() and item.suffix.casefold() == ".mp4")
+    if ffprobe is None:
+        return {"status": "unavailable", "reason_code": "ffprobe_unavailable"}
+    if not files:
+        return {"status": "unavailable", "reason_code": "video_output_missing"}
+    result = subprocess.run(  # noqa: S603
+        [ffprobe, "-v", "error", "-show_entries", "stream=codec_type,codec_name,nb_frames,sample_rate,channels,avg_frame_rate", "-of", "json", str(files[-1])],
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    if result.returncode != 0:
+        return {"status": "unavailable", "reason_code": "ffprobe_failed"}
+    try:
+        decoded = json.loads(result.stdout)
+    except (TypeError, ValueError):
+        return {"status": "unavailable", "reason_code": "ffprobe_invalid_json"}
+    streams = decoded.get("streams") if isinstance(decoded, dict) else None
+    if not isinstance(streams, list):
+        return {"status": "unavailable", "reason_code": "ffprobe_streams_missing"}
+    video = next((item for item in streams if isinstance(item, dict) and item.get("codec_type") == "video"), None)
+    audio = next((item for item in streams if isinstance(item, dict) and item.get("codec_type") == "audio"), None)
+    if not isinstance(video, dict) or not isinstance(audio, dict):
+        return {"status": "failed", "reason_code": "native_audio_or_video_stream_missing"}
+    return {
+        "audio_channels": audio.get("channels"),
+        "audio_codec": audio.get("codec_name"),
+        "audio_sample_rate": audio.get("sample_rate"),
+        "status": "pass",
+        "video_codec": video.get("codec_name"),
+        "video_frames": video.get("nb_frames"),
+        "video_rate": video.get("avg_frame_rate"),
+    }
 
 
 def _gpu_memory_snapshot() -> int | None:
@@ -728,16 +774,22 @@ def _run_rows(args: argparse.Namespace, models_root: Path, run_path: Path) -> di
                 )
                 before = _gpu_memory_snapshot()
                 prompt = build_h4_prompt(variant="H3 Base FL2VA", model_name=model_name, clip_name=clip_name, video_vae_name=video_vae, audio_vae_name=audio_vae, prompt=args.prompt, width=args.width, height=args.height, length=args.length, steps=steps, seed=args.seed, shift_video=12.0, shift_audio=3.0)
+                warmup_prompt_id, _warmup_history = _submit(base_url=base_url, prompt=prompt, timeout=args.execution_timeout)
+                warmup_outputs = _output_fingerprints(run_path)
                 started = time.perf_counter()
                 first_prompt_id, first_history = _submit(base_url=base_url, prompt=prompt, timeout=args.execution_timeout)
                 first_latency = int((time.perf_counter() - started) * 1_000_000)
-                first_outputs = _output_fingerprints(run_path)
+                first_all_outputs = _output_fingerprints(run_path)
+                first_outputs = _new_output_fingerprints(warmup_outputs, first_all_outputs)
+                first_media = _media_summary(run_path)
                 started = time.perf_counter()
                 second_prompt_id, second_history = _submit(base_url=base_url, prompt=prompt, timeout=args.execution_timeout)
                 repeat_latency = int((time.perf_counter() - started) * 1_000_000)
-                repeat_outputs = _output_fingerprints(run_path)
+                second_all_outputs = _output_fingerprints(run_path)
+                repeat_outputs = _new_output_fingerprints(first_all_outputs, second_all_outputs)
+                repeat_media = _media_summary(run_path)
                 after = _gpu_memory_snapshot()
-                results[row] = {"artifact": observation.projection(), "disposition": RowDisposition.NO_PROMOTION.value, "status": "succeeded", "first_prompt_id": first_prompt_id, "repeat_prompt_id": second_prompt_id, "first_history_status": _history_summary(first_history, first_prompt_id), "repeat_history_status": _history_summary(second_history, second_prompt_id), "first_latency_us": first_latency, "repeat_latency_us": repeat_latency, "first_output_fingerprints": list(first_outputs), "repeat_output_fingerprints": list(repeat_outputs), "repeat_stable": first_outputs == repeat_outputs, "gpu_memory_before": before, "gpu_memory_after": after, "backend": {"requested_operation_backend": "unavailable", "requested_attention_backend": "ck_int8" if args.use_ck_attention else "pytorch", "actual_operation_backend": "not_observed", "actual_attention_backend": "not_observed", "observation_source": "not_observed", "launch_flags_are_not_proof": True}, "host_version": live_version, "reason_code": "backend_observation_not_supplied"}
+                results[row] = {"artifact": observation.projection(), "disposition": RowDisposition.NO_PROMOTION.value, "status": "succeeded", "warmup_prompt_id": warmup_prompt_id, "first_prompt_id": first_prompt_id, "repeat_prompt_id": second_prompt_id, "first_history_status": _history_summary(first_history, first_prompt_id), "repeat_history_status": _history_summary(second_history, second_prompt_id), "first_latency_us": first_latency, "repeat_latency_us": repeat_latency, "first_output_fingerprints": list(first_outputs), "repeat_output_fingerprints": list(repeat_outputs), "repeat_stable": first_outputs == repeat_outputs, "first_media": first_media, "repeat_media": repeat_media, "gpu_memory_before": before, "gpu_memory_after": after, "backend": {"requested_operation_backend": "unavailable", "requested_attention_backend": "ck_int8" if args.use_ck_attention else "pytorch", "actual_operation_backend": "not_observed", "actual_attention_backend": "not_observed", "observation_source": "not_observed", "launch_flags_are_not_proof": True}, "host_version": live_version, "reason_code": "backend_observation_not_supplied"}
         finally:
             shutdown = _terminate(process, base_url=base_url)
             results["shutdown"] = shutdown

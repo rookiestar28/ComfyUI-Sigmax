@@ -206,10 +206,13 @@ def test_minimax_h3_host_identity_guard_keeps_pinned_and_latest_lanes_fail_close
 def test_minimax_h3_live_host_version_is_verified_without_retaining_system_stats() -> None:
     harness = _harness()
 
-    assert harness._verify_minimax_h3_live_host_version(
-        {"system": {"comfyui_version": "0.32.0", "argv": ["private"]}},
-        expected_version="0.32.0",
-    ) == "0.32.0"
+    assert (
+        harness._verify_minimax_h3_live_host_version(
+            {"system": {"comfyui_version": "0.32.0", "argv": ["private"]}},
+            expected_version="0.32.0",
+        )
+        == "0.32.0"
+    )
     with pytest.raises(ScheduleContractError, match="version"):
         harness._verify_minimax_h3_live_host_version(
             {"system": {"comfyui_version": "0.31.0"}},

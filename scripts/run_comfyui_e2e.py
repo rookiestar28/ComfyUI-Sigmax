@@ -2595,7 +2595,9 @@ def _validate_minimax_h3_host_identity(
 ) -> None:
     """Fail closed on caller/checkout identity before an H3 host process starts."""
 
-    if not isinstance(expected_revision, str) or not re.fullmatch(r"[0-9a-f]{40}", expected_revision):
+    if not isinstance(expected_revision, str) or not re.fullmatch(
+        r"[0-9a-f]{40}", expected_revision
+    ):
         raise ScheduleContractError("MiniMax H3 expected host revision must be a 40-digit SHA")
     if not isinstance(actual_revision, str) or not re.fullmatch(r"[0-9a-f]{40}", actual_revision):
         raise ScheduleContractError("MiniMax H3 selected host revision is invalid")
@@ -2613,14 +2615,10 @@ def _validate_minimax_h3_host_identity(
     if lane is not WorkflowValidationLane.LATEST_HOST:
         raise ScheduleContractError("MiniMax H3 host lane must be known_good or latest")
     if version < _MINIMAX_H3_MIN_LATEST_HOST_VERSION:
-        raise ScheduleContractError(
-            "MiniMax H3 latest host lane requires ComfyUI 0.31.0 or newer"
-        )
+        raise ScheduleContractError("MiniMax H3 latest host lane requires ComfyUI 0.31.0 or newer")
 
 
-def _verify_minimax_h3_live_host_version(
-    system_stats: object, *, expected_version: object
-) -> str:
+def _verify_minimax_h3_live_host_version(system_stats: object, *, expected_version: object) -> str:
     """Verify the version reported by the running host without retaining private stats."""
 
     expected = _minimax_h3_host_version(expected_version)
@@ -2628,7 +2626,9 @@ def _verify_minimax_h3_live_host_version(
     system = _object(root.get("system"), label="MiniMax H3 live system identity")
     reported = system.get("comfyui_version")
     if _minimax_h3_host_version(reported) != expected:
-        raise ScheduleContractError("running ComfyUI version does not match the exact H3 host version")
+        raise ScheduleContractError(
+            "running ComfyUI version does not match the exact H3 host version"
+        )
     return cast(str, reported)
 
 

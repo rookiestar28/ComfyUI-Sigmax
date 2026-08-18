@@ -276,8 +276,11 @@ def test_cleanup_projection_requires_graceful_exit_port_readback_and_owned_root(
     assert _cleanup_projection(shutdown, port, temp, readback)["status"] == "pass"
     forced = dict(shutdown, return_code=1, termination="forced")
     assert _cleanup_projection(forced, port, temp, readback)["status"] == "fail"
-    cooperative_nonzero = dict(shutdown, return_code=2)
-    assert _cleanup_projection(cooperative_nonzero, port, temp, readback)["status"] == "fail"
+    cooperative_nonzero = dict(shutdown, return_code=2, termination_method="cooperative_sigint")
+    projection = _cleanup_projection(cooperative_nonzero, port, temp, readback)
+    assert projection["status"] == "fail"
+    assert projection["reason_code"] == "nonzero_cooperative_return"
+    assert projection["termination_method"] == "cooperative_sigint"
 
 
 def test_terminate_uses_cooperative_windows_signal_after_interrupt(
@@ -319,6 +322,7 @@ def test_terminate_uses_cooperative_windows_signal_after_interrupt(
 
     assert result["interrupt_requested"] is True
     assert result["termination"] == "graceful"
+    assert result["termination_method"] == "cooperative_sigint"
     assert result["return_code"] == 0
     assert process.terminate_called is False
 

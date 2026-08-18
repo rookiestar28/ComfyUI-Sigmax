@@ -759,6 +759,7 @@ def _submit(
 def _terminate(process: subprocess.Popen[bytes], *, base_url: str) -> dict[str, object]:
     interrupt_requested = False
     termination = "requested"
+    termination_method = "already_exited"
     with suppress(ScheduleContractError):
         # ComfyUI's interrupt route is a no-content endpoint; JSON decoding a 204 falsely
         # records the cooperative request as unavailable and forces the hard-kill path below.
@@ -777,9 +778,11 @@ def _terminate(process: subprocess.Popen[bytes], *, base_url: str) -> dict[str, 
                 if not callable(killpg) or not isinstance(sigint, int):
                     _fail("POSIX process-group signaling is unavailable")
                 cast(Callable[[int, int], None], killpg)(process.pid, sigint)
+            termination_method = "cooperative_sigint"
             process.wait(timeout=20)
         except (OSError, subprocess.TimeoutExpired):
             termination = "forced"
+            termination_method = "forced_terminate"
             if os.name == "nt":
                 taskkill = shutil.which("taskkill")
                 if taskkill is not None:
@@ -807,6 +810,7 @@ def _terminate(process: subprocess.Popen[bytes], *, base_url: str) -> dict[str, 
         "process_exited": process_exited,
         "return_code": process.returncode,
         "termination": termination,
+        "termination_method": termination_method,
     }
 
 
@@ -1175,6 +1179,7 @@ def _cleanup_projection(
     host_readback: Mapping[str, object],
 ) -> dict[str, object]:
     termination = shutdown.get("termination")
+    termination_method = shutdown.get("termination_method")
     process_exited = shutdown.get("process_exited") is True
     return_code = shutdown.get("return_code")
     termination_ok = termination == "graceful" and process_exited and return_code in (0, None)
@@ -1187,16 +1192,27 @@ def _cleanup_projection(
         status = "unavailable"
     else:
         status = "fail"
+    if status == "pass":
+        reason_code = "cleanup_complete"
+    elif termination_method == "cooperative_sigint" and return_code not in (0, None):
+        reason_code = "nonzero_cooperative_return"
+    elif termination == "forced" or termination_method == "forced_terminate":
+        reason_code = "forced_termination"
+    else:
+        reason_code = "cleanup_incomplete"
     return {
         "host_readback": dict(host_readback),
         "host_mutation": dict(cast(Mapping[str, object], host_readback.get("host_mutation", {}))),
         "port_release": dict(port_release),
         "process_exited": process_exited,
-        "reason_code": "cleanup_complete" if status == "pass" else "cleanup_incomplete",
+        "reason_code": reason_code,
         "return_code": return_code,
         "status": status,
         "temp_root": dict(temp_root),
         "termination": termination if isinstance(termination, str) else "failed",
+        "termination_method": (
+            termination_method if isinstance(termination_method, str) else "failed"
+        ),
     }
 
 
@@ -1950,6 +1966,7 @@ def _run_rows(
                 "process_exited": True,
                 "return_code": None,
                 "termination": "failed",
+                "termination_method": "not_started",
             }
         else:
             try:
@@ -1960,6 +1977,7 @@ def _run_rows(
                     "process_exited": process.poll() is not None,
                     "return_code": process.returncode,
                     "termination": "failed",
+                    "termination_method": "failed",
                 }
                 run_failed = True
                 results["failure_reason_code"] = _failure_reason_code(exc)

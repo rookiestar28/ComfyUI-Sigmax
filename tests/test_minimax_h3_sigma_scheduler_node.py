@@ -107,3 +107,15 @@ def test_minimax_h3_node_can_execute_with_a_torch_like_float_tensor(
     assert isinstance(output_tensor, FakeTensor)
     info = json.loads(metadata)
     assert info["fingerprints"]["output"].startswith("sha256:")
+
+    turbo_tensor, turbo_metadata = MiniMaxH3SigmaScheduler().build(
+        "H3 Base FL2VA",
+        4,
+        0,
+        -1,
+        turbo="h3.fl2va.lightx2v-turbo-4-v0.1-544p",
+    )
+    assert isinstance(turbo_tensor, FakeTensor)
+    turbo_info = json.loads(turbo_metadata)
+    assert turbo_info["mode"] == "turbo_experimental_community"
+    assert turbo_info["experimental"]["enabled"] is True

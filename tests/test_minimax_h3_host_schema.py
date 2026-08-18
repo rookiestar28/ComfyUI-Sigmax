@@ -135,6 +135,22 @@ def _host_object_info() -> dict[str, object]:
                 "start_step": _type("INT"),
                 "end_step": _type("INT"),
             },
+            optional={
+                "turbo": _combo(
+                    "disabled",
+                    "h3.fl2va.lightx2v-turbo-4-v0.1-544p",
+                    "h3.fl2va.lightx2v-turbo-8-v1.0-544p",
+                    "h3.fl2va.lightx2v-turbo-4-v1.0-768p",
+                    "h3.ref2va.lightx2v-turbo-4-v0.1-544p",
+                ),
+                "recipe_id": _combo(
+                    "disabled",
+                    "h3.fl2va.lightx2v-turbo-4-v0.1-544p",
+                    "h3.fl2va.lightx2v-turbo-8-v1.0-544p",
+                    "h3.fl2va.lightx2v-turbo-4-v1.0-768p",
+                    "h3.ref2va.lightx2v-turbo-4-v0.1-544p",
+                ),
+            },
             outputs=("SIGMAS", "STRING"),
         ),
         "KSamplerSelect": _node(
@@ -214,6 +230,17 @@ def test_schema_preflight_accepts_both_explicit_variants() -> None:
         assert report.compatible is True
         assert report.issues == ()
         assert report.report_fingerprint.startswith("sha256:")
+
+
+def test_schema_preflight_accepts_experimental_turbo_optional_input() -> None:
+    workflow = build_minimax_h3_host_workflow(
+        MiniMaxH3WorkflowSpec(variant="H3 Base FL2VA", prompt="turbo schema preflight")
+    )
+    schedule_inputs = cast(dict[str, object], workflow.prompt["7"]["inputs"])
+    schedule_inputs["turbo"] = "h3.fl2va.lightx2v-turbo-4-v0.1-544p"
+    report = validate_minimax_h3_host_workflow_schema(workflow, _host_object_info())
+    assert report.compatible is True
+    assert report.issues == ()
 
 
 def test_schema_preflight_reports_artifact_and_dynamic_schema_drift() -> None:

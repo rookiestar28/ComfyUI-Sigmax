@@ -116,16 +116,16 @@ def _canonical_info(value: dict[str, object]) -> str:
 
 
 def _turbo_profile(
-    *, public_variant: str, recipe_id: object
+    *, public_variant: str, selector: object
 ) -> tuple[str, MiniMaxH3TurboProfile] | None:
-    if recipe_id is None:
+    if selector is None:
         return None
-    if not isinstance(recipe_id, str):
-        raise ScheduleContractError("MiniMax H3 Turbo recipe_id must be selected explicitly")
-    if recipe_id in {"", "disabled"}:
+    if not isinstance(selector, str):
+        raise ScheduleContractError("MiniMax H3 Turbo selector must be selected explicitly")
+    if selector in {"", "disabled"}:
         return None
     try:
-        profile = get_minimax_h3_turbo_profile(recipe_id)
+        profile = get_minimax_h3_turbo_profile(selector)
     except MiniMaxH3TurboError:
         raise
     expected_task = "fl2va" if public_variant == _FL2VA_MODE else "ref2va"
@@ -134,7 +134,32 @@ def _turbo_profile(
             MiniMaxH3TurboReasonCode.WRONG_TASK,
             "recipe task does not match the selected H3 variant",
         )
-    return recipe_id, profile
+    return selector, profile
+
+
+def _resolve_turbo_profile(
+    *, public_variant: str, turbo: object, recipe_id: object
+) -> tuple[str, MiniMaxH3TurboProfile, str] | None:
+    """Resolve the new selector and the legacy alias through one fail-closed path."""
+
+    selected: list[tuple[str, MiniMaxH3TurboProfile, str]] = []
+    for source, value in (("turbo", turbo), ("recipe_id", recipe_id)):
+        resolved = _turbo_profile(public_variant=public_variant, selector=value)
+        if resolved is not None:
+            selected_recipe, profile = resolved
+            selected.append((selected_recipe, profile, source))
+    if len(selected) == 2:
+        first_recipe, first_profile, first_source = selected[0]
+        second_recipe, _second_profile, second_source = selected[1]
+        if first_recipe != second_recipe:
+            raise ScheduleContractError(
+                "MiniMax H3 Turbo selectors conflict: "
+                f"{first_source}={first_recipe!r} and {second_source}={second_recipe!r}"
+            )
+        return first_recipe, first_profile, "turbo+recipe_id"
+    if selected:
+        return selected[0]
+    return None
 
 
 def _build_base_schedule(
@@ -229,6 +254,7 @@ def _build_turbo_schedule(
     public_variant: str,
     profile: MiniMaxH3TurboProfile,
     recipe_id: str,
+    selector_source: str,
     requested_steps: int,
     start_step: object,
     end_step: object,
@@ -276,7 +302,14 @@ def _build_turbo_schedule(
         },
         "lane": "m6_13_recipe_owned_endpoint_inclusive_readiness",
         "license_boundary": "code_only_no_weight_or_lora_redistribution",
-        "mode": "turbo_readiness_only",
+        "mode": "turbo_experimental_community",
+        "experimental": {
+            "enabled": True,
+            "evidence": "experimental",
+            "promotion": "not_claimed",
+            "scope": "community_unofficial_turbo_lora",
+            "selector": selector_source,
+        },
         "profile": {
             "id": profile.profile_id,
             "recipe_id": recipe_id,
@@ -322,6 +355,7 @@ def build_minimax_h3_sigma_schedule(
     start_step: object,
     end_step: object,
     recipe_id: object = None,
+    turbo: object = None,
 ) -> MiniMaxH3SigmaNodeResult:
     """Build and slice the explicit Diffusers endpoint lane without host imports.
 
@@ -331,13 +365,18 @@ def build_minimax_h3_sigma_schedule(
 
     public_variant, selected_variant, base_profile = _variant(variant)
     requested_steps = _steps(steps)
-    selected_turbo = _turbo_profile(public_variant=public_variant, recipe_id=recipe_id)
+    selected_turbo = _resolve_turbo_profile(
+        public_variant=public_variant,
+        turbo=turbo,
+        recipe_id=recipe_id,
+    )
     if selected_turbo is not None:
-        selected_recipe, turbo_profile = selected_turbo
+        selected_recipe, turbo_profile, selector_source = selected_turbo
         return _build_turbo_schedule(
             public_variant=public_variant,
             profile=turbo_profile,
             recipe_id=selected_recipe,
+            selector_source=selector_source,
             requested_steps=requested_steps,
             start_step=start_step,
             end_step=end_step,
@@ -388,8 +427,8 @@ class MiniMaxH3SigmaScheduler:
 
     DESCRIPTION = (
         "Builds an explicit MiniMax H3 Base FL2VA or Ref2VA video sigma schedule; "
-        "an optional exact Turbo recipe is readiness-only and requires eligible artifact evidence "
-        "before any model workflow can execute."
+        "the optional turbo selector is Experimental — community, unsupported and only "
+        "constructs sigmas. Load any matching community LoRA separately in the host workflow."
     )
     CATEGORY = "Sigmax/scheduling"
     FUNCTION = "build"
@@ -422,13 +461,27 @@ class MiniMaxH3SigmaScheduler:
                 ),
             },
             "optional": {
+                "turbo": (
+                    MINIMAX_H3_TURBO_RECIPE_CHOICES,
+                    {
+                        "default": "disabled",
+                        "tooltip": (
+                            "Turbo LoRA (Experimental — community, unsupported). "
+                            "Select an exact recipe; the Scheduler does not load or patch a LoRA."
+                        ),
+                    },
+                ),
                 "recipe_id": (
                     MINIMAX_H3_TURBO_RECIPE_CHOICES,
                     {
                         "default": "disabled",
-                        "tooltip": "Experimental exact M6-13 recipe; readiness-only until artifact evidence is eligible.",
+                        "advanced": True,
+                        "tooltip": (
+                            "Legacy recipe_id compatibility alias for the experimental turbo "
+                            "selector; prefer turbo."
+                        ),
                     },
-                )
+                ),
             },
         }
 
@@ -439,6 +492,7 @@ class MiniMaxH3SigmaScheduler:
         start_step: object,
         end_step: object,
         recipe_id: object = None,
+        turbo: object = None,
     ) -> tuple[object, str]:
         result = build_minimax_h3_sigma_schedule(
             variant=variant,
@@ -446,6 +500,7 @@ class MiniMaxH3SigmaScheduler:
             start_step=start_step,
             end_step=end_step,
             recipe_id=recipe_id,
+            turbo=turbo,
         )
         try:
             torch = importlib.import_module("torch")

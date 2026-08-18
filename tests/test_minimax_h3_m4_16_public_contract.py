@@ -55,12 +55,20 @@ def _sorted_recipe_ids() -> tuple[str, ...]:
     return tuple(sorted((_FL2VA_4, _FL2VA_8, _FL2VA_768, _REF2VA_4)))
 
 
-def test_recipe_selector_is_additive_and_base_remains_default() -> None:
+def test_turbo_selector_is_explicit_and_base_remains_default() -> None:
     inputs = MiniMaxH3SigmaScheduler.INPUT_TYPES()
     assert tuple(inputs["required"]) == ("variant", "steps", "start_step", "end_step")
     optional = inputs["optional"]
-    assert tuple(optional) == ("recipe_id",)
+    assert tuple(optional) == ("turbo", "recipe_id")
+    assert optional["turbo"][0] == MINIMAX_H3_TURBO_RECIPE_CHOICES
     assert optional["recipe_id"][0] == MINIMAX_H3_TURBO_RECIPE_CHOICES
+    turbo_options = cast(dict[str, object], optional["turbo"][1])
+    legacy_options = cast(dict[str, object], optional["recipe_id"][1])
+    assert turbo_options["default"] == "disabled"
+    turbo_tooltip = cast(str, turbo_options["tooltip"])
+    assert "Experimental" in turbo_tooltip
+    assert "community" in turbo_tooltip.lower()
+    assert legacy_options["advanced"] is True
     assert ("disabled", *_sorted_recipe_ids()) == MINIMAX_H3_TURBO_RECIPE_CHOICES
 
     base = build_minimax_h3_sigma_schedule(
@@ -95,7 +103,14 @@ def test_turbo_selector_builds_recipe_owned_readiness_schedule(
     assert len(result.sigmas) == steps + 1
     assert result.sigmas[0] == 1.0
     assert result.sigmas[-1] == 0.0
-    assert info["mode"] == "turbo_readiness_only"
+    assert info["mode"] == "turbo_experimental_community"
+    assert info["experimental"] == {
+        "enabled": True,
+        "evidence": "experimental",
+        "promotion": "not_claimed",
+        "scope": "community_unofficial_turbo_lora",
+        "selector": "recipe_id",
+    }
     assert info["profile"] == {
         "id": f"minimax-h3.turbo.{recipe_id.removeprefix('h3.')}",
         "recipe_id": recipe_id,
@@ -111,10 +126,61 @@ def test_turbo_selector_builds_recipe_owned_readiness_schedule(
     assert "/home/" not in encoded
 
 
+def test_new_turbo_selector_matches_legacy_recipe_path() -> None:
+    turbo = build_minimax_h3_sigma_schedule(
+        variant="H3 Base FL2VA",
+        steps=4,
+        start_step=0,
+        end_step=-1,
+        turbo=_FL2VA_4,
+    )
+    legacy = build_minimax_h3_sigma_schedule(
+        variant="H3 Base FL2VA",
+        steps=4,
+        start_step=0,
+        end_step=-1,
+        recipe_id=_FL2VA_4,
+    )
+    assert turbo.sigmas == legacy.sigmas
+    assert turbo.recipe_id == legacy.recipe_id == _FL2VA_4
+    assert cast(dict[str, object], _info(turbo)["experimental"])["selector"] == "turbo"
+
+
+def test_turbo_selector_precedence_is_deterministic_and_conflicts_fail_closed() -> None:
+    equal = build_minimax_h3_sigma_schedule(
+        variant="H3 Base FL2VA",
+        steps=4,
+        start_step=0,
+        end_step=-1,
+        turbo=_FL2VA_4,
+        recipe_id=_FL2VA_4,
+    )
+    disabled_alias = build_minimax_h3_sigma_schedule(
+        variant="H3 Base FL2VA",
+        steps=4,
+        start_step=0,
+        end_step=-1,
+        turbo=_FL2VA_4,
+        recipe_id="disabled",
+    )
+    assert equal.sigmas == disabled_alias.sigmas
+    assert cast(dict[str, object], _info(equal)["experimental"])["selector"] == "turbo+recipe_id"
+
+    with pytest.raises(ScheduleContractError, match="conflict"):
+        build_minimax_h3_sigma_schedule(
+            variant="H3 Base FL2VA",
+            steps=4,
+            start_step=0,
+            end_step=-1,
+            turbo=_FL2VA_4,
+            recipe_id=_FL2VA_8,
+        )
+
+
 def test_turbo_selector_rejects_unknown_wrong_variant_and_unproven_steps() -> None:
     with pytest.raises(ScheduleContractError, match="UNKNOWN_RECIPE"):
         build_minimax_h3_sigma_schedule(
-            variant="H3 Base FL2VA", steps=4, start_step=0, end_step=-1, recipe_id="Turbo"
+            variant="H3 Base FL2VA", steps=4, start_step=0, end_step=-1, turbo="Turbo"
         )
     with pytest.raises(ScheduleContractError, match=r"task|variant"):
         build_minimax_h3_sigma_schedule(

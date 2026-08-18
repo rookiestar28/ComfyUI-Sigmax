@@ -6,6 +6,7 @@ import json
 import os
 import signal
 import subprocess
+from argparse import Namespace
 from collections.abc import Mapping
 from pathlib import Path
 from typing import cast
@@ -28,7 +29,9 @@ from scripts.run_minimax_h3_h4_validation import (
     _port_release_receipt,
     _protocol_binding,
     _read_dispatch_trace,
+    _stage_reference_image,
     _temp_root_receipt,
+    _turbo_row_spec,
     _validate_h4_schema,
     build_h4_prompt,
     classify_turbo_artifact,
@@ -98,6 +101,276 @@ def test_h4_trace_prompt_observes_model_clone_and_finalizes_after_save(tmp_path:
     assert finalizer_inputs["video"] == ["15", 0]
     assert finalizer_inputs["trace_file"] == trace_file
     assert "MiniMaxH3SigmaShift" not in {node["class_type"] for node in prompt.values()}
+
+
+def test_turbo_prompt_binds_exact_recipe_lora_and_scheduler() -> None:
+    recipe_id = "h3.fl2va.lightx2v-turbo-8-v1.0-544p"
+    prompt = build_h4_prompt(
+        variant="H3 Base FL2VA",
+        model_name="H3/model.safetensors",
+        clip_name="clip.safetensors",
+        video_vae_name="video.safetensors",
+        audio_vae_name="audio.safetensors",
+        prompt="A quiet studio.",
+        width=608,
+        height=352,
+        length=17,
+        steps=8,
+        seed=1,
+        shift_video=12.0,
+        shift_audio=3.0,
+        recipe_id=recipe_id,
+        lora_name="minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
+    )
+    sample_node = prompt["11"]
+    schedule_node = prompt["7"]
+    lora_node = prompt["5"]
+    sample_inputs = cast(dict[str, object], sample_node["inputs"])
+    schedule_inputs = cast(dict[str, object], schedule_node["inputs"])
+    lora_inputs = cast(dict[str, object], lora_node["inputs"])
+    assert sample_inputs["sigmas"] == ["7", 0]
+    assert schedule_inputs["recipe_id"] == recipe_id
+    assert schedule_inputs["steps"] == 8
+    assert schedule_inputs["start_step"] == 0
+    assert schedule_inputs["end_step"] == -1
+    assert prompt["5"]["class_type"] == "LoraLoaderModelOnly"
+    assert lora_inputs["strength_model"] == 1.0
+
+
+def test_ref2v_turbo_prompt_binds_reference_image_and_task_node() -> None:
+    recipe_id = "h3.ref2va.lightx2v-turbo-4-v0.1-544p"
+    prompt = build_h4_prompt(
+        variant="H3 Base Ref2VA",
+        model_name="H3/model.safetensors",
+        clip_name="clip.safetensors",
+        video_vae_name="video.safetensors",
+        audio_vae_name="audio.safetensors",
+        prompt="<Picture 1> in a quiet studio.",
+        width=608,
+        height=352,
+        length=17,
+        steps=4,
+        seed=1,
+        shift_video=12.0,
+        shift_audio=3.0,
+        recipe_id=recipe_id,
+        lora_name="minimax_h3_ref2v_turbo_4step_v0.1_comfyui_bf16.safetensors",
+        reference_image_name="m7_13_reference.png",
+    )
+    reference_node = prompt["6"]
+    ref_schedule_node = prompt["7"]
+    reference_inputs = cast(dict[str, object], reference_node["inputs"])
+    ref_schedule_inputs = cast(dict[str, object], ref_schedule_node["inputs"])
+    assert prompt["6"]["class_type"] == "MiniMaxH3ReferenceToVideo"
+    assert reference_inputs["audio_vae"] == ["4", 0]
+    assert reference_inputs["ref_images.ref_image_0"] == ["18", 0]
+    assert prompt["18"] == {"class_type": "LoadImage", "inputs": {"image": "m7_13_reference.png"}}
+    assert ref_schedule_inputs["recipe_id"] == recipe_id
+
+
+def test_turbo_publisher_allowlist_does_not_alias_unsupported_544p_v01() -> None:
+    assert "h3.fl2va.lightx2v-turbo-4-v0.1-544p" not in h4._PUBLISHER_ARTIFACTS
+    assert (
+        h4._PUBLISHER_ARTIFACTS["h3.fl2va.lightx2v-turbo-8-v1.0-544p"][1]
+        == (
+            "2339acdf19bfe123f46b971ea35d367a84adb85de43627e1eceafa5a5b2b111e"  # pragma: allowlist secret
+        )
+    )
+
+
+def test_turbo_row_artifact_identity_cannot_be_reused_across_rows(tmp_path: Path) -> None:
+    artifact = tmp_path / "publisher.safetensors"
+    _tiny_safetensors(artifact)
+    result = h4._row_artifact(
+        row="T8-544",
+        models_root=tmp_path,
+        turbo_artifact=artifact.name,
+        turbo_artifact_id="h3.fl2va.lightx2v-turbo-4-v1.0-768p",
+        turbo_source="publisher-full",
+        license_ack=True,
+    )
+    assert result is not None
+    assert result.disposition is RowDisposition.REJECTED
+    assert result.reason_code == "artifact.recipe_row_mismatch"
+
+
+def test_multiple_turbo_rows_are_rejected_before_queueing(tmp_path: Path) -> None:
+    artifact = tmp_path / "publisher.safetensors"
+    _tiny_safetensors(artifact)
+    result = h4._row_artifact(
+        row="T8-544",
+        models_root=tmp_path,
+        turbo_artifact=artifact.name,
+        turbo_artifact_id="h3.fl2va.lightx2v-turbo-8-v1.0-544p",
+        turbo_source="publisher-full",
+        license_ack=True,
+        turbo_rows=("T8-544", "T4-768"),
+    )
+    assert result is not None
+    assert result.disposition is RowDisposition.REJECTED
+    assert result.reason_code == "artifact.multi_row_ambiguity"
+
+
+def test_preflight_retains_multi_row_negative_receipts(tmp_path: Path) -> None:
+    args = Namespace(
+        rows=["T8-544", "T4-768"],
+        turbo_artifact=None,
+        turbo_artifact_id=None,
+        turbo_source="publisher-full",
+        license_ack=True,
+        reference_image=None,
+        reference_image_root=None,
+    )
+    rows = h4._preflight_rows(args, tmp_path)
+    t8 = cast(dict[str, object], rows["T8-544"])
+    t4 = cast(dict[str, object], rows["T4-768"])
+    assert t8["disposition"] == RowDisposition.REJECTED.value
+    assert t8["reason_code"] == "artifact.multi_row_ambiguity"
+    assert t4["reason_code"] == "artifact.multi_row_ambiguity"
+
+
+def test_queue_gate_seam_counts_only_accepted_rows(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    accepted = h4.ArtifactObservation(
+        artifact_id="accepted",
+        disposition=RowDisposition.ACCEPTED,
+        reason_code=None,
+        file_bytes=1,
+        sha256="a" * 64,
+        header_bytes=1,
+        tensor_count=1,
+        dtype_counts=(("F32", 1),),
+    )
+    blocked = h4.ArtifactObservation(
+        artifact_id="blocked",
+        disposition=RowDisposition.BLOCKED,
+        reason_code="artifact.publisher_full_not_available",
+        file_bytes=None,
+        sha256=None,
+        header_bytes=None,
+        tensor_count=None,
+        dtype_counts=(),
+    )
+
+    def fake_row_artifact(*, row: str, **_kwargs: object) -> h4.ArtifactObservation:
+        return accepted if row == "T8-544" else blocked
+
+    monkeypatch.setattr(h4, "_row_artifact", fake_row_artifact)
+    accepted_args = Namespace(
+        rows=["T8-544", "T4-544"],
+        turbo_artifact="publisher.safetensors",
+        turbo_artifact_id="h3.fl2va.lightx2v-turbo-8-v1.0-544p",
+        turbo_source="publisher-full",
+        license_ack=True,
+    )
+    assert h4._queueable_rows(accepted_args, tmp_path) == ("T8-544",)
+    blocked_args = Namespace(
+        rows=["T4-544"],
+        turbo_artifact=None,
+        turbo_artifact_id=None,
+        turbo_source="publisher-full",
+        license_ack=True,
+    )
+    assert h4._queueable_rows(blocked_args, tmp_path) == ()
+    ref_args = Namespace(
+        rows=["R4-544"],
+        turbo_artifact="publisher.safetensors",
+        turbo_artifact_id="h3.ref2va.lightx2v-turbo-4-v0.1-544p",
+        turbo_source="publisher-full",
+        license_ack=True,
+        reference_image=None,
+        reference_image_root=None,
+    )
+    monkeypatch.setattr(h4, "_row_artifact", lambda **_kwargs: accepted)
+    assert h4._queueable_rows(ref_args, tmp_path) == ()
+    submits: list[str] = []
+
+    def fake_submit() -> tuple[str, dict[str, object], int, dict[str, object]]:
+        submits.append("queued")
+        return ("prompt-1", {}, 1, {})
+
+    assert h4._submit_if_eligible(accepted, fake_submit) == ("prompt-1", {}, 1, {})
+    assert h4._submit_if_eligible(blocked, fake_submit) is None
+    assert submits == ["queued"]
+
+
+def test_turbo_row_specs_bind_recipe_task_and_resolution() -> None:
+    t4 = _turbo_row_spec("T4-768")
+    assert (t4.recipe_id, t4.variant, t4.steps, t4.shift_video) == (
+        "h3.fl2va.lightx2v-turbo-4-v1.0-768p",
+        "H3 Base FL2VA",
+        4,
+        6.0,
+    )
+    assert (t4.width, t4.height, t4.requires_reference_image) == (1344, 768, False)
+    ref = _turbo_row_spec("R4-544")
+    assert (ref.variant, ref.width, ref.height, ref.requires_reference_image) == (
+        "H3 Base Ref2VA",
+        960,
+        544,
+        True,
+    )
+
+
+def test_reference_image_staging_is_private_and_bounded(tmp_path: Path) -> None:
+    source = tmp_path / "caller-reference.png"
+    source.write_bytes(b"\x89PNG\r\n\x1a\n" + b"PNG fixture")
+    run_path = tmp_path / "run"
+    (run_path / "input").mkdir(parents=True)
+    name = _stage_reference_image(source, run_path, owner_root=tmp_path)
+    assert name == "m7_13_reference.png"
+    assert (run_path / "input" / name).read_bytes() == source.read_bytes()
+    with pytest.raises(ScheduleContractError, match="unavailable"):
+        _stage_reference_image(tmp_path / "missing.png", run_path, owner_root=tmp_path)
+    outside = tmp_path.parent / "outside-reference.png"
+    outside.write_bytes(source.read_bytes())
+    with pytest.raises(ScheduleContractError, match="outside"):
+        _stage_reference_image(outside, run_path, owner_root=tmp_path)
+    outside.unlink()
+
+
+def test_reference_image_staging_rejects_missing_owner_root_and_oversize(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source = tmp_path / "caller-reference.png"
+    source.write_bytes(b"\x89PNG\r\n\x1a\n" + b"PNG fixture")
+    run_path = tmp_path / "run"
+    (run_path / "input").mkdir(parents=True)
+    with pytest.raises(ScheduleContractError, match="owner root"):
+        _stage_reference_image(source, run_path)
+    monkeypatch.setattr(h4, "_MAX_REFERENCE_IMAGE_BYTES", 8)
+    with pytest.raises(ScheduleContractError, match="size bound"):
+        _stage_reference_image(source, run_path, owner_root=tmp_path)
+
+
+def test_reference_image_preflight_is_path_free_and_blocks_missing_root(tmp_path: Path) -> None:
+    source = tmp_path / "caller-reference.png"
+    source.write_bytes(b"\x89PNG\r\n\x1a\n" + b"PNG fixture")
+    missing_root = Namespace(reference_image=source, reference_image_root=None)
+    assert h4._reference_image_preflight_reason(missing_root) == (
+        "input.reference_image_root_not_supplied"
+    )
+    outside = tmp_path.parent / "outside-reference.png"
+    outside.write_bytes(source.read_bytes())
+    bounded = Namespace(reference_image=outside, reference_image_root=tmp_path)
+    assert h4._reference_image_preflight_reason(bounded) == (
+        "input.reference_image_outside_owner_root"
+    )
+    outside.unlink()
+    linked = tmp_path / "linked-reference.png"
+    try:
+        linked.symlink_to(source)
+    except (OSError, NotImplementedError):
+        pass
+    else:
+        assert (
+            h4._reference_image_preflight_reason(
+                Namespace(reference_image=linked, reference_image_root=tmp_path)
+            )
+            == "input.reference_image_reparse_point"
+        )
+        linked.unlink()
 
 
 def test_h4_prompt_rejects_private_prompt_and_bad_frame_grid() -> None:

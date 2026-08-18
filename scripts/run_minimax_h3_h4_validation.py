@@ -17,6 +17,7 @@ import re
 import shutil
 import signal
 import socket
+import stat
 import subprocess
 import sys
 import threading
@@ -43,11 +44,18 @@ from comfyui_sigmax.core.safetensors_header import (  # noqa: E402
     SafetensorsHeaderError,
     read_safetensors_header,
 )
+from comfyui_sigmax.profiles.minimax_h3_turbo import (  # noqa: E402
+    MiniMaxH3TurboError,
+    MiniMaxH3TurboProfile,
+    build_minimax_h3_turbo_schedule,
+    get_minimax_h3_turbo_profile,
+)
 
 _LOOPBACK: Final = "127.0.0.1"
 _MAX_HTTP_BYTES: Final = 4_000_000
 _MAX_LOG_BYTES: Final = 1_000_000
 _MAX_DISPATCH_TRACE_BYTES: Final = 64 * 1024
+_MAX_REFERENCE_IMAGE_BYTES: Final = 16 * 1024 * 1024
 _SHA256: Final = re.compile(r"^[0-9a-f]{64}$")
 _REVISION: Final = re.compile(r"^[0-9a-f]{40}$")
 _SEMVER: Final = re.compile(r"^\d+\.\d+\.\d+$")
@@ -83,20 +91,79 @@ _DEFAULT_AUTHORIZATION: Final = REPOSITORY_ROOT / ".planning" / "260818-M7-13_H4
 
 _PUBLISHER_ARTIFACTS: Final = {
     "h3.fl2va.lightx2v-turbo-4-v1.0-768p": (
-        0,
+        1956192992,
         "c396a9a06f58399e9df9754b18299818d84a2ddd371724ba48fe4a41221437dc",  # pragma: allowlist secret
     ),
     "h3.fl2va.lightx2v-turbo-8-v1.0-544p": (
-        0,
-        "2339acdf19bfe123f46b971ea35d367a84adb85de43627e1eceafa5a5b2b111e",  # pragma: allowlist secret
-    ),
-    "h3.fl2va.lightx2v-turbo-4-v0.1-544p": (
-        0,
+        1956193000,
         "2339acdf19bfe123f46b971ea35d367a84adb85de43627e1eceafa5a5b2b111e",  # pragma: allowlist secret
     ),
     "h3.ref2va.lightx2v-turbo-4-v0.1-544p": (
-        0,
+        1956193000,
         "5b9ab5ade15d0775676d01a907268a69a1468dc6033b3b0d3ded5502f3ebb84c",  # pragma: allowlist secret
+    ),
+}
+
+
+@dataclass(frozen=True, slots=True)
+class TurboRowSpec:
+    """One protocol row's immutable recipe/task binding for private H4 execution."""
+
+    row: str
+    recipe_id: str
+    variant: str
+    steps: int
+    shift_video: float
+    shift_audio: float
+    width: int
+    height: int
+    requires_reference_image: bool
+
+
+_TURBO_ROW_SPECS: Final = {
+    "T4-768": TurboRowSpec(
+        row="T4-768",
+        recipe_id="h3.fl2va.lightx2v-turbo-4-v1.0-768p",
+        variant="H3 Base FL2VA",
+        steps=4,
+        shift_video=6.0,
+        shift_audio=3.0,
+        width=1344,
+        height=768,
+        requires_reference_image=False,
+    ),
+    "T8-544": TurboRowSpec(
+        row="T8-544",
+        recipe_id="h3.fl2va.lightx2v-turbo-8-v1.0-544p",
+        variant="H3 Base FL2VA",
+        steps=8,
+        shift_video=12.0,
+        shift_audio=3.0,
+        width=960,
+        height=544,
+        requires_reference_image=False,
+    ),
+    "T4-544": TurboRowSpec(
+        row="T4-544",
+        recipe_id="h3.fl2va.lightx2v-turbo-4-v0.1-544p",
+        variant="H3 Base FL2VA",
+        steps=4,
+        shift_video=12.0,
+        shift_audio=3.0,
+        width=960,
+        height=544,
+        requires_reference_image=False,
+    ),
+    "R4-544": TurboRowSpec(
+        row="R4-544",
+        recipe_id="h3.ref2va.lightx2v-turbo-4-v0.1-544p",
+        variant="H3 Base Ref2VA",
+        steps=4,
+        shift_video=12.0,
+        shift_audio=3.0,
+        width=960,
+        height=544,
+        requires_reference_image=True,
     ),
 }
 
@@ -148,6 +215,24 @@ class ArtifactObservation:
 
 def _fail(message: str) -> NoReturn:
     raise ScheduleContractError(message)
+
+
+def _turbo_row_spec(row: str) -> TurboRowSpec:
+    spec = _TURBO_ROW_SPECS.get(row)
+    if spec is None:
+        _fail("H4 Turbo row is not in the frozen protocol matrix")
+    try:
+        profile = get_minimax_h3_turbo_profile(spec.recipe_id)
+    except MiniMaxH3TurboError as exc:
+        raise ScheduleContractError("H4 Turbo row profile is not registered") from exc
+    if (
+        profile.task != ("ref2va" if spec.variant == "H3 Base Ref2VA" else "fl2va")
+        or profile.video_shift != spec.shift_video
+        or profile.audio_shift != spec.shift_audio
+        or spec.steps not in profile.allowed_nfe
+    ):
+        _fail("H4 Turbo row binding disagrees with the pure recipe profile")
+    return spec
 
 
 def _validate_h4_schema(value: object) -> None:
@@ -291,7 +376,14 @@ def classify_turbo_artifact(
         return base
     expected = _PUBLISHER_ARTIFACTS.get(artifact_id)
     if source != "publisher-full" or expected is None:
-        return base
+        return replace(
+            base,
+            reason_code=(
+                "artifact.publisher_full_not_available"
+                if source == "publisher-full" and expected is None
+                else base.reason_code
+            ),
+        )
     expected_bytes, expected_hash = expected
     if not license_ack:
         return replace(base, reason_code="artifact.license_ack_required")
@@ -359,13 +451,34 @@ def build_h4_prompt(
     trace_file: str | None = None,
     requested_attention_backend: str = "pytorch",
     requested_operation_backend: str = "auto",
+    recipe_id: str | None = None,
+    reference_image_name: str | None = None,
 ) -> dict[str, dict[str, object]]:
     """Build a native H3 graph with one external Sigmax schedule and no double shift."""
 
     if variant not in {"H3 Base FL2VA", "H3 Base Ref2VA"}:
         _fail("H4 graph variant must be explicit")
-    if variant != "H3 Base FL2VA":
-        _fail("H4 graph currently freezes FL2VA controls only")
+    turbo_profile: MiniMaxH3TurboProfile | None = None
+    if recipe_id is not None:
+        try:
+            turbo_profile = get_minimax_h3_turbo_profile(recipe_id)
+        except MiniMaxH3TurboError as exc:
+            raise ScheduleContractError("H4 graph Turbo recipe is unknown") from exc
+        expected_task = "ref2va" if variant == "H3 Base Ref2VA" else "fl2va"
+        if turbo_profile.task != expected_task:
+            _fail("H4 graph Turbo recipe task does not match the selected variant")
+        if steps not in turbo_profile.allowed_nfe:
+            _fail("H4 graph Turbo recipe does not allow the requested NFE")
+        if shift_video != turbo_profile.video_shift or shift_audio != turbo_profile.audio_shift:
+            _fail("H4 graph Turbo shifts must remain recipe-owned")
+        if lora_name is None:
+            _fail("H4 Turbo graph requires an explicit LoRA artifact")
+    elif lora_name is not None:
+        _fail("H4 LoRA artifact requires an explicit Turbo recipe")
+    if variant == "H3 Base Ref2VA" and reference_image_name is None:
+        _fail("H4 Ref2VA graph requires an explicit reference image")
+    if variant == "H3 Base FL2VA" and reference_image_name is not None:
+        _fail("H4 FL2VA graph cannot receive a reference image")
     for field, value in (
         ("model_name", model_name),
         ("clip_name", clip_name),
@@ -380,6 +493,11 @@ def build_h4_prompt(
     host_video_vae_name = video_vae_name.replace("/", "\\")
     host_audio_vae_name = audio_vae_name.replace("/", "\\")
     host_lora_name = None if lora_name is None else lora_name.replace("/", "\\")
+    host_reference_image_name = (
+        None
+        if reference_image_name is None
+        else _safe_relative_name(reference_image_name, field="reference_image_name")
+    )
     if (
         not isinstance(prompt, str)
         or not prompt
@@ -418,10 +536,41 @@ def build_h4_prompt(
     save_id = "15"
     observer_id = "16"
     finalizer_id = "17"
+    reference_image_id = "18"
     model_link = [model_id, 0]
     if lora_name is not None:
         _safe_relative_name(lora_name, field="lora_name")
         model_link = [model_sampling_id, 0]
+    schedule_inputs: dict[str, object] = {
+        "variant": variant,
+        "steps": steps,
+        "start_step": 0,
+        "end_step": -1,
+    }
+    if recipe_id is not None:
+        schedule_inputs["recipe_id"] = recipe_id
+    conditioning_inputs: dict[str, object] = {
+        "clip": [clip_id, 0],
+        "vae": [video_vae_id, 0],
+        "prompt": prompt,
+        "width": width,
+        "height": height,
+        "length": length,
+    }
+    if variant == "H3 Base Ref2VA":
+        conditioning_inputs.update(
+            {
+                "audio_vae": [audio_vae_id, 0],
+                "ref_image_size": "match",
+                "ref_images.ref_image_0": [reference_image_id, 0],
+            }
+        )
+    conditioning_node: dict[str, object] = {
+        "class_type": (
+            "MiniMaxH3ReferenceToVideo" if variant == "H3 Base Ref2VA" else "MiniMaxH3ImageToVideo"
+        ),
+        "inputs": conditioning_inputs,
+    }
     return {
         model_id: {
             "class_type": "UNETLoader",
@@ -462,22 +611,12 @@ def build_h4_prompt(
             if trace_file is not None
             else {}
         ),
-        condition_id: {
-            "class_type": "MiniMaxH3ImageToVideo",
-            "inputs": {
-                "clip": [clip_id, 0],
-                "vae": [video_vae_id, 0],
-                "prompt": prompt,
-                "width": width,
-                "height": height,
-                "length": length,
-            },
-        },
+        condition_id: conditioning_node,
         # ModelSamplingAV already carries 12/3.  Do not insert MiniMaxH3SigmaShift here:
         # CRITICAL: Sigmax's schedule is already video-shifted; a second shift changes parity.
         schedule_id: {
             "class_type": "Sigmax.MiniMaxH3SigmaScheduler",
-            "inputs": {"variant": variant, "steps": steps, "start_step": 0, "end_step": -1},
+            "inputs": schedule_inputs,
         },
         sampler_id: {"class_type": "KSamplerSelect", "inputs": {"sampler_name": "euler"}},
         guider_id: {
@@ -527,6 +666,16 @@ def build_h4_prompt(
                 }
             }
             if trace_file is not None
+            else {}
+        ),
+        **(
+            {
+                reference_image_id: {
+                    "class_type": "LoadImage",
+                    "inputs": {"image": host_reference_image_name},
+                }
+            }
+            if host_reference_image_name is not None
             else {}
         ),
     }
@@ -1120,6 +1269,17 @@ def _submit_measured(
     return prompt_id, history, int((time.perf_counter() - started) * 1_000_000), memory
 
 
+def _submit_if_eligible(
+    observation: ArtifactObservation,
+    submit: Callable[[], tuple[str, dict[str, object], int, dict[str, object]]],
+) -> tuple[str, dict[str, object], int, dict[str, object]] | None:
+    """Keep the queue seam fail-closed for every blocked/rejected artifact row."""
+
+    if observation.disposition is not RowDisposition.ACCEPTED:
+        return None
+    return submit()
+
+
 def _temp_root_receipt(run_path: Path, *, owned_root: Path, remove: bool) -> dict[str, object]:
     """Remove only the exact harness-owned run directory when finalization permits it."""
 
@@ -1634,6 +1794,7 @@ def _row_artifact(
     turbo_artifact_id: str | None,
     turbo_source: str,
     license_ack: bool,
+    turbo_rows: Sequence[str] = (),
 ) -> ArtifactObservation | None:
     if row.startswith("B-"):
         model_name = (
@@ -1654,11 +1815,34 @@ def _row_artifact(
             expected_sha256=expected,
             reason_code=None,
         )
+    if len(tuple(turbo_rows)) > 1:
+        return ArtifactObservation(
+            artifact_id=row.casefold(),
+            disposition=RowDisposition.REJECTED,
+            reason_code="artifact.multi_row_ambiguity",
+            file_bytes=None,
+            sha256=None,
+            header_bytes=None,
+            tensor_count=None,
+            dtype_counts=(),
+        )
     if turbo_artifact is None or turbo_artifact_id is None:
         return ArtifactObservation(
             artifact_id=row.casefold(),
             disposition=RowDisposition.BLOCKED,
             reason_code="artifact.publisher_full_not_supplied",
+            file_bytes=None,
+            sha256=None,
+            header_bytes=None,
+            tensor_count=None,
+            dtype_counts=(),
+        )
+    spec = _turbo_row_spec(row)
+    if turbo_artifact_id != spec.recipe_id:
+        return ArtifactObservation(
+            artifact_id=row.casefold(),
+            disposition=RowDisposition.REJECTED,
+            reason_code="artifact.recipe_row_mismatch",
             file_bytes=None,
             sha256=None,
             header_bytes=None,
@@ -1671,11 +1855,17 @@ def _row_artifact(
     )
 
 
-def _preflight_rows(args: argparse.Namespace, models_root: Path) -> dict[str, object]:
+_VALID_H4_ROWS: Final = frozenset({"B-BF16", "B-INT8", "T4-768", "T8-544", "T4-544", "R4-544"})
+
+
+def _artifact_observations(
+    args: argparse.Namespace, models_root: Path
+) -> dict[str, ArtifactObservation]:
     rows = tuple(args.rows)
-    observations: dict[str, object] = {}
+    turbo_rows = tuple(row for row in rows if row.startswith(("T", "R")))
+    observations: dict[str, ArtifactObservation] = {}
     for row in rows:
-        if row not in {"B-BF16", "B-INT8", "T4-768", "T8-544", "T4-544", "R4-544"}:
+        if row not in _VALID_H4_ROWS:
             _fail("H4 row is not in the frozen protocol matrix")
         observation = _row_artifact(
             row=row,
@@ -1684,11 +1874,43 @@ def _preflight_rows(args: argparse.Namespace, models_root: Path) -> dict[str, ob
             turbo_artifact_id=args.turbo_artifact_id,
             turbo_source=args.turbo_source,
             license_ack=args.license_ack,
+            turbo_rows=turbo_rows,
         )
         if observation is None:
             _fail("H4 row has no artifact observation")
-        observations[row] = observation.projection()
+        observations[row] = observation
     return observations
+
+
+def _queueable_rows(
+    args: argparse.Namespace,
+    models_root: Path,
+    *,
+    observations: Mapping[str, ArtifactObservation] | None = None,
+) -> tuple[str, ...]:
+    """Return only rows that may reach the first queue submission seam."""
+
+    observed = observations or _artifact_observations(args, models_root)
+    return tuple(
+        row
+        for row in args.rows
+        if observed[row].disposition is RowDisposition.ACCEPTED
+        and not (row == "R4-544" and _reference_image_preflight_reason(args) is not None)
+    )
+
+
+def _preflight_rows(args: argparse.Namespace, models_root: Path) -> dict[str, object]:
+    observations = _artifact_observations(args, models_root)
+    projections: dict[str, object] = {}
+    for row, observation in observations.items():
+        projection = observation.projection()
+        if row == "R4-544" and observation.disposition is RowDisposition.ACCEPTED:
+            reference_reason = _reference_image_preflight_reason(args)
+            if reference_reason is not None:
+                projection["disposition"] = RowDisposition.BLOCKED.value
+                projection["reason_code"] = reference_reason
+        projections[row] = projection
+    return projections
 
 
 def _preflight_components(args: argparse.Namespace, models_root: Path) -> dict[str, object]:
@@ -1767,6 +1989,100 @@ def _selected_artifact_paths(
     return tuple(rows)
 
 
+def _path_is_reparse_point(path: Path) -> bool:
+    """Reject links/junctions before resolving caller-owned input paths."""
+
+    try:
+        if path.is_symlink():
+            return True
+        is_junction = getattr(path, "is_junction", None)
+        if callable(is_junction) and bool(is_junction()):
+            return True
+        attributes = getattr(path.lstat(), "st_file_attributes", 0)
+    except (OSError, PermissionError):
+        return True
+    return bool(attributes & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400))
+
+
+def _reference_image_source(source: Path, owner_root: Path | None) -> Path:
+    """Validate a caller-owned image without exposing or following reparse paths."""
+
+    if owner_root is None:
+        raise ScheduleContractError("H4 reference image owner root is required")
+    if not os.path.lexists(source):
+        raise ScheduleContractError("H4 reference image is unavailable")
+    if not os.path.lexists(owner_root):
+        raise ScheduleContractError("H4 reference image owner root is invalid")
+    if _path_is_reparse_point(source) or _path_is_reparse_point(owner_root):
+        raise ScheduleContractError("H4 reference image links are not accepted")
+    try:
+        owner_path = owner_root.resolve(strict=True)
+        source_path = source.resolve(strict=True)
+    except (OSError, RuntimeError) as exc:
+        raise ScheduleContractError("H4 reference image is unavailable") from exc
+    if not owner_path.is_dir() or _path_is_reparse_point(owner_path):
+        raise ScheduleContractError("H4 reference image owner root is invalid")
+    try:
+        source_path.relative_to(owner_path)
+    except ValueError as exc:
+        raise ScheduleContractError("H4 reference image is outside the owner root") from exc
+    # CRITICAL: reject a symlink/junction anywhere in the caller-owned path before copying.
+    cursor = source
+    while True:
+        if _path_is_reparse_point(cursor):
+            raise ScheduleContractError("H4 reference image links are not accepted")
+        if cursor == cursor.parent:
+            break
+        cursor = cursor.parent
+    suffix = source_path.suffix.casefold()
+    if not source_path.is_file() or suffix not in {".png", ".jpg", ".jpeg", ".webp"}:
+        raise ScheduleContractError("H4 reference image must be a supported image file")
+    try:
+        size = source_path.stat().st_size
+    except (OSError, PermissionError) as exc:
+        raise ScheduleContractError("H4 reference image is unreadable") from exc
+    if size <= 0 or size > _MAX_REFERENCE_IMAGE_BYTES:
+        raise ScheduleContractError("H4 reference image exceeds the size bound")
+    return source_path
+
+
+def _reference_image_preflight_reason(args: argparse.Namespace) -> str | None:
+    source = getattr(args, "reference_image", None)
+    owner_root = getattr(args, "reference_image_root", None)
+    if source is None:
+        return "input.reference_image_not_supplied"
+    try:
+        _reference_image_source(Path(source), None if owner_root is None else Path(owner_root))
+    except ScheduleContractError as exc:
+        if "owner root is required" in str(exc):
+            return "input.reference_image_root_not_supplied"
+        if "outside" in str(exc):
+            return "input.reference_image_outside_owner_root"
+        if "links" in str(exc):
+            return "input.reference_image_reparse_point"
+        if "size bound" in str(exc):
+            return "input.reference_image_size_bound"
+        if "supported image" in str(exc):
+            return "input.reference_image_format_unsupported"
+        return "input.reference_image_unavailable"
+    return None
+
+
+def _stage_reference_image(source: Path, run_path: Path, *, owner_root: Path | None = None) -> str:
+    """Copy one caller-owned reference image into the exact private host input root."""
+
+    source_path = _reference_image_source(source, owner_root)
+    target = run_path / "input" / f"m7_13_reference{source_path.suffix.casefold()}"
+    try:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source_path, target)
+    except (OSError, PermissionError) as exc:
+        raise ScheduleContractError("H4 reference image could not be staged") from exc
+    if target.stat().st_size != source_path.stat().st_size:
+        raise ScheduleContractError("H4 reference image staging readback failed")
+    return target.name
+
+
 def _run_rows(
     args: argparse.Namespace,
     models_root: Path,
@@ -1786,6 +2102,8 @@ def _run_rows(
             host_root, selected_artifacts or _selected_artifact_paths(args, models_root)
         )
     selected = tuple(selected_artifacts or _selected_artifact_paths(args, models_root))
+    row_observations = _artifact_observations(args, models_root)
+    queueable_rows = frozenset(_queueable_rows(args, models_root, observations=row_observations))
     host_revision = host_before.get("revision")
     port = _free_port()
     base_url = f"http://{_LOOPBACK}:{port}"
@@ -1823,32 +2141,82 @@ def _run_rows(
                     base_url=base_url, expected=args.host_version
                 )
                 for row in args.rows:
-                    observation = _row_artifact(
-                        row=row,
-                        models_root=models_root,
-                        turbo_artifact=args.turbo_artifact,
-                        turbo_artifact_id=args.turbo_artifact_id,
-                        turbo_source=args.turbo_source,
-                        license_ack=args.license_ack,
-                    )
-                    if observation is None:
-                        _fail("H4 row artifact preflight returned no observation")
-                    if observation.disposition is not RowDisposition.ACCEPTED:
+                    observation = row_observations[row]
+                    if row not in queueable_rows:
+                        disposition = observation.disposition.value
+                        reason_code = observation.reason_code
+                        if row == "R4-544" and observation.disposition is RowDisposition.ACCEPTED:
+                            disposition = RowDisposition.BLOCKED.value
+                            reason_code = _reference_image_preflight_reason(args)
                         results[row] = {
                             "artifact": observation.projection(),
-                            "disposition": observation.disposition.value,
+                            "disposition": disposition,
+                            "reason_code": reason_code,
                             "status": "not_executed",
                         }
                         continue
-                    if not row.startswith("B-"):
-                        results[row] = {
-                            "artifact": observation.projection(),
-                            "disposition": RowDisposition.NO_PROMOTION.value,
-                            "status": "not_executed",
-                            "reason_code": "turbo.artifact_not_eligible",
+                    turbo_spec = None if row.startswith("B-") else _turbo_row_spec(row)
+                    if turbo_spec is None:
+                        variant = "H3 Base FL2VA"
+                        steps = 20
+                        width = args.width
+                        height = args.height
+                        shift_video = 12.0
+                        shift_audio = 3.0
+                        recipe_id = None
+                        lora_name = None
+                        reference_image_name = None
+                        schedule_receipt: dict[str, object] | None = None
+                    else:
+                        variant = turbo_spec.variant
+                        steps = turbo_spec.steps
+                        width = turbo_spec.width
+                        height = turbo_spec.height
+                        shift_video = turbo_spec.shift_video
+                        shift_audio = turbo_spec.shift_audio
+                        recipe_id = turbo_spec.recipe_id
+                        lora_name = _safe_relative_name(args.turbo_artifact, field="turbo_artifact")
+                        reference_image_name = None
+                        reference_receipt: dict[str, object] | None = None
+                        if turbo_spec.requires_reference_image:
+                            reference_reason = _reference_image_preflight_reason(args)
+                            if reference_reason is not None:
+                                results[row] = {
+                                    "artifact": observation.projection(),
+                                    "disposition": RowDisposition.BLOCKED.value,
+                                    "status": "not_executed",
+                                    "reason_code": reference_reason,
+                                }
+                                continue
+                            reference_image_name = _stage_reference_image(
+                                Path(args.reference_image),
+                                run_path,
+                                owner_root=Path(args.reference_image_root),
+                            )
+                            reference_receipt = {
+                                "image_name": reference_image_name,
+                                "sha256": (
+                                    "sha256:"
+                                    + _sha256_file(run_path / "input" / reference_image_name)
+                                ),
+                                "staged": True,
+                            }
+                        schedule = build_minimax_h3_turbo_schedule(
+                            turbo_spec.recipe_id,
+                            nfe=turbo_spec.steps,
+                            precision="float64",
+                            task=("ref2va" if turbo_spec.variant == "H3 Base Ref2VA" else "fl2va"),
+                            video_shift=turbo_spec.shift_video,
+                            audio_shift=turbo_spec.shift_audio,
+                            loader_strength=1.0,
+                        )
+                        schedule_receipt = {
+                            "audio_shift": turbo_spec.shift_audio,
+                            "fingerprint": schedule.fingerprint,
+                            "nfe": turbo_spec.steps,
+                            "recipe_id": turbo_spec.recipe_id,
+                            "video_shift": turbo_spec.shift_video,
                         }
-                        continue
-                    steps = 20
                     model_name = _safe_relative_name(
                         args.int8_diffusion_model if row == "B-INT8" else args.diffusion_model,
                         field="diffusion_model",
@@ -1859,40 +2227,52 @@ def _run_rows(
                     requested_attention_backend = "ck_int8" if args.use_ck_attention else "pytorch"
                     before = _gpu_memory_snapshot()
                     prompt = build_h4_prompt(
-                        variant="H3 Base FL2VA",
+                        variant=variant,
                         model_name=model_name,
                         clip_name=clip_name,
                         video_vae_name=video_vae,
                         audio_vae_name=audio_vae,
                         prompt=args.prompt,
-                        width=args.width,
-                        height=args.height,
+                        width=width,
+                        height=height,
                         length=args.length,
                         steps=steps,
                         seed=args.seed,
-                        shift_video=12.0,
-                        shift_audio=3.0,
+                        shift_video=shift_video,
+                        shift_audio=shift_audio,
+                        lora_name=lora_name,
                         trace_file=str(trace_path),
                         requested_attention_backend=requested_attention_backend,
                         requested_operation_backend="auto",
+                        recipe_id=recipe_id,
+                        reference_image_name=reference_image_name,
                     )
-                    warmup_prompt_id, _warmup_history, warmup_latency, warmup_memory = (
-                        _submit_measured(
-                            base_url=base_url, prompt=prompt, timeout=args.execution_timeout
+
+                    def submit_current_prompt(
+                        current_prompt: Mapping[str, object] = prompt,
+                    ) -> tuple[str, dict[str, object], int, dict[str, object]]:
+                        return _submit_measured(
+                            base_url=base_url,
+                            prompt=current_prompt,
+                            timeout=args.execution_timeout,
                         )
-                    )
+
+                    warmup_result = _submit_if_eligible(observation, submit_current_prompt)
+                    if warmup_result is None:
+                        _fail("H4 queue gate rejected an accepted row")
+                    warmup_prompt_id, _warmup_history, warmup_latency, warmup_memory = warmup_result
                     warmup_outputs = _output_fingerprints(run_path)
-                    first_prompt_id, first_history, first_latency, first_memory = _submit_measured(
-                        base_url=base_url, prompt=prompt, timeout=args.execution_timeout
-                    )
+                    first_result = _submit_if_eligible(observation, submit_current_prompt)
+                    if first_result is None:
+                        _fail("H4 queue gate rejected an accepted row")
+                    first_prompt_id, first_history, first_latency, first_memory = first_result
                     first_all_outputs = _output_fingerprints(run_path)
                     first_outputs = _new_output_fingerprints(warmup_outputs, first_all_outputs)
                     first_media = _media_summary(run_path)
-                    second_prompt_id, second_history, repeat_latency, repeat_memory = (
-                        _submit_measured(
-                            base_url=base_url, prompt=prompt, timeout=args.execution_timeout
-                        )
-                    )
+                    repeat_result = _submit_if_eligible(observation, submit_current_prompt)
+                    if repeat_result is None:
+                        _fail("H4 queue gate rejected an accepted row")
+                    second_prompt_id, second_history, repeat_latency, repeat_memory = repeat_result
                     second_all_outputs = _output_fingerprints(run_path)
                     repeat_outputs = _new_output_fingerprints(first_all_outputs, second_all_outputs)
                     repeat_media = _media_summary(run_path)
@@ -1912,6 +2292,28 @@ def _run_rows(
                             "requested_operation_backend": dispatch["requested_operation_backend"],
                         },
                         "disposition": RowDisposition.NO_PROMOTION.value,
+                        **(
+                            {
+                                "recipe": {
+                                    "audio_shift": turbo_spec.shift_audio,
+                                    "id": turbo_spec.recipe_id,
+                                    "nfe": turbo_spec.steps,
+                                    "task": (
+                                        "ref2va"
+                                        if turbo_spec.variant == "H3 Base Ref2VA"
+                                        else "fl2va"
+                                    ),
+                                    "variant": turbo_spec.variant,
+                                    "video_shift": turbo_spec.shift_video,
+                                    "width": turbo_spec.width,
+                                    "height": turbo_spec.height,
+                                },
+                                "schedule": schedule_receipt,
+                                "reference": reference_receipt,
+                            }
+                            if turbo_spec is not None
+                            else {}
+                        ),
                         "first_history_status": _history_summary(first_history, first_prompt_id),
                         "first_latency_us": first_latency,
                         "first_media": first_media,
@@ -2112,6 +2514,8 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--audio-vae", default="minimax_h3_audio_vae_fp32.safetensors")
     parser.add_argument("--audio-vae-sha256")
     parser.add_argument("--prompt")
+    parser.add_argument("--reference-image", type=Path)
+    parser.add_argument("--reference-image-root", type=Path)
     parser.add_argument("--width", type=int, default=608)
     parser.add_argument("--height", type=int, default=352)
     parser.add_argument("--length", type=int, default=17)

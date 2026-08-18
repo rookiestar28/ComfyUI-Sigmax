@@ -285,4 +285,4 @@ def test_port_receipt_and_temp_root_are_bounded_and_owned(tmp_path: Path) -> Non
     receipt = _temp_root_receipt(owned, owned_root=tmp_path, remove=False)
     expected_owned = h4.REPOSITORY_ROOT.resolve() in tmp_path.resolve().parents
     assert receipt["owned"] is expected_owned
-    assert receipt["cleanup_status"] == "retained"
+    assert receipt["cleanup_status"] == ("retained" if expected_owned else "failed")

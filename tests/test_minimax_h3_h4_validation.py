@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import json
+import os
+import signal
+import subprocess
 from collections.abc import Mapping
 from pathlib import Path
 from typing import cast
@@ -273,6 +276,67 @@ def test_cleanup_projection_requires_graceful_exit_port_readback_and_owned_root(
     assert _cleanup_projection(shutdown, port, temp, readback)["status"] == "pass"
     forced = dict(shutdown, return_code=1, termination="forced")
     assert _cleanup_projection(forced, port, temp, readback)["status"] == "fail"
+    cooperative_nonzero = dict(shutdown, return_code=2)
+    assert _cleanup_projection(cooperative_nonzero, port, temp, readback)["status"] == "fail"
+
+
+def test_terminate_uses_cooperative_windows_signal_after_interrupt(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakeProcess:
+        pid = 1234
+
+        def __init__(self) -> None:
+            self.returncode: int | None = None
+            self.terminate_called = False
+
+        def poll(self) -> int | None:
+            return self.returncode
+
+        def wait(self, timeout: float | None = None) -> int:
+            del timeout
+            if self.returncode is None:
+                self.returncode = 0
+            return self.returncode
+
+        def terminate(self) -> None:
+            self.terminate_called = True
+            self.returncode = 1
+
+    process = FakeProcess()
+    monkeypatch.setattr(os, "name", "nt")
+    monkeypatch.setattr(h4, "_http_no_content", lambda *args, **kwargs: None)
+
+    def cooperative_signal(pid: int, signum: int) -> None:
+        assert pid == process.pid
+        assert signum == signal.SIGINT
+        process.returncode = 0
+
+    monkeypatch.setattr(os, "kill", cooperative_signal)
+    result = h4._terminate(
+        cast(subprocess.Popen[bytes], process), base_url="http://127.0.0.1:12345"
+    )
+
+    assert result["interrupt_requested"] is True
+    assert result["termination"] == "graceful"
+    assert result["return_code"] == 0
+    assert process.terminate_called is False
+
+
+def test_interrupt_request_accepts_no_content_response(monkeypatch: pytest.MonkeyPatch) -> None:
+    class NoContentResponse:
+        def __enter__(self) -> NoContentResponse:
+            return self
+
+        def __exit__(self, *_args: object) -> None:
+            return None
+
+        def read(self, limit: int) -> bytes:
+            assert limit > 0
+            return b""
+
+    monkeypatch.setattr(h4, "urlopen", lambda *args, **kwargs: NoContentResponse())
+    h4._http_no_content("http://127.0.0.1:12345/interrupt", method="POST", timeout=1)
 
 
 def test_port_receipt_and_temp_root_are_bounded_and_owned(tmp_path: Path) -> None:

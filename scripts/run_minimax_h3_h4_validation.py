@@ -590,6 +590,22 @@ def _http_json(
         raise ScheduleContractError("loopback host request failed") from exc
 
 
+def _http_no_content(url: str, *, method: str, timeout: float) -> None:
+    """Send a bounded loopback request whose endpoint may legitimately return 204."""
+
+    request = Request(  # noqa: S310
+        _loopback_url(url),
+        data=b"{}",
+        headers={"Content-Type": "application/json"},
+        method=method,
+    )
+    try:
+        with urlopen(request, timeout=timeout) as response:  # noqa: S310
+            response.read(_MAX_HTTP_BYTES + 1)
+    except (HTTPError, URLError, TimeoutError, OSError) as exc:
+        raise ScheduleContractError("loopback host request failed") from exc
+
+
 def _api_unreachable(base_url: str) -> bool:
     """Return only a boolean readback result; never retain a private response/error."""
 
@@ -744,13 +760,17 @@ def _terminate(process: subprocess.Popen[bytes], *, base_url: str) -> dict[str, 
     interrupt_requested = False
     termination = "requested"
     with suppress(ScheduleContractError):
-        _http_json(f"{base_url}/interrupt", method="POST", body={}, timeout=2)
+        # ComfyUI's interrupt route is a no-content endpoint; JSON decoding a 204 falsely
+        # records the cooperative request as unavailable and forces the hard-kill path below.
+        _http_no_content(f"{base_url}/interrupt", method="POST", timeout=2)
         interrupt_requested = True
     if process.poll() is None:
         try:
             if os.name == "nt":
-                process.terminate()
-                termination = "forced"
+                sigint = getattr(signal, "SIGINT", None)
+                if not isinstance(sigint, int):
+                    _fail("Windows cooperative process signaling is unavailable")
+                os.kill(process.pid, sigint)
             else:
                 killpg = getattr(os, "killpg", None)
                 sigint = getattr(signal, "SIGINT", None)

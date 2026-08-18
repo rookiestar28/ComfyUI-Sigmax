@@ -136,9 +136,7 @@ class _TraceState:
 
     def record_attention(self, backend: str, outcome: str) -> None:
         self.attention_call_count += 1
-        self.attention_backend_counts[backend] = (
-            self.attention_backend_counts.get(backend, 0) + 1
-        )
+        self.attention_backend_counts[backend] = self.attention_backend_counts.get(backend, 0) + 1
         if outcome == "returned":
             self.attention_success_count += 1
         else:
@@ -153,7 +151,9 @@ class _TraceState:
         )
         self._maybe_write(self.attention_call_count)
 
-    def wrap_operation(self, operation: str, implementation: Callable[..., object]) -> Callable[..., object]:
+    def wrap_operation(
+        self, operation: str, implementation: Callable[..., object]
+    ) -> Callable[..., object]:
         """Wrap one allowlisted returned implementation without changing its call contract."""
 
         if operation not in _ALLOWED_OPERATION_NAMES:
@@ -379,9 +379,7 @@ def install_model(
         selected = resolver(host_name)
         if not callable(selected):
             raise DispatchObserverError("selected attention callable is unavailable")
-        observed_attention = _wrap_attention_callable(
-            state, requested_attention_backend, selected
-        )
+        observed_attention = _wrap_attention_callable(state, requested_attention_backend, selected)
         setter = getattr(observed_model, "set_model_optimized_attention", None)
         if not callable(setter):
             raise DispatchObserverError("model clone lacks scoped attention setter")
@@ -392,7 +390,9 @@ def install_model(
         try:
             disarm()
         except Exception as restore_error:
-            raise DispatchObserverError("observer cleanup failed after arm error") from restore_error
+            raise DispatchObserverError(
+                "observer cleanup failed after arm error"
+            ) from restore_error
         raise exc
 
 

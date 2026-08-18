@@ -17,9 +17,7 @@ from scripts.h4_dispatch_observer import (
 )
 
 
-def _callable(
-    *, module: str, name: str, result: object = "ok"
-) -> Callable[..., object]:
+def _callable(*, module: str, name: str, result: object = "ok") -> Callable[..., object]:
     def implementation(*args: object, **kwargs: object) -> object:
         return result
 
@@ -29,16 +27,22 @@ def _callable(
 
 
 def test_backend_identity_is_bounded_to_allowlisted_comfy_kitchen_modules() -> None:
-    assert _backend_from_callable(
-        _callable(module="comfy_kitchen.backends.cuda", name="convrot_w4a4_linear")
-    ) == "cuda"
+    assert (
+        _backend_from_callable(
+            _callable(module="comfy_kitchen.backends.cuda", name="convrot_w4a4_linear")
+        )
+        == "cuda"
+    )
     assert (
         _backend_from_callable(
             _callable(module="comfy_kitchen.backends.eager.quantization", name="int8_linear")
         )
         == "eager"
     )
-    assert _backend_from_callable(_callable(module="private.module", name="convrot_w4a4_linear")) is None
+    assert (
+        _backend_from_callable(_callable(module="private.module", name="convrot_w4a4_linear"))
+        is None
+    )
 
 
 def test_operation_is_not_observed_until_wrapped_callable_enters(tmp_path: Path) -> None:

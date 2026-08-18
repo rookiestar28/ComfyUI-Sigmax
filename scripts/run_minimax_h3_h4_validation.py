@@ -393,11 +393,7 @@ def build_h4_prompt(
         _fail("H4 operation backend request must remain auto")
     if trace_file is not None:
         trace_path = Path(trace_file)
-        if (
-            not trace_path.is_absolute()
-            or "\x00" in trace_file
-            or ".." in trace_path.parts
-        ):
+        if not trace_path.is_absolute() or "\x00" in trace_file or ".." in trace_path.parts:
             _fail("H4 dispatch trace file must be absolute and traversal-free")
     model_id = "1"
     clip_id = "2"
@@ -606,7 +602,9 @@ def _stage_extension(run_path: Path) -> Path:
     shutil.copytree(REPOSITORY_ROOT / "web", target / "web")
     observer_target = run_path / "base" / "custom_nodes" / "SigmaxH4Observer"
     observer_target.mkdir(parents=True)
-    shutil.copy2(REPOSITORY_ROOT / "scripts" / "h4_dispatch_observer.py", observer_target / "__init__.py")
+    shutil.copy2(
+        REPOSITORY_ROOT / "scripts" / "h4_dispatch_observer.py", observer_target / "__init__.py"
+    )
     return target
 
 
@@ -866,7 +864,9 @@ def _gpu_memory_snapshot() -> int | None:
     return max(values, default=0) * 1024 * 1024 if result.returncode == 0 else None
 
 
-def _dispatch_unavailable(reason_code: str, *, requested_attention_backend: str) -> dict[str, object]:
+def _dispatch_unavailable(
+    reason_code: str, *, requested_attention_backend: str
+) -> dict[str, object]:
     return {
         "actual_attention_backend": "not_observed",
         "actual_operation_backend": "not_observed",
@@ -918,9 +918,7 @@ def _dispatch_backend_counts(
     return result
 
 
-def _dispatch_events(
-    value: object, *, kind: str
-) -> list[dict[str, object]] | None:
+def _dispatch_events(value: object, *, kind: str) -> list[dict[str, object]] | None:
     if not isinstance(value, list) or len(value) > 32:
         return None
     result: list[dict[str, object]] = []
@@ -938,9 +936,7 @@ def _dispatch_events(
         ordinal = item.get("ordinal")
         outcome = item.get("outcome")
         if not isinstance(backend, str) or backend not in (
-            _DISPATCH_OPERATION_BACKENDS
-            if kind == "operation"
-            else _DISPATCH_ATTENTION_BACKENDS
+            _DISPATCH_OPERATION_BACKENDS if kind == "operation" else _DISPATCH_ATTENTION_BACKENDS
         ):
             return None
         if _dispatch_count(ordinal) is None or ordinal == 0:
@@ -966,7 +962,8 @@ def _read_dispatch_trace(path: Path, *, expected_attention_backend: str) -> dict
 
     if expected_attention_backend not in _DISPATCH_ATTENTION_BACKENDS:
         return _dispatch_unavailable(
-            "dispatch_request_not_allowlisted", requested_attention_backend=expected_attention_backend
+            "dispatch_request_not_allowlisted",
+            requested_attention_backend=expected_attention_backend,
         )
     try:
         payload = path.read_bytes()
@@ -986,7 +983,8 @@ def _read_dispatch_trace(path: Path, *, expected_attention_backend: str) -> dict
         )
     if not isinstance(decoded, Mapping) or _contains_private_dispatch_value(decoded):
         return _dispatch_unavailable(
-            "dispatch_trace_redaction_failed", requested_attention_backend=expected_attention_backend
+            "dispatch_trace_redaction_failed",
+            requested_attention_backend=expected_attention_backend,
         )
     if decoded.get("schema") != _DISPATCH_TRACE_SCHEMA:
         return _dispatch_unavailable(
@@ -994,7 +992,8 @@ def _read_dispatch_trace(path: Path, *, expected_attention_backend: str) -> dict
         )
     if decoded.get("adapter_version") != _DISPATCH_ADAPTER_VERSION:
         return _dispatch_unavailable(
-            "dispatch_trace_adapter_mismatch", requested_attention_backend=expected_attention_backend
+            "dispatch_trace_adapter_mismatch",
+            requested_attention_backend=expected_attention_backend,
         )
     if decoded.get("status") != "DISARMED":
         return _dispatch_unavailable(
@@ -1003,7 +1002,8 @@ def _read_dispatch_trace(path: Path, *, expected_attention_backend: str) -> dict
     requested_attention = decoded.get("requested_attention_backend")
     if requested_attention != expected_attention_backend:
         return _dispatch_unavailable(
-            "dispatch_trace_request_mismatch", requested_attention_backend=expected_attention_backend
+            "dispatch_trace_request_mismatch",
+            requested_attention_backend=expected_attention_backend,
         )
     if decoded.get("requested_operation_backend") != "auto":
         return _dispatch_unavailable(
@@ -1021,7 +1021,8 @@ def _read_dispatch_trace(path: Path, *, expected_attention_backend: str) -> dict
     attention_calls = _dispatch_count(attention.get("calls"))
     if operation_calls is None or attention_calls is None:
         return _dispatch_unavailable(
-            "dispatch_trace_call_count_invalid", requested_attention_backend=expected_attention_backend
+            "dispatch_trace_call_count_invalid",
+            requested_attention_backend=expected_attention_backend,
         )
     operation_counts = _dispatch_backend_counts(
         operation.get("backend_counts"),
@@ -1050,10 +1051,14 @@ def _read_dispatch_trace(path: Path, *, expected_attention_backend: str) -> dict
             "dispatch_trace_events_invalid", requested_attention_backend=expected_attention_backend
         )
     expected_operation = (
-        next(iter(operation_counts)) if operation_counts is not None and len(operation_counts) == 1 else "not_observed"
+        next(iter(operation_counts))
+        if operation_counts is not None and len(operation_counts) == 1
+        else "not_observed"
     )
     expected_attention = (
-        next(iter(attention_counts)) if attention_counts is not None and len(attention_counts) == 1 else "not_observed"
+        next(iter(attention_counts))
+        if attention_counts is not None and len(attention_counts) == 1
+        else "not_observed"
     )
     actual_operation = decoded.get("actual_operation_backend")
     actual_attention = decoded.get("actual_attention_backend")
@@ -1069,7 +1074,8 @@ def _read_dispatch_trace(path: Path, *, expected_attention_backend: str) -> dict
         )
     if actual_operation != expected_operation or actual_attention != expected_attention:
         return _dispatch_unavailable(
-            "dispatch_trace_backend_mismatch", requested_attention_backend=expected_attention_backend
+            "dispatch_trace_backend_mismatch",
+            requested_attention_backend=expected_attention_backend,
         )
     expected_source = (
         "authorized_host_dispatch"

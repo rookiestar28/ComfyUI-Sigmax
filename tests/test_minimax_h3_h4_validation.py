@@ -3,18 +3,33 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from pathlib import Path
 from typing import cast
 
 import pytest
+import scripts.run_minimax_h3_h4_validation as h4
 from comfyui_sigmax.core import ScheduleContractError
 from scripts.h4_dispatch_observer import _TraceState
 from scripts.run_minimax_h3_h4_validation import (
+    H4_SCHEMA,
+    PROTOCOL_STATUS,
     RowDisposition,
     _artifact_observation,
+    _cleanup_projection,
+    _free_port,
+    _gpu_memory_projection,
+    _GpuMemorySampler,
+    _host_readback_projection,
+    _parse_gpu_memory_output,
+    _port_release_receipt,
+    _protocol_binding,
     _read_dispatch_trace,
+    _temp_root_receipt,
+    _validate_h4_schema,
     build_h4_prompt,
     classify_turbo_artifact,
+    current_candidate,
 )
 
 
@@ -164,3 +179,110 @@ def test_dispatch_trace_projection_requires_disarmed_redacted_observation(tmp_pa
     rejected = _read_dispatch_trace(trace_file, expected_attention_backend="pytorch")
     assert rejected["status"] == "unavailable"
     assert rejected["reason_code"] == "dispatch_trace_redaction_failed"
+
+
+def test_h4_protocol_binding_accepts_review_state_and_rejects_stale_state(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    commit, tree = current_candidate()
+    monkeypatch.setattr(h4, "REPOSITORY_ROOT", tmp_path)
+
+    def write_protocol(status: str) -> Path:
+        target = tmp_path / f"protocol-{status}.md"
+        target.write_text(
+            f"**Protocol status:** `{status}`\ncommit: {commit}\ntree: {tree}\n",
+            encoding="utf-8",
+        )
+        return target
+
+    _protocol_binding(write_protocol(PROTOCOL_STATUS), expected_commit=commit, expected_tree=tree)
+    with pytest.raises(ScheduleContractError):
+        _protocol_binding(
+            write_protocol("ACTIVE_PENDING_PREFLIGHT"), expected_commit=commit, expected_tree=tree
+        )
+    assert H4_SCHEMA.endswith("/2")
+    with pytest.raises(ScheduleContractError):
+        _validate_h4_schema("sigmax.minimax-h3-h4-private-validation/1")
+
+
+def test_gpu_memory_projection_is_strict_per_device_and_never_promotes_zero() -> None:
+    parsed = _parse_gpu_memory_output("0, 128\n1, 256\n")
+    assert parsed == {0: 128 * 1024 * 1024, 1: 256 * 1024 * 1024}
+    projected = _gpu_memory_projection(
+        [parsed, {0: 192 * 1024 * 1024, 1: 224 * 1024 * 1024}],
+        sample_interval_ms=250,
+    )
+    assert projected["status"] == "pass"
+    assert projected["peak_used_bytes"] == 416 * 1024 * 1024
+    assert projected["peak_used_bytes_by_device"] == {
+        "0": 192 * 1024 * 1024,
+        "1": 256 * 1024 * 1024,
+    }
+    with pytest.raises(ValueError):
+        _parse_gpu_memory_output("0, 128 MiB\n")
+    assert _gpu_memory_projection([{0: 0}], sample_interval_ms=250)["status"] == "failed"
+
+
+def test_host_readback_projection_detects_revision_tree_and_artifact_drift() -> None:
+    before = {
+        "revision": "a" * 40,
+        "tree": "b" * 40,
+        "worktree_state": "sha256:clean",
+        "artifacts": {"model": "sha256:one"},
+    }
+    after = {
+        "revision": "a" * 40,
+        "tree": "c" * 40,
+        "worktree_state": "sha256:dirty",
+        "artifacts": {"model": "sha256:two"},
+    }
+    result = _host_readback_projection(
+        before,
+        after,
+        process_alive=False,
+        api_unreachable=True,
+    )
+    assert result["status"] == "fail"
+    assert result["worktree_state_unchanged"] is False
+    mutation = cast(Mapping[str, object], result["host_mutation"])
+    assert mutation["checkout_unchanged"] is False
+    assert mutation["selected_artifacts_unchanged"] is False
+
+
+def test_gpu_sampler_retains_unavailable_reason_without_fabricating_peak() -> None:
+    sampler = _GpuMemorySampler(
+        snapshot=lambda: (None, "gpu_memory_timeout"), interval_seconds=5.0
+    )
+    sampler.start()
+    result = sampler.stop()
+    assert result["status"] == "unavailable"
+    assert result["peak_used_bytes"] is None
+    assert result["reason_code"] == "gpu_memory_timeout"
+
+
+def test_cleanup_projection_requires_graceful_exit_port_readback_and_owned_root() -> None:
+    shutdown = {
+        "process_exited": True,
+        "return_code": 0,
+        "termination": "graceful",
+    }
+    port = {
+        "status": "pass",
+        "verified_by": "bind_probe",
+    }
+    temp = {"cleanup_status": "removed", "owned": True}
+    readback = {"status": "pass"}
+    assert _cleanup_projection(shutdown, port, temp, readback)["status"] == "pass"
+    forced = dict(shutdown, return_code=1, termination="forced")
+    assert _cleanup_projection(forced, port, temp, readback)["status"] == "fail"
+
+
+def test_port_receipt_and_temp_root_are_bounded_and_owned(tmp_path: Path) -> None:
+    port = _port_release_receipt(0, timeout=1)
+    assert port["status"] == "unavailable"
+    assert _port_release_receipt(_free_port(), timeout=1)["status"] == "pass"
+    owned = tmp_path / "h4-owned"
+    owned.mkdir()
+    (owned / "marker").write_text("private", encoding="utf-8")
+    receipt = _temp_root_receipt(owned, owned_root=tmp_path, remove=False)
+    assert receipt["owned"] is False

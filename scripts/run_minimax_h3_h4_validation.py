@@ -19,6 +19,7 @@ import signal
 import socket
 import subprocess
 import sys
+import threading
 import time
 import uuid
 from collections import Counter
@@ -72,8 +73,8 @@ _DISPATCH_OPERATION_NAMES: Final = frozenset(
 )
 _DISPATCH_ADAPTER_VERSION: Final = "m7-13-h4-dispatch-observer/1"
 
-H4_SCHEMA: Final = "sigmax.minimax-h3-h4-private-validation/1"
-PROTOCOL_STATUS: Final = "ACTIVE_PENDING_PREFLIGHT"
+H4_SCHEMA: Final = "sigmax.minimax-h3-h4-private-validation/2"
+PROTOCOL_STATUS: Final = "ACTIVE_PENDING_REVIEW"
 AUTHORIZATION_MARKER: Final = "M7-13-H4-AUTHORIZED-2026-08-18"
 _DEFAULT_PROTOCOL: Final = (
     REPOSITORY_ROOT / ".planning" / "260818-M7-13_MINIMAX_H3_ACCELERATED_VALIDATION_PROTOCOL.md"
@@ -147,6 +148,11 @@ class ArtifactObservation:
 
 def _fail(message: str) -> NoReturn:
     raise ScheduleContractError(message)
+
+
+def _validate_h4_schema(value: object) -> None:
+    if value != H4_SCHEMA:
+        _fail("H4 evidence schema is not the current private version")
 
 
 def _safe_relative_name(value: object, *, field: str) -> str:
@@ -584,6 +590,16 @@ def _http_json(
         raise ScheduleContractError("loopback host request failed") from exc
 
 
+def _api_unreachable(base_url: str) -> bool:
+    """Return only a boolean readback result; never retain a private response/error."""
+
+    try:
+        _http_json(f"{base_url}/system_stats", timeout=1)
+    except ScheduleContractError:
+        return True
+    return False
+
+
 def _free_port() -> int:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.bind((_LOOPBACK, 0))
@@ -725,12 +741,16 @@ def _submit(
 
 
 def _terminate(process: subprocess.Popen[bytes], *, base_url: str) -> dict[str, object]:
+    interrupt_requested = False
+    termination = "requested"
     with suppress(ScheduleContractError):
         _http_json(f"{base_url}/interrupt", method="POST", body={}, timeout=2)
+        interrupt_requested = True
     if process.poll() is None:
         try:
             if os.name == "nt":
                 process.terminate()
+                termination = "forced"
             else:
                 killpg = getattr(os, "killpg", None)
                 sigint = getattr(signal, "SIGINT", None)
@@ -739,6 +759,7 @@ def _terminate(process: subprocess.Popen[bytes], *, base_url: str) -> dict[str, 
                 cast(Callable[[int, int], None], killpg)(process.pid, sigint)
             process.wait(timeout=20)
         except (OSError, subprocess.TimeoutExpired):
+            termination = "forced"
             if os.name == "nt":
                 taskkill = shutil.which("taskkill")
                 if taskkill is not None:
@@ -756,20 +777,60 @@ def _terminate(process: subprocess.Popen[bytes], *, base_url: str) -> dict[str, 
                         cast(Callable[[int, int], None], killpg)(process.pid, sigkill)
             with suppress(subprocess.TimeoutExpired):
                 process.wait(timeout=10)
-    return {"return_code": process.returncode}
+    process_exited = process.poll() is not None
+    if process_exited and termination == "requested":
+        termination = "graceful"
+    if not process_exited:
+        termination = "failed"
+    return {
+        "interrupt_requested": interrupt_requested,
+        "process_exited": process_exited,
+        "return_code": process.returncode,
+        "termination": termination,
+    }
 
 
-def _wait_for_port_release(port: int, *, timeout: float = 10.0) -> None:
+def _port_release_receipt(port: int, *, timeout: float = 10.0) -> dict[str, object]:
+    if port <= 0 or port > 65535 or timeout <= 0:
+        return {
+            "attempts": 0,
+            "elapsed_ms": 0,
+            "reason_code": "port_release_input_invalid",
+            "status": "unavailable",
+            "verified_by": "bind_probe",
+        }
     deadline = time.monotonic() + timeout
+    started = time.monotonic()
+    attempts = 0
     while time.monotonic() < deadline:
+        attempts += 1
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
             try:
                 probe.bind((_LOOPBACK, port))
             except OSError:
                 time.sleep(0.1)
                 continue
-            return
-    _fail("owned H4 loopback port was not released")
+            return {
+                "attempts": attempts,
+                "elapsed_ms": int((time.monotonic() - started) * 1000),
+                "reason_code": "port_released",
+                "status": "pass",
+                "verified_by": "bind_probe",
+            }
+    return {
+        "attempts": attempts,
+        "elapsed_ms": int((time.monotonic() - started) * 1000),
+        "reason_code": "port_release_timeout",
+        "status": "fail",
+        "verified_by": "bind_probe",
+    }
+
+
+def _wait_for_port_release(port: int, *, timeout: float = 10.0) -> dict[str, object]:
+    receipt = _port_release_receipt(port, timeout=timeout)
+    if receipt["status"] != "pass":
+        _fail("owned H4 loopback port was not released")
+    return receipt
 
 
 def _output_fingerprints(run_path: Path) -> tuple[str, ...]:
@@ -846,22 +907,294 @@ def _media_summary(run_path: Path) -> dict[str, object]:
     }
 
 
-def _gpu_memory_snapshot() -> int | None:
+_GPU_MEMORY_INTERVAL_SECONDS: Final = 0.25
+_GPU_MEMORY_UNAVAILABLE_REASONS: Final = frozenset(
+    {"gpu_memory_tool_unavailable", "gpu_memory_timeout", "gpu_memory_no_samples"}
+)
+
+
+def _parse_gpu_memory_output(output: str) -> dict[int, int]:
+    """Parse strict ``index,memory.used`` MiB rows into device-indexed bytes."""
+
+    if not isinstance(output, str):
+        raise ValueError("GPU memory output is not text")
+    rows = [line.strip() for line in output.splitlines() if line.strip()]
+    if not rows:
+        raise ValueError("GPU memory output is empty")
+    parsed: dict[int, int] = {}
+    integer = re.compile(r"(?:0|[1-9][0-9]*)")
+    for row in rows:
+        fields = [item.strip() for item in row.split(",")]
+        if len(fields) != 2 or any(integer.fullmatch(item) is None for item in fields):
+            raise ValueError("GPU memory output is malformed")
+        device, memory_mib = (int(item) for item in fields)
+        if device in parsed or device > 4096 or memory_mib > (1 << 40):
+            raise ValueError("GPU memory output is out of bounds")
+        parsed[device] = memory_mib * 1024 * 1024
+    return parsed
+
+
+def _gpu_memory_observation() -> tuple[dict[int, int] | None, str]:
     executable = shutil.which("nvidia-smi")
     if executable is None:
-        return None
-    result = subprocess.run(  # noqa: S603
-        [executable, "--query-gpu=memory.used", "--format=csv,noheader,nounits"],
-        check=False,
-        capture_output=True,
-        text=True,
-        timeout=10,
+        return None, "gpu_memory_tool_unavailable"
+    try:
+        result = subprocess.run(  # noqa: S603
+            [
+                executable,
+                "--query-gpu=index,memory.used",
+                "--format=csv,noheader,nounits",
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+    except subprocess.TimeoutExpired:
+        return None, "gpu_memory_timeout"
+    except OSError:
+        return None, "gpu_memory_command_failed"
+    if result.returncode != 0:
+        return None, "gpu_memory_command_failed"
+    try:
+        return _parse_gpu_memory_output(result.stdout), "gpu_memory_observed"
+    except ValueError:
+        return None, "gpu_memory_malformed"
+
+
+def _gpu_memory_snapshot() -> int | None:
+    """Retain the historical max-device before/after snapshot semantics."""
+
+    observation, _reason = _gpu_memory_observation()
+    return max(observation.values(), default=0) if observation is not None else None
+
+
+def _gpu_memory_projection(
+    samples: Sequence[Mapping[int, int]],
+    *,
+    status: str = "pass",
+    reason_code: str | None = None,
+    sample_interval_ms: int = int(_GPU_MEMORY_INTERVAL_SECONDS * 1000),
+) -> dict[str, object]:
+    """Project bounded per-device samples without converting missing data to zero."""
+
+    if status not in {"pass", "unavailable", "failed"}:
+        raise ValueError("GPU memory status is invalid")
+    if sample_interval_ms <= 0:
+        raise ValueError("GPU memory interval is invalid")
+    normalized: list[dict[int, int]] = []
+    for sample in samples:
+        item: dict[int, int] = {}
+        for device, value in sample.items():
+            if not isinstance(device, int) or device < 0 or device > 4096:
+                raise ValueError("GPU memory device index is invalid")
+            if not isinstance(value, int) or value < 0:
+                raise ValueError("GPU memory value is invalid")
+            item[device] = value
+        if item:
+            normalized.append(item)
+    if status == "pass" and not normalized:
+        status = "unavailable"
+        reason_code = reason_code or "gpu_memory_no_samples"
+    peak_by_device = {
+        str(device): max(sample.get(device, 0) for sample in normalized)
+        for device in sorted({device for sample in normalized for device in sample})
+    }
+    peak_used = max((sum(sample.values()) for sample in normalized), default=0)
+    if status == "pass" and peak_used == 0:
+        status = "failed"
+        reason_code = reason_code or "gpu_memory_zero_sample"
+    return {
+        "aggregation_policy": "max_sum_per_sample",
+        "peak_used_bytes": peak_used if normalized and status == "pass" else None,
+        "peak_used_bytes_by_device": peak_by_device if normalized and status == "pass" else {},
+        "reason_code": reason_code or "gpu_memory_observed",
+        "sample_count": len(normalized),
+        "sample_interval_ms": sample_interval_ms,
+        "source": "nvidia-smi.memory.used",
+        "status": status,
+    }
+
+
+class _GpuMemorySampler:
+    """Bounded queue sampler; failures remain explicit in the private projection."""
+
+    def __init__(
+        self,
+        *,
+        snapshot: Callable[[], tuple[dict[int, int] | None, str]] = _gpu_memory_observation,
+        interval_seconds: float = _GPU_MEMORY_INTERVAL_SECONDS,
+    ) -> None:
+        if interval_seconds <= 0 or interval_seconds > 5:
+            raise ValueError("GPU memory sampler interval is invalid")
+        self._snapshot = snapshot
+        self._interval_seconds = interval_seconds
+        self._samples: list[dict[int, int]] = []
+        self._reasons: list[str] = []
+        self._lock = threading.Lock()
+        self._stop = threading.Event()
+        self._thread: threading.Thread | None = None
+
+    def _record(self) -> None:
+        try:
+            sample, reason = self._snapshot()
+        except (OSError, ScheduleContractError, ValueError, subprocess.SubprocessError):
+            sample, reason = None, "gpu_memory_sampler_failed"
+        with self._lock:
+            if sample:
+                self._samples.append(dict(sample))
+            else:
+                self._reasons.append(reason)
+
+    def _poll(self) -> None:
+        while not self._stop.wait(self._interval_seconds):
+            self._record()
+
+    def start(self) -> None:
+        if self._thread is not None:
+            raise RuntimeError("GPU memory sampler already started")
+        self._record()
+        self._thread = threading.Thread(target=self._poll, name="sigmax-h4-gpu-sampler", daemon=True)
+        self._thread.start()
+
+    def stop(self) -> dict[str, object]:
+        if self._thread is not None:
+            self._stop.set()
+            self._thread.join(timeout=max(1.0, self._interval_seconds * 4))
+            self._thread = None
+        self._record()
+        with self._lock:
+            samples = tuple(dict(item) for item in self._samples)
+            reasons = tuple(self._reasons)
+        if samples:
+            return _gpu_memory_projection(
+                samples,
+                sample_interval_ms=int(self._interval_seconds * 1000),
+            )
+        reason = reasons[0] if reasons else "gpu_memory_no_samples"
+        status = "unavailable" if reason in _GPU_MEMORY_UNAVAILABLE_REASONS else "failed"
+        return _gpu_memory_projection(
+            (),
+            status=status,
+            reason_code=reason,
+            sample_interval_ms=int(self._interval_seconds * 1000),
+        )
+
+
+def _submit_measured(
+    *, base_url: str, prompt: Mapping[str, object], timeout: float
+) -> tuple[str, dict[str, object], int, dict[str, object]]:
+    sampler = _GpuMemorySampler()
+    started = time.perf_counter()
+    sampler.start()
+    try:
+        prompt_id, history = _submit(base_url=base_url, prompt=prompt, timeout=timeout)
+    finally:
+        memory = sampler.stop()
+    return prompt_id, history, int((time.perf_counter() - started) * 1_000_000), memory
+
+
+def _temp_root_receipt(
+    run_path: Path, *, owned_root: Path, remove: bool
+) -> dict[str, object]:
+    """Remove only the exact harness-owned run directory when finalization permits it."""
+
+    resolved_run = run_path.resolve()
+    resolved_root = owned_root.resolve()
+    owned = (
+        resolved_run.parent == resolved_root
+        and resolved_run.name.startswith("h4-")
+        and REPOSITORY_ROOT.resolve() in resolved_root.parents
     )
-    values: list[int] = []
-    for line in result.stdout.splitlines():
-        with suppress(ValueError):
-            values.append(int(line.strip()))
-    return max(values, default=0) * 1024 * 1024 if result.returncode == 0 else None
+    if not owned:
+        return {
+            "cleanup_status": "failed",
+            "owned": False,
+            "reason_code": "temp_root_ownership_failed",
+            "remaining_entries": None,
+        }
+    if not resolved_run.exists():
+        return {
+            "cleanup_status": "removed",
+            "owned": True,
+            "reason_code": "temp_root_already_removed",
+            "remaining_entries": 0,
+        }
+    if not remove:
+        try:
+            remaining = sum(1 for _ in resolved_run.rglob("*"))
+        except OSError:
+            remaining = None
+        return {
+            "cleanup_status": "retained",
+            "owned": True,
+            "reason_code": "temp_root_retained_after_failure",
+            "remaining_entries": remaining,
+        }
+    try:
+        shutil.rmtree(resolved_run)
+    except OSError:
+        return {
+            "cleanup_status": "failed",
+            "owned": True,
+            "reason_code": "temp_root_cleanup_failed",
+            "remaining_entries": None,
+        }
+    return {
+        "cleanup_status": "removed",
+        "owned": True,
+        "reason_code": "temp_root_removed",
+        "remaining_entries": 0,
+    }
+
+
+def _cleanup_projection(
+    shutdown: Mapping[str, object],
+    port_release: Mapping[str, object],
+    temp_root: Mapping[str, object],
+    host_readback: Mapping[str, object],
+) -> dict[str, object]:
+    termination = shutdown.get("termination")
+    process_exited = shutdown.get("process_exited") is True
+    return_code = shutdown.get("return_code")
+    termination_ok = termination == "graceful" and process_exited and return_code in (0, None)
+    port_ok = port_release.get("status") == "pass"
+    temp_ok = temp_root.get("cleanup_status") == "removed"
+    host_ok = host_readback.get("status") == "pass"
+    if termination_ok and port_ok and temp_ok and host_ok:
+        status = "pass"
+    elif any(
+        item.get("status") == "unavailable"
+        for item in (port_release, host_readback)
+    ):
+        status = "unavailable"
+    else:
+        status = "fail"
+    return {
+        "host_readback": dict(host_readback),
+        "host_mutation": dict(
+            cast(Mapping[str, object], host_readback.get("host_mutation", {}))
+        ),
+        "port_release": dict(port_release),
+        "process_exited": process_exited,
+        "reason_code": "cleanup_complete" if status == "pass" else "cleanup_incomplete",
+        "return_code": return_code,
+        "status": status,
+        "temp_root": dict(temp_root),
+        "termination": termination if isinstance(termination, str) else "failed",
+    }
+
+
+def _failure_reason_code(error: BaseException) -> str:
+    if isinstance(error, ScheduleContractError):
+        return "execution_contract_failed"
+    if isinstance(error, (OSError, PermissionError)):
+        return "execution_io_failed"
+    if isinstance(error, subprocess.SubprocessError):
+        return "execution_subprocess_failed"
+    if isinstance(error, ValueError):
+        return "execution_value_failed"
+    return "execution_failed"
 
 
 def _dispatch_unavailable(
@@ -1135,6 +1468,105 @@ def _host_revision(root: Path) -> str:
     return revision
 
 
+def _host_git_value(root: Path, *arguments: str) -> str:
+    git = shutil.which("git")
+    if git is None:
+        _fail("git executable is unavailable")
+    result = subprocess.run(  # noqa: S603
+        [git, "-C", str(root), *arguments],
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=15,
+    )
+    if result.returncode != 0:
+        _fail("selected host Git readback failed")
+    return result.stdout.strip()
+
+
+def _host_readback_snapshot(
+    root: Path, selected_artifacts: Sequence[tuple[str, Path]]
+) -> dict[str, object]:
+    """Capture only exact checkout identities and explicit artifact digests."""
+
+    revision = _host_git_value(root, "rev-parse", "HEAD")
+    tree = _host_git_value(root, "rev-parse", "HEAD^{tree}")
+    worktree = _host_git_value(root, "status", "--porcelain=v1", "--untracked-files=no")
+    if _REVISION.fullmatch(revision) is None or _REVISION.fullmatch(tree) is None:
+        _fail("selected host Git readback identity is malformed")
+    worktree_digest = "sha256:" + hashlib.sha256(worktree.encode("utf-8")).hexdigest()
+    artifacts: dict[str, str] = {}
+    for artifact_id, path in selected_artifacts:
+        if not path.is_file():
+            artifacts[artifact_id] = "missing"
+            continue
+        artifacts[artifact_id] = "sha256:" + _sha256_file(path)
+    return {
+        "artifacts": artifacts,
+        "revision": revision,
+        "tree": tree,
+        "worktree_state": worktree_digest,
+    }
+
+
+def _host_readback_projection(
+    before: Mapping[str, object],
+    after: Mapping[str, object],
+    *,
+    process_alive: bool,
+    api_unreachable: bool,
+) -> dict[str, object]:
+    """Compare private readback snapshots while emitting no checkout paths or status text."""
+
+    required = ("revision", "tree", "worktree_state", "artifacts")
+    complete = all(key in before and key in after for key in required)
+    revision_unchanged: bool | None
+    tree_unchanged: bool | None
+    worktree_unchanged: bool | None
+    artifacts_unchanged: bool | None
+    if complete:
+        revision_unchanged = before["revision"] == after["revision"]
+        tree_unchanged = before["tree"] == after["tree"]
+        worktree_unchanged = before["worktree_state"] == after["worktree_state"]
+        artifacts_unchanged = before["artifacts"] == after["artifacts"]
+    else:
+        revision_unchanged = tree_unchanged = worktree_unchanged = artifacts_unchanged = None
+    checkout_unchanged = (
+        bool(revision_unchanged and tree_unchanged and worktree_unchanged)
+        if complete
+        else None
+    )
+    if not complete:
+        status = "unavailable"
+        reason_code = "host_readback_unavailable"
+    elif process_alive or not api_unreachable:
+        status = "fail"
+        reason_code = "host_process_or_api_still_alive"
+    elif not checkout_unchanged or not artifacts_unchanged:
+        status = "fail"
+        reason_code = "host_mutation_detected"
+    else:
+        status = "pass"
+        reason_code = "host_readback_unchanged"
+    mutation_status = status
+    return {
+        "api_unreachable": api_unreachable,
+        "host_mutation": {
+            "checkout_unchanged": checkout_unchanged,
+            "selected_artifacts_unchanged": artifacts_unchanged,
+            "status": mutation_status,
+        },
+        "process_alive": process_alive,
+        "reason_code": reason_code,
+        "revision_after": after.get("revision"),
+        "revision_before": before.get("revision"),
+        "status": status,
+        "tree_after": after.get("tree"),
+        "tree_before": before.get("tree"),
+        "worktree_state_unchanged": worktree_unchanged,
+    }
+
+
 def _private_path(path: Path, *, label: str) -> Path:
     resolved = path.resolve()
     if (
@@ -1257,157 +1689,270 @@ def _preflight_components(args: argparse.Namespace, models_root: Path) -> dict[s
     return {item.artifact_id: item.projection() for item in observations}
 
 
-def _run_rows(args: argparse.Namespace, models_root: Path, run_path: Path) -> dict[str, object]:
+def _selected_artifact_paths(
+    args: argparse.Namespace, models_root: Path
+) -> tuple[tuple[str, Path], ...]:
+    """Return only explicit model/component paths for readback; never scan model directories."""
+
+    rows: list[tuple[str, Path]] = []
+    for row in args.rows:
+        if row == "B-BF16":
+            name = args.diffusion_model
+        elif row == "B-INT8":
+            name = args.int8_diffusion_model
+        else:
+            continue
+        rows.append((row.casefold(), models_root / "diffusion_models" / Path(_safe_relative_name(name, field="diffusion_model"))))
+    if args.turbo_artifact is not None:
+        turbo_path = models_root / "loras" / Path(
+            _safe_relative_name(args.turbo_artifact, field="turbo_artifact")
+        )
+        rows.append(("turbo_artifact", turbo_path))
+    rows.extend(
+        (
+            ("text_encoder", models_root / "clip" / Path(_safe_relative_name(args.text_encoder, field="text_encoder"))),
+            ("video_vae", models_root / "vae" / Path(_safe_relative_name(args.video_vae, field="video_vae"))),
+            ("audio_vae", models_root / "vae" / Path(_safe_relative_name(args.audio_vae, field="audio_vae"))),
+        )
+    )
+    return tuple(rows)
+
+
+def _run_rows(
+    args: argparse.Namespace,
+    models_root: Path,
+    run_path: Path,
+    *,
+    host_before: Mapping[str, object] | None = None,
+    selected_artifacts: Sequence[tuple[str, Path]] = (),
+) -> dict[str, object]:
     if not args.prompt:
         _fail("private H4 prompt text is required through --prompt")
     clip_name = _safe_relative_name(args.text_encoder, field="text_encoder")
     video_vae = _safe_relative_name(args.video_vae, field="video_vae")
     audio_vae = _safe_relative_name(args.audio_vae, field="audio_vae")
-    host_revision = _host_revision(Path(args.comfyui_root).resolve())
+    host_root = Path(args.comfyui_root).resolve()
+    if host_before is None:
+        host_before = _host_readback_snapshot(
+            host_root, selected_artifacts or _selected_artifact_paths(args, models_root)
+        )
+    selected = tuple(selected_artifacts or _selected_artifact_paths(args, models_root))
+    host_revision = host_before.get("revision")
     port = _free_port()
     base_url = f"http://{_LOOPBACK}:{port}"
     log_path = run_path / "comfyui.log"
     process: subprocess.Popen[bytes] | None = None
     results: dict[str, object] = {}
-    with log_path.open("wb") as log:
-        process = subprocess.Popen(  # noqa: S603
-            _host_command(
-                host_python=Path(args.host_python).resolve(),
-                comfyui_root=Path(args.comfyui_root).resolve(),
-                models_root=models_root,
-                run_path=run_path,
-                port=port,
-                use_ck_attention=args.use_ck_attention,
-                enable_triton=args.enable_triton,
-            ),
-            cwd=run_path,
-            stdout=log,
-            stderr=subprocess.STDOUT,
-            creationflags=cast(int, getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0))
-            if os.name == "nt"
-            else 0,
-            start_new_session=os.name == "posix",
-        )
-        try:
-            _readiness(
-                base_url=base_url,
-                process=process,
-                deadline=time.monotonic() + args.readiness_timeout,
-            )
-            live_version = _verify_live_host_version(base_url=base_url, expected=args.host_version)
-            for row in args.rows:
-                observation = _row_artifact(
-                    row=row,
+    run_failed = False
+    try:
+        with log_path.open("wb") as log:
+            process = subprocess.Popen(  # noqa: S603
+                _host_command(
+                    host_python=Path(args.host_python).resolve(),
+                    comfyui_root=host_root,
                     models_root=models_root,
-                    turbo_artifact=args.turbo_artifact,
-                    turbo_artifact_id=args.turbo_artifact_id,
-                    turbo_source=args.turbo_source,
-                    license_ack=args.license_ack,
+                    run_path=run_path,
+                    port=port,
+                    use_ck_attention=args.use_ck_attention,
+                    enable_triton=args.enable_triton,
+                ),
+                cwd=run_path,
+                stdout=log,
+                stderr=subprocess.STDOUT,
+                creationflags=cast(int, getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0))
+                if os.name == "nt"
+                else 0,
+                start_new_session=os.name == "posix",
+            )
+            try:
+                _readiness(
+                    base_url=base_url,
+                    process=process,
+                    deadline=time.monotonic() + args.readiness_timeout,
                 )
-                if observation is None:
-                    _fail("H4 row artifact preflight returned no observation")
-                if observation.disposition is not RowDisposition.ACCEPTED:
+                live_version = _verify_live_host_version(
+                    base_url=base_url, expected=args.host_version
+                )
+                for row in args.rows:
+                    observation = _row_artifact(
+                        row=row,
+                        models_root=models_root,
+                        turbo_artifact=args.turbo_artifact,
+                        turbo_artifact_id=args.turbo_artifact_id,
+                        turbo_source=args.turbo_source,
+                        license_ack=args.license_ack,
+                    )
+                    if observation is None:
+                        _fail("H4 row artifact preflight returned no observation")
+                    if observation.disposition is not RowDisposition.ACCEPTED:
+                        results[row] = {
+                            "artifact": observation.projection(),
+                            "disposition": observation.disposition.value,
+                            "status": "not_executed",
+                        }
+                        continue
+                    if not row.startswith("B-"):
+                        results[row] = {
+                            "artifact": observation.projection(),
+                            "disposition": RowDisposition.NO_PROMOTION.value,
+                            "status": "not_executed",
+                            "reason_code": "turbo.artifact_not_eligible",
+                        }
+                        continue
+                    steps = 20
+                    model_name = _safe_relative_name(
+                        args.int8_diffusion_model if row == "B-INT8" else args.diffusion_model,
+                        field="diffusion_model",
+                    )
+                    if re.fullmatch(r"[A-Za-z0-9-]+", row) is None:
+                        _fail("H4 row identifier is not safe for a private trace filename")
+                    trace_path = run_path / f"{row.casefold()}_dispatch_trace.json"
+                    requested_attention_backend = "ck_int8" if args.use_ck_attention else "pytorch"
+                    before = _gpu_memory_snapshot()
+                    prompt = build_h4_prompt(
+                        variant="H3 Base FL2VA",
+                        model_name=model_name,
+                        clip_name=clip_name,
+                        video_vae_name=video_vae,
+                        audio_vae_name=audio_vae,
+                        prompt=args.prompt,
+                        width=args.width,
+                        height=args.height,
+                        length=args.length,
+                        steps=steps,
+                        seed=args.seed,
+                        shift_video=12.0,
+                        shift_audio=3.0,
+                        trace_file=str(trace_path),
+                        requested_attention_backend=requested_attention_backend,
+                        requested_operation_backend="auto",
+                    )
+                    warmup_prompt_id, _warmup_history, warmup_latency, warmup_memory = _submit_measured(
+                        base_url=base_url, prompt=prompt, timeout=args.execution_timeout
+                    )
+                    warmup_outputs = _output_fingerprints(run_path)
+                    first_prompt_id, first_history, first_latency, first_memory = _submit_measured(
+                        base_url=base_url, prompt=prompt, timeout=args.execution_timeout
+                    )
+                    first_all_outputs = _output_fingerprints(run_path)
+                    first_outputs = _new_output_fingerprints(warmup_outputs, first_all_outputs)
+                    first_media = _media_summary(run_path)
+                    second_prompt_id, second_history, repeat_latency, repeat_memory = _submit_measured(
+                        base_url=base_url, prompt=prompt, timeout=args.execution_timeout
+                    )
+                    second_all_outputs = _output_fingerprints(run_path)
+                    repeat_outputs = _new_output_fingerprints(first_all_outputs, second_all_outputs)
+                    repeat_media = _media_summary(run_path)
+                    after = _gpu_memory_snapshot()
+                    dispatch = _read_dispatch_trace(
+                        trace_path, expected_attention_backend=requested_attention_backend
+                    )
                     results[row] = {
                         "artifact": observation.projection(),
-                        "disposition": observation.disposition.value,
-                        "status": "not_executed",
-                    }
-                    continue
-                if not row.startswith("B-"):
-                    results[row] = {
-                        "artifact": observation.projection(),
+                        "backend": {
+                            "actual_attention_backend": dispatch["actual_attention_backend"],
+                            "actual_operation_backend": dispatch["actual_operation_backend"],
+                            "dispatch_trace": dispatch["dispatch_trace"],
+                            "launch_flags_are_not_proof": True,
+                            "observation_source": dispatch["observation_source"],
+                            "requested_attention_backend": dispatch["requested_attention_backend"],
+                            "requested_operation_backend": dispatch["requested_operation_backend"],
+                        },
                         "disposition": RowDisposition.NO_PROMOTION.value,
-                        "status": "not_executed",
-                        "reason_code": "turbo.artifact_not_eligible",
+                        "first_history_status": _history_summary(first_history, first_prompt_id),
+                        "first_latency_us": first_latency,
+                        "first_media": first_media,
+                        "first_output_fingerprints": list(first_outputs),
+                        "gpu_memory_after": after,
+                        "gpu_memory_before": before,
+                        "host_version": live_version,
+                        "queues": {
+                            "first": {
+                                "history": _history_summary(first_history, first_prompt_id),
+                                "latency_us": first_latency,
+                                "memory": first_memory,
+                                "outputs": list(first_outputs),
+                                "prompt_id": first_prompt_id,
+                            },
+                            "repeat": {
+                                "history": _history_summary(second_history, second_prompt_id),
+                                "latency_us": repeat_latency,
+                                "memory": repeat_memory,
+                                "outputs": list(repeat_outputs),
+                                "prompt_id": second_prompt_id,
+                            },
+                            "warmup": {
+                                "latency_us": warmup_latency,
+                                "memory": warmup_memory,
+                                "prompt_id": warmup_prompt_id,
+                            },
+                        },
+                        "reason_code": dispatch["reason_code"],
+                        "repeat_history_status": _history_summary(second_history, second_prompt_id),
+                        "repeat_latency_us": repeat_latency,
+                        "repeat_media": repeat_media,
+                        "repeat_output_fingerprints": list(repeat_outputs),
+                        "repeat_stable": first_outputs == repeat_outputs,
+                        "status": "succeeded",
+                        "warmup_prompt_id": warmup_prompt_id,
+                        "first_prompt_id": first_prompt_id,
+                        "repeat_prompt_id": second_prompt_id,
                     }
-                    continue
-                steps = 20
-                model_name = _safe_relative_name(
-                    args.int8_diffusion_model if row == "B-INT8" else args.diffusion_model,
-                    field="diffusion_model",
-                )
-                if re.fullmatch(r"[A-Za-z0-9-]+", row) is None:
-                    _fail("H4 row identifier is not safe for a private trace filename")
-                trace_path = run_path / f"{row.casefold()}_dispatch_trace.json"
-                requested_attention_backend = "ck_int8" if args.use_ck_attention else "pytorch"
-                before = _gpu_memory_snapshot()
-                prompt = build_h4_prompt(
-                    variant="H3 Base FL2VA",
-                    model_name=model_name,
-                    clip_name=clip_name,
-                    video_vae_name=video_vae,
-                    audio_vae_name=audio_vae,
-                    prompt=args.prompt,
-                    width=args.width,
-                    height=args.height,
-                    length=args.length,
-                    steps=steps,
-                    seed=args.seed,
-                    shift_video=12.0,
-                    shift_audio=3.0,
-                    trace_file=str(trace_path),
-                    requested_attention_backend=requested_attention_backend,
-                    requested_operation_backend="auto",
-                )
-                warmup_prompt_id, _warmup_history = _submit(
-                    base_url=base_url, prompt=prompt, timeout=args.execution_timeout
-                )
-                warmup_outputs = _output_fingerprints(run_path)
-                started = time.perf_counter()
-                first_prompt_id, first_history = _submit(
-                    base_url=base_url, prompt=prompt, timeout=args.execution_timeout
-                )
-                first_latency = int((time.perf_counter() - started) * 1_000_000)
-                first_all_outputs = _output_fingerprints(run_path)
-                first_outputs = _new_output_fingerprints(warmup_outputs, first_all_outputs)
-                first_media = _media_summary(run_path)
-                started = time.perf_counter()
-                second_prompt_id, second_history = _submit(
-                    base_url=base_url, prompt=prompt, timeout=args.execution_timeout
-                )
-                repeat_latency = int((time.perf_counter() - started) * 1_000_000)
-                second_all_outputs = _output_fingerprints(run_path)
-                repeat_outputs = _new_output_fingerprints(first_all_outputs, second_all_outputs)
-                repeat_media = _media_summary(run_path)
-                after = _gpu_memory_snapshot()
-                dispatch = _read_dispatch_trace(
-                    trace_path, expected_attention_backend=requested_attention_backend
-                )
-                results[row] = {
-                    "artifact": observation.projection(),
-                    "disposition": RowDisposition.NO_PROMOTION.value,
-                    "status": "succeeded",
-                    "warmup_prompt_id": warmup_prompt_id,
-                    "first_prompt_id": first_prompt_id,
-                    "repeat_prompt_id": second_prompt_id,
-                    "first_history_status": _history_summary(first_history, first_prompt_id),
-                    "repeat_history_status": _history_summary(second_history, second_prompt_id),
-                    "first_latency_us": first_latency,
-                    "repeat_latency_us": repeat_latency,
-                    "first_output_fingerprints": list(first_outputs),
-                    "repeat_output_fingerprints": list(repeat_outputs),
-                    "repeat_stable": first_outputs == repeat_outputs,
-                    "first_media": first_media,
-                    "repeat_media": repeat_media,
-                    "gpu_memory_before": before,
-                    "gpu_memory_after": after,
-                    "backend": {
-                        "requested_operation_backend": dispatch["requested_operation_backend"],
-                        "requested_attention_backend": dispatch["requested_attention_backend"],
-                        "actual_operation_backend": dispatch["actual_operation_backend"],
-                        "actual_attention_backend": dispatch["actual_attention_backend"],
-                        "observation_source": dispatch["observation_source"],
-                        "launch_flags_are_not_proof": True,
-                        "dispatch_trace": dispatch["dispatch_trace"],
-                    },
-                    "host_version": live_version,
-                    "reason_code": dispatch["reason_code"],
+            except (OSError, ScheduleContractError, ValueError, subprocess.SubprocessError) as exc:
+                run_failed = True
+                results["failure_reason_code"] = _failure_reason_code(exc)
+        if process is None:
+            run_failed = True
+    except (OSError, ScheduleContractError, ValueError, subprocess.SubprocessError) as exc:
+        run_failed = True
+        results["failure_reason_code"] = _failure_reason_code(exc)
+    finally:
+        if process is None:
+            shutdown: dict[str, object] = {
+                "interrupt_requested": False,
+                "process_exited": True,
+                "return_code": None,
+                "termination": "failed",
+            }
+        else:
+            try:
+                shutdown = _terminate(process, base_url=base_url)
+            except (OSError, ScheduleContractError, ValueError, subprocess.SubprocessError) as exc:
+                shutdown = {
+                    "interrupt_requested": False,
+                    "process_exited": process.poll() is not None,
+                    "return_code": process.returncode,
+                    "termination": "failed",
                 }
-        finally:
-            shutdown = _terminate(process, base_url=base_url)
-            results["shutdown"] = shutdown
-            _wait_for_port_release(port)
+                run_failed = True
+                results["failure_reason_code"] = _failure_reason_code(exc)
+        port_release = _port_release_receipt(port)
+        try:
+            host_after = _host_readback_snapshot(host_root, selected)
+        except (OSError, ScheduleContractError, ValueError, subprocess.SubprocessError) as exc:
+            host_after = {}
+            results.setdefault("failure_reason_code", _failure_reason_code(exc))
+        api_unreachable = _api_unreachable(base_url)
+        host_readback = _host_readback_projection(
+            host_before,
+            host_after,
+            process_alive=process is not None and process.poll() is None,
+            api_unreachable=api_unreachable,
+        )
+        safe_remove = (
+            not run_failed
+            and shutdown.get("termination") == "graceful"
+            and port_release.get("status") == "pass"
+            and host_readback.get("status") == "pass"
+        )
+        temp_root = _temp_root_receipt(run_path, owned_root=run_path.parent, remove=safe_remove)
+        results["cleanup"] = _cleanup_projection(
+            shutdown, port_release, temp_root, host_readback
+        )
+        results["shutdown"] = shutdown
+        results["port_release"] = port_release
     results["host_revision"] = host_revision
+    results["status"] = "failed" if run_failed else "succeeded"
     return results
 
 
@@ -1435,10 +1980,17 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         _fail("selected H4 host revision does not match the exact expected revision")
     preflight = _preflight_rows(args, models_root)
     components = _preflight_components(args, models_root)
+    selected_artifacts = _selected_artifact_paths(args, models_root)
+    host_before = _host_readback_snapshot(host_root, selected_artifacts)
     evidence: dict[str, object] = {
         "schema": H4_SCHEMA,
         "candidate": {"commit": commit, "tree": tree},
-        "host": {"version": args.host_version, "revision": actual_host_revision},
+        "host": {
+            "revision": actual_host_revision,
+            "tree": host_before.get("tree"),
+            "version": args.host_version,
+            "worktree_state": host_before.get("worktree_state"),
+        },
         "components": components,
         "rows": preflight,
         "authorization": "private_non_redistribution",
@@ -1455,8 +2007,18 @@ def run(args: argparse.Namespace) -> dict[str, object]:
     for name in ("base", "input", "output", "temp", "user"):
         (run_path / name).mkdir()
     _stage_extension(run_path)
-    evidence["execution"] = _run_rows(args, models_root, run_path)
-    evidence["status"] = "execution_complete"
+    evidence["execution"] = _run_rows(
+        args,
+        models_root,
+        run_path,
+        host_before=host_before,
+        selected_artifacts=selected_artifacts,
+    )
+    evidence["status"] = (
+        "execution_complete"
+        if cast(Mapping[str, object], evidence["execution"]).get("status") == "succeeded"
+        else "execution_failed"
+    )
     return evidence
 
 
@@ -1510,6 +2072,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         args = _parser().parse_args(argv)
         evidence = run(args)
+        _validate_h4_schema(evidence.get("schema"))
         if args.evidence_file is not None:
             target = _private_path(args.evidence_file, label="evidence")
             target.parent.mkdir(parents=True, exist_ok=True)

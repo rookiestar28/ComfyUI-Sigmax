@@ -22,6 +22,10 @@ from comfyui_sigmax.adapters.comfyui_flow_euler import (
     TorchFlowEulerStateOperations,
 )
 from comfyui_sigmax.core import (
+    AdvancedExecutionMode,
+    AdvancedReceiptStatus,
+    AdvancedWorkflowFeature,
+    AdvancedWorkflowRequest,
     CapabilityDimension,
     ExecutionBehavior,
     ExecutionReceipt,
@@ -35,13 +39,17 @@ from comfyui_sigmax.core import (
     ScheduleOwnership,
     SigmaDomain,
     TerminalRequirement,
+    build_advanced_workflow_receipt,
     canonical_projection_bytes,
+    deserialize_advanced_workflow_receipt,
     deserialize_sampler_execution_spec,
     deserialize_sampler_state_snapshot,
     execute_deterministic_flow_euler,
     execute_stochastic_flow_euler,
+    resolve_advanced_workflow,
     sampler_execution_spec_fingerprint,
     sampler_state_snapshot_fingerprint,
+    serialize_advanced_workflow_receipt,
     serialize_sampler_execution_spec,
     serialize_sampler_state_snapshot,
 )
@@ -79,6 +87,7 @@ _KREA2_CONDITIONING_UI_KEY = "sigmax_krea2_conditioning"
 _SAMPLER_STATE_UI_KEY = "sigmax_sampler_state_contract"
 _FLOW_EULER_UI_KEY = "sigmax_flow_euler_contract"
 _STOCHASTIC_FLOW_EULER_UI_KEY = "sigmax_stochastic_flow_euler_contract"
+_ADVANCED_WORKFLOW_UI_KEY = "sigmax_advanced_workflow_compatibility_contract"
 _KREA2_CONDITIONING_FEATURES = 12 * 2560
 
 
@@ -693,6 +702,131 @@ class StochasticFlowEulerContractProbe:
         return {
             "ui": {
                 _STOCHASTIC_FLOW_EULER_UI_KEY: [
+                    json.dumps(
+                        trace,
+                        allow_nan=False,
+                        ensure_ascii=False,
+                        separators=(",", ":"),
+                        sort_keys=True,
+                    )
+                ]
+            }
+        }
+
+
+class AdvancedWorkflowCompatibilityProbe:
+    """Exercise M5-05 decisions and receipts without model or framework execution."""
+
+    CATEGORY = "SigmaxTest"
+    DESCRIPTION = "Test-only M5-05 advanced-workflow compatibility contract probe."
+    FUNCTION = "execute"
+    OUTPUT_NODE = True
+    RETURN_TYPES: tuple[()] = ()
+    RETURN_NAMES: tuple[()] = ()
+
+    @classmethod
+    def INPUT_TYPES(cls) -> dict[str, dict[str, tuple[object, ...]]]:
+        return {"required": {}}
+
+    def execute(self) -> dict[str, object]:
+        before_call = torch.nn.Module.__call__
+        before_schedulers = tuple(comfy_samplers.SCHEDULER_NAMES)
+        fixed_spec = _fixture_fingerprint("a")
+        fixed_snapshot = _fixture_fingerprint("b")
+
+        requests = {
+            "native_missing_capability": AdvancedWorkflowRequest(
+                features=(
+                    AdvancedWorkflowFeature.IMAGE_TO_IMAGE,
+                    AdvancedWorkflowFeature.INPAINTING,
+                ),
+                execution_mode=AdvancedExecutionMode.NATIVE_HOST,
+                host_capabilities=(AdvancedWorkflowFeature.IMAGE_TO_IMAGE,),
+            ),
+            "deterministic_controller": AdvancedWorkflowRequest(
+                features=(
+                    AdvancedWorkflowFeature.IMAGE_TO_IMAGE,
+                    AdvancedWorkflowFeature.PARTIAL_DENOISE,
+                ),
+                execution_mode=AdvancedExecutionMode.DETERMINISTIC_PURE,
+                required_state=("latent", "sigma_cursor"),
+            ),
+            "stochastic_rejected": AdvancedWorkflowRequest(
+                features=(
+                    AdvancedWorkflowFeature.PARTIAL_DENOISE,
+                    AdvancedWorkflowFeature.RESUME,
+                ),
+                execution_mode=AdvancedExecutionMode.STOCHASTIC_PURE,
+            ),
+            "deterministic_resume": AdvancedWorkflowRequest(
+                features=(AdvancedWorkflowFeature.RESUME,),
+                execution_mode=AdvancedExecutionMode.DETERMINISTIC_PURE,
+                required_state=("execution_cursor", "snapshot"),
+                snapshot_fingerprint=fixed_snapshot,
+                spec_fingerprint=fixed_spec,
+                snapshot_spec_fingerprint=fixed_spec,
+            ),
+            "native_interruption": AdvancedWorkflowRequest(
+                features=(AdvancedWorkflowFeature.INTERRUPTION,),
+                execution_mode=AdvancedExecutionMode.NATIVE_HOST,
+                host_capabilities=(AdvancedWorkflowFeature.INTERRUPTION,),
+            ),
+            "pure_inpainting_rejected": AdvancedWorkflowRequest(
+                features=(AdvancedWorkflowFeature.INPAINTING,),
+                execution_mode=AdvancedExecutionMode.DETERMINISTIC_PURE,
+            ),
+        }
+        decisions = {name: resolve_advanced_workflow(request) for name, request in requests.items()}
+        receipts = {
+            name: build_advanced_workflow_receipt(
+                requests[name],
+                decision,
+                execution_status=(
+                    AdvancedReceiptStatus.INTERRUPTED
+                    if name == "native_interruption"
+                    else AdvancedReceiptStatus.RESUMABLE
+                    if name == "deterministic_resume"
+                    else None
+                ),
+                resumable=name == "deterministic_resume",
+            )
+            for name, decision in decisions.items()
+        }
+        restored = {
+            name: deserialize_advanced_workflow_receipt(
+                serialize_advanced_workflow_receipt(receipt)
+            )
+            for name, receipt in receipts.items()
+        }
+        global_mutation = (
+            torch.nn.Module.__call__ is not before_call
+            or tuple(comfy_samplers.SCHEDULER_NAMES) != before_schedulers
+        )
+        trace = {
+            "cleanup": True,
+            "decision_fingerprints": {
+                name: decision.fingerprint for name, decision in decisions.items()
+            },
+            "decision_levels": {name: decision.level.value for name, decision in decisions.items()},
+            "expected_rejections": 3,
+            "global_mutation": global_mutation,
+            "model_weights_used": False,
+            "receipt_fingerprints": {
+                name: receipt.receipt_fingerprint for name, receipt in receipts.items()
+            },
+            "receipt_statuses": {
+                name: receipt.execution_status.value for name, receipt in receipts.items()
+            },
+            "registry_mutation": global_mutation,
+            "round_trip_stable": all(restored[name] == receipts[name] for name in receipts),
+            "schema": "sigmax.advanced-workflow-host-contract/1",
+            "status": "succeeded",
+            "python_version": platform.python_version(),
+            "torch_version": str(torch.__version__),
+        }
+        return {
+            "ui": {
+                _ADVANCED_WORKFLOW_UI_KEY: [
                     json.dumps(
                         trace,
                         allow_nan=False,
@@ -2098,6 +2232,7 @@ NODE_CLASS_MAPPINGS = {
     "SigmaxTest.NativeEulerProbe": NativeEulerProbe,
     "SigmaxTest.FlowEulerContractProbe": FlowEulerContractProbe,
     "SigmaxTest.StochasticFlowEulerContractProbe": StochasticFlowEulerContractProbe,
+    "SigmaxTest.AdvancedWorkflowCompatibilityProbe": AdvancedWorkflowCompatibilityProbe,
     "SigmaxTest.SamplerStateContractProbe": SamplerStateContractProbe,
     "SigmaxTest.ScheduleAlgebraProbe": ScheduleAlgebraProbe,
     "SigmaxTest.ZImageScheduleProbe": ZImageScheduleProbe,
@@ -2126,6 +2261,9 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "SigmaxTest.FlowEulerContractProbe": "Sigmax Test — Flow Euler Contract Probe",
     "SigmaxTest.StochasticFlowEulerContractProbe": (
         "Sigmax Test — Stochastic Flow Euler Contract Probe"
+    ),
+    "SigmaxTest.AdvancedWorkflowCompatibilityProbe": (
+        "Sigmax Test — Advanced Workflow Compatibility Probe"
     ),
     "SigmaxTest.SamplerStateContractProbe": "Sigmax Test — Sampler State Contract Probe",
     "SigmaxTest.ScheduleAlgebraProbe": "Sigmax Test — Schedule Algebra Probe",

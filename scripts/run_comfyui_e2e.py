@@ -104,6 +104,9 @@ _FLOW_EULER_HOST_SCHEMA: Final = "sigmax.flow-euler-host-contract/1"
 _STOCHASTIC_FLOW_EULER_OUTPUT_NODE_ID: Final = "12"
 _STOCHASTIC_FLOW_EULER_TRACE_KEY: Final = "sigmax_stochastic_flow_euler_contract"
 _STOCHASTIC_FLOW_EULER_HOST_SCHEMA: Final = "sigmax.stochastic-flow-euler-host-contract/1"
+_ADVANCED_WORKFLOW_OUTPUT_NODE_ID: Final = "13"
+_ADVANCED_WORKFLOW_TRACE_KEY: Final = "sigmax_advanced_workflow_compatibility_contract"
+_ADVANCED_WORKFLOW_HOST_SCHEMA: Final = "sigmax.advanced-workflow-host-contract/1"
 _FLOW_EULER_FULL_RESULT_FINGERPRINT: Final = (
     "sha256:a24cbd32a60a671ef5c69d3def61caeacc550d224922d94d73d87caa7c360cc7"
 )
@@ -1789,6 +1792,17 @@ def build_stochastic_flow_euler_contract_api_prompt() -> dict[str, object]:
     }
 
 
+def build_advanced_workflow_contract_api_prompt() -> dict[str, object]:
+    """Return the release-excluded M5-05 model-free compatibility graph."""
+
+    return {
+        _ADVANCED_WORKFLOW_OUTPUT_NODE_ID: {
+            "class_type": "SigmaxTest.AdvancedWorkflowCompatibilityProbe",
+            "inputs": {},
+        }
+    }
+
+
 def build_native_euler_h3_partial_rejection_prompt() -> dict[str, object]:
     """Return a partial schedule that M5-01 must reject instead of misclaiming."""
 
@@ -3000,6 +3014,108 @@ def verify_stochastic_flow_euler_contract_history(
     )
     if traces[0] != canonical:
         raise ScheduleContractError("stochastic-flow-euler trace is not canonical")
+    return trace
+
+
+def verify_advanced_workflow_contract_history(
+    history: object,
+    *,
+    prompt_id: str,
+) -> dict[str, object]:
+    """Verify M5-05 ownership, rejection, receipt, and non-mutation evidence."""
+
+    root = _object(history, label="advanced-workflow contract history")
+    entry = _object(root.get(prompt_id), label="advanced-workflow contract entry")
+    status = _object(entry.get("status"), label="advanced-workflow contract status")
+    if status.get("completed") is not True or status.get("status_str") != "success":
+        raise ScheduleContractError("advanced-workflow contract did not complete successfully")
+    prompt_tuple = _array(entry.get("prompt"), label="advanced-workflow contract prompt")
+    if len(prompt_tuple) < 3 or prompt_tuple[2] != build_advanced_workflow_contract_api_prompt():
+        raise ScheduleContractError("advanced-workflow contract retained graph is stale")
+    outputs = _object(entry.get("outputs"), label="advanced-workflow contract outputs")
+    output = _object(
+        outputs.get(_ADVANCED_WORKFLOW_OUTPUT_NODE_ID),
+        label="advanced-workflow contract output",
+    )
+    traces = _array(
+        output.get(_ADVANCED_WORKFLOW_TRACE_KEY),
+        label="advanced-workflow contract trace",
+    )
+    if len(traces) != 1 or not isinstance(traces[0], str):
+        raise ScheduleContractError("advanced-workflow contract trace is malformed")
+    trace = _object(
+        _decode_json(traces[0].encode("utf-8"), label="advanced-workflow contract trace"),
+        label="advanced-workflow contract trace",
+    )
+    expected = {
+        "cleanup": True,
+        "expected_rejections": 3,
+        "global_mutation": False,
+        "model_weights_used": False,
+        "registry_mutation": False,
+        "round_trip_stable": True,
+        "schema": _ADVANCED_WORKFLOW_HOST_SCHEMA,
+        "status": "succeeded",
+    }
+    expected_levels = {
+        "deterministic_controller": "allow",
+        "deterministic_resume": "allow",
+        "native_interruption": "warn",
+        "native_missing_capability": "reject",
+        "pure_inpainting_rejected": "reject",
+        "stochastic_rejected": "reject",
+    }
+    expected_statuses = {
+        "deterministic_controller": "not_executed",
+        "deterministic_resume": "resumable",
+        "native_interruption": "interrupted",
+        "native_missing_capability": "rejected",
+        "pure_inpainting_rejected": "rejected",
+        "stochastic_rejected": "rejected",
+    }
+    dynamic = {
+        "decision_fingerprints",
+        "decision_levels",
+        "python_version",
+        "receipt_fingerprints",
+        "receipt_statuses",
+        "torch_version",
+    }
+    if set(trace) != set(expected) | dynamic:
+        raise ScheduleContractError("advanced-workflow contract fields drifted")
+    if any(trace.get(key) != value for key, value in expected.items()):
+        raise ScheduleContractError("advanced-workflow contract evidence drifted")
+    if trace.get("decision_levels") != expected_levels:
+        raise ScheduleContractError("advanced-workflow decision levels drifted")
+    if trace.get("receipt_statuses") != expected_statuses:
+        raise ScheduleContractError("advanced-workflow receipt statuses drifted")
+    for field_name in ("decision_fingerprints", "receipt_fingerprints"):
+        values = trace.get(field_name)
+        if (
+            not isinstance(values, dict)
+            or set(values) != set(expected_levels)
+            or any(
+                not isinstance(value, str) or re.fullmatch(r"sha256:[0-9a-f]{64}", value) is None
+                for value in values.values()
+            )
+        ):
+            raise ScheduleContractError("advanced-workflow fingerprints are malformed")
+    version_pattern = re.compile(r"\d+\.\d+\.\d+(?:[a-z0-9.+-]*)?")
+    if any(
+        not isinstance(trace.get(key), str)
+        or version_pattern.fullmatch(cast(str, trace[key])) is None
+        for key in ("python_version", "torch_version")
+    ):
+        raise ScheduleContractError("advanced-workflow runtime version is malformed")
+    canonical = json.dumps(
+        trace,
+        allow_nan=False,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    )
+    if traces[0] != canonical:
+        raise ScheduleContractError("advanced-workflow trace is not canonical")
     return trace
 
 
@@ -4349,43 +4465,52 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
         args.sampler_state_contract_only
         or args.flow_euler_contract_only
         or args.stochastic_flow_euler_contract_only
+        or args.advanced_workflow_contract_only
     )
     evidence: dict[str, object] = {
         "schema": (
-            _STOCHASTIC_FLOW_EULER_HOST_SCHEMA
-            if args.stochastic_flow_euler_contract_only
+            _ADVANCED_WORKFLOW_HOST_SCHEMA
+            if args.advanced_workflow_contract_only
             else (
-                "sigmax.flow-euler-host-e2e/1"
-                if args.flow_euler_contract_only
+                _STOCHASTIC_FLOW_EULER_HOST_SCHEMA
+                if args.stochastic_flow_euler_contract_only
                 else (
-                    "sigmax.sampler-state-host-e2e/1"
-                    if args.sampler_state_contract_only
+                    "sigmax.flow-euler-host-e2e/1"
+                    if args.flow_euler_contract_only
                     else (
-                        _MINIMAX_H3_M7_15_SCHEMA
-                        if args.minimax_h3_scheduler_matrix
-                        else "sigmax.minimax-h3-host-e2e/1"
+                        "sigmax.sampler-state-host-e2e/1"
+                        if args.sampler_state_contract_only
+                        else (
+                            _MINIMAX_H3_M7_15_SCHEMA
+                            if args.minimax_h3_scheduler_matrix
+                            else "sigmax.minimax-h3-host-e2e/1"
+                        )
                     )
                 )
             )
         ),
         "lanes": (
-            ["H1", "H2_STOCHASTIC_FLOW_EULER_CONTRACT_M5_04"]
-            if args.stochastic_flow_euler_contract_only
+            ["H1", "H2_ADVANCED_WORKFLOW_CONTRACT_M5_05"]
+            if args.advanced_workflow_contract_only
             else (
-                ["H1", "H2_FLOW_EULER_CONTRACT_M5_03"]
-                if args.flow_euler_contract_only
-                else ["H1", "H2_SAMPLER_STATE_CONTRACT_M5_02"]
-                if args.sampler_state_contract_only
-                else [
-                    "H1",
-                    "H2_MINIMAX_H3_M6_05",
-                    "H2_MINIMAX_H3_M4_17_NATIVE_SIMPLE",
-                    *(
-                        ["H2_MINIMAX_H3_M7_15_NATIVE_MATRIX"]
-                        if args.minimax_h3_scheduler_matrix
-                        else []
-                    ),
-                ]
+                ["H1", "H2_STOCHASTIC_FLOW_EULER_CONTRACT_M5_04"]
+                if args.stochastic_flow_euler_contract_only
+                else (
+                    ["H1", "H2_FLOW_EULER_CONTRACT_M5_03"]
+                    if args.flow_euler_contract_only
+                    else ["H1", "H2_SAMPLER_STATE_CONTRACT_M5_02"]
+                    if args.sampler_state_contract_only
+                    else [
+                        "H1",
+                        "H2_MINIMAX_H3_M6_05",
+                        "H2_MINIMAX_H3_M4_17_NATIVE_SIMPLE",
+                        *(
+                            ["H2_MINIMAX_H3_M7_15_NATIVE_MATRIX"]
+                            if args.minimax_h3_scheduler_matrix
+                            else []
+                        ),
+                    ]
+                )
             )
         ),
         "validation_lane": validation_lane.value,
@@ -4401,15 +4526,19 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
         "import_probe": import_probe,
         "attempt_transitions": {},
         "model_execution": (
-            "weight_free_stochastic_flow_euler_fixture"
-            if args.stochastic_flow_euler_contract_only
+            "weight_free_advanced_workflow_fixture"
+            if args.advanced_workflow_contract_only
             else (
-                "weight_free_flow_euler_fixture"
-                if args.flow_euler_contract_only
+                "weight_free_stochastic_flow_euler_fixture"
+                if args.stochastic_flow_euler_contract_only
                 else (
-                    "not_performed_contract_only"
-                    if args.sampler_state_contract_only
-                    else "weight_free_model_sampling_fixture"
+                    "weight_free_flow_euler_fixture"
+                    if args.flow_euler_contract_only
+                    else (
+                        "not_performed_contract_only"
+                        if args.sampler_state_contract_only
+                        else "weight_free_model_sampling_fixture"
+                    )
                 )
             )
         ),
@@ -4452,18 +4581,24 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
                     "MiniMax H3 host is missing one or more Sigmax node IDs"
                 )
             test_ids = (
-                {"SigmaxTest.StochasticFlowEulerContractProbe"}
-                if args.stochastic_flow_euler_contract_only
+                {"SigmaxTest.AdvancedWorkflowCompatibilityProbe"}
+                if args.advanced_workflow_contract_only
                 else (
-                    {"SigmaxTest.FlowEulerContractProbe"}
-                    if args.flow_euler_contract_only
-                    else {"SigmaxTest.SamplerStateContractProbe"}
-                    if args.sampler_state_contract_only
-                    else {
-                        "SigmaxTest.MiniMaxH3ScheduleProbe",
-                        "SigmaxTest.MiniMaxH3NativeModelSource",
-                        "SigmaxTest.MiniMaxH3NativeScheduleProbe",
-                    }
+                    {"SigmaxTest.StochasticFlowEulerContractProbe"}
+                    if args.stochastic_flow_euler_contract_only
+                    else (
+                        {"SigmaxTest.FlowEulerContractProbe"}
+                        if args.flow_euler_contract_only
+                        else (
+                            {"SigmaxTest.SamplerStateContractProbe"}
+                            if args.sampler_state_contract_only
+                            else {
+                                "SigmaxTest.MiniMaxH3ScheduleProbe",
+                                "SigmaxTest.MiniMaxH3NativeModelSource",
+                                "SigmaxTest.MiniMaxH3NativeScheduleProbe",
+                            }
+                        )
+                    )
                 )
             )
             if args.minimax_h3_scheduler_matrix and not contract_only:
@@ -4597,6 +4732,31 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
                 )
                 evidence["stochastic_flow_euler_contract"] = stochastic_summary
                 attempts["stochastic_flow_euler_contract"] = stochastic_transition
+                succeeded = True
+                return evidence
+            if args.advanced_workflow_contract_only:
+
+                def submit_advanced_workflow(ordinal: int) -> tuple[str, dict[str, object]]:
+                    return _submit_successful_prompt(
+                        base_url=base_url,
+                        client_id=f"sigmax-m5-05-advanced-workflow-attempt-{ordinal}",
+                        prompt=build_advanced_workflow_contract_api_prompt(),
+                        execution_timeout=args.execution_timeout,
+                    )
+
+                def verify_advanced_workflow(
+                    history: object,
+                    prompt_id: str,
+                ) -> dict[str, object]:
+                    return verify_advanced_workflow_contract_history(history, prompt_id=prompt_id)
+
+                advanced_summary, advanced_transition = execute_verified_host_repeat(
+                    lane="H2_ADVANCED_WORKFLOW_CONTRACT_M5_05",
+                    submit=submit_advanced_workflow,
+                    verify=verify_advanced_workflow,
+                )
+                evidence["advanced_workflow_contract"] = advanced_summary
+                attempts["advanced_workflow_contract"] = advanced_transition
                 succeeded = True
                 return evidence
             h2_results: list[dict[str, object]] = []
@@ -5818,6 +5978,11 @@ def _parser() -> argparse.ArgumentParser:
         help="run only the M5-04 model-free caller-RNG stochastic Flow Euler contract",
     )
     parser.add_argument(
+        "--advanced-workflow-contract-only",
+        action="store_true",
+        help="run only the M5-05 model-free advanced-workflow compatibility contract",
+    )
+    parser.add_argument(
         "--minimax-h3-scheduler-matrix",
         action="store_true",
         help="extend --minimax-h3-only with the frozen M7-15 ten-scheduler host matrix",
@@ -5914,6 +6079,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             or args.sampler_state_contract_only
             or args.flow_euler_contract_only
             or args.stochastic_flow_euler_contract_only
+            or args.advanced_workflow_contract_only
         ):
             parser.error("--minimax-h3-model-plan cannot be combined with an execution-only lane")
         if not args.minimax_h3_model_variant:
@@ -5953,6 +6119,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         or args.sampler_state_contract_only
         or args.flow_euler_contract_only
         or args.stochastic_flow_euler_contract_only
+        or args.advanced_workflow_contract_only
     ):
         parser.error("--validation-lane latest is reserved for an exact reviewed host lane")
     if args.minimax_h3_scheduler_matrix and not args.minimax_h3_only:
@@ -5964,6 +6131,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             args.sampler_state_contract_only,
             args.flow_euler_contract_only,
             args.stochastic_flow_euler_contract_only,
+            args.advanced_workflow_contract_only,
         )
         if sum(exclusive_lanes) > 1:
             parser.error("execution-only lanes are mutually exclusive")
@@ -5972,6 +6140,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             or args.sampler_state_contract_only
             or args.flow_euler_contract_only
             or args.stochastic_flow_euler_contract_only
+            or args.advanced_workflow_contract_only
         ):
             evidence = run_minimax_h3(args)
         elif args.conditioning_only:

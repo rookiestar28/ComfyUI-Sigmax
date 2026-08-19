@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import math
+import platform
 from itertools import pairwise
 from types import SimpleNamespace
 from typing import Any
@@ -14,6 +16,27 @@ from comfy import samplers as comfy_samplers
 from comfy import supported_models
 from comfy.k_diffusion.sampling import sample_euler  # type: ignore[import-not-found]
 from comfy.model_sampling import CONST  # type: ignore[import-not-found]
+from comfyui_sigmax.core import (
+    CapabilityDimension,
+    ExecutionBehavior,
+    ExecutionReceipt,
+    NoiseOwnership,
+    PredictionType,
+    SamplerCapabilities,
+    SamplerExecutionSpec,
+    SamplerState,
+    SamplerStateSnapshot,
+    ScheduleOwnership,
+    SigmaDomain,
+    TerminalRequirement,
+    canonical_projection_bytes,
+    deserialize_sampler_execution_spec,
+    deserialize_sampler_state_snapshot,
+    sampler_execution_spec_fingerprint,
+    sampler_state_snapshot_fingerprint,
+    serialize_sampler_execution_spec,
+    serialize_sampler_state_snapshot,
+)
 
 _INITIAL = (0.75, -0.5, 1.25, -1.0)
 _BIASES = (0.0625, -0.125, 0.1875, -0.25)
@@ -45,6 +68,7 @@ _MINIMAX_H3_NATIVE_SCHEDULERS = (
 )
 _KREA2_LORA_UI_KEY = "sigmax_krea2_lora_experimental"
 _KREA2_CONDITIONING_UI_KEY = "sigmax_krea2_conditioning"
+_SAMPLER_STATE_UI_KEY = "sigmax_sampler_state_contract"
 _KREA2_CONDITIONING_FEATURES = 12 * 2560
 
 
@@ -160,6 +184,162 @@ class NativeEulerProbe:
         return {
             "ui": {
                 _UI_KEY: [
+                    json.dumps(
+                        trace,
+                        allow_nan=False,
+                        ensure_ascii=False,
+                        separators=(",", ":"),
+                        sort_keys=True,
+                    )
+                ]
+            }
+        }
+
+
+def _fixture_fingerprint(character: str) -> str:
+    return "sha256:" + character * 64
+
+
+def _sampler_state_not_executed_receipt(spec: SamplerExecutionSpec) -> ExecutionReceipt:
+    projection: dict[str, object] = {
+        "artifact": {
+            "construction_fingerprint": _fixture_fingerprint("a"),
+            "numerical_fingerprint": _fixture_fingerprint("b"),
+        },
+        "compatibility": {
+            "considered": [item.value for item in CapabilityDimension],
+            "level": "allow",
+            "reasons": ["compatible"],
+        },
+        "counts": {
+            "effective_model_evaluations": 0,
+            "effective_transitions": 0,
+            "requested_model_evaluations": spec.requested_model_evaluations,
+            "requested_transitions": spec.requested_transitions,
+        },
+        "effective_inputs": {
+            "compatibility": {},
+            "height": None,
+            "precision": "float64",
+            "profile": "fixture.profile",
+            "profile_version": "1",
+            "steps": spec.requested_transitions,
+            "width": None,
+        },
+        "execution": {"reason_code": None, "status": "not_executed"},
+        "host": {
+            "api_version": "test",
+            "id": "comfyui",
+            "revision": "fixture",
+            "version": "contract",
+        },
+        "model": {
+            "fingerprint": _fixture_fingerprint("c"),
+            "id": "fixture.model",
+            "version": "1",
+        },
+        "profile": {"id": "fixture.profile", "version": "1"},
+        "rng_ownership": {"model": "none", "sampler": "none", "schedule": "none"},
+        "sampler": {
+            "fingerprint": _fixture_fingerprint("d"),
+            "id": spec.capabilities.sampler_id,
+            "version": spec.capabilities.sampler_version,
+        },
+        "schema": "sigmax.execution-receipt/1",
+    }
+    payload = canonical_projection_bytes(projection)
+    return ExecutionReceipt(
+        receipt_bytes=payload,
+        receipt_fingerprint="sha256:" + hashlib.sha256(payload).hexdigest(),
+        construction_fingerprint=_fixture_fingerprint("a"),
+        numerical_fingerprint=_fixture_fingerprint("b"),
+    )
+
+
+class SamplerStateContractProbe:
+    """Exercise only the M5-02 portable contract; never call a numerical sampler."""
+
+    CATEGORY = "SigmaxTest"
+    DESCRIPTION = "Test-only M5-02 sampler-state contract probe without sampler execution."
+    FUNCTION = "execute"
+    OUTPUT_NODE = True
+    RETURN_TYPES: tuple[()] = ()
+    RETURN_NAMES: tuple[()] = ()
+
+    @classmethod
+    def INPUT_TYPES(cls) -> dict[str, dict[str, tuple[object, ...]]]:
+        return {"required": {}}
+
+    def execute(self) -> dict[str, object]:
+        before_call = torch.nn.Module.__call__
+        before_schedulers = tuple(comfy_samplers.SCHEDULER_NAMES)
+        capabilities = SamplerCapabilities(
+            sampler_id="comfy.euler",
+            sampler_version="native",
+            accepted_prediction_types=(PredictionType.FLOW_VELOCITY,),
+            accepted_sigma_domains=(SigmaDomain.UNIT_FLOW,),
+            accepted_ownerships=(ScheduleOwnership.EXTERNAL_SIGMAS,),
+            terminal_requirement=TerminalRequirement.REQUIRES_ZERO,
+            execution_behavior=ExecutionBehavior.DETERMINISTIC,
+            noise_ownership=NoiseOwnership.NONE,
+            required_state=(
+                SamplerState.BEGIN_INDEX,
+                SamplerState.STEP_INDEX,
+                SamplerState.MULTISTEP_HISTORY,
+                SamplerState.RESUME,
+            ),
+            supports_partial_denoise=True,
+            supports_per_token_timesteps=True,
+        )
+        spec = SamplerExecutionSpec(
+            capabilities=capabilities,
+            scheduler_index=4,
+            begin_index=2,
+            solver_order=1,
+            timestep_spacing="native",
+            random_source_ownership=NoiseOwnership.NONE,
+            per_token_time=(0.25, 0.5),
+            requested_transitions=2,
+            requested_model_evaluations=2,
+        )
+        spec_bytes = serialize_sampler_execution_spec(spec)
+        restored_spec = deserialize_sampler_execution_spec(spec_bytes)
+        initial = SamplerStateSnapshot.initial(spec)
+        initial_bytes = serialize_sampler_state_snapshot(initial, spec)
+        restored_initial = deserialize_sampler_state_snapshot(initial_bytes, spec)
+        receipt = _sampler_state_not_executed_receipt(spec)
+        bound = initial.attach_execution_receipt_evidence(spec, receipt)
+        bound_bytes = serialize_sampler_state_snapshot(bound, spec)
+        restored_bound = deserialize_sampler_state_snapshot(bound_bytes, spec)
+        global_mutation = (
+            torch.nn.Module.__call__ is not before_call
+            or tuple(comfy_samplers.SCHEDULER_NAMES) != before_schedulers
+        )
+        trace = {
+            "bound_snapshot_fingerprint": sampler_state_snapshot_fingerprint(bound, spec),
+            "execution_receipt_fingerprint": receipt.receipt_fingerprint,
+            "global_mutation": global_mutation,
+            "history_length": len(bound.history),
+            "initial_snapshot_fingerprint": sampler_state_snapshot_fingerprint(initial, spec),
+            "python_version": platform.python_version(),
+            "receipt_bound": bound.execution_receipt_fingerprint == receipt.receipt_fingerprint,
+            "receipt_status": "not_executed",
+            "round_trip_stable": (
+                restored_spec == spec
+                and restored_initial == initial
+                and restored_bound == bound
+                and serialize_sampler_execution_spec(restored_spec) == spec_bytes
+                and serialize_sampler_state_snapshot(restored_initial, spec) == initial_bytes
+                and serialize_sampler_state_snapshot(restored_bound, spec) == bound_bytes
+            ),
+            "sampler_execution_performed": False,
+            "schema": "sigmax.sampler-state-host-contract/1",
+            "spec_fingerprint": sampler_execution_spec_fingerprint(spec),
+            "status": bound.status.value,
+        }
+        return {
+            "ui": {
+                _SAMPLER_STATE_UI_KEY: [
                     json.dumps(
                         trace,
                         allow_nan=False,
@@ -1563,6 +1743,7 @@ NODE_CLASS_MAPPINGS = {
     "SigmaxTest.Krea2ConditioningProbe": Krea2ConditioningProbe,
     "SigmaxTest.Krea2ConditioningSource": Krea2ConditioningSource,
     "SigmaxTest.NativeEulerProbe": NativeEulerProbe,
+    "SigmaxTest.SamplerStateContractProbe": SamplerStateContractProbe,
     "SigmaxTest.ScheduleAlgebraProbe": ScheduleAlgebraProbe,
     "SigmaxTest.ZImageScheduleProbe": ZImageScheduleProbe,
 }
@@ -1587,6 +1768,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "SigmaxTest.Krea2ConditioningProbe": "Sigmax Test — Krea 2 Conditioning Probe",
     "SigmaxTest.Krea2ConditioningSource": "Sigmax Test — Krea 2 Conditioning Source",
     "SigmaxTest.NativeEulerProbe": "Sigmax Test — Native Euler Probe",
+    "SigmaxTest.SamplerStateContractProbe": "Sigmax Test — Sampler State Contract Probe",
     "SigmaxTest.ScheduleAlgebraProbe": "Sigmax Test — Schedule Algebra Probe",
     "SigmaxTest.ZImageScheduleProbe": "Sigmax Test — Z-Image Schedule Probe",
 }

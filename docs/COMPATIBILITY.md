@@ -10,7 +10,7 @@ current unreleased development additions described below.
 | Python | 3.10 or newer |
 | ComfyUI package requirement | 0.29.0 or newer |
 | General validated host baseline | ComfyUI 0.29.0 |
-| MiniMax H3 qualified host roles | ComfyUI 0.30.0 and 0.32.0 with the upstream H3 nodes; the complete native-scheduler matrix remains a development validation item |
+| MiniMax H3 qualified host roles | ComfyUI 0.30.0 and 0.32.0 with the upstream H3 nodes; the complete ten-scheduler model-free matrix is validated on both exact host roles |
 | Operating systems covered by project gates | Windows and Linux/WSL |
 | Mandatory additional Python packages | None |
 | Host runtime dependency policy | Record the selected host's compatible package versions; current ComfyUI-recommended `comfy-aimdo` versions (including 0.4.13) are accepted without an exact-version gate |
@@ -68,7 +68,15 @@ path. The other nine values delegate to the installed ComfyUI scheduler using a 
 already-shifted H3 model and are explicitly experimental. This support means that the dispatch
 path is executable; it is not an official MiniMax recommendation and makes no image-quality,
 speed, memory, NFE, or acceleration claim. Full cross-host validation of every native choice is a
-separate development closeout item.
+completed development check on the exact 0.30.0 and 0.32.0 host roles; this remains functional
+experimental evidence, not a quality recommendation.
+
+The current `dev` branch also contains the dependency-free M5-02 sampler-state schema-v1
+contract. It represents a sampler capability declaration, scheduler/begin cursor, solver order,
+timestep spacing, random-source ownership, optional per-token time, requested/effective counts,
+immutable step history, lifecycle status, and exact execution-receipt binding. This is a pure
+portable contract and has no production ComfyUI node. It does not execute a sampler, persist
+latents or RNG state, connect host interruption, or prove that a workflow can actually resume.
 
 ## Usage boundary
 
@@ -120,7 +128,9 @@ separate development closeout item.
 - General real-model GPU compatibility or image-quality parity. One bounded local Krea 2 H4
   execution/provenance lane completed, but blind scoring and threshold review were explicitly
   waived, so it does not support a quality or profile-promotion claim.
-- Stochastic, resumable, or interrupted sampler state.
+- Executed stochastic sampling, persisted latent/RNG state, host interruption plumbing, or actual
+  resume behavior; the pure M5-02 schema-v1 state/evidence representation alone does not establish
+  those runtime capabilities.
 - General partial-denoise execution or advanced model-patch compatibility beyond the explicitly
   documented MiniMax H3 host workflow.
 - Automatic compatibility with unlisted model families.

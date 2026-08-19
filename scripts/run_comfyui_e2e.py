@@ -95,6 +95,9 @@ _OUTPUT_NODE_ID: Final = "3"
 _H3_OUTPUT_NODE_ID: Final = "4"
 _BUNDLE_KEY: Final = "sigmax_execution_bundle"
 _H3_TRACE_KEY: Final = "sigmax_native_euler_trace"
+_SAMPLER_STATE_OUTPUT_NODE_ID: Final = "10"
+_SAMPLER_STATE_TRACE_KEY: Final = "sigmax_sampler_state_contract"
+_SAMPLER_STATE_HOST_SCHEMA: Final = "sigmax.sampler-state-host-contract/1"
 _MINIMAX_H3_OUTPUT_NODE_ID: Final = "5"
 _MINIMAX_H3_TRACE_KEY: Final = "sigmax_minimax_h3_h2"
 _MINIMAX_H3_NATIVE_TRACE_KEY: Final = "sigmax_minimax_h3_native_h2"
@@ -1738,6 +1741,17 @@ def build_native_euler_h3_api_prompt() -> dict[str, object]:
     return prompt
 
 
+def build_sampler_state_contract_api_prompt() -> dict[str, object]:
+    """Return the release-excluded M5-02 contract-only output graph."""
+
+    return {
+        _SAMPLER_STATE_OUTPUT_NODE_ID: {
+            "class_type": "SigmaxTest.SamplerStateContractProbe",
+            "inputs": {},
+        }
+    }
+
+
 def build_native_euler_h3_partial_rejection_prompt() -> dict[str, object]:
     """Return a partial schedule that M5-01 must reject instead of misclaiming."""
 
@@ -2669,6 +2683,81 @@ def verify_native_euler_h3_history(
             "stochastic_euler",
         ],
     }
+
+
+def verify_sampler_state_contract_history(
+    history: object,
+    *,
+    prompt_id: str,
+) -> dict[str, object]:
+    """Verify exact, public, model-free M5-02 host contract evidence."""
+
+    root = _object(history, label="sampler-state contract history")
+    entry = _object(root.get(prompt_id), label="sampler-state contract entry")
+    status = _object(entry.get("status"), label="sampler-state contract status")
+    if status.get("completed") is not True or status.get("status_str") != "success":
+        raise ScheduleContractError("sampler-state contract did not complete successfully")
+    prompt_tuple = _array(entry.get("prompt"), label="sampler-state contract prompt")
+    if len(prompt_tuple) < 3 or prompt_tuple[2] != build_sampler_state_contract_api_prompt():
+        raise ScheduleContractError("sampler-state contract retained graph is stale")
+    outputs = _object(entry.get("outputs"), label="sampler-state contract outputs")
+    output = _object(
+        outputs.get(_SAMPLER_STATE_OUTPUT_NODE_ID),
+        label="sampler-state contract output",
+    )
+    traces = _array(
+        output.get(_SAMPLER_STATE_TRACE_KEY),
+        label="sampler-state contract trace",
+    )
+    if len(traces) != 1 or not isinstance(traces[0], str):
+        raise ScheduleContractError("sampler-state contract trace is malformed")
+    try:
+        raw = traces[0].encode("utf-8")
+    except UnicodeError as error:
+        raise ScheduleContractError("sampler-state contract trace is not valid Unicode") from error
+    trace = _object(
+        _decode_json(raw, label="sampler-state contract trace"),
+        label="sampler-state contract trace",
+    )
+    canonical = json.dumps(
+        trace,
+        allow_nan=False,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    )
+    python_version = trace.get("python_version")
+    expected = {
+        "bound_snapshot_fingerprint": (
+            "sha256:6ba2e932400f6f63be7d0e9e626ea79d3add14493bcd313b102443ec789d61ae"
+        ),
+        "execution_receipt_fingerprint": (
+            "sha256:a93ea0f52a55111376ec3c9c78a2b452a53e72df7989f9cbfe0439a7ded6775e"
+        ),
+        "global_mutation": False,
+        "history_length": 0,
+        "initial_snapshot_fingerprint": (
+            "sha256:25a5a7a47f7a5220ccb04d2c7819ac13bb30c84d0f7a36b43041229f67f8faff"
+        ),
+        "receipt_bound": True,
+        "receipt_status": "not_executed",
+        "round_trip_stable": True,
+        "sampler_execution_performed": False,
+        "schema": _SAMPLER_STATE_HOST_SCHEMA,
+        "spec_fingerprint": (
+            "sha256:b0433c362287832b9e92868894ea03d4cb78520a90ef3054aee824da14c86887"
+        ),
+        "status": "ready",
+    }
+    observed = {key: value for key, value in trace.items() if key != "python_version"}
+    if (
+        traces[0] != canonical
+        or observed != expected
+        or not isinstance(python_version, str)
+        or re.fullmatch(r"\d+\.\d+\.\d+(?:[a-z0-9.+-]*)?", python_version) is None
+    ):
+        raise ScheduleContractError("sampler-state contract evidence drifted")
+    return trace
 
 
 def verify_native_euler_h3_partial_rejection(
@@ -3950,7 +4039,7 @@ def build_minimax_h3_model_lane_plan(
 
 
 def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
-    """Execute the model-free MiniMax H3 H1/H2 contract on an exact reviewed host."""
+    """Execute an exact-host H3 lane or the M5-02 contract-only lane."""
 
     started = time.time()
     comfyui_root = Path(args.comfyui_root).resolve()
@@ -3993,16 +4082,28 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
     succeeded = False
     evidence: dict[str, object] = {
         "schema": (
-            _MINIMAX_H3_M7_15_SCHEMA
-            if args.minimax_h3_scheduler_matrix
-            else "sigmax.minimax-h3-host-e2e/1"
+            "sigmax.sampler-state-host-e2e/1"
+            if args.sampler_state_contract_only
+            else (
+                _MINIMAX_H3_M7_15_SCHEMA
+                if args.minimax_h3_scheduler_matrix
+                else "sigmax.minimax-h3-host-e2e/1"
+            )
         ),
-        "lanes": [
-            "H1",
-            "H2_MINIMAX_H3_M6_05",
-            "H2_MINIMAX_H3_M4_17_NATIVE_SIMPLE",
-            *(["H2_MINIMAX_H3_M7_15_NATIVE_MATRIX"] if args.minimax_h3_scheduler_matrix else []),
-        ],
+        "lanes": (
+            ["H1", "H2_SAMPLER_STATE_CONTRACT_M5_02"]
+            if args.sampler_state_contract_only
+            else [
+                "H1",
+                "H2_MINIMAX_H3_M6_05",
+                "H2_MINIMAX_H3_M4_17_NATIVE_SIMPLE",
+                *(
+                    ["H2_MINIMAX_H3_M7_15_NATIVE_MATRIX"]
+                    if args.minimax_h3_scheduler_matrix
+                    else []
+                ),
+            ]
+        ),
         "validation_lane": validation_lane.value,
         "host": {
             "id": "comfyui",
@@ -4015,7 +4116,11 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
         "port": port,
         "import_probe": import_probe,
         "attempt_transitions": {},
-        "model_execution": "weight_free_model_sampling_fixture",
+        "model_execution": (
+            "not_performed_contract_only"
+            if args.sampler_state_contract_only
+            else "weight_free_model_sampling_fixture"
+        ),
     }
     try:
         creationflags = (
@@ -4054,12 +4159,16 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
                 raise ScheduleContractError(
                     "MiniMax H3 host is missing one or more Sigmax node IDs"
                 )
-            test_ids = {
-                "SigmaxTest.MiniMaxH3ScheduleProbe",
-                "SigmaxTest.MiniMaxH3NativeModelSource",
-                "SigmaxTest.MiniMaxH3NativeScheduleProbe",
-            }
-            if args.minimax_h3_scheduler_matrix:
+            test_ids = (
+                {"SigmaxTest.SamplerStateContractProbe"}
+                if args.sampler_state_contract_only
+                else {
+                    "SigmaxTest.MiniMaxH3ScheduleProbe",
+                    "SigmaxTest.MiniMaxH3NativeModelSource",
+                    "SigmaxTest.MiniMaxH3NativeScheduleProbe",
+                }
+            )
+            if args.minimax_h3_scheduler_matrix and not args.sampler_state_contract_only:
                 test_ids.add("SigmaxTest.MiniMaxH3NativeUnexpectedSuccessProbe")
             if not test_ids <= set(object_info):
                 raise ScheduleContractError("MiniMax H3 H2 test probe is not registered")
@@ -4071,14 +4180,16 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
             )
             if not live_report.gate_passed or live_report.issues:
                 raise ScheduleContractError("MiniMax H3 host H1 live schema validation failed")
-            scheduler_schema = _verify_minimax_h3_scheduler_live_schema(object_info)
             h1_summary = {
                 "expected_node_ids": list(expected_ids),
                 "live_schema_fingerprint": live_report.report_fingerprint,
                 "registered": True,
-                "scheduler_schema": scheduler_schema,
                 "status": "succeeded",
             }
+            if not args.sampler_state_contract_only:
+                h1_summary["scheduler_schema"] = _verify_minimax_h3_scheduler_live_schema(
+                    object_info
+                )
             repeat_info = _object(
                 _http_json(f"{base_url}/object_info"),
                 label="MiniMax H3 repeat live object_info",
@@ -4092,7 +4203,6 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
                 host_revision=host_revision,
                 lane=validation_lane,
             )
-            repeat_scheduler_schema = _verify_minimax_h3_scheduler_live_schema(repeat_info)
             repeat_h1_summary = {
                 "expected_node_ids": list(expected_ids),
                 "live_schema_fingerprint": repeat_report.report_fingerprint,
@@ -4101,15 +4211,44 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
                     and repeat_report.gate_passed
                     and not repeat_report.issues
                 ),
-                "scheduler_schema": repeat_scheduler_schema,
                 "status": "succeeded",
             }
+            if not args.sampler_state_contract_only:
+                repeat_h1_summary["scheduler_schema"] = _verify_minimax_h3_scheduler_live_schema(
+                    repeat_info
+                )
             attempts = cast(dict[str, object], evidence["attempt_transitions"])
             attempts["h1"] = build_verified_host_repeat_transition(
                 lane="H1",
                 first_summary=h1_summary,
                 repeat_summary=repeat_h1_summary,
             )
+            evidence["h1"] = h1_summary
+            if args.sampler_state_contract_only:
+
+                def submit_sampler_state(ordinal: int) -> tuple[str, dict[str, object]]:
+                    return _submit_successful_prompt(
+                        base_url=base_url,
+                        client_id=f"sigmax-m5-02-sampler-state-attempt-{ordinal}",
+                        prompt=build_sampler_state_contract_api_prompt(),
+                        execution_timeout=args.execution_timeout,
+                    )
+
+                def verify_sampler_state(
+                    history: object,
+                    prompt_id: str,
+                ) -> dict[str, object]:
+                    return verify_sampler_state_contract_history(history, prompt_id=prompt_id)
+
+                sampler_summary, sampler_transition = execute_verified_host_repeat(
+                    lane="H2_SAMPLER_STATE_CONTRACT_M5_02",
+                    submit=submit_sampler_state,
+                    verify=verify_sampler_state,
+                )
+                evidence["sampler_state_contract"] = sampler_summary
+                attempts["sampler_state_contract"] = sampler_transition
+                succeeded = True
+                return evidence
             h2_results: list[dict[str, object]] = []
             for variant, variant_id in (
                 ("H3 Base FL2VA", "fl2va"),
@@ -4188,7 +4327,6 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
                 )
                 native_h2_results.append(native_summary)
                 attempts[f"h2_minimax_h3_native_simple.{variant_id}"] = native_transition
-            evidence["h1"] = h1_summary
             evidence["h2_minimax_h3"] = h2_results
             evidence["h2_minimax_h3_native_simple"] = native_h2_results
             if args.minimax_h3_scheduler_matrix:
@@ -5305,6 +5443,11 @@ def _parser() -> argparse.ArgumentParser:
         help="run only the model-free MiniMax H3 H1/H2 contract on the pinned 0.30.0 host",
     )
     parser.add_argument(
+        "--sampler-state-contract-only",
+        action="store_true",
+        help="run only the M5-02 model-free sampler-state contract on an exact reviewed host",
+    )
+    parser.add_argument(
         "--minimax-h3-scheduler-matrix",
         action="store_true",
         help="extend --minimax-h3-only with the frozen M7-15 ten-scheduler host matrix",
@@ -5395,10 +5538,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = _parser()
     args = parser.parse_args(argv)
     if args.minimax_h3_model_plan:
-        if args.conditioning_only or args.minimax_h3_only:
-            parser.error(
-                "--minimax-h3-model-plan cannot be combined with --conditioning-only or --minimax-h3-only"
-            )
+        if args.conditioning_only or args.minimax_h3_only or args.sampler_state_contract_only:
+            parser.error("--minimax-h3-model-plan cannot be combined with an execution-only lane")
         if not args.minimax_h3_model_variant:
             parser.error("--minimax-h3-model-variant is required with --minimax-h3-model-plan")
         if not args.minimax_h3_model_prompt:
@@ -5431,14 +5572,21 @@ def main(argv: Sequence[str] | None = None) -> int:
         parser.error("COMFYUI_ROOT or --comfyui-root is required")
     if not args.host_python:
         parser.error("SIGMAX_COMFYUI_PYTHON or --host-python is required")
-    if args.validation_lane == _MINIMAX_H3_LATEST_LANE and not args.minimax_h3_only:
-        parser.error("--validation-lane latest is reserved for --minimax-h3-only")
+    if args.validation_lane == _MINIMAX_H3_LATEST_LANE and not (
+        args.minimax_h3_only or args.sampler_state_contract_only
+    ):
+        parser.error("--validation-lane latest is reserved for an exact reviewed host lane")
     if args.minimax_h3_scheduler_matrix and not args.minimax_h3_only:
         parser.error("--minimax-h3-scheduler-matrix requires --minimax-h3-only")
     try:
-        if args.conditioning_only and args.minimax_h3_only:
-            parser.error("--conditioning-only and --minimax-h3-only are mutually exclusive")
-        if args.minimax_h3_only:
+        exclusive_lanes = (
+            args.conditioning_only,
+            args.minimax_h3_only,
+            args.sampler_state_contract_only,
+        )
+        if sum(exclusive_lanes) > 1:
+            parser.error("execution-only lanes are mutually exclusive")
+        if args.minimax_h3_only or args.sampler_state_contract_only:
             evidence = run_minimax_h3(args)
         elif args.conditioning_only:
             evidence = run_conditioning(args)

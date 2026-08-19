@@ -80,6 +80,14 @@ _DISPATCH_OPERATION_NAMES: Final = frozenset(
     }
 )
 _DISPATCH_ADAPTER_VERSION: Final = "m7-13-h4-dispatch-observer/1"
+_WINDOWS_HOST_BOOTSTRAP: Final = (
+    "import os,runpy,signal,sys;"
+    "main_path=sys.argv[1];"
+    "signal.signal(signal.SIGBREAK, signal.default_int_handler);"
+    "sys.path.insert(0,os.path.dirname(os.path.abspath(main_path)));"
+    "sys.argv=[main_path,*sys.argv[2:]];"
+    "runpy.run_path(main_path,run_name='__main__')"
+)
 
 H4_SCHEMA: Final = "sigmax.minimax-h3-h4-private-validation/2"
 PROTOCOL_STATUS: Final = "ACTIVE_PENDING_REVIEW"
@@ -799,9 +807,13 @@ def _host_command(
     use_ck_attention: bool,
     enable_triton: bool,
 ) -> list[str]:
+    host_entrypoint = [str(host_python)]
+    if os.name == "nt":
+        host_entrypoint.extend(["-c", _WINDOWS_HOST_BOOTSTRAP, str(comfyui_root / "main.py")])
+    else:
+        host_entrypoint.append(str(comfyui_root / "main.py"))
     command = [
-        str(host_python),
-        str(comfyui_root / "main.py"),
+        *host_entrypoint,
         "--listen",
         _LOOPBACK,
         "--port",
@@ -831,6 +843,15 @@ def _host_command(
     if enable_triton:
         command.append("--enable-triton-backend")
     return command
+
+
+def _host_process_group_options() -> tuple[int, bool]:
+    if os.name == "nt":
+        creation_flag = getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", None)
+        if not isinstance(creation_flag, int) or creation_flag == 0:
+            _fail("Windows process-group launch support is unavailable")
+        return creation_flag, False
+    return 0, True
 
 
 def _readiness(
@@ -917,17 +938,19 @@ def _terminate(process: subprocess.Popen[bytes], *, base_url: str) -> dict[str, 
     if process.poll() is None:
         try:
             if os.name == "nt":
-                sigint = getattr(signal, "SIGINT", None)
-                if not isinstance(sigint, int):
-                    _fail("Windows cooperative process signaling is unavailable")
-                os.kill(process.pid, sigint)
+                ctrl_break = getattr(signal, "CTRL_BREAK_EVENT", None)
+                if not isinstance(ctrl_break, int):
+                    _fail("Windows CTRL+BREAK process signaling is unavailable")
+                # IMPORTANT: Windows os.kill(SIGINT) calls TerminateProcess and returns code 2.
+                process.send_signal(ctrl_break)
+                termination_method = "cooperative_ctrl_break"
             else:
                 killpg = getattr(os, "killpg", None)
                 sigint = getattr(signal, "SIGINT", None)
                 if not callable(killpg) or not isinstance(sigint, int):
                     _fail("POSIX process-group signaling is unavailable")
                 cast(Callable[[int, int], None], killpg)(process.pid, sigint)
-            termination_method = "cooperative_sigint"
+                termination_method = "cooperative_sigint"
             process.wait(timeout=20)
         except (OSError, subprocess.TimeoutExpired):
             termination = "forced"
@@ -1354,7 +1377,10 @@ def _cleanup_projection(
         status = "fail"
     if status == "pass":
         reason_code = "cleanup_complete"
-    elif termination_method == "cooperative_sigint" and return_code not in (0, None):
+    elif termination_method in {
+        "cooperative_ctrl_break",
+        "cooperative_sigint",
+    } and return_code not in (0, None):
         reason_code = "nonzero_cooperative_return"
     elif termination == "forced" or termination_method == "forced_terminate":
         reason_code = "forced_termination"
@@ -2113,6 +2139,7 @@ def _run_rows(
     run_failed = False
     try:
         with log_path.open("wb") as log:
+            creation_flags, start_new_session = _host_process_group_options()
             process = subprocess.Popen(  # noqa: S603
                 _host_command(
                     host_python=Path(args.host_python).resolve(),
@@ -2126,10 +2153,8 @@ def _run_rows(
                 cwd=run_path,
                 stdout=log,
                 stderr=subprocess.STDOUT,
-                creationflags=cast(int, getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0))
-                if os.name == "nt"
-                else 0,
-                start_new_session=os.name == "posix",
+                creationflags=creation_flags,
+                start_new_session=start_new_session,
             )
             try:
                 _readiness(

@@ -549,14 +549,78 @@ def test_cleanup_projection_requires_graceful_exit_port_readback_and_owned_root(
     assert _cleanup_projection(shutdown, port, temp, readback)["status"] == "pass"
     forced = dict(shutdown, return_code=1, termination="forced")
     assert _cleanup_projection(forced, port, temp, readback)["status"] == "fail"
-    cooperative_nonzero = dict(shutdown, return_code=2, termination_method="cooperative_sigint")
+    cooperative_nonzero = dict(shutdown, return_code=2, termination_method="cooperative_ctrl_break")
     projection = _cleanup_projection(cooperative_nonzero, port, temp, readback)
     assert projection["status"] == "fail"
     assert projection["reason_code"] == "nonzero_cooperative_return"
-    assert projection["termination_method"] == "cooperative_sigint"
+    assert projection["termination_method"] == "cooperative_ctrl_break"
 
 
-def test_terminate_uses_cooperative_windows_signal_after_interrupt(
+def test_windows_host_command_uses_fixed_sigbreak_bootstrap_and_preserves_arguments(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    host_root = tmp_path / "reviewed-host"
+    host_python = tmp_path / "host-python.exe"
+    models_root = tmp_path / "models"
+    run_path = tmp_path / "run"
+    monkeypatch.setattr(os, "name", "nt")
+
+    command = h4._host_command(
+        host_python=host_python,
+        comfyui_root=host_root,
+        models_root=models_root,
+        run_path=run_path,
+        port=12345,
+        use_ck_attention=True,
+        enable_triton=True,
+    )
+
+    assert command[:3] == [str(host_python), "-c", h4._WINDOWS_HOST_BOOTSTRAP]
+    assert command[3] == str(host_root / "main.py")
+    assert str(host_root) not in h4._WINDOWS_HOST_BOOTSTRAP
+    assert "signal.signal(signal.SIGBREAK, signal.default_int_handler)" in command[2]
+    assert command[4:8] == ["--listen", "127.0.0.1", "--port", "12345"]
+    assert command[-2:] == ["--use-ck-attention", "--enable-triton-backend"]
+
+
+def test_host_process_group_options_are_platform_scoped(monkeypatch: pytest.MonkeyPatch) -> None:
+    expected_windows_flag = 512
+    monkeypatch.setattr(
+        subprocess, "CREATE_NEW_PROCESS_GROUP", expected_windows_flag, raising=False
+    )
+    monkeypatch.setattr(os, "name", "nt")
+    windows_flags, windows_session = h4._host_process_group_options()
+    assert windows_flags == expected_windows_flag
+    assert windows_session is False
+
+    monkeypatch.setattr(os, "name", "posix")
+    posix_flags, posix_session = h4._host_process_group_options()
+    assert posix_flags == 0
+    assert posix_session is True
+
+
+def test_posix_host_command_keeps_direct_main_entrypoint(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    host_root = tmp_path / "reviewed-host"
+    host_python = tmp_path / "python"
+    monkeypatch.setattr(os, "name", "posix")
+
+    command = h4._host_command(
+        host_python=host_python,
+        comfyui_root=host_root,
+        models_root=tmp_path / "models",
+        run_path=tmp_path / "run",
+        port=12345,
+        use_ck_attention=False,
+        enable_triton=False,
+    )
+
+    assert command[:2] == [str(host_python), str(host_root / "main.py")]
+    assert "-c" not in command[:3]
+
+
+def test_terminate_uses_cooperative_windows_ctrl_break_after_interrupt(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     class FakeProcess:
@@ -565,6 +629,7 @@ def test_terminate_uses_cooperative_windows_signal_after_interrupt(
         def __init__(self) -> None:
             self.returncode: int | None = None
             self.terminate_called = False
+            self.sent_signals: list[int] = []
 
         def poll(self) -> int | None:
             return self.returncode
@@ -579,25 +644,49 @@ def test_terminate_uses_cooperative_windows_signal_after_interrupt(
             self.terminate_called = True
             self.returncode = 1
 
+        def send_signal(self, signum: int) -> None:
+            self.sent_signals.append(signum)
+            self.returncode = 0
+
     process = FakeProcess()
     monkeypatch.setattr(os, "name", "nt")
     monkeypatch.setattr(h4, "_http_no_content", lambda *args, **kwargs: None)
-
-    def cooperative_signal(pid: int, signum: int) -> None:
-        assert pid == process.pid
-        assert signum == signal.SIGINT
-        process.returncode = 0
-
-    monkeypatch.setattr(os, "kill", cooperative_signal)
+    monkeypatch.setattr(
+        os,
+        "kill",
+        lambda *_args, **_kwargs: pytest.fail("Windows termination must not call os.kill"),
+    )
     result = h4._terminate(
         cast(subprocess.Popen[bytes], process), base_url="http://127.0.0.1:12345"
     )
 
     assert result["interrupt_requested"] is True
     assert result["termination"] == "graceful"
-    assert result["termination_method"] == "cooperative_sigint"
+    assert result["termination_method"] == "cooperative_ctrl_break"
     assert result["return_code"] == 0
+    assert process.sent_signals == [signal.CTRL_BREAK_EVENT]
     assert process.terminate_called is False
+
+
+def test_terminate_fails_closed_when_windows_ctrl_break_is_unavailable(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakeProcess:
+        pid = 1234
+        returncode: int | None = None
+
+        def poll(self) -> int | None:
+            return self.returncode
+
+    monkeypatch.setattr(os, "name", "nt")
+    monkeypatch.delattr(signal, "CTRL_BREAK_EVENT")
+    monkeypatch.setattr(h4, "_http_no_content", lambda *args, **kwargs: None)
+
+    with pytest.raises(ScheduleContractError, match=r"CTRL\+BREAK"):
+        h4._terminate(
+            cast(subprocess.Popen[bytes], FakeProcess()),
+            base_url="http://127.0.0.1:12345",
+        )
 
 
 def test_interrupt_request_accepts_no_content_response(monkeypatch: pytest.MonkeyPatch) -> None:

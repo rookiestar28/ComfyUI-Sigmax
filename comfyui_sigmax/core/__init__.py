@@ -60,6 +60,16 @@ from comfyui_sigmax.core.fingerprints import (
     float_to_ieee_hex,
     numerical_fingerprint,
 )
+from comfyui_sigmax.core.flow_euler import (
+    FLOW_EULER_EXECUTION_RESULT_SCHEMA,
+    FLOW_EULER_SAMPLER_ID,
+    FLOW_EULER_SAMPLER_VERSION,
+    FlowEulerExecutionResult,
+    FlowEulerStateOperations,
+    FlowEulerVelocityEvaluator,
+    execute_deterministic_flow_euler,
+    flow_euler_execution_result_fingerprint,
+)
 from comfyui_sigmax.core.h3_backend_receipts import (
     H3_BACKEND_RECEIPT_SCHEMA,
     H3_BACKEND_RECEIPT_VERSION,
@@ -164,6 +174,9 @@ from comfyui_sigmax.core.workflow_metadata import (
 __all__ = [
     "EXECUTION_RECEIPT_ENVELOPE_SCHEMA",
     "EXECUTION_RECEIPT_SCHEMA",
+    "FLOW_EULER_EXECUTION_RESULT_SCHEMA",
+    "FLOW_EULER_SAMPLER_ID",
+    "FLOW_EULER_SAMPLER_VERSION",
     "H3_BACKEND_RECEIPT_SCHEMA",
     "H3_BACKEND_RECEIPT_VERSION",
     "NUMERICAL_SCHEDULE_SCHEMA",
@@ -201,6 +214,9 @@ __all__ = [
     "ExecutionReceiptMetadata",
     "ExecutionRngOwnership",
     "ExecutionStatus",
+    "FlowEulerExecutionResult",
+    "FlowEulerStateOperations",
+    "FlowEulerVelocityEvaluator",
     "H3BackendExecutionReceipt",
     "ModelCapabilities",
     "NoiseOwnership",
@@ -268,9 +284,11 @@ __all__ = [
     "detach_workflow_metadata",
     "direct_ratio_shift",
     "evaluate_compatibility",
+    "execute_deterministic_flow_euler",
     "exponential_mu_shift",
     "extract_workflow_metadata",
     "float_to_ieee_hex",
+    "flow_euler_execution_result_fingerprint",
     "flowmatch_reciprocal_step_grid",
     "krea_reciprocal_step_grid",
     "linear_endpoint_grid",

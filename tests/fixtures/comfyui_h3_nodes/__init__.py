@@ -16,6 +16,10 @@ from comfy import samplers as comfy_samplers
 from comfy import supported_models
 from comfy.k_diffusion.sampling import sample_euler  # type: ignore[import-not-found]
 from comfy.model_sampling import CONST  # type: ignore[import-not-found]
+from comfyui_sigmax.adapters.comfyui_flow_euler import (
+    ComfyDenoisedFlowVelocityEvaluator,
+    TorchFlowEulerStateOperations,
+)
 from comfyui_sigmax.core import (
     CapabilityDimension,
     ExecutionBehavior,
@@ -26,12 +30,14 @@ from comfyui_sigmax.core import (
     SamplerExecutionSpec,
     SamplerState,
     SamplerStateSnapshot,
+    ScheduleContractError,
     ScheduleOwnership,
     SigmaDomain,
     TerminalRequirement,
     canonical_projection_bytes,
     deserialize_sampler_execution_spec,
     deserialize_sampler_state_snapshot,
+    execute_deterministic_flow_euler,
     sampler_execution_spec_fingerprint,
     sampler_state_snapshot_fingerprint,
     serialize_sampler_execution_spec,
@@ -69,6 +75,7 @@ _MINIMAX_H3_NATIVE_SCHEDULERS = (
 _KREA2_LORA_UI_KEY = "sigmax_krea2_lora_experimental"
 _KREA2_CONDITIONING_UI_KEY = "sigmax_krea2_conditioning"
 _SAMPLER_STATE_UI_KEY = "sigmax_sampler_state_contract"
+_FLOW_EULER_UI_KEY = "sigmax_flow_euler_contract"
 _KREA2_CONDITIONING_FEATURES = 12 * 2560
 
 
@@ -340,6 +347,236 @@ class SamplerStateContractProbe:
         return {
             "ui": {
                 _SAMPLER_STATE_UI_KEY: [
+                    json.dumps(
+                        trace,
+                        allow_nan=False,
+                        ensure_ascii=False,
+                        separators=(",", ":"),
+                        sort_keys=True,
+                    )
+                ]
+            }
+        }
+
+
+def _flow_euler_capabilities() -> SamplerCapabilities:
+    return SamplerCapabilities(
+        sampler_id="sigmax.flow_euler",
+        sampler_version="1",
+        accepted_prediction_types=(PredictionType.FLOW_VELOCITY,),
+        accepted_sigma_domains=(SigmaDomain.UNIT_FLOW,),
+        accepted_ownerships=(ScheduleOwnership.EXTERNAL_SIGMAS,),
+        terminal_requirement=TerminalRequirement.REQUIRES_ZERO,
+        execution_behavior=ExecutionBehavior.DETERMINISTIC,
+        noise_ownership=NoiseOwnership.NONE,
+        required_state=(
+            SamplerState.BEGIN_INDEX,
+            SamplerState.STEP_INDEX,
+            SamplerState.MULTISTEP_HISTORY,
+            SamplerState.RESUME,
+        ),
+        supports_partial_denoise=True,
+        supports_per_token_timesteps=False,
+    )
+
+
+def _flow_euler_spec(*, begin_index: int, transitions: int) -> SamplerExecutionSpec:
+    return SamplerExecutionSpec(
+        capabilities=_flow_euler_capabilities(),
+        scheduler_index=begin_index,
+        begin_index=begin_index,
+        solver_order=1,
+        timestep_spacing="explicit_unit_flow",
+        random_source_ownership=NoiseOwnership.NONE,
+        per_token_time=None,
+        requested_transitions=transitions,
+        requested_model_evaluations=transitions,
+    )
+
+
+def _flow_model(call_sigmas: list[float]) -> Any:
+    bias = torch.tensor([_BIASES], dtype=torch.float32, device="cpu")
+
+    def model(
+        state: torch.Tensor,
+        sigma: torch.Tensor,
+        **_extra: object,
+    ) -> torch.Tensor:
+        sigma_value = sigma.reshape(-1, 1)
+        call_sigmas.append(float(sigma_value.detach().cpu().reshape(-1)[0]))
+        velocity = state * 0.125 + sigma_value * 0.25 + bias
+        return state - velocity * sigma_value
+
+    return model
+
+
+class FlowEulerContractProbe:
+    """Execute M5-03 against native Euler on bounded model-free CPU tensors."""
+
+    CATEGORY = "SigmaxTest"
+    DESCRIPTION = "Test-only M5-03 deterministic Flow Euler execution and native parity probe."
+    FUNCTION = "execute"
+    OUTPUT_NODE = True
+    RETURN_TYPES: tuple[()] = ()
+    RETURN_NAMES: tuple[()] = ()
+
+    @classmethod
+    def INPUT_TYPES(cls) -> dict[str, dict[str, tuple[object, ...]]]:
+        return {"required": {}}
+
+    def execute(self) -> dict[str, object]:
+        before_call = torch.nn.Module.__call__
+        before_schedulers = tuple(comfy_samplers.SCHEDULER_NAMES)
+        before_rng = torch.random.get_rng_state().clone()
+        sigmas = torch.tensor((1.0, 0.75, 0.25, 0.0), dtype=torch.float32, device="cpu")
+        sigma_values = tuple(float(item) for item in sigmas.tolist())
+        initial = torch.tensor([_INITIAL], dtype=torch.float32, device="cpu")
+        operations = TorchFlowEulerStateOperations(torch_module=torch)
+
+        native_full_calls: list[float] = []
+        native_full = sample_euler(
+            _flow_model(native_full_calls),
+            initial.clone(),
+            sigmas,
+            disable=True,
+            s_churn=0.0,
+        )
+        full_calls: list[float] = []
+        full = execute_deterministic_flow_euler(
+            spec=_flow_euler_spec(begin_index=0, transitions=3),
+            sigmas=sigma_values,
+            state=initial.clone(),
+            evaluator=ComfyDenoisedFlowVelocityEvaluator(model=_flow_model(full_calls)),
+            operations=operations,
+        )
+
+        prefix_calls: list[float] = []
+        partial_initial = sample_euler(
+            _flow_model(prefix_calls),
+            initial.clone(),
+            sigmas[:2],
+            disable=True,
+            s_churn=0.0,
+        )
+        native_partial_calls: list[float] = []
+        native_partial = sample_euler(
+            _flow_model(native_partial_calls),
+            partial_initial.clone(),
+            sigmas[1:],
+            disable=True,
+            s_churn=0.0,
+        )
+        partial_calls: list[float] = []
+        partial = execute_deterministic_flow_euler(
+            spec=_flow_euler_spec(begin_index=1, transitions=2),
+            sigmas=sigma_values,
+            state=partial_initial.clone(),
+            evaluator=ComfyDenoisedFlowVelocityEvaluator(model=_flow_model(partial_calls)),
+            operations=operations,
+        )
+
+        resume_calls: list[float] = []
+        resume_spec = _flow_euler_spec(begin_index=0, transitions=3)
+        interrupted = execute_deterministic_flow_euler(
+            spec=resume_spec,
+            sigmas=sigma_values,
+            state=initial.clone(),
+            evaluator=ComfyDenoisedFlowVelocityEvaluator(model=_flow_model(resume_calls)),
+            operations=operations,
+            transition_limit=1,
+        )
+        resumed = execute_deterministic_flow_euler(
+            spec=resume_spec,
+            sigmas=sigma_values,
+            state=interrupted.state,
+            evaluator=ComfyDenoisedFlowVelocityEvaluator(model=_flow_model(resume_calls)),
+            operations=operations,
+            snapshot=interrupted.snapshot,
+        )
+
+        invalid_terminal_calls: list[float] = []
+        try:
+            execute_deterministic_flow_euler(
+                spec=_flow_euler_spec(begin_index=0, transitions=2),
+                sigmas=(1.0, 0.5, 0.25),
+                state=initial.clone(),
+                evaluator=ComfyDenoisedFlowVelocityEvaluator(
+                    model=_flow_model(invalid_terminal_calls)
+                ),
+                operations=operations,
+            )
+        except ScheduleContractError:
+            pass
+        else:
+            raise RuntimeError("M5-03 invalid terminal schedule was accepted")
+
+        resume_mismatch_calls: list[float] = []
+        try:
+            execute_deterministic_flow_euler(
+                spec=resume_spec,
+                sigmas=sigma_values,
+                state=interrupted.state + 1.0,
+                evaluator=ComfyDenoisedFlowVelocityEvaluator(
+                    model=_flow_model(resume_mismatch_calls)
+                ),
+                operations=operations,
+                snapshot=interrupted.snapshot,
+            )
+        except ScheduleContractError:
+            pass
+        else:
+            raise RuntimeError("M5-03 mismatched resume state was accepted")
+
+        full_error = (full.state - native_full).abs()
+        partial_error = (partial.state - native_partial).abs()
+        all_calls = (
+            native_full_calls
+            + full_calls
+            + prefix_calls
+            + native_partial_calls
+            + partial_calls
+            + resume_calls
+        )
+        global_mutation = (
+            torch.nn.Module.__call__ is not before_call
+            or tuple(comfy_samplers.SCHEDULER_NAMES) != before_schedulers
+            or not torch.equal(torch.random.get_rng_state(), before_rng)
+        )
+        trace = {
+            "full_effective_model_evaluations": full.snapshot.effective_model_evaluations,
+            "full_effective_transitions": full.snapshot.effective_transitions,
+            "full_result_fingerprint": full.result_fingerprint,
+            "full_scheduler_indexes": [step.scheduler_index for step in full.snapshot.history],
+            "global_mutation": global_mutation,
+            "model_weights_used": False,
+            "negative_rejections": {
+                "invalid_terminal_evaluator_calls": len(invalid_terminal_calls),
+                "resume_mismatch_evaluator_calls": len(resume_mismatch_calls),
+            },
+            "native_full_max_abs_error_hex": float(full_error.max().item()).hex(),
+            "native_full_mean_abs_error_hex": float(full_error.mean().item()).hex(),
+            "native_partial_max_abs_error_hex": float(partial_error.max().item()).hex(),
+            "partial_effective_model_evaluations": partial.snapshot.effective_model_evaluations,
+            "partial_effective_transitions": partial.snapshot.effective_transitions,
+            "partial_result_fingerprint": partial.result_fingerprint,
+            "partial_scheduler_indexes": [
+                step.scheduler_index for step in partial.snapshot.history
+            ],
+            "python_version": platform.python_version(),
+            "resumed_matches_full": (
+                torch.equal(resumed.state, full.state) and resumed.snapshot == full.snapshot
+            ),
+            "resumed_result_fingerprint": resumed.result_fingerprint,
+            "sampler_execution_performed": True,
+            "schedule_fingerprint": full.schedule_fingerprint,
+            "schema": "sigmax.flow-euler-host-contract/1",
+            "status": "succeeded",
+            "terminal_model_evaluations": sum(value == 0.0 for value in all_calls),
+            "torch_version": str(torch.__version__),
+        }
+        return {
+            "ui": {
+                _FLOW_EULER_UI_KEY: [
                     json.dumps(
                         trace,
                         allow_nan=False,
@@ -1743,6 +1980,7 @@ NODE_CLASS_MAPPINGS = {
     "SigmaxTest.Krea2ConditioningProbe": Krea2ConditioningProbe,
     "SigmaxTest.Krea2ConditioningSource": Krea2ConditioningSource,
     "SigmaxTest.NativeEulerProbe": NativeEulerProbe,
+    "SigmaxTest.FlowEulerContractProbe": FlowEulerContractProbe,
     "SigmaxTest.SamplerStateContractProbe": SamplerStateContractProbe,
     "SigmaxTest.ScheduleAlgebraProbe": ScheduleAlgebraProbe,
     "SigmaxTest.ZImageScheduleProbe": ZImageScheduleProbe,
@@ -1768,6 +2006,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "SigmaxTest.Krea2ConditioningProbe": "Sigmax Test — Krea 2 Conditioning Probe",
     "SigmaxTest.Krea2ConditioningSource": "Sigmax Test — Krea 2 Conditioning Source",
     "SigmaxTest.NativeEulerProbe": "Sigmax Test — Native Euler Probe",
+    "SigmaxTest.FlowEulerContractProbe": "Sigmax Test — Flow Euler Contract Probe",
     "SigmaxTest.SamplerStateContractProbe": "Sigmax Test — Sampler State Contract Probe",
     "SigmaxTest.ScheduleAlgebraProbe": "Sigmax Test — Schedule Algebra Probe",
     "SigmaxTest.ZImageScheduleProbe": "Sigmax Test — Z-Image Schedule Probe",

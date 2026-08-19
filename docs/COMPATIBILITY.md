@@ -75,12 +75,19 @@ The current `dev` branch also contains the dependency-free M5-02 sampler-state s
 contract. It represents a sampler capability declaration, scheduler/begin cursor, solver order,
 timestep spacing, random-source ownership, optional per-token time, requested/effective counts,
 immutable step history, lifecycle status, and exact execution-receipt binding. This is a pure
-portable contract and has no production ComfyUI node. It does not execute a sampler, persist
-latents or RNG state, connect host interruption, or prove that a workflow can actually resume.
+portable contract and has no production ComfyUI node.
+
+The unreleased M5-03 development layer adds an internal, experimental deterministic Flow Euler
+controller over that state contract. Its pure core executes an explicit descending unit-flow
+schedule, supports full, partial, interrupt-boundary, and in-process resume paths, and keeps the
+Torch/Comfy denoised adapter optional. Model-free CPU probes match ComfyUI native Euler exactly on
+the qualified 0.30.0 and 0.32.0 host roles. This does not add a public `SAMPLER` node, replace the
+native `euler` workflow path, persist tensor data, or claim real-model quality or acceleration.
 
 ## Usage boundary
 
-- Sigmax produces sigma schedules; it does not replace the numerical sampler.
+- Public Sigmax nodes produce sigma schedules; they do not replace the workflow's numerical
+  sampler. The internal experimental M5-03 controller is not registered as a public node.
 - External Sigmax sigmas must not be shifted or scheduled a second time.
 - Krea 2 `Auto` selection fails closed when evidence identifies the family but not RAW versus
   Turbo.
@@ -128,9 +135,9 @@ latents or RNG state, connect host interruption, or prove that a workflow can ac
 - General real-model GPU compatibility or image-quality parity. One bounded local Krea 2 H4
   execution/provenance lane completed, but blind scoring and threshold review were explicitly
   waived, so it does not support a quality or profile-promotion claim.
-- Executed stochastic sampling, persisted latent/RNG state, host interruption plumbing, or actual
-  resume behavior; the pure M5-02 schema-v1 state/evidence representation alone does not establish
-  those runtime capabilities.
+- Executed stochastic sampling, persisted latent/RNG state, host interruption plumbing, or
+  cross-process resume. M5-03 proves only deterministic in-process boundary resume over supplied
+  state in a model-free host fixture.
 - General partial-denoise execution or advanced model-patch compatibility beyond the explicitly
   documented MiniMax H3 host workflow.
 - Automatic compatibility with unlisted model families.

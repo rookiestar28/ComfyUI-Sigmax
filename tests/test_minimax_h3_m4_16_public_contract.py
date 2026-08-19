@@ -59,7 +59,7 @@ def test_turbo_selector_is_explicit_and_base_remains_default() -> None:
     inputs = MiniMaxH3SigmaScheduler.INPUT_TYPES()
     assert tuple(inputs["required"]) == ("variant", "steps", "start_step", "end_step")
     optional = inputs["optional"]
-    assert tuple(optional) == ("turbo", "recipe_id")
+    assert tuple(optional) == ("turbo", "recipe_id", "scheduler", "model")
     assert optional["turbo"][0] == MINIMAX_H3_TURBO_RECIPE_CHOICES
     assert optional["recipe_id"][0] == MINIMAX_H3_TURBO_RECIPE_CHOICES
     turbo_options = cast(dict[str, object], optional["turbo"][1])

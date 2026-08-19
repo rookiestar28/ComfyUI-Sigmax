@@ -150,6 +150,19 @@ def _host_object_info() -> dict[str, object]:
                     "h3.fl2va.lightx2v-turbo-4-v1.0-768p",
                     "h3.ref2va.lightx2v-turbo-4-v0.1-544p",
                 ),
+                "scheduler": _combo(
+                    "h3_endpoint",
+                    "simple",
+                    "sgm_uniform",
+                    "karras",
+                    "exponential",
+                    "ddim_uniform",
+                    "beta",
+                    "normal",
+                    "linear_quadratic",
+                    "kl_optimal",
+                ),
+                "model": _type("MODEL"),
             },
             outputs=("SIGMAS", "STRING"),
         ),
@@ -238,6 +251,20 @@ def test_schema_preflight_accepts_experimental_turbo_optional_input() -> None:
     )
     schedule_inputs = cast(dict[str, object], workflow.prompt["7"]["inputs"])
     schedule_inputs["turbo"] = "h3.fl2va.lightx2v-turbo-4-v0.1-544p"
+    report = validate_minimax_h3_host_workflow_schema(workflow, _host_object_info())
+    assert report.compatible is True
+    assert report.issues == ()
+
+
+def test_schema_preflight_accepts_native_scheduler_model_connection() -> None:
+    workflow = build_minimax_h3_host_workflow(
+        MiniMaxH3WorkflowSpec(
+            variant="H3 Base FL2VA",
+            prompt="native scheduler schema preflight",
+            scheduler="simple",
+        )
+    )
+    assert cast(dict[str, object], workflow.prompt["7"]["inputs"])["model"] == ["5", 0]
     report = validate_minimax_h3_host_workflow_schema(workflow, _host_object_info())
     assert report.compatible is True
     assert report.issues == ()

@@ -58,6 +58,10 @@ from comfyui_sigmax.profiles import KREA2_TURBO_SCHEMA  # noqa: E402
 from comfyui_sigmax.profiles.minimax_h3 import (  # noqa: E402
     MINIMAX_H3_COMFYUI_REVISION,
 )
+from comfyui_sigmax.profiles.minimax_h3_scheduler_contract import (  # noqa: E402
+    MINIMAX_H3_DEFAULT_SCHEDULER,
+    MINIMAX_H3_SCHEDULER_CHOICES,
+)
 from comfyui_sigmax.workflows import (  # noqa: E402
     WorkflowValidationLane,
     load_canonical_workflow_fixtures,
@@ -92,6 +96,7 @@ _BUNDLE_KEY: Final = "sigmax_execution_bundle"
 _H3_TRACE_KEY: Final = "sigmax_native_euler_trace"
 _MINIMAX_H3_OUTPUT_NODE_ID: Final = "5"
 _MINIMAX_H3_TRACE_KEY: Final = "sigmax_minimax_h3_h2"
+_MINIMAX_H3_NATIVE_TRACE_KEY: Final = "sigmax_minimax_h3_native_h2"
 _MINIMAX_H3_HOST_VERSION: Final = "0.30.0"
 _MINIMAX_H3_MIN_LATEST_HOST_VERSION: Final = (0, 31, 0)
 _MINIMAX_H3_LATEST_LANE: Final = "latest"
@@ -242,6 +247,40 @@ def build_minimax_h3_h2_api_prompt(variant: str) -> dict[str, object]:
             "inputs": {
                 "schedule_info": ["1", 1],
                 "sigmas": ["1", 0],
+            },
+        },
+    }
+
+
+def build_minimax_h3_native_h2_api_prompt(variant: str) -> dict[str, object]:
+    """Return a weight-free native-simple scheduler -> differential probe graph."""
+
+    if variant not in {"H3 Base FL2VA", "H3 Base Ref2VA"}:
+        raise ScheduleContractError("MiniMax H3 native H2 variant must be selected explicitly")
+    return {
+        "1": {
+            "class_type": "SigmaxTest.MiniMaxH3NativeModelSource",
+            "inputs": {},
+        },
+        "2": {
+            "class_type": "Sigmax.MiniMaxH3SigmaScheduler",
+            "inputs": {
+                "end_step": -1,
+                "model": ["1", 0],
+                "scheduler": "simple",
+                "steps": 4,
+                "start_step": 0,
+                "variant": variant,
+            },
+        },
+        _MINIMAX_H3_OUTPUT_NODE_ID: {
+            "class_type": "SigmaxTest.MiniMaxH3NativeScheduleProbe",
+            "inputs": {
+                "model": ["1", 0],
+                "schedule_info": ["2", 1],
+                "scheduler": "simple",
+                "sigmas": ["2", 0],
+                "steps": 4,
             },
         },
     }
@@ -1901,6 +1940,92 @@ def verify_minimax_h3_h2_history(
     }
 
 
+def verify_minimax_h3_native_h2_history(
+    history: object,
+    *,
+    prompt_id: str,
+    variant: str,
+) -> dict[str, object]:
+    """Verify native-simple output against the same host ModelSamplingAV reference."""
+
+    if variant not in {"H3 Base FL2VA", "H3 Base Ref2VA"}:
+        raise ScheduleContractError("MiniMax H3 native H2 variant must be selected explicitly")
+    root = _object(history, label="MiniMax H3 native H2 history")
+    entry = _object(root.get(prompt_id), label="MiniMax H3 native H2 history entry")
+    status = _object(entry.get("status"), label="MiniMax H3 native H2 prompt status")
+    if status.get("completed") is not True or status.get("status_str") != "success":
+        raise ScheduleContractError("MiniMax H3 native H2 does not prove completed success")
+    prompt_tuple = _array(entry.get("prompt"), label="MiniMax H3 native H2 retained prompt")
+    if len(prompt_tuple) < 3 or prompt_tuple[2] != build_minimax_h3_native_h2_api_prompt(variant):
+        raise ScheduleContractError("MiniMax H3 native H2 graph or variant is stale")
+    outputs = _object(entry.get("outputs"), label="MiniMax H3 native H2 outputs")
+    output = _object(
+        outputs.get(_MINIMAX_H3_OUTPUT_NODE_ID),
+        label="MiniMax H3 native H2 probe output",
+    )
+    traces = _array(
+        output.get(_MINIMAX_H3_NATIVE_TRACE_KEY),
+        label="MiniMax H3 native H2 trace",
+    )
+    if len(traces) != 1 or not isinstance(traces[0], str) or len(traces[0]) > 100_000:
+        raise ScheduleContractError("MiniMax H3 native H2 trace is malformed")
+    trace = _object(
+        _decode_json(traces[0].encode(), label="MiniMax H3 native H2 trace"),
+        label="MiniMax H3 native H2 decoded trace",
+    )
+    canonical = json.dumps(
+        trace,
+        allow_nan=False,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    )
+    sigmas = _array(trace.get("sigmas"), label="MiniMax H3 native H2 sigmas")
+    reference = _array(trace.get("reference_sigmas"), label="MiniMax H3 native H2 reference sigmas")
+    info = _object(trace.get("schedule_info"), label="MiniMax H3 native H2 metadata")
+    scheduler = _object(info.get("scheduler"), label="MiniMax H3 native scheduler metadata")
+    counts = _object(scheduler.get("counts"), label="MiniMax H3 native counts")
+    terminal = _object(scheduler.get("terminal"), label="MiniMax H3 native terminal")
+    fingerprints = _object(scheduler.get("fingerprints"), label="MiniMax H3 native fingerprints")
+    expected_task = "fl2va" if variant == "H3 Base FL2VA" else "ref2va"
+    if (
+        traces[0] != canonical
+        or trace.get("scheduler") != "simple"
+        or trace.get("steps") != 4
+        or trace.get("max_abs_error") != 0.0
+        or len(sigmas) != 5
+        or sigmas != reference
+        or any(
+            not isinstance(value, int | float)
+            or isinstance(value, bool)
+            or not math.isfinite(value)
+            for value in sigmas
+        )
+        or scheduler.get("owner") != "comfyui_native"
+        or scheduler.get("scheduler") != "simple"
+        or scheduler.get("model_task") != expected_task
+        or counts.get("requested_steps") != 4
+        or counts.get("actual_sigmas") != 5
+        or counts.get("actual_transitions") != 4
+        or terminal.get("included") is not True
+        or terminal.get("value") != 0.0
+        or not isinstance(fingerprints.get("contract"), str)
+        or not isinstance(fingerprints.get("output"), str)
+    ):
+        raise ScheduleContractError("MiniMax H3 native H2 execution evidence drifted")
+    return {
+        "actual_sigmas": len(sigmas),
+        "actual_transitions": len(sigmas) - 1,
+        "contract_fingerprint": fingerprints["contract"],
+        "max_abs_error": 0.0,
+        "model_task": expected_task,
+        "output_fingerprint": fingerprints["output"],
+        "scheduler": "simple",
+        "status": "succeeded",
+        "variant": variant,
+    }
+
+
 def verify_native_euler_h3_history(
     history: object,
     *,
@@ -2632,6 +2757,40 @@ def _verify_minimax_h3_live_host_version(system_stats: object, *, expected_versi
     return cast(str, reported)
 
 
+def _verify_minimax_h3_scheduler_live_schema(object_info: object) -> dict[str, object]:
+    """Verify the exact additive M4-17 selector without retaining unrelated host schema."""
+
+    root = _object(object_info, label="MiniMax H3 live object_info")
+    node = _object(
+        root.get("Sigmax.MiniMaxH3SigmaScheduler"),
+        label="MiniMax H3 live scheduler node",
+    )
+    input_root = _object(node.get("input"), label="MiniMax H3 live scheduler inputs")
+    optional = _object(input_root.get("optional"), label="MiniMax H3 live optional inputs")
+    if tuple(optional) != ("turbo", "recipe_id", "scheduler", "model"):
+        raise ScheduleContractError("MiniMax H3 live optional input order drifted")
+    scheduler = _array(optional.get("scheduler"), label="MiniMax H3 live scheduler COMBO")
+    if len(scheduler) != 2:
+        raise ScheduleContractError("MiniMax H3 live scheduler COMBO is malformed")
+    choices = _array(scheduler[0], label="MiniMax H3 live scheduler choices")
+    options = _object(scheduler[1], label="MiniMax H3 live scheduler options")
+    model = _array(optional.get("model"), label="MiniMax H3 live MODEL input")
+    if (
+        tuple(choices) != MINIMAX_H3_SCHEDULER_CHOICES
+        or options.get("default") != MINIMAX_H3_DEFAULT_SCHEDULER
+        or model != ["MODEL"]
+    ):
+        raise ScheduleContractError("MiniMax H3 live scheduler/model schema drifted")
+    tooltip = options.get("tooltip")
+    if not isinstance(tooltip, str) or "Experimental" not in tooltip:
+        raise ScheduleContractError("MiniMax H3 live native scheduler warning is missing")
+    return {
+        "model_type": "MODEL",
+        "scheduler_choices": list(choices),
+        "scheduler_default": options["default"],
+    }
+
+
 def _stage_extension(run_path: Path) -> Path:
     custom_node = run_path / "base" / "custom_nodes" / "ComfyUI-Sigmax"
     custom_node.mkdir(parents=True)
@@ -3338,7 +3497,7 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
     succeeded = False
     evidence: dict[str, object] = {
         "schema": "sigmax.minimax-h3-host-e2e/1",
-        "lanes": ["H1", "H2_MINIMAX_H3_M6_05"],
+        "lanes": ["H1", "H2_MINIMAX_H3_M6_05", "H2_MINIMAX_H3_M4_17_NATIVE_SIMPLE"],
         "validation_lane": validation_lane.value,
         "host": {
             "id": "comfyui",
@@ -3351,7 +3510,7 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
         "port": port,
         "import_probe": import_probe,
         "attempt_transitions": {},
-        "model_execution": "not_loaded",
+        "model_execution": "weight_free_model_sampling_fixture",
     }
     try:
         creationflags = (
@@ -3390,7 +3549,11 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
                 raise ScheduleContractError(
                     "MiniMax H3 host is missing one or more Sigmax node IDs"
                 )
-            test_ids = {"SigmaxTest.MiniMaxH3ScheduleProbe"}
+            test_ids = {
+                "SigmaxTest.MiniMaxH3ScheduleProbe",
+                "SigmaxTest.MiniMaxH3NativeModelSource",
+                "SigmaxTest.MiniMaxH3NativeScheduleProbe",
+            }
             if not test_ids <= set(object_info):
                 raise ScheduleContractError("MiniMax H3 H2 test probe is not registered")
             live_report = validate_live_workflow_fixtures(
@@ -3401,10 +3564,12 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
             )
             if not live_report.gate_passed or live_report.issues:
                 raise ScheduleContractError("MiniMax H3 host H1 live schema validation failed")
+            scheduler_schema = _verify_minimax_h3_scheduler_live_schema(object_info)
             h1_summary = {
                 "expected_node_ids": list(expected_ids),
                 "live_schema_fingerprint": live_report.report_fingerprint,
                 "registered": True,
+                "scheduler_schema": scheduler_schema,
                 "status": "succeeded",
             }
             repeat_info = _object(
@@ -3420,6 +3585,7 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
                 host_revision=host_revision,
                 lane=validation_lane,
             )
+            repeat_scheduler_schema = _verify_minimax_h3_scheduler_live_schema(repeat_info)
             repeat_h1_summary = {
                 "expected_node_ids": list(expected_ids),
                 "live_schema_fingerprint": repeat_report.report_fingerprint,
@@ -3428,6 +3594,7 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
                     and repeat_report.gate_passed
                     and not repeat_report.issues
                 ),
+                "scheduler_schema": repeat_scheduler_schema,
                 "status": "succeeded",
             }
             attempts = cast(dict[str, object], evidence["attempt_transitions"])
@@ -3474,8 +3641,49 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
                 )
                 h2_results.append(summary)
                 attempts[f"h2_minimax_h3.{variant_id}"] = transition
+            native_h2_results: list[dict[str, object]] = []
+            for variant, variant_id in (
+                ("H3 Base FL2VA", "fl2va"),
+                ("H3 Base Ref2VA", "ref2va"),
+            ):
+
+                def submit_native_h2(
+                    ordinal: int,
+                    *,
+                    selected_variant: str = variant,
+                    selected_id: str = variant_id,
+                ) -> tuple[str, dict[str, object]]:
+                    return _submit_successful_prompt(
+                        base_url=base_url,
+                        client_id=(
+                            f"sigmax-m4-17-minimax-h3-native-{selected_id}-attempt-{ordinal}"
+                        ),
+                        prompt=build_minimax_h3_native_h2_api_prompt(selected_variant),
+                        execution_timeout=args.execution_timeout,
+                    )
+
+                def verify_native_h2(
+                    history: object,
+                    prompt_id: str,
+                    *,
+                    selected_variant: str = variant,
+                ) -> dict[str, object]:
+                    return verify_minimax_h3_native_h2_history(
+                        history,
+                        prompt_id=prompt_id,
+                        variant=selected_variant,
+                    )
+
+                native_summary, native_transition = execute_verified_host_repeat(
+                    lane="H2_MINIMAX_H3_M4_17_NATIVE_SIMPLE",
+                    submit=submit_native_h2,
+                    verify=verify_native_h2,
+                )
+                native_h2_results.append(native_summary)
+                attempts[f"h2_minimax_h3_native_simple.{variant_id}"] = native_transition
             evidence["h1"] = h1_summary
             evidence["h2_minimax_h3"] = h2_results
+            evidence["h2_minimax_h3_native_simple"] = native_h2_results
             succeeded = True
     finally:
         if process is not None:

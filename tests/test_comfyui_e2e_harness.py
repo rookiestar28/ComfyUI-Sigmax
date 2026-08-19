@@ -1069,6 +1069,160 @@ def test_minimax_h3_h2_history_verifier_rejects_variant_mismatch() -> None:
         )
 
 
+@pytest.mark.parametrize("variant", ["H3 Base FL2VA", "H3 Base Ref2VA"])
+def test_minimax_h3_native_h2_prompt_connects_weight_free_model_and_probe(
+    variant: str,
+) -> None:
+    assert _harness().build_minimax_h3_native_h2_api_prompt(variant) == {
+        "1": {"class_type": "SigmaxTest.MiniMaxH3NativeModelSource", "inputs": {}},
+        "2": {
+            "class_type": "Sigmax.MiniMaxH3SigmaScheduler",
+            "inputs": {
+                "end_step": -1,
+                "model": ["1", 0],
+                "scheduler": "simple",
+                "steps": 4,
+                "start_step": 0,
+                "variant": variant,
+            },
+        },
+        "5": {
+            "class_type": "SigmaxTest.MiniMaxH3NativeScheduleProbe",
+            "inputs": {
+                "model": ["1", 0],
+                "schedule_info": ["2", 1],
+                "scheduler": "simple",
+                "sigmas": ["2", 0],
+                "steps": 4,
+            },
+        },
+    }
+
+
+def _minimax_h3_native_h2_history(*, variant: str = "H3 Base FL2VA") -> dict[str, Any]:
+    task = "fl2va" if variant == "H3 Base FL2VA" else "ref2va"
+    sigmas = [0.8, 0.6, 0.4, 0.2, 0.0]
+    trace = {
+        "max_abs_error": 0.0,
+        "reference_sigmas": sigmas,
+        "schedule_info": {
+            "lane": "m4_17_comfyui_native_scheduler",
+            "scheduler": {
+                "counts": {
+                    "actual_sigmas": 5,
+                    "actual_transitions": 4,
+                    "raw_sigmas": 5,
+                    "requested_steps": 4,
+                },
+                "fingerprints": {
+                    "contract": "sha256:" + "a" * 64,
+                    "output": "sha256:" + "b" * 64,
+                },
+                "model_task": task,
+                "owner": "comfyui_native",
+                "scheduler": "simple",
+                "terminal": {"included": True, "value": 0.0},
+            },
+        },
+        "scheduler": "simple",
+        "sigmas": sigmas,
+        "steps": 4,
+    }
+    prompt = _harness().build_minimax_h3_native_h2_api_prompt(variant)
+    return {
+        "prompt-minimax-h3-native": {
+            "prompt": [0, "prompt-minimax-h3-native", prompt, {}, ["5"]],
+            "outputs": {
+                "5": {
+                    "sigmax_minimax_h3_native_h2": [
+                        json.dumps(
+                            trace,
+                            allow_nan=False,
+                            ensure_ascii=False,
+                            separators=(",", ":"),
+                            sort_keys=True,
+                        )
+                    ]
+                }
+            },
+            "status": {"completed": True, "status_str": "success", "messages": []},
+        }
+    }
+
+
+@pytest.mark.parametrize("variant", ["H3 Base FL2VA", "H3 Base Ref2VA"])
+def test_minimax_h3_native_h2_history_verifier_requires_exact_differential(
+    variant: str,
+) -> None:
+    task = "fl2va" if variant == "H3 Base FL2VA" else "ref2va"
+    assert _harness().verify_minimax_h3_native_h2_history(
+        _minimax_h3_native_h2_history(variant=variant),
+        prompt_id="prompt-minimax-h3-native",
+        variant=variant,
+    ) == {
+        "actual_sigmas": 5,
+        "actual_transitions": 4,
+        "contract_fingerprint": "sha256:" + "a" * 64,
+        "max_abs_error": 0.0,
+        "model_task": task,
+        "output_fingerprint": "sha256:" + "b" * 64,
+        "scheduler": "simple",
+        "status": "succeeded",
+        "variant": variant,
+    }
+
+
+def test_minimax_h3_native_h2_history_rejects_nonzero_difference() -> None:
+    history = _minimax_h3_native_h2_history()
+    output = history["prompt-minimax-h3-native"]["outputs"]["5"]
+    trace = json.loads(output["sigmax_minimax_h3_native_h2"][0])
+    trace["max_abs_error"] = 0.01
+    output["sigmax_minimax_h3_native_h2"][0] = json.dumps(
+        trace, ensure_ascii=False, separators=(",", ":"), sort_keys=True
+    )
+    with pytest.raises(ScheduleContractError, match="drifted"):
+        _harness().verify_minimax_h3_native_h2_history(
+            history,
+            prompt_id="prompt-minimax-h3-native",
+            variant="H3 Base FL2VA",
+        )
+
+
+def test_minimax_h3_live_schema_requires_exact_ten_scheduler_addition() -> None:
+    choices = [
+        "h3_endpoint",
+        "simple",
+        "sgm_uniform",
+        "karras",
+        "exponential",
+        "ddim_uniform",
+        "beta",
+        "normal",
+        "linear_quadratic",
+        "kl_optimal",
+    ]
+    object_info = {
+        "Sigmax.MiniMaxH3SigmaScheduler": {
+            "input": {
+                "optional": {
+                    "turbo": [["disabled"], {"default": "disabled"}],
+                    "recipe_id": [["disabled"], {"default": "disabled"}],
+                    "scheduler": [
+                        choices,
+                        {"default": "h3_endpoint", "tooltip": "Experimental native choices"},
+                    ],
+                    "model": ["MODEL"],
+                }
+            }
+        }
+    }
+    assert _harness()._verify_minimax_h3_scheduler_live_schema(object_info) == {
+        "model_type": "MODEL",
+        "scheduler_choices": choices,
+        "scheduler_default": "h3_endpoint",
+    }
+
+
 def test_h3_partial_schedule_prompt_targets_explicit_runtime_rejection() -> None:
     prompt = _harness().build_native_euler_h3_partial_rejection_prompt()
 
@@ -1109,6 +1263,8 @@ def test_h3_test_pack_is_namespaced_staged_only_and_not_public(
     assert staged.read_bytes() == H3_TEST_PACK.read_bytes()
     assert "SigmaxTest.NativeEulerProbe" not in builtin_node_registry().class_mappings()
     assert "SigmaxTest.MiniMaxH3ScheduleProbe" not in builtin_node_registry().class_mappings()
+    assert "SigmaxTest.MiniMaxH3NativeModelSource" not in builtin_node_registry().class_mappings()
+    assert "SigmaxTest.MiniMaxH3NativeScheduleProbe" not in builtin_node_registry().class_mappings()
 
 
 def test_h3_test_pack_exports_minimax_h3_schedule_probe() -> None:
@@ -1130,6 +1286,8 @@ def test_h3_test_pack_exports_minimax_h3_schedule_probe() -> None:
         if isinstance(key, ast.Constant) and isinstance(key.value, str)
     }
     assert "SigmaxTest.MiniMaxH3ScheduleProbe" in exported_ids
+    assert "SigmaxTest.MiniMaxH3NativeModelSource" in exported_ids
+    assert "SigmaxTest.MiniMaxH3NativeScheduleProbe" in exported_ids
 
 
 def _native_euler_h3_history(*, case: dict[str, Any] | None = None) -> dict[str, Any]:

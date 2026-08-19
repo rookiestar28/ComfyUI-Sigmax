@@ -5,11 +5,14 @@ from __future__ import annotations
 import json
 import math
 from itertools import pairwise
+from types import SimpleNamespace
 from typing import Any
 
 import torch  # type: ignore[import-not-found]
+from comfy import samplers as comfy_samplers  # type: ignore[import-not-found]
+from comfy import supported_models
 from comfy.k_diffusion.sampling import sample_euler  # type: ignore[import-not-found]
-from comfy.model_sampling import CONST  # type: ignore[import-not-found]
+from comfy.model_sampling import CONST, ModelSamplingAV  # type: ignore[import-not-found]
 
 _INITIAL = (0.75, -0.5, 1.25, -1.0)
 _BIASES = (0.0625, -0.125, 0.1875, -0.25)
@@ -27,6 +30,7 @@ _ANIMA_UI_KEY = "sigmax_anima_schedule"
 _WAN_UI_KEY = "sigmax_wan_schedule"
 _LTX_UI_KEY = "sigmax_ltx_schedule"
 _MINIMAX_H3_H2_UI_KEY = "sigmax_minimax_h3_h2"
+_MINIMAX_H3_NATIVE_H2_UI_KEY = "sigmax_minimax_h3_native_h2"
 _KREA2_LORA_UI_KEY = "sigmax_krea2_lora_experimental"
 _KREA2_CONDITIONING_UI_KEY = "sigmax_krea2_conditioning"
 _KREA2_CONDITIONING_FEATURES = 12 * 2560
@@ -237,6 +241,138 @@ class MiniMaxH3ScheduleProbe:
         return {
             "ui": {
                 _MINIMAX_H3_H2_UI_KEY: [
+                    json.dumps(
+                        trace,
+                        allow_nan=False,
+                        ensure_ascii=False,
+                        separators=(",", ":"),
+                        sort_keys=True,
+                    )
+                ]
+            }
+        }
+
+
+class _SyntheticMiniMaxH3Model:
+    """Weight-free MODEL seam around the real host's H3 sampling implementation."""
+
+    def __init__(self) -> None:
+        config = supported_models.MiniMaxH3({"image_model": "minimax_h3"})
+
+        class SyntheticSampling(ModelSamplingAV, CONST):  # type: ignore[misc]
+            pass
+
+        self._sampling = SyntheticSampling(config)
+        self.model = SimpleNamespace(model_config=config)
+        self.model_options = {
+            "transformer_options": {
+                "minimax_h3_sigma_shift_video": 12.0,
+                "minimax_h3_sigma_shift_audio": 3.0,
+            }
+        }
+
+    def get_model_object(self, name: str) -> object:
+        if name != "model_sampling":
+            raise KeyError(name)
+        return self._sampling
+
+
+class MiniMaxH3NativeModelSource:
+    """Return a bounded weight-free H3 MODEL for native scheduler H2."""
+
+    CATEGORY = "SigmaxTest"
+    DESCRIPTION = "Test-only MiniMax H3 ModelSamplingAV source; loads no weights."
+    FUNCTION = "build"
+    RETURN_TYPES = ("MODEL",)
+    RETURN_NAMES = ("model",)
+
+    @classmethod
+    def INPUT_TYPES(cls) -> dict[str, dict[str, tuple[object, ...]]]:
+        return {"required": {}}
+
+    def build(self) -> tuple[object]:
+        return (_SyntheticMiniMaxH3Model(),)
+
+
+class MiniMaxH3NativeScheduleProbe:
+    """Compare delegated sigmas to BasicScheduler's host-owned calculation."""
+
+    CATEGORY = "SigmaxTest"
+    DESCRIPTION = "Test-only MiniMax H3 native scheduler differential probe."
+    FUNCTION = "execute"
+    OUTPUT_NODE = True
+    RETURN_TYPES: tuple[()] = ()
+    RETURN_NAMES: tuple[()] = ()
+
+    @classmethod
+    def INPUT_TYPES(cls) -> dict[str, dict[str, tuple[object, ...]]]:
+        return {
+            "required": {
+                "model": ("MODEL",),
+                "sigmas": ("SIGMAS",),
+                "schedule_info": ("STRING", {"default": "", "multiline": True}),
+                "scheduler": (("simple",), {"default": "simple"}),
+                "steps": ("INT", {"default": 4, "min": 1, "max": 1000}),
+            }
+        }
+
+    def execute(
+        self,
+        model: object,
+        sigmas: object,
+        schedule_info: object,
+        scheduler: object,
+        steps: object,
+    ) -> dict[str, object]:
+        if scheduler != "simple" or steps != 4:
+            raise ValueError("MiniMax H3 native H2 supports the bounded simple/4 case")
+        if not isinstance(sigmas, torch.Tensor) or sigmas.dtype != torch.float32:
+            raise ValueError("MiniMax H3 native H2 sigmas must be float32")
+        if not isinstance(schedule_info, str):
+            raise ValueError("MiniMax H3 native H2 schedule information must be text")
+        getter = getattr(model, "get_model_object", None)
+        if not callable(getter):
+            raise ValueError("MiniMax H3 native H2 MODEL lacks model sampling")
+        reference = comfy_samplers.calculate_sigmas(
+            getter("model_sampling"), scheduler, steps
+        ).cpu()
+        reference = reference[-(steps + 1) :]
+        if sigmas.device.type != "cpu" or reference.dtype != torch.float32:
+            raise ValueError("MiniMax H3 native H2 must remain on the float32 CPU boundary")
+        if sigmas.shape != reference.shape or not torch.equal(sigmas, reference):
+            raise ValueError("MiniMax H3 native schedule differs from BasicScheduler semantics")
+        info = json.loads(schedule_info)
+        if not isinstance(info, dict):
+            raise ValueError("MiniMax H3 native H2 metadata must be an object")
+        native = info.get("scheduler")
+        if (
+            info.get("lane") != "m4_17_comfyui_native_scheduler"
+            or info.get("mode") != "experimental_comfyui_native_scheduler"
+            or not isinstance(native, dict)
+            or native.get("owner") != "comfyui_native"
+            or native.get("scheduler") != scheduler
+            or native.get("model_task") not in {"fl2va", "ref2va"}
+            or not isinstance(native.get("host"), dict)
+            or native["host"].get("observed_version") not in {"0.30.0", "0.32.0"}
+            or not isinstance(native.get("counts"), dict)
+            or native["counts"].get("requested_steps") != steps
+            or native["counts"].get("actual_sigmas") != len(sigmas)
+            or native["counts"].get("actual_transitions") != len(sigmas) - 1
+            or not isinstance(native.get("terminal"), dict)
+            or native["terminal"].get("value") != 0.0
+        ):
+            raise ValueError("MiniMax H3 native scheduler metadata drifted")
+        trace = {
+            "max_abs_error": 0.0,
+            "reference_sigmas": _vector(reference),
+            "schedule_info": info,
+            "scheduler": scheduler,
+            "sigmas": _vector(sigmas),
+            "steps": steps,
+        }
+        return {
+            "ui": {
+                _MINIMAX_H3_NATIVE_H2_UI_KEY: [
                     json.dumps(
                         trace,
                         allow_nan=False,
@@ -1212,6 +1348,8 @@ NODE_CLASS_MAPPINGS = {
     "SigmaxTest.LTXScheduleProbe": LTXScheduleProbe,
     # IMPORTANT: keep H3 probes exported; defining the class alone does not register it in ComfyUI.
     "SigmaxTest.MiniMaxH3ScheduleProbe": MiniMaxH3ScheduleProbe,
+    "SigmaxTest.MiniMaxH3NativeModelSource": MiniMaxH3NativeModelSource,
+    "SigmaxTest.MiniMaxH3NativeScheduleProbe": MiniMaxH3NativeScheduleProbe,
     "SigmaxTest.CheckpointEvidenceProbe": CheckpointEvidenceProbe,
     "SigmaxTest.Krea2LoraExperimentalProbe": Krea2LoraExperimentalProbe,
     "SigmaxTest.Krea2ConditioningProbe": Krea2ConditioningProbe,
@@ -1231,6 +1369,8 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "SigmaxTest.WanScheduleProbe": "Sigmax Test — Wan Schedule Probe",
     "SigmaxTest.LTXScheduleProbe": "Sigmax Test — LTX Schedule Probe",
     "SigmaxTest.MiniMaxH3ScheduleProbe": "Sigmax Test — MiniMax H3 Schedule Probe",
+    "SigmaxTest.MiniMaxH3NativeModelSource": "Sigmax Test — MiniMax H3 Native Model Source",
+    "SigmaxTest.MiniMaxH3NativeScheduleProbe": "Sigmax Test — MiniMax H3 Native Schedule Probe",
     "SigmaxTest.CheckpointEvidenceProbe": "Sigmax Test — Checkpoint Evidence Probe",
     "SigmaxTest.Krea2LoraExperimentalProbe": "Sigmax Test — Krea 2 LoRA Experimental Probe",
     "SigmaxTest.Krea2ConditioningProbe": "Sigmax Test — Krea 2 Conditioning Probe",

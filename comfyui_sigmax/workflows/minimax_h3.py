@@ -18,6 +18,10 @@ from comfyui_sigmax.profiles.minimax_h3 import (
     MINIMAX_H3_MAX_STEPS,
     MINIMAX_H3_VIDEO_SHIFT,
 )
+from comfyui_sigmax.profiles.minimax_h3_scheduler_contract import (
+    MINIMAX_H3_DEFAULT_SCHEDULER,
+    MINIMAX_H3_SCHEDULER_CHOICES,
+)
 from comfyui_sigmax.profiles.minimax_h3_turbo import get_minimax_h3_turbo_profile
 from comfyui_sigmax.profiles.minimax_h3_turbo_public import require_minimax_h3_turbo_artifact
 
@@ -149,6 +153,7 @@ class MiniMaxH3WorkflowSpec:
     last_frame: str | None = None
     reference_images: tuple[str, ...] = ()
     model_files: MiniMaxH3ModelFiles | None = None
+    scheduler: str = MINIMAX_H3_DEFAULT_SCHEDULER
     recipe_id: str | None = None
     artifact_id: str | None = None
     artifact_sha256: str | None = None
@@ -196,6 +201,12 @@ class MiniMaxH3WorkflowSpec:
         if self.sampler_name != MINIMAX_H3_SAMPLER:
             raise ScheduleContractError(
                 "MiniMax H3 host workflow currently exposes the pinned euler sampler only"
+            )
+        if self.scheduler not in MINIMAX_H3_SCHEDULER_CHOICES:
+            raise ScheduleContractError("MiniMax H3 workflow scheduler is unsupported")
+        if self.scheduler in {"beta", "kl_optimal"} and self.steps < 2:
+            raise ScheduleContractError(
+                f"MiniMax H3 workflow scheduler {self.scheduler} requires at least two steps"
             )
         if self.ref_image_size not in {"match", "max"}:
             raise ScheduleContractError("MiniMax H3 ref_image_size must be match or max")
@@ -279,6 +290,7 @@ class MiniMaxH3HostWorkflowContract:
     audio_ownership: str
     external_video_shift_applied_once: bool
     external_audio_schedule: bool
+    scheduler: str = MINIMAX_H3_DEFAULT_SCHEDULER
     recipe_id: str | None = None
 
 
@@ -386,6 +398,9 @@ def build_minimax_h3_host_workflow(spec: MiniMaxH3WorkflowSpec) -> MiniMaxH3Host
     }
     if spec.recipe_id is not None:
         scheduler_inputs["recipe_id"] = spec.recipe_id
+    if spec.scheduler != MINIMAX_H3_DEFAULT_SCHEDULER:
+        scheduler_inputs["scheduler"] = spec.scheduler
+        scheduler_inputs["model"] = _link(_SHIFT_ID)
     prompt[_SCHEDULE_ID] = _node("Sigmax.MiniMaxH3SigmaScheduler", scheduler_inputs)
     prompt[_SAMPLER_ID] = _node("KSamplerSelect", {"sampler_name": spec.sampler_name})
     prompt[_GUIDER_ID] = _node(
@@ -423,10 +438,15 @@ def build_minimax_h3_host_workflow(spec: MiniMaxH3WorkflowSpec) -> MiniMaxH3Host
         schedule_node_id=_SCHEDULE_ID,
         native_shift_node_id=_SHIFT_ID,
         sampler_node_id=_SAMPLE_ID,
-        schedule_ownership="external_video_only",
+        schedule_ownership=(
+            "external_video_only"
+            if spec.scheduler == MINIMAX_H3_DEFAULT_SCHEDULER
+            else "comfyui_native_model_sampling"
+        ),
         audio_ownership="model_native",
         external_video_shift_applied_once=True,
         external_audio_schedule=False,
+        scheduler=spec.scheduler,
         recipe_id=spec.recipe_id,
     )
     # next_node_id is intentionally calculated above so malformed future dynamic-input changes

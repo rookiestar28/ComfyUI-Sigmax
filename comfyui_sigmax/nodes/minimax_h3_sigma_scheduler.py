@@ -7,6 +7,10 @@ import json
 from dataclasses import dataclass, replace
 from typing import Final
 
+from comfyui_sigmax.adapters.minimax_h3_scheduler import (
+    MiniMaxH3NativeScheduleResult,
+    build_minimax_h3_native_schedule,
+)
 from comfyui_sigmax.core import (
     ScheduleContractError,
     SigmaDomain,
@@ -25,6 +29,12 @@ from comfyui_sigmax.profiles.minimax_h3 import (
     MiniMaxH3Profile,
     MiniMaxH3Variant,
     build_minimax_h3_schedule,
+)
+from comfyui_sigmax.profiles.minimax_h3_scheduler_contract import (
+    MINIMAX_H3_DEFAULT_SCHEDULER,
+    MINIMAX_H3_SCHEDULER_CHOICES,
+    MiniMaxH3SchedulerContractError,
+    MiniMaxH3SchedulerReasonCode,
 )
 from comfyui_sigmax.profiles.minimax_h3_turbo import (
     MiniMaxH3TurboError,
@@ -422,11 +432,77 @@ def bind_minimax_h3_sigma_output_info(
     return _canonical_info(info)
 
 
+def _native_node_result(
+    *,
+    compatibility_result: MiniMaxH3SigmaNodeResult,
+    native_result: MiniMaxH3NativeScheduleResult,
+) -> MiniMaxH3SigmaNodeResult:
+    """Replace only the schedule-owned fields of accepted Base/Turbo metadata."""
+
+    validation = native_result.validation
+    info = json.loads(compatibility_result.schedule_info_json)
+    if not isinstance(info, dict):
+        raise ScheduleContractError("MiniMax H3 compatibility metadata is malformed")
+    info["lane"] = "m4_17_comfyui_native_scheduler"
+    info["mode"] = "experimental_comfyui_native_scheduler"
+    info["scheduler"] = native_result.projection()
+    info["license_boundary"] = "delegation_only_installed_comfyui_gpl"
+    counts = info.get("counts")
+    if not isinstance(counts, dict):
+        raise ScheduleContractError("MiniMax H3 count metadata is malformed")
+    counts.update(
+        {
+            "effective_grid_points": len(validation.output_sigmas),
+            "effective_model_evaluations": validation.output_transitions,
+            "effective_steps": validation.output_transitions,
+            "effective_transitions": validation.output_transitions,
+            "native_raw_sigmas": validation.raw_count,
+            "native_basic_scheduler_sigmas": validation.basic_scheduler_count,
+        }
+    )
+    slicing = info.get("slicing")
+    if not isinstance(slicing, dict):
+        raise ScheduleContractError("MiniMax H3 slicing metadata is malformed")
+    slicing.update(
+        {
+            "available_steps": validation.basic_scheduler_count - 1,
+            "end_step": validation.end_step,
+            "output_steps": validation.output_transitions,
+            "start_step": validation.start_step,
+        }
+    )
+    shift = info.get("shift")
+    if not isinstance(shift, dict):
+        raise ScheduleContractError("MiniMax H3 shift metadata is malformed")
+    shift["transform_order"] = "model_native_shift_then_host_scheduler_then_basic_tail"
+    fingerprints = info.get("fingerprints")
+    if not isinstance(fingerprints, dict):
+        raise ScheduleContractError("MiniMax H3 fingerprint metadata is malformed")
+    fingerprints["complete"] = sigma_output_fingerprint(
+        validation.basic_scheduler_sigmas,
+        domain=SigmaDomain.UNIT_FLOW,
+    )
+    fingerprints["output"] = validation.output_fingerprint
+    warnings = info.get("warnings")
+    if not isinstance(warnings, list):
+        raise ScheduleContractError("MiniMax H3 warning metadata is malformed")
+    warnings.append("experimental_comfyui_native_scheduler_not_official_minimax")
+    return MiniMaxH3SigmaNodeResult(
+        variant=compatibility_result.variant,
+        domain=SigmaDomain.UNIT_FLOW,
+        sigmas=validation.output_sigmas,
+        schedule_info_json=_canonical_info(info),
+        recipe_id=compatibility_result.recipe_id,
+    )
+
+
 class MiniMaxH3SigmaScheduler:
-    """Construct explicit MiniMax H3 Base video sigmas without model patching."""
+    """Construct pure or delegated MiniMax H3 video sigmas without model patching."""
 
     DESCRIPTION = (
         "Builds an explicit MiniMax H3 Base FL2VA or Ref2VA video sigma schedule; "
+        "the scheduler selector includes experimental ComfyUI-native alternatives that require "
+        "an already-shifted H3 MODEL; "
         "the optional turbo selector is Experimental — community, unsupported and only "
         "constructs sigmas. Load any matching community LoRA separately in the host workflow."
     )
@@ -482,6 +558,18 @@ class MiniMaxH3SigmaScheduler:
                         ),
                     },
                 ),
+                "scheduler": (
+                    MINIMAX_H3_SCHEDULER_CHOICES,
+                    {
+                        "default": MINIMAX_H3_DEFAULT_SCHEDULER,
+                        "tooltip": (
+                            "Scheduler (Experimental for native choices). h3_endpoint preserves "
+                            "the Sigmax compatibility schedule; all other choices require an "
+                            "already-shifted MiniMax H3 MODEL and delegate to ComfyUI."
+                        ),
+                    },
+                ),
+                "model": ("MODEL",),
             },
         }
 
@@ -493,8 +581,10 @@ class MiniMaxH3SigmaScheduler:
         end_step: object,
         recipe_id: object = None,
         turbo: object = None,
+        scheduler: object = MINIMAX_H3_DEFAULT_SCHEDULER,
+        model: object = None,
     ) -> tuple[object, str]:
-        result = build_minimax_h3_sigma_schedule(
+        compatibility_result = build_minimax_h3_sigma_schedule(
             variant=variant,
             steps=steps,
             start_step=start_step,
@@ -502,6 +592,27 @@ class MiniMaxH3SigmaScheduler:
             recipe_id=recipe_id,
             turbo=turbo,
         )
+        if scheduler == MINIMAX_H3_DEFAULT_SCHEDULER:
+            if model is not None:
+                raise MiniMaxH3SchedulerContractError(
+                    MiniMaxH3SchedulerReasonCode.MODEL_FORBIDDEN,
+                    "MODEL input is inert and therefore forbidden for h3_endpoint",
+                )
+            result = compatibility_result
+        else:
+            native_result = build_minimax_h3_native_schedule(
+                model=model,
+                scheduler=scheduler,
+                variant=compatibility_result.variant,
+                steps=steps,
+                start_step=start_step,
+                end_step=end_step,
+                recipe_id=compatibility_result.recipe_id,
+            )
+            result = _native_node_result(
+                compatibility_result=compatibility_result,
+                native_result=native_result,
+            )
         try:
             torch = importlib.import_module("torch")
             tensor = torch.__dict__["tensor"]
@@ -520,6 +631,7 @@ class MiniMaxH3SigmaScheduler:
 
 
 __all__ = [
+    "MINIMAX_H3_SCHEDULER_CHOICES",
     "MINIMAX_H3_SIGMA_NODE_ID",
     "MINIMAX_H3_SIGMA_NODE_SCHEMA_ID",
     "MINIMAX_H3_TURBO_RECIPE_CHOICES",

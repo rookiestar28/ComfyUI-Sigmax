@@ -88,7 +88,7 @@ Connect an image scheduler's `SIGMAS` directly to a custom-sampling path that ac
 
 | Model | Node | Recommended settings |
 | --- | --- | --- |
-| MiniMax H3 Base | `Sigmax.MiniMaxH3SigmaScheduler` | Select `H3 Base FL2VA` or `H3 Base Ref2VA`; `steps=20` produces 21 endpoint-inclusive video sigmas and 20 transitions; audio remapping remains model-owned |
+| MiniMax H3 Base | `Sigmax.MiniMaxH3SigmaScheduler` | Select FL2VA or Ref2VA explicitly. `h3_endpoint` remains the default pure schedule; nine additional ComfyUI-native scheduler choices are experimental and require the already-shifted H3 `MODEL` |
 | Wan 2.1 T2V / I2V | `Sigmax.WanSigmaScheduler` | Select generation, task, source, and resolution explicitly; official T2V 50 steps (`5.0`), official I2V 480P/720P 40 steps (`3.0`/`5.0`) |
 | Wan 2.1 FLF2V / VACE | `Sigmax.WanSigmaScheduler` | Official-native FLF2V 14B 720P uses 50 steps (`16.0`); VACE 1.3B/14B use 50 steps (`16.0`) |
 | Wan 2.2 TI2V 5B / A14B T2V/I2V | `Sigmax.WanSigmaScheduler` | Native or Diffusers-reference source lanes; TI2V 5B uses `5.0`; A14B T2V/I2V use `12.0`/`5.0` with caller-owned boundary metadata |
@@ -98,7 +98,7 @@ Connect an image scheduler's `SIGMAS` directly to a custom-sampling path that ac
 
 Connect a video scheduler's `SIGMAS` directly to the matching custom-sampling path. Do not add another scheduler or time shift, and inspect `schedule_info` for the selected generation mode, stage, resolution, boundary ownership, and warnings.
 
-- **MiniMax H3:** Select Base FL2VA or Ref2VA explicitly. Public `steps` count executed transitions (`sigma_count = steps + 1`). Sigmax owns the Diffusers endpoint-inclusive external video schedule with shift `12.0`; ComfyUI's upstream `MiniMaxH3SigmaShift` supplies matching video/audio values `12.0`/`3.0` for model-owned audio mapping. Keep the two nodes aligned, and do not add `BasicScheduler` or another time shift. Native `simple` remains a separate lane. The model-free workflow helper can preflight a graph against ComfyUI `/object_info` without loading weights or submitting a prompt. Context-IR, Regenerate-2K, sparse attention, weights, samplers, hosted/API behavior, and quality claims are excluded.
+- **MiniMax H3:** Select Base FL2VA or Ref2VA explicitly. The `scheduler` menu contains `h3_endpoint`, `simple`, `sgm_uniform`, `karras`, `exponential`, `ddim_uniform`, `beta`, `normal`, `linear_quadratic`, and `kl_optimal`. The default `h3_endpoint` path is the existing pure endpoint-inclusive schedule and needs no `MODEL`. Every other choice is an experimental ComfyUI-native lane: connect the `MODEL` after upstream `MiniMaxH3SigmaShift`, keep its video/audio shifts aligned with the selected Base or Turbo recipe, and do not add a separate `BasicScheduler` or another time shift. These native choices are functional compatibility options, not MiniMax recommendations or quality, speed, memory, NFE, or acceleration claims. The complete nine-scheduler/two-host validation matrix is tracked separately.
 - **Wan 2.1/2.2 and Wan Animate 2:** Select generation, task, source, and resolution explicitly. Wan 2.1 I2V requires `480P` or `720P`; Wan 2.2 A14B boundaries are caller-owned metadata and never route experts. FLF2V, VACE, S2V, Animate, and Wan Animate 2 rows are official-native schedule math only; Diffusers-reference lanes describe scheduler construction only. Execution, weights, expert routing, conditioning, and video-quality parity are excluded.
 - **LTX:** Select LTXV 0.9.8, LTX-2 19B, or LTX-2.3 22B plus generation/stage explicitly. Dev mode derives one token-count shift; distilled modes use immutable publisher vectors. Sigmax does not load video weights, run encoders, or claim video-quality parity.
 
@@ -134,7 +134,7 @@ Sigmax, stop ComfyUI, remove or move only the `comfyui-sigmax` directory, and re
 | `Auto` rejects Krea 2 | Select `Turbo` or `RAW` explicitly. Do not rely on the filename alone. |
 | The schedule appears shifted twice | Remove the second scheduler or model time shift; use the Sigmax `SIGMAS` output once. |
 | Krea 2 RAW dimensions differ | Check the requested and effective dimensions in `schedule_info`; RAW dimensions are normalized to the supported grid. |
-| MiniMax H3 video/audio shifts disagree | With the Sigmax H3 schedule, keep the upstream `MiniMaxH3SigmaShift` at `12.0`/`3.0`; do not add `BasicScheduler` or change only the model-side values. |
+| MiniMax H3 native scheduler asks for `MODEL` or reports a shift mismatch | Connect the H3 model after `MiniMaxH3SigmaShift`. Use `12.0`/`3.0` for Base or the exact selected experimental Turbo recipe values; do not add a separate `BasicScheduler` or second shift. |
 | A newer ComfyUI release behaves differently | Review the supported boundary in [Compatibility](docs/COMPATIBILITY.md). |
 
 ComfyUI custom nodes execute Python code inside the host process. Install reviewed sources only.

@@ -63,7 +63,7 @@ def _qualified(
     )
 
 
-def test_m6_14_is_a_non_public_pure_seam() -> None:
+def test_m6_14_remains_the_pure_contract_behind_the_m4_17_public_seam() -> None:
     module = _module()
     assert module.MINIMAX_H3_SCHEDULER_CONTRACT_SCHEMA_ID == (
         "sigmax.minimax-h3-ten-scheduler-contract/1"
@@ -72,15 +72,15 @@ def test_m6_14_is_a_non_public_pure_seam() -> None:
     assert module.MINIMAX_H3_SCHEDULER_RESULT_SCHEMA_ID == ("sigmax.minimax-h3-scheduler-result/1")
     schema = MiniMaxH3SigmaScheduler.INPUT_TYPES()
     assert "scheduler" not in schema["required"]
-    assert "scheduler" not in schema["optional"]
+    assert schema["optional"]["scheduler"][0] == module.MINIMAX_H3_SCHEDULER_CHOICES
     assert "model" not in schema["required"]
-    assert "model" not in schema["optional"]
+    assert schema["optional"]["model"] == ("MODEL",)
 
     script = """
 import sys
 import comfyui_sigmax
-assert 'comfyui_sigmax.profiles.minimax_h3_scheduler_contract' not in sys.modules
 assert not any(name == 'comfy' or name.startswith('comfy.') for name in sys.modules)
+assert 'torch' not in sys.modules
 """
     completed = subprocess.run(
         [sys.executable, "-I", "-c", script],

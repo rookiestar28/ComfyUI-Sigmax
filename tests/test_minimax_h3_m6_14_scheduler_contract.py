@@ -25,6 +25,7 @@ def _model(
     family_id: str = "minimax_h3",
     task: str = "fl2va",
     is_model_sampling_av: bool = True,
+    sampling_api: str = "model_sampling_av_v032",
     video_shift: float = 12.0,
     audio_shift: float = 3.0,
     already_shifted: bool = True,
@@ -33,6 +34,7 @@ def _model(
         family_id=family_id,
         task=task,
         is_model_sampling_av=is_model_sampling_av,
+        sampling_api=module.MiniMaxH3SamplingAPI(sampling_api),
         video_shift=video_shift,
         audio_shift=audio_shift,
         already_shifted=already_shifted,
@@ -162,6 +164,41 @@ def test_m6_14_supported_host_source_matrix_is_exact_and_gpl_scoped() -> None:
         assert host.source_locators == tuple(sorted(set(host.source_locators)))
         assert "comfy/samplers.py" in host.source_locators
         assert "comfy/model_sampling.py" in host.source_locators
+    assert [host.sampling_api.value for host in hosts] == [
+        "model_sampling_discrete_flow_h3_v030",
+        "model_sampling_av_v032",
+    ]
+
+
+def test_m6_14_sampling_api_must_match_the_exact_host_revision() -> None:
+    module = _module()
+    legacy_host, current_host = module.MINIMAX_H3_SCHEDULER_HOSTS
+    legacy = module.qualify_minimax_h3_scheduler_request(
+        scheduler="simple",
+        steps=4,
+        model_sampling=_model(
+            module,
+            is_model_sampling_av=False,
+            sampling_api="model_sampling_discrete_flow_h3_v030",
+        ),
+        host_revision=legacy_host.revision,
+        available_handlers=module.MINIMAX_H3_NATIVE_SCHEDULERS,
+    )
+    assert legacy.sampling_api.value == "model_sampling_discrete_flow_h3_v030"
+
+    with pytest.raises(module.MiniMaxH3SchedulerContractError) as mismatch:
+        module.qualify_minimax_h3_scheduler_request(
+            scheduler="simple",
+            steps=4,
+            model_sampling=_model(
+                module,
+                is_model_sampling_av=False,
+                sampling_api="model_sampling_discrete_flow_h3_v030",
+            ),
+            host_revision=current_host.revision,
+            available_handlers=module.MINIMAX_H3_NATIVE_SCHEDULERS,
+        )
+    assert mismatch.value.reason_code is module.MiniMaxH3SchedulerReasonCode.MODEL_SAMPLING_NOT_AV
 
 
 @pytest.mark.parametrize("scheduler", ("beta", "kl_optimal"))
@@ -447,6 +484,10 @@ def test_m6_14_manifest_serialization_and_fingerprint_are_deterministic_and_publ
         "native_model_required": True,
         "native_recipe_task_match": True,
         "native_requires_already_shifted": True,
+        "native_sampling_apis": [
+            "model_sampling_discrete_flow_h3_v030",
+            "model_sampling_av_v032",
+        ],
         "pure_model_forbidden": True,
     }
     assert first["result_identity"]["result_schema_id"] == (

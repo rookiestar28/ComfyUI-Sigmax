@@ -30,13 +30,21 @@ class _MiniMaxH3Config:
     unet_config: ClassVar[dict[str, str]] = {"image_model": "minimax_h3"}
 
 
-class _ModelSamplingAV:
+class _ModelSamplingDiscreteFlow:
+    pass
+
+
+class _ModelSamplingAV(_ModelSamplingDiscreteFlow):
     pass
 
 
 class _Sampling(_ModelSamplingAV):
     shift = 12.0
     audio_shift = 3.0
+
+
+class _LegacySampling(_ModelSamplingDiscreteFlow):
+    shift = 12.0
 
 
 class _FakeTensor:
@@ -110,6 +118,21 @@ def _install_host_modules(
     return calls
 
 
+def _install_legacy_host_modules(
+    monkeypatch: pytest.MonkeyPatch,
+) -> list[tuple[object, str, int]]:
+    calls = _install_host_modules(monkeypatch, version="0.30.0")
+    original_import = importlib.import_module
+
+    def import_module(name: str) -> object:
+        if name == "comfy.model_sampling":
+            return SimpleNamespace(ModelSamplingDiscreteFlow=_ModelSamplingDiscreteFlow)
+        return original_import(name)
+
+    monkeypatch.setattr(importlib, "import_module", import_module)
+    return calls
+
+
 def _reason(exc: pytest.ExceptionInfo[MiniMaxH3SchedulerContractError]) -> str:
     return exc.value.reason_code.value
 
@@ -178,6 +201,70 @@ def test_native_adapter_delegates_once_and_mirrors_basic_scheduler_tail(
     assert result.validation.start_step == 1
     assert result.validation.end_step == 3
     assert result.validation.output_fingerprint.startswith("sha256:")
+
+
+def test_legacy_host_accepts_discrete_flow_only_with_complete_shift_markers(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls = _install_legacy_host_modules(monkeypatch)
+    model = _Model(
+        sampling=_LegacySampling(),
+        transformer_options={
+            "minimax_h3_sigma_shift_video": 12.0,
+            "minimax_h3_sigma_shift_audio": 3.0,
+        },
+    )
+
+    result = adapter.build_minimax_h3_native_schedule(
+        model=model,
+        scheduler="simple",
+        variant="H3 Base FL2VA",
+        steps=4,
+        start_step=0,
+        end_step=-1,
+        recipe_id=None,
+    )
+
+    assert calls == [(model._sampling, "simple", 4)]
+    assert result.host_version == "0.30.0"
+    assert result.sampling_api == "model_sampling_discrete_flow_h3_v030"
+    assert result.projection()["sampling_api"] == result.sampling_api
+
+
+def test_sampling_api_is_qualified_per_host_and_legacy_markers_are_mandatory(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _install_legacy_host_modules(monkeypatch)
+    with pytest.raises(MiniMaxH3SchedulerContractError) as missing_markers:
+        adapter.build_minimax_h3_native_schedule(
+            model=_Model(sampling=_LegacySampling()),
+            scheduler="simple",
+            variant="H3 Base FL2VA",
+            steps=4,
+            start_step=0,
+            end_step=-1,
+            recipe_id=None,
+        )
+    assert _reason(missing_markers) == "SHIFT_MISMATCH"
+
+    _install_host_modules(monkeypatch, version="0.32.0")
+    with pytest.raises(MiniMaxH3SchedulerContractError) as wrong_api:
+        adapter.build_minimax_h3_native_schedule(
+            model=_Model(
+                sampling=_LegacySampling(),
+                transformer_options={
+                    "minimax_h3_sigma_shift_video": 12.0,
+                    "minimax_h3_sigma_shift_audio": 3.0,
+                },
+            ),
+            scheduler="simple",
+            variant="H3 Base FL2VA",
+            steps=4,
+            start_step=0,
+            end_step=-1,
+            recipe_id=None,
+        )
+    assert _reason(wrong_api) == "MODEL_SAMPLING_NOT_AV"
 
 
 @pytest.mark.parametrize(

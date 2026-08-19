@@ -77,6 +77,13 @@ class MiniMaxH3SchedulerHostRole(str, Enum):
     SUPPLIED_CURRENT = "supplied_current"
 
 
+class MiniMaxH3SamplingAPI(str, Enum):
+    """Exact H3 sampling seam provided by one qualified ComfyUI host."""
+
+    DISCRETE_FLOW_H3_V030 = "model_sampling_discrete_flow_h3_v030"
+    AUDIO_VIDEO_V032 = "model_sampling_av_v032"
+
+
 class MiniMaxH3SchedulerReasonCode(str, Enum):
     """Stable fail-closed qualification and result-validation reasons."""
 
@@ -194,6 +201,7 @@ class MiniMaxH3SchedulerHost:
     version: str
     revision: str
     role: MiniMaxH3SchedulerHostRole
+    sampling_api: MiniMaxH3SamplingAPI
     scheduler_names: tuple[str, ...]
     license_id: str
     delegation_only: bool
@@ -206,6 +214,8 @@ class MiniMaxH3SchedulerHost:
             raise ScheduleContractError("host revision must be a pinned lowercase commit")
         if not isinstance(self.role, MiniMaxH3SchedulerHostRole):
             raise ScheduleContractError("host role is unsupported")
+        if not isinstance(self.sampling_api, MiniMaxH3SamplingAPI):
+            raise ScheduleContractError("host sampling API is unsupported")
         if self.scheduler_names != MINIMAX_H3_NATIVE_SCHEDULERS:
             raise ScheduleContractError("host scheduler_names must match the native choice set")
         if self.license_id != "GPL-3.0-only":
@@ -256,6 +266,7 @@ class MiniMaxH3ModelSamplingEvidence:
     family_id: str
     task: str
     is_model_sampling_av: bool
+    sampling_api: MiniMaxH3SamplingAPI
     video_shift: float
     audio_shift: float
     already_shifted: bool
@@ -266,6 +277,8 @@ class MiniMaxH3ModelSamplingEvidence:
             raise ScheduleContractError("model task must be fl2va or ref2va")
         if not isinstance(self.is_model_sampling_av, bool):
             raise ScheduleContractError("is_model_sampling_av must be boolean")
+        if not isinstance(self.sampling_api, MiniMaxH3SamplingAPI):
+            raise ScheduleContractError("sampling_api must identify a qualified H3 sampling seam")
         if not isinstance(self.already_shifted, bool):
             raise ScheduleContractError("already_shifted must be boolean")
         for field_name, value in (
@@ -297,6 +310,7 @@ class MiniMaxH3QualifiedSchedulerRequest:
     model_family_id: str | None
     model_task: str | None
     host_revision: str | None
+    sampling_api: MiniMaxH3SamplingAPI | None
     contract_fingerprint: str
 
 
@@ -310,6 +324,7 @@ class MiniMaxH3SchedulerResultValidation:
     contract_fingerprint: str
     host_revision: str | None
     model_task: str | None
+    sampling_api: MiniMaxH3SamplingAPI | None
     recipe_id: str | None
     raw_count: int
     basic_scheduler_count: int
@@ -449,6 +464,9 @@ def _schedule_fingerprint(
         "host_revision": qualification.host_revision,
         "model_family_id": qualification.model_family_id,
         "model_task": qualification.model_task,
+        "sampling_api": (
+            None if qualification.sampling_api is None else qualification.sampling_api.value
+        ),
         "normalized_values": [float_to_ieee_hex(value, precision) for value in normalized],
         "output_transitions": len(output) - 1,
         "output_values": [float_to_ieee_hex(value, precision) for value in output],
@@ -522,6 +540,7 @@ def qualify_minimax_h3_scheduler_request(
             model_family_id=None,
             model_task=None,
             host_revision=None,
+            sampling_api=None,
             contract_fingerprint=minimax_h3_scheduler_contract_fingerprint(),
         )
 
@@ -551,10 +570,14 @@ def qualify_minimax_h3_scheduler_request(
             MiniMaxH3SchedulerReasonCode.MODEL_TASK_MISMATCH,
             "MODEL task differs from the selected Turbo recipe",
         )
-    if not model_sampling.is_model_sampling_av:
+    expected_is_av = host.sampling_api is MiniMaxH3SamplingAPI.AUDIO_VIDEO_V032
+    if (
+        model_sampling.sampling_api is not host.sampling_api
+        or model_sampling.is_model_sampling_av is not expected_is_av
+    ):
         raise MiniMaxH3SchedulerContractError(
             MiniMaxH3SchedulerReasonCode.MODEL_SAMPLING_NOT_AV,
-            "MODEL sampling evidence is not ModelSamplingAV-compatible",
+            "MODEL sampling evidence is incompatible with the exact host H3 sampling API",
         )
     if not model_sampling.already_shifted:
         raise MiniMaxH3SchedulerContractError(
@@ -581,6 +604,7 @@ def qualify_minimax_h3_scheduler_request(
         model_family_id=model_sampling.family_id,
         model_task=model_sampling.task,
         host_revision=host.revision,
+        sampling_api=model_sampling.sampling_api,
         contract_fingerprint=minimax_h3_scheduler_contract_fingerprint(),
     )
 
@@ -640,21 +664,29 @@ def _validate_qualification(
             qualification.host_revision is not None
             or qualification.model_family_id is not None
             or qualification.model_task is not None
+            or qualification.sampling_api is not None
         ):
             _result_error(
                 MiniMaxH3SchedulerReasonCode.RESULT_QUALIFICATION_INVALID,
                 "pure qualification cannot carry host or MODEL identity",
             )
-    elif (
-        qualification.host_revision not in _HOSTS_BY_REVISION
-        or qualification.model_family_id != "minimax_h3"
-        or qualification.model_task not in {"fl2va", "ref2va"}
-        or (recipe is not None and qualification.model_task != recipe.task)
-    ):
-        _result_error(
-            MiniMaxH3SchedulerReasonCode.RESULT_QUALIFICATION_INVALID,
-            "native qualification lacks exact host or MODEL task identity",
+    else:
+        host = (
+            _HOSTS_BY_REVISION.get(qualification.host_revision)
+            if isinstance(qualification.host_revision, str)
+            else None
         )
+        if (
+            host is None
+            or qualification.sampling_api is not host.sampling_api
+            or qualification.model_family_id != "minimax_h3"
+            or qualification.model_task not in {"fl2va", "ref2va"}
+            or (recipe is not None and qualification.model_task != recipe.task)
+        ):
+            _result_error(
+                MiniMaxH3SchedulerReasonCode.RESULT_QUALIFICATION_INVALID,
+                "native qualification lacks exact host, sampling API, or MODEL task identity",
+            )
     return qualification, contract
 
 
@@ -698,6 +730,7 @@ def validate_minimax_h3_scheduler_result(
         contract_fingerprint=selected.contract_fingerprint,
         host_revision=selected.host_revision,
         model_task=selected.model_task,
+        sampling_api=selected.sampling_api,
         recipe_id=selected.recipe_id,
         raw_count=len(raw_values),
         basic_scheduler_count=len(normalized),
@@ -733,6 +766,7 @@ def serialize_minimax_h3_scheduler_contract() -> dict[str, object]:
             "native_model_required": True,
             "native_recipe_task_match": True,
             "native_requires_already_shifted": True,
+            "native_sampling_apis": [item.value for item in MiniMaxH3SamplingAPI],
             "pure_model_forbidden": True,
         },
         "pure_source": {
@@ -758,6 +792,7 @@ def serialize_minimax_h3_scheduler_contract() -> dict[str, object]:
                 "host_revision",
                 "model_family_id",
                 "model_task",
+                "sampling_api",
                 "normalized_values",
                 "output_transitions",
                 "output_values",
@@ -798,6 +833,7 @@ def serialize_minimax_h3_scheduler_contract() -> dict[str, object]:
                 "license_id": host.license_id,
                 "revision": host.revision,
                 "role": host.role.value,
+                "sampling_api": host.sampling_api.value,
                 "scheduler_names": list(host.scheduler_names),
                 "source_locators": list(host.source_locators),
                 "url": host.url,
@@ -870,21 +906,31 @@ MINIMAX_H3_SCHEDULER_HOSTS: Final = (
         version="0.30.0",
         revision="14b05228cef127ce529bc0c08660770d4af3e9a8",  # pragma: allowlist secret
         role=MiniMaxH3SchedulerHostRole.ACCEPTED_KNOWN_GOOD,
+        sampling_api=MiniMaxH3SamplingAPI.DISCRETE_FLOW_H3_V030,
         scheduler_names=MINIMAX_H3_NATIVE_SCHEDULERS,
         license_id="GPL-3.0-only",
         delegation_only=True,
         url="https://github.com/Comfy-Org/ComfyUI",
-        source_locators=("comfy/model_sampling.py", "comfy/samplers.py"),
+        source_locators=(
+            "comfy/model_sampling.py",
+            "comfy/samplers.py",
+            "comfy_extras/nodes_minimax_h3.py",
+        ),
     ),
     MiniMaxH3SchedulerHost(
         version="0.32.0",
         revision="b323a345bbbfb2f3a95b5b73b68eb7919a26515e",  # pragma: allowlist secret
         role=MiniMaxH3SchedulerHostRole.SUPPLIED_CURRENT,
+        sampling_api=MiniMaxH3SamplingAPI.AUDIO_VIDEO_V032,
         scheduler_names=MINIMAX_H3_NATIVE_SCHEDULERS,
         license_id="GPL-3.0-only",
         delegation_only=True,
         url="https://github.com/Comfy-Org/ComfyUI",
-        source_locators=("comfy/model_sampling.py", "comfy/samplers.py"),
+        source_locators=(
+            "comfy/model_sampling.py",
+            "comfy/samplers.py",
+            "comfy_extras/nodes_minimax_h3.py",
+        ),
     ),
 )
 _HOSTS_BY_REVISION: Final = {host.revision: host for host in MINIMAX_H3_SCHEDULER_HOSTS}
@@ -916,6 +962,7 @@ __all__ = [
     "MiniMaxH3ModelPolicy",
     "MiniMaxH3ModelSamplingEvidence",
     "MiniMaxH3QualifiedSchedulerRequest",
+    "MiniMaxH3SamplingAPI",
     "MiniMaxH3SchedulerContract",
     "MiniMaxH3SchedulerContractError",
     "MiniMaxH3SchedulerHost",

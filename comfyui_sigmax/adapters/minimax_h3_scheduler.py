@@ -17,6 +17,7 @@ from comfyui_sigmax.profiles.minimax_h3_scheduler_contract import (
     MINIMAX_H3_NATIVE_SCHEDULERS,
     MINIMAX_H3_SCHEDULER_HOSTS,
     MiniMaxH3ModelSamplingEvidence,
+    MiniMaxH3SamplingAPI,
     MiniMaxH3SchedulerContractError,
     MiniMaxH3SchedulerReasonCode,
     MiniMaxH3SchedulerResultValidation,
@@ -31,6 +32,7 @@ _AUDIO_SHIFT_MARKER: Final = "minimax_h3_sigma_shift_audio"
 MINIMAX_H3_HOST_REVISION_BY_VERSION: Final = {
     host.version: host.revision for host in MINIMAX_H3_SCHEDULER_HOSTS
 }
+_MINIMAX_H3_HOST_BY_VERSION: Final = {host.version: host for host in MINIMAX_H3_SCHEDULER_HOSTS}
 
 
 def _error(reason: MiniMaxH3SchedulerReasonCode, message: str) -> MiniMaxH3SchedulerContractError:
@@ -75,6 +77,7 @@ def _model_sampling(
     model_sampling_module: object,
     supported_models_module: object,
     task: str,
+    sampling_api: MiniMaxH3SamplingAPI,
 ) -> tuple[object, MiniMaxH3ModelSamplingEvidence]:
     getter = getattr(model, "get_model_object", None)
     if not callable(getter):
@@ -90,11 +93,16 @@ def _model_sampling(
             "MODEL sampling object is unavailable",
         ) from exc
 
-    sampling_type = getattr(model_sampling_module, "ModelSamplingAV", None)
+    if sampling_api is MiniMaxH3SamplingAPI.DISCRETE_FLOW_H3_V030:
+        sampling_type = getattr(model_sampling_module, "ModelSamplingDiscreteFlow", None)
+        is_model_sampling_av = False
+    else:
+        sampling_type = getattr(model_sampling_module, "ModelSamplingAV", None)
+        is_model_sampling_av = True
     if not isinstance(sampling_type, type) or not isinstance(sampling, sampling_type):
         raise _error(
             MiniMaxH3SchedulerReasonCode.MODEL_SAMPLING_NOT_AV,
-            "MODEL sampling object is not ModelSamplingAV-compatible",
+            "MODEL sampling object is incompatible with the exact host H3 sampling API",
         )
 
     model_core = getattr(model, "model", None)
@@ -113,7 +121,6 @@ def _model_sampling(
         )
 
     video_shift = _finite_shift(getattr(sampling, "shift", None), label="video")
-    audio_shift = _finite_shift(getattr(sampling, "audio_shift", None), label="audio")
     model_options = getattr(model, "model_options", None)
     transformer_options: Mapping[object, object] = {}
     if isinstance(model_options, Mapping):
@@ -127,21 +134,38 @@ def _model_sampling(
             MiniMaxH3SchedulerReasonCode.SHIFT_MISMATCH,
             "MODEL contains incomplete MiniMax H3 shift markers",
         )
-    if video_marker is not None:
+    if sampling_api is MiniMaxH3SamplingAPI.DISCRETE_FLOW_H3_V030:
+        if video_marker is None:
+            raise _error(
+                MiniMaxH3SchedulerReasonCode.SHIFT_MISMATCH,
+                "ComfyUI 0.30.0 H3 MODEL requires complete video/audio shift markers",
+            )
         marked_video = _finite_shift(video_marker, label="marked video")
         marked_audio = _finite_shift(audio_marker, label="marked audio")
-        if not math.isclose(marked_video, video_shift, abs_tol=1e-9) or not math.isclose(
-            marked_audio, audio_shift, abs_tol=1e-9
-        ):
+        if not math.isclose(marked_video, video_shift, abs_tol=1e-9):
             raise _error(
                 MiniMaxH3SchedulerReasonCode.SHIFT_MISMATCH,
                 "MODEL shift markers conflict with its sampling object",
             )
+        audio_shift = marked_audio
+    else:
+        audio_shift = _finite_shift(getattr(sampling, "audio_shift", None), label="audio")
+        if video_marker is not None:
+            marked_video = _finite_shift(video_marker, label="marked video")
+            marked_audio = _finite_shift(audio_marker, label="marked audio")
+            if not math.isclose(marked_video, video_shift, abs_tol=1e-9) or not math.isclose(
+                marked_audio, audio_shift, abs_tol=1e-9
+            ):
+                raise _error(
+                    MiniMaxH3SchedulerReasonCode.SHIFT_MISMATCH,
+                    "MODEL shift markers conflict with its sampling object",
+                )
 
     return sampling, MiniMaxH3ModelSamplingEvidence(
         family_id="minimax_h3",
         task=task,
-        is_model_sampling_av=True,
+        is_model_sampling_av=is_model_sampling_av,
+        sampling_api=sampling_api,
         video_shift=video_shift,
         audio_shift=audio_shift,
         already_shifted=True,
@@ -196,6 +220,7 @@ class MiniMaxH3NativeScheduleResult:
     qualified_host_revision: str
     expected_video_shift: float
     expected_audio_shift: float
+    sampling_api: str
     validation: MiniMaxH3SchedulerResultValidation
 
     def projection(self) -> dict[str, object]:
@@ -206,6 +231,7 @@ class MiniMaxH3NativeScheduleResult:
             "scheduler": selected.scheduler,
             "model_task": selected.model_task,
             "recipe_id": selected.recipe_id,
+            "sampling_api": self.sampling_api,
             "dtype": selected.dtype,
             "host": {
                 "observed_version": self.host_version,
@@ -271,8 +297,8 @@ def build_minimax_h3_native_schedule(
         ) from exc
 
     host_version = _host_version(version_module)
-    host_revision = MINIMAX_H3_HOST_REVISION_BY_VERSION.get(host_version)
-    if host_revision is None:
+    host = _MINIMAX_H3_HOST_BY_VERSION.get(host_version)
+    if host is None:
         raise _error(
             MiniMaxH3SchedulerReasonCode.UNSUPPORTED_HOST,
             "installed ComfyUI version is outside the qualified host matrix",
@@ -283,13 +309,14 @@ def build_minimax_h3_native_schedule(
         model_sampling_module=model_sampling_module,
         supported_models_module=supported_models_module,
         task=task,
+        sampling_api=host.sampling_api,
     )
     qualification = qualify_minimax_h3_scheduler_request(
         scheduler=scheduler,
         steps=steps,
         model_sampling=evidence,
         recipe_id=recipe_id,
-        host_revision=host_revision,
+        host_revision=host.revision,
         available_handlers=handlers,
     )
     calculate_sigmas = getattr(samplers_module, "calculate_sigmas", None)
@@ -312,9 +339,10 @@ def build_minimax_h3_native_schedule(
     )
     return MiniMaxH3NativeScheduleResult(
         host_version=host_version,
-        qualified_host_revision=host_revision,
+        qualified_host_revision=host.revision,
         expected_video_shift=qualification.expected_video_shift,
         expected_audio_shift=qualification.expected_audio_shift,
+        sampling_api=host.sampling_api.value,
         validation=validation,
     )
 

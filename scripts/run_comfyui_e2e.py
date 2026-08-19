@@ -1946,7 +1946,7 @@ def verify_minimax_h3_native_h2_history(
     prompt_id: str,
     variant: str,
 ) -> dict[str, object]:
-    """Verify native-simple output against the same host ModelSamplingAV reference."""
+    """Verify native-simple output against the same host-qualified sampling reference."""
 
     if variant not in {"H3 Base FL2VA", "H3 Base Ref2VA"}:
         raise ScheduleContractError("MiniMax H3 native H2 variant must be selected explicitly")
@@ -1987,6 +1987,16 @@ def verify_minimax_h3_native_h2_history(
     counts = _object(scheduler.get("counts"), label="MiniMax H3 native counts")
     terminal = _object(scheduler.get("terminal"), label="MiniMax H3 native terminal")
     fingerprints = _object(scheduler.get("fingerprints"), label="MiniMax H3 native fingerprints")
+    host = _object(scheduler.get("host"), label="MiniMax H3 native host")
+    host_version = host.get("observed_version")
+    expected_sampling_api = (
+        {
+            "0.30.0": "model_sampling_discrete_flow_h3_v030",
+            "0.32.0": "model_sampling_av_v032",
+        }.get(host_version)
+        if isinstance(host_version, str)
+        else None
+    )
     expected_task = "fl2va" if variant == "H3 Base FL2VA" else "ref2va"
     if (
         traces[0] != canonical
@@ -2004,6 +2014,8 @@ def verify_minimax_h3_native_h2_history(
         or scheduler.get("owner") != "comfyui_native"
         or scheduler.get("scheduler") != "simple"
         or scheduler.get("model_task") != expected_task
+        or expected_sampling_api is None
+        or scheduler.get("sampling_api") != expected_sampling_api
         or counts.get("requested_steps") != 4
         or counts.get("actual_sigmas") != 5
         or counts.get("actual_transitions") != 4
@@ -2020,6 +2032,7 @@ def verify_minimax_h3_native_h2_history(
         "max_abs_error": 0.0,
         "model_task": expected_task,
         "output_fingerprint": fingerprints["output"],
+        "sampling_api": expected_sampling_api,
         "scheduler": "simple",
         "status": "succeeded",
         "variant": variant,

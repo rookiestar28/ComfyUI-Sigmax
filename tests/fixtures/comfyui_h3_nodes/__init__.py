@@ -9,10 +9,11 @@ from types import SimpleNamespace
 from typing import Any
 
 import torch  # type: ignore[import-not-found]
-from comfy import samplers as comfy_samplers  # type: ignore[import-not-found]
+from comfy import model_sampling as comfy_model_sampling  # type: ignore[import-not-found]
+from comfy import samplers as comfy_samplers
 from comfy import supported_models
 from comfy.k_diffusion.sampling import sample_euler  # type: ignore[import-not-found]
-from comfy.model_sampling import CONST, ModelSamplingAV  # type: ignore[import-not-found]
+from comfy.model_sampling import CONST  # type: ignore[import-not-found]
 
 _INITIAL = (0.75, -0.5, 1.25, -1.0)
 _BIASES = (0.0625, -0.125, 0.1875, -0.25)
@@ -259,7 +260,14 @@ class _SyntheticMiniMaxH3Model:
     def __init__(self) -> None:
         config = supported_models.MiniMaxH3({"image_model": "minimax_h3"})
 
-        class SyntheticSampling(ModelSamplingAV, CONST):  # type: ignore[misc]
+        sampling_base = getattr(
+            comfy_model_sampling,
+            "ModelSamplingAV",
+            comfy_model_sampling.ModelSamplingDiscreteFlow,
+        )
+
+        # IMPORTANT: the qualified 0.30 host predates ModelSamplingAV and uses DiscreteFlow.
+        class SyntheticSampling(sampling_base, CONST):  # type: ignore[misc, valid-type]
             pass
 
         self._sampling = SyntheticSampling(config)
@@ -281,7 +289,7 @@ class MiniMaxH3NativeModelSource:
     """Return a bounded weight-free H3 MODEL for native scheduler H2."""
 
     CATEGORY = "SigmaxTest"
-    DESCRIPTION = "Test-only MiniMax H3 ModelSamplingAV source; loads no weights."
+    DESCRIPTION = "Test-only host-qualified MiniMax H3 sampling source; loads no weights."
     FUNCTION = "build"
     RETURN_TYPES = ("MODEL",)
     RETURN_NAMES = ("model",)
@@ -345,6 +353,17 @@ class MiniMaxH3NativeScheduleProbe:
         if not isinstance(info, dict):
             raise ValueError("MiniMax H3 native H2 metadata must be an object")
         native = info.get("scheduler")
+        host_version = (
+            native.get("host", {}).get("observed_version") if isinstance(native, dict) else None
+        )
+        expected_sampling_api = (
+            {
+                "0.30.0": "model_sampling_discrete_flow_h3_v030",
+                "0.32.0": "model_sampling_av_v032",
+            }.get(host_version)
+            if isinstance(host_version, str)
+            else None
+        )
         if (
             info.get("lane") != "m4_17_comfyui_native_scheduler"
             or info.get("mode") != "experimental_comfyui_native_scheduler"
@@ -353,7 +372,8 @@ class MiniMaxH3NativeScheduleProbe:
             or native.get("scheduler") != scheduler
             or native.get("model_task") not in {"fl2va", "ref2va"}
             or not isinstance(native.get("host"), dict)
-            or native["host"].get("observed_version") not in {"0.30.0", "0.32.0"}
+            or expected_sampling_api is None
+            or native.get("sampling_api") != expected_sampling_api
             or not isinstance(native.get("counts"), dict)
             or native["counts"].get("requested_steps") != steps
             or native["counts"].get("actual_sigmas") != len(sigmas)

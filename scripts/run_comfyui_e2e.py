@@ -515,12 +515,27 @@ _MINIMAX_H3_M7_15_REJECTION_REASONS: Final = {
     "base_shift_mismatch": "SHIFT_MISMATCH",
     "turbo_shift_mismatch": "SHIFT_MISMATCH",
 }
+_MINIMAX_H3_M7_15_RECEIPT_REASONS: Final = {
+    "missing_model": "minimax_h3.model_required",
+    "non_h3_model": "minimax_h3.model_family_mismatch",
+    "base_shift_mismatch": "minimax_h3.base_shift_mismatch",
+    "turbo_shift_mismatch": "minimax_h3.turbo_shift_mismatch",
+}
 
 
 def minimax_h3_native_matrix_rejection_reason(case_id: str) -> str:
     """Return the stable production reason expected for one bounded live negative."""
 
     reason = _MINIMAX_H3_M7_15_REJECTION_REASONS.get(case_id)
+    if reason is None:
+        raise ScheduleContractError("MiniMax H3 native matrix rejection case is unsupported")
+    return reason
+
+
+def minimax_h3_native_matrix_rejection_receipt_reason(case_id: str) -> str:
+    """Return a receipt-safe, case-specific code for one verified rejection."""
+
+    reason = _MINIMAX_H3_M7_15_RECEIPT_REASONS.get(case_id)
     if reason is None:
         raise ScheduleContractError("MiniMax H3 native matrix rejection case is unsupported")
     return reason
@@ -2501,7 +2516,8 @@ def verify_minimax_h3_native_matrix_rejection_history(
         raise ScheduleContractError("MiniMax H3 matrix rejection reason drifted")
     return {
         "case_id": case_id,
-        "reason_code": expected_reason,
+        "production_reason": expected_reason,
+        "reason_code": minimax_h3_native_matrix_rejection_receipt_reason(case_id),
         "status": "rejected",
     }
 

@@ -241,6 +241,73 @@ def test_m7_15_negative_graphs_are_runtime_bounded(case_id: str, expected_reason
     assert "5" in prompt
 
 
+@pytest.mark.parametrize(
+    ("case_id", "production_reason", "receipt_reason"),
+    [
+        ("missing_model", "MODEL_REQUIRED", "minimax_h3.model_required"),
+        (
+            "non_h3_model",
+            "MODEL_FAMILY_MISMATCH",
+            "minimax_h3.model_family_mismatch",
+        ),
+        (
+            "base_shift_mismatch",
+            "SHIFT_MISMATCH",
+            "minimax_h3.base_shift_mismatch",
+        ),
+        (
+            "turbo_shift_mismatch",
+            "SHIFT_MISMATCH",
+            "minimax_h3.turbo_shift_mismatch",
+        ),
+    ],
+)
+def test_m7_15_negative_history_uses_receipt_safe_case_specific_reason(
+    case_id: str,
+    production_reason: str,
+    receipt_reason: str,
+) -> None:
+    prompt = harness.build_minimax_h3_native_matrix_rejection_prompt(case_id)
+    history = {
+        "prompt-negative": {
+            "prompt": [0, "prompt-negative", prompt, {}, ["5"]],
+            "outputs": {},
+            "status": {
+                "completed": False,
+                "messages": [
+                    [
+                        "execution_error",
+                        {"exception_message": f"{production_reason}: bounded rejection"},
+                    ]
+                ],
+                "status_str": "error",
+            },
+        }
+    }
+    summary = harness.verify_minimax_h3_native_matrix_rejection_history(
+        history,
+        prompt_id="prompt-negative",
+        case_id=case_id,
+    )
+
+    assert summary == {
+        "case_id": case_id,
+        "production_reason": production_reason,
+        "reason_code": receipt_reason,
+        "status": "rejected",
+    }
+    transition = harness.build_verified_host_repeat_transition(
+        lane="H2_MINIMAX_H3_M7_15_NATIVE_NEGATIVE",
+        first_summary=summary,
+        repeat_summary=summary,
+    )
+    first = cast(dict[str, object], transition["first"])
+    repeat = cast(dict[str, object], transition["repeat"])
+    assert first["reason_code"] == receipt_reason
+    assert repeat["reason_code"] == receipt_reason
+    assert transition["transition"] == "pass_to_pass"
+
+
 def test_m7_15_cli_matrix_mode_is_explicit_and_requires_h3_only_lane() -> None:
     arguments = harness._parser().parse_args(["--minimax-h3-only", "--minimax-h3-scheduler-matrix"])
     assert arguments.minimax_h3_only is True

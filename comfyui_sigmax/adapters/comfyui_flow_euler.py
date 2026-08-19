@@ -111,3 +111,76 @@ class TorchFlowEulerStateOperations:
             raise ScheduleContractError("Flow Euler tensor operation mutated state in place")
         self.validate(result)
         return cast(object, result)
+
+    def interpolate(self, x0: object, noise: object, weight: float) -> object:
+        """Evaluate the pinned direct stochastic expression without algebraic rewriting."""
+
+        x0_tensor = self._validated_tensor(x0)
+        noise_tensor = self._validated_tensor(noise)
+        if (
+            x0_tensor.shape != noise_tensor.shape
+            or x0_tensor.dtype != noise_tensor.dtype
+            or x0_tensor.device != noise_tensor.device
+            or x0_tensor.layout != noise_tensor.layout
+        ):
+            raise ScheduleContractError("state and noise tensor metadata differ")
+        if (
+            isinstance(weight, bool)
+            or not isinstance(weight, float)
+            or not math.isfinite(weight)
+            or not 0.0 <= weight <= 1.0
+        ):
+            raise ScheduleContractError("Flow Euler interpolation weight is invalid")
+        # CRITICAL: preserve Diffusers v0.39.0 float32 expression order for exact parity.
+        result = (1.0 - weight) * x0_tensor + weight * noise_tensor
+        if result is x0_tensor or result is noise_tensor:
+            raise ScheduleContractError("Flow Euler interpolation mutated an input in place")
+        self.validate(result)
+        return cast(object, result)
+
+
+class TorchFlowEulerNoiseProvider:
+    """Draw state-shaped noise only from one explicitly supplied Torch generator."""
+
+    def __init__(
+        self,
+        *,
+        generator: object,
+        torch_module: ModuleType | object | None = None,
+    ) -> None:
+        self._torch: Any = (
+            importlib.import_module("torch") if torch_module is None else torch_module
+        )
+        generator_type = getattr(self._torch, "Generator", None)
+        if not isinstance(generator_type, type) or not isinstance(generator, generator_type):
+            raise ScheduleContractError("noise provider requires an explicit torch generator")
+        self._generator = generator
+        self._operations = TorchFlowEulerStateOperations(torch_module=self._torch)
+
+    def __call__(
+        self,
+        reference: object,
+        sigma: float,
+        next_sigma: float,
+        scheduler_index: int,
+    ) -> object:
+        del sigma, next_sigma, scheduler_index
+        tensor = self._operations._validated_tensor(reference)
+        generator_device = getattr(self._generator, "device", None)
+        if generator_device is None or str(generator_device) != str(tensor.device):
+            raise ScheduleContractError("torch generator device does not match state device")
+        strided = getattr(self._torch, "strided", None)
+        if strided is not None and tensor.layout != strided:
+            raise ScheduleContractError("torch noise provider requires strided tensor layout")
+        randn = getattr(self._torch, "randn", None)
+        if not callable(randn):
+            raise ScheduleContractError("torch module does not expose randn")
+        noise = randn(
+            tensor.shape,
+            generator=self._generator,
+            device=tensor.device,
+            dtype=tensor.dtype,
+            layout=tensor.layout,
+        )
+        self._operations.validate(noise)
+        return cast(object, noise)

@@ -1,4 +1,4 @@
-"""Framework-independent deterministic Flow Euler execution controller."""
+"""Framework-independent deterministic and stochastic Flow Euler controllers."""
 
 from __future__ import annotations
 
@@ -34,6 +34,9 @@ from comfyui_sigmax.core.schedule_contracts import (
 FLOW_EULER_EXECUTION_RESULT_SCHEMA = "sigmax.flow-euler-execution-result/1"
 FLOW_EULER_SAMPLER_ID = "sigmax.flow_euler"
 FLOW_EULER_SAMPLER_VERSION = "1"
+STOCHASTIC_FLOW_EULER_EXECUTION_RESULT_SCHEMA = "sigmax.stochastic-flow-euler-execution-result/1"
+STOCHASTIC_FLOW_EULER_SAMPLER_ID = "sigmax.flow_euler_stochastic"
+STOCHASTIC_FLOW_EULER_SAMPLER_VERSION = "1"
 _FINGERPRINT_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
 _MAX_SIGMAS = 10_001
 
@@ -54,6 +57,24 @@ class FlowEulerVelocityEvaluator(Protocol[StateT]):
     """Return one direct flow velocity for the current state and schedule coordinate."""
 
     def __call__(self, state: StateT, sigma: float, scheduler_index: int) -> StateT: ...
+
+
+class StochasticFlowEulerStateOperations(FlowEulerStateOperations[StateT], Protocol[StateT]):
+    """State operations preserving the pinned stochastic interpolation order."""
+
+    def interpolate(self, x0: StateT, noise: StateT, weight: float) -> StateT: ...
+
+
+class FlowEulerNoiseProvider(Protocol[StateT]):
+    """Return one caller-owned noise state for an absolute schedule transition."""
+
+    def __call__(
+        self,
+        reference: StateT,
+        sigma: float,
+        next_sigma: float,
+        scheduler_index: int,
+    ) -> StateT: ...
 
 
 def _sha256(payload: bytes) -> str:
@@ -146,6 +167,59 @@ def _validate_spec(spec: object, sigmas: tuple[float, ...]) -> SamplerExecutionS
     return spec
 
 
+def _validate_stochastic_spec(
+    spec: object,
+    sigmas: tuple[float, ...],
+) -> SamplerExecutionSpec:
+    if not isinstance(spec, SamplerExecutionSpec):
+        raise ScheduleContractError("spec must be a SamplerExecutionSpec")
+    capabilities = spec.capabilities
+    if (
+        capabilities.sampler_id != STOCHASTIC_FLOW_EULER_SAMPLER_ID
+        or capabilities.sampler_version != STOCHASTIC_FLOW_EULER_SAMPLER_VERSION
+    ):
+        raise ScheduleContractError("execution spec does not identify Sigmax stochastic Flow Euler")
+    if PredictionType.FLOW_VELOCITY not in capabilities.accepted_prediction_types:
+        raise ScheduleContractError("stochastic Flow Euler requires flow-velocity prediction")
+    if SigmaDomain.UNIT_FLOW not in capabilities.accepted_sigma_domains:
+        raise ScheduleContractError("stochastic Flow Euler requires the unit-flow sigma domain")
+    if ScheduleOwnership.EXTERNAL_SIGMAS not in capabilities.accepted_ownerships:
+        raise ScheduleContractError("stochastic Flow Euler requires external sigma ownership")
+    if (
+        capabilities.execution_behavior is not ExecutionBehavior.STOCHASTIC
+        or capabilities.noise_ownership is not NoiseOwnership.CALLER
+        or spec.random_source_ownership is not NoiseOwnership.CALLER
+    ):
+        raise ScheduleContractError("stochastic Flow Euler requires caller-owned random noise")
+    required_state = {
+        SamplerState.BEGIN_INDEX,
+        SamplerState.STEP_INDEX,
+        SamplerState.MULTISTEP_HISTORY,
+    }
+    if set(capabilities.required_state) != required_state:
+        raise ScheduleContractError("stochastic Flow Euler state dimensions drifted")
+    if (
+        capabilities.terminal_requirement is not TerminalRequirement.REQUIRES_ZERO
+        or capabilities.supports_partial_denoise
+        or capabilities.supports_per_token_timesteps
+        or spec.per_token_time is not None
+    ):
+        raise ScheduleContractError(
+            "stochastic Flow Euler requires terminal zero and full non-token execution"
+        )
+    if spec.solver_order != 1:
+        raise ScheduleContractError("stochastic Flow Euler requires solver order one")
+    if spec.scheduler_index != 0 or spec.begin_index != 0:
+        raise ScheduleContractError("stochastic Flow Euler is full-schedule only")
+    expected_transitions = len(sigmas) - 1
+    if (
+        spec.requested_transitions != expected_transitions
+        or spec.requested_model_evaluations != expected_transitions
+    ):
+        raise ScheduleContractError("requested counts do not match the full schedule")
+    return spec
+
+
 @dataclass(frozen=True, slots=True, kw_only=True)
 class FlowEulerExecutionResult(Generic[StateT]):
     """One immutable controller result without embedding raw state in its projection."""
@@ -204,6 +278,79 @@ def flow_euler_execution_result_fingerprint(result: FlowEulerExecutionResult[Any
 
     if not isinstance(result, FlowEulerExecutionResult):
         raise ScheduleContractError("result must be a FlowEulerExecutionResult")
+    return _sha256(canonical_projection_bytes(result.projection()))
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class StochasticFlowEulerExecutionResult(Generic[StateT]):
+    """Immutable full-run stochastic result without raw noise or generator state."""
+
+    spec: SamplerExecutionSpec
+    state: StateT
+    state_fingerprint: str
+    schedule_fingerprint: str
+    snapshot: SamplerStateSnapshot
+    noise_fingerprints: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.spec, SamplerExecutionSpec):
+            raise ScheduleContractError("result spec must be a SamplerExecutionSpec")
+        _require_fingerprint("state_fingerprint", self.state_fingerprint)
+        _require_fingerprint("schedule_fingerprint", self.schedule_fingerprint)
+        if not isinstance(self.snapshot, SamplerStateSnapshot):
+            raise ScheduleContractError("result snapshot must be a SamplerStateSnapshot")
+        if self.snapshot.spec_fingerprint != sampler_execution_spec_fingerprint(self.spec):
+            raise ScheduleContractError("result snapshot does not match its execution spec")
+        if (
+            self.snapshot.status is not SamplerStateStatus.COMPLETED
+            or not self.snapshot.history
+            or self.snapshot.history[-1].output_state_fingerprint != self.state_fingerprint
+        ):
+            raise ScheduleContractError("result state does not match completed execution history")
+        if (
+            not isinstance(self.noise_fingerprints, tuple)
+            or len(self.noise_fingerprints) != self.snapshot.effective_transitions
+            or len(self.noise_fingerprints) != self.spec.requested_transitions
+        ):
+            raise ScheduleContractError("noise fingerprint count does not match transitions")
+        for index, fingerprint in enumerate(self.noise_fingerprints):
+            _require_fingerprint(f"noise_fingerprints[{index}]", fingerprint)
+
+    def projection(self) -> dict[str, object]:
+        return {
+            "counts": {
+                "effective_model_evaluations": self.snapshot.effective_model_evaluations,
+                "effective_noise_draws": len(self.noise_fingerprints),
+                "effective_transitions": self.snapshot.effective_transitions,
+                "requested_model_evaluations": self.spec.requested_model_evaluations,
+                "requested_transitions": self.spec.requested_transitions,
+            },
+            "executed_scheduler_indexes": [step.scheduler_index for step in self.snapshot.history],
+            "noise_fingerprints": list(self.noise_fingerprints),
+            "noise_ownership": self.spec.random_source_ownership.value,
+            "schedule_fingerprint": self.schedule_fingerprint,
+            "schema": STOCHASTIC_FLOW_EULER_EXECUTION_RESULT_SCHEMA,
+            "snapshot_fingerprint": sampler_state_snapshot_fingerprint(
+                self.snapshot,
+                self.spec,
+            ),
+            "spec_fingerprint": sampler_execution_spec_fingerprint(self.spec),
+            "state_fingerprint": self.state_fingerprint,
+            "status": self.snapshot.status.value,
+        }
+
+    @property
+    def result_fingerprint(self) -> str:
+        return stochastic_flow_euler_execution_result_fingerprint(self)
+
+
+def stochastic_flow_euler_execution_result_fingerprint(
+    result: StochasticFlowEulerExecutionResult[Any],
+) -> str:
+    """Return the canonical identity of a stochastic Flow Euler result."""
+
+    if not isinstance(result, StochasticFlowEulerExecutionResult):
+        raise ScheduleContractError("result must be a StochasticFlowEulerExecutionResult")
     return _sha256(canonical_projection_bytes(result.projection()))
 
 
@@ -315,4 +462,94 @@ def execute_deterministic_flow_euler(
         state_fingerprint=final_fingerprint,
         schedule_fingerprint=_schedule_fingerprint(validated_sigmas),
         snapshot=current_snapshot,
+    )
+
+
+def execute_stochastic_flow_euler(
+    *,
+    spec: SamplerExecutionSpec,
+    sigmas: tuple[float, ...],
+    state: StateT,
+    evaluator: FlowEulerVelocityEvaluator[StateT],
+    noise_provider: FlowEulerNoiseProvider[StateT],
+    operations: StochasticFlowEulerStateOperations[StateT],
+) -> StochasticFlowEulerExecutionResult[StateT]:
+    """Execute the pinned full-schedule stochastic FlowMatch Euler contract."""
+
+    validated_sigmas = _validate_sigmas(sigmas)
+    validated_spec = _validate_stochastic_spec(spec, validated_sigmas)
+    if not callable(evaluator):
+        raise ScheduleContractError("evaluator must be callable")
+    if not callable(noise_provider):
+        raise ScheduleContractError("noise_provider must be callable")
+    for name in ("validate", "fingerprint", "add_scaled", "interpolate"):
+        if not callable(getattr(operations, name, None)):
+            raise ScheduleContractError(
+                "operations do not implement the stochastic Flow Euler state contract"
+            )
+
+    operations.validate(state)
+    current_snapshot = SamplerStateSnapshot.initial(validated_spec)
+    current_state = state
+    noise_fingerprints: list[str] = []
+
+    for scheduler_index, (sigma, next_sigma) in enumerate(pairwise(validated_sigmas)):
+        input_fingerprint = _require_fingerprint(
+            "input state fingerprint",
+            operations.fingerprint(current_state),
+        )
+        velocity = evaluator(current_state, sigma, scheduler_index)
+        # CRITICAL: callbacks may observe but never mutate caller-owned execution state.
+        if operations.fingerprint(current_state) != input_fingerprint:
+            raise ScheduleContractError("velocity evaluator mutated the input state")
+        operations.validate(velocity)
+        x0 = operations.add_scaled(current_state, velocity, -sigma)
+        operations.validate(x0)
+        x0_fingerprint = _require_fingerprint("x0 fingerprint", operations.fingerprint(x0))
+
+        noise = noise_provider(x0, sigma, next_sigma, scheduler_index)
+        if operations.fingerprint(x0) != x0_fingerprint:
+            raise ScheduleContractError("noise provider mutated the denoised state")
+        operations.validate(noise)
+        noise_fingerprint = _require_fingerprint(
+            "noise fingerprint",
+            operations.fingerprint(noise),
+        )
+        next_state = operations.interpolate(x0, noise, next_sigma)
+        if operations.fingerprint(x0) != x0_fingerprint:
+            raise ScheduleContractError("interpolation mutated the denoised state")
+        if operations.fingerprint(noise) != noise_fingerprint:
+            raise ScheduleContractError("interpolation mutated the noise state")
+        operations.validate(next_state)
+        output_fingerprint = _require_fingerprint(
+            "output state fingerprint",
+            operations.fingerprint(next_state),
+        )
+        current_snapshot = current_snapshot.append_step(
+            validated_spec,
+            SamplerStep(
+                step_index=scheduler_index,
+                scheduler_index=scheduler_index,
+                sigma=sigma,
+                next_sigma=next_sigma,
+                model_evaluations=1,
+                input_state_fingerprint=input_fingerprint,
+                output_state_fingerprint=output_fingerprint,
+            ),
+        )
+        noise_fingerprints.append(noise_fingerprint)
+        current_state = next_state
+
+    current_snapshot = current_snapshot.complete(validated_spec)
+    final_fingerprint = _require_fingerprint(
+        "final state fingerprint",
+        operations.fingerprint(current_state),
+    )
+    return StochasticFlowEulerExecutionResult(
+        spec=validated_spec,
+        state=current_state,
+        state_fingerprint=final_fingerprint,
+        schedule_fingerprint=_schedule_fingerprint(validated_sigmas),
+        snapshot=current_snapshot,
+        noise_fingerprints=tuple(noise_fingerprints),
     )

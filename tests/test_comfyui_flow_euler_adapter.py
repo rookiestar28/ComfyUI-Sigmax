@@ -48,6 +48,7 @@ def test_adapter_module_has_no_top_level_optional_framework_imports() -> None:
     assert "comfy" not in imports
     module = importlib.import_module("comfyui_sigmax.adapters.comfyui_flow_euler")
     assert module.ComfyDenoisedFlowVelocityEvaluator is not None
+    assert module.TorchFlowEulerNoiseProvider is not None
 
 
 def test_denoised_adapter_recovers_direct_flow_velocity_once() -> None:
@@ -97,3 +98,17 @@ def test_torch_operations_require_an_explicit_or_available_torch_module() -> Non
     operations = module.TorchFlowEulerStateOperations(torch_module=FakeTorch())
     with pytest.raises(ScheduleContractError, match="tensor"):
         operations.validate(object())
+
+
+def test_torch_noise_provider_requires_an_explicit_generator() -> None:
+    module = importlib.import_module("comfyui_sigmax.adapters.comfyui_flow_euler")
+
+    class FakeTorch:
+        class Tensor:
+            pass
+
+        class Generator:
+            pass
+
+    with pytest.raises(ScheduleContractError, match="generator"):
+        module.TorchFlowEulerNoiseProvider(generator=object(), torch_module=FakeTorch())

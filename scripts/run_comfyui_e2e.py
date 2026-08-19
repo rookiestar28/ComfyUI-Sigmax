@@ -101,6 +101,9 @@ _SAMPLER_STATE_HOST_SCHEMA: Final = "sigmax.sampler-state-host-contract/1"
 _FLOW_EULER_OUTPUT_NODE_ID: Final = "11"
 _FLOW_EULER_TRACE_KEY: Final = "sigmax_flow_euler_contract"
 _FLOW_EULER_HOST_SCHEMA: Final = "sigmax.flow-euler-host-contract/1"
+_STOCHASTIC_FLOW_EULER_OUTPUT_NODE_ID: Final = "12"
+_STOCHASTIC_FLOW_EULER_TRACE_KEY: Final = "sigmax_stochastic_flow_euler_contract"
+_STOCHASTIC_FLOW_EULER_HOST_SCHEMA: Final = "sigmax.stochastic-flow-euler-host-contract/1"
 _FLOW_EULER_FULL_RESULT_FINGERPRINT: Final = (
     "sha256:a24cbd32a60a671ef5c69d3def61caeacc550d224922d94d73d87caa7c360cc7"
 )
@@ -1775,6 +1778,17 @@ def build_flow_euler_contract_api_prompt() -> dict[str, object]:
     }
 
 
+def build_stochastic_flow_euler_contract_api_prompt() -> dict[str, object]:
+    """Return the release-excluded M5-04 caller-RNG execution graph."""
+
+    return {
+        _STOCHASTIC_FLOW_EULER_OUTPUT_NODE_ID: {
+            "class_type": "SigmaxTest.StochasticFlowEulerContractProbe",
+            "inputs": {},
+        }
+    }
+
+
 def build_native_euler_h3_partial_rejection_prompt() -> dict[str, object]:
     """Return a partial schedule that M5-01 must reject instead of misclaiming."""
 
@@ -2878,6 +2892,114 @@ def verify_flow_euler_contract_history(
         raise ScheduleContractError("flow-euler contract runtime version is malformed")
     if traces[0] != canonical:
         raise ScheduleContractError("flow-euler contract trace is not canonical")
+    return trace
+
+
+def verify_stochastic_flow_euler_contract_history(
+    history: object,
+    *,
+    prompt_id: str,
+) -> dict[str, object]:
+    """Verify bounded M5-04 caller-RNG execution and non-mutation evidence."""
+
+    root = _object(history, label="stochastic-flow-euler contract history")
+    entry = _object(root.get(prompt_id), label="stochastic-flow-euler contract entry")
+    status = _object(entry.get("status"), label="stochastic-flow-euler contract status")
+    if status.get("completed") is not True or status.get("status_str") != "success":
+        raise ScheduleContractError("stochastic-flow-euler contract did not complete successfully")
+    prompt_tuple = _array(entry.get("prompt"), label="stochastic-flow-euler contract prompt")
+    if (
+        len(prompt_tuple) < 3
+        or prompt_tuple[2] != build_stochastic_flow_euler_contract_api_prompt()
+    ):
+        raise ScheduleContractError("stochastic-flow-euler contract retained graph is stale")
+    outputs = _object(entry.get("outputs"), label="stochastic-flow-euler contract outputs")
+    output = _object(
+        outputs.get(_STOCHASTIC_FLOW_EULER_OUTPUT_NODE_ID),
+        label="stochastic-flow-euler contract output",
+    )
+    traces = _array(
+        output.get(_STOCHASTIC_FLOW_EULER_TRACE_KEY),
+        label="stochastic-flow-euler contract trace",
+    )
+    if len(traces) != 1 or not isinstance(traces[0], str):
+        raise ScheduleContractError("stochastic-flow-euler contract trace is malformed")
+    trace = _object(
+        _decode_json(traces[0].encode("utf-8"), label="stochastic-flow-euler contract trace"),
+        label="stochastic-flow-euler contract trace",
+    )
+    expected = {
+        "different_seed_diverges": True,
+        "full_effective_model_evaluations": 3,
+        "full_effective_noise_draws": 3,
+        "full_effective_transitions": 3,
+        "global_mutation": False,
+        "model_weights_used": False,
+        "same_seed_repeat": True,
+        "sampler_execution_performed": True,
+        "schema": _STOCHASTIC_FLOW_EULER_HOST_SCHEMA,
+        "status": "succeeded",
+        "terminal_noise_draw": True,
+    }
+    dynamic = {
+        "alternate_result_fingerprint",
+        "full_result_fingerprint",
+        "noise_fingerprints",
+        "python_version",
+        "repeat_result_fingerprint",
+        "schedule_fingerprint",
+        "torch_version",
+    }
+    if set(trace) != set(expected) | dynamic:
+        raise ScheduleContractError("stochastic-flow-euler contract fields drifted")
+    if any(trace.get(key) != value for key, value in expected.items()):
+        raise ScheduleContractError("stochastic-flow-euler contract evidence drifted")
+    fingerprint_pattern = re.compile(r"sha256:[0-9a-f]{64}")
+    fingerprints = {
+        key: trace.get(key)
+        for key in (
+            "alternate_result_fingerprint",
+            "full_result_fingerprint",
+            "repeat_result_fingerprint",
+            "schedule_fingerprint",
+        )
+    }
+    if any(
+        not isinstance(value, str) or fingerprint_pattern.fullmatch(value) is None
+        for value in fingerprints.values()
+    ):
+        raise ScheduleContractError("stochastic-flow-euler contract fingerprint is malformed")
+    noise_fingerprints = trace.get("noise_fingerprints")
+    if (
+        not isinstance(noise_fingerprints, list)
+        or len(noise_fingerprints) != 3
+        or any(
+            not isinstance(value, str) or fingerprint_pattern.fullmatch(value) is None
+            for value in noise_fingerprints
+        )
+    ):
+        raise ScheduleContractError("stochastic-flow-euler noise trace is malformed")
+    if (
+        fingerprints["full_result_fingerprint"] != fingerprints["repeat_result_fingerprint"]
+        or fingerprints["full_result_fingerprint"] == fingerprints["alternate_result_fingerprint"]
+    ):
+        raise ScheduleContractError("stochastic-flow-euler seed identity drifted")
+    version_pattern = re.compile(r"\d+\.\d+\.\d+(?:[a-z0-9.+-]*)?")
+    if any(
+        not isinstance(trace.get(key), str)
+        or version_pattern.fullmatch(cast(str, trace[key])) is None
+        for key in ("python_version", "torch_version")
+    ):
+        raise ScheduleContractError("stochastic-flow-euler runtime version is malformed")
+    canonical = json.dumps(
+        trace,
+        allow_nan=False,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    )
+    if traces[0] != canonical:
+        raise ScheduleContractError("stochastic-flow-euler trace is not canonical")
     return trace
 
 
@@ -4223,26 +4345,36 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
     process: subprocess.Popen[bytes] | None = None
     shutdown: dict[str, object] = {}
     succeeded = False
-    contract_only = args.sampler_state_contract_only or args.flow_euler_contract_only
+    contract_only = (
+        args.sampler_state_contract_only
+        or args.flow_euler_contract_only
+        or args.stochastic_flow_euler_contract_only
+    )
     evidence: dict[str, object] = {
         "schema": (
-            "sigmax.flow-euler-host-e2e/1"
-            if args.flow_euler_contract_only
+            _STOCHASTIC_FLOW_EULER_HOST_SCHEMA
+            if args.stochastic_flow_euler_contract_only
             else (
-                "sigmax.sampler-state-host-e2e/1"
-                if args.sampler_state_contract_only
+                "sigmax.flow-euler-host-e2e/1"
+                if args.flow_euler_contract_only
                 else (
-                    _MINIMAX_H3_M7_15_SCHEMA
-                    if args.minimax_h3_scheduler_matrix
-                    else "sigmax.minimax-h3-host-e2e/1"
+                    "sigmax.sampler-state-host-e2e/1"
+                    if args.sampler_state_contract_only
+                    else (
+                        _MINIMAX_H3_M7_15_SCHEMA
+                        if args.minimax_h3_scheduler_matrix
+                        else "sigmax.minimax-h3-host-e2e/1"
+                    )
                 )
             )
         ),
         "lanes": (
-            ["H1", "H2_FLOW_EULER_CONTRACT_M5_03"]
-            if args.flow_euler_contract_only
+            ["H1", "H2_STOCHASTIC_FLOW_EULER_CONTRACT_M5_04"]
+            if args.stochastic_flow_euler_contract_only
             else (
-                ["H1", "H2_SAMPLER_STATE_CONTRACT_M5_02"]
+                ["H1", "H2_FLOW_EULER_CONTRACT_M5_03"]
+                if args.flow_euler_contract_only
+                else ["H1", "H2_SAMPLER_STATE_CONTRACT_M5_02"]
                 if args.sampler_state_contract_only
                 else [
                     "H1",
@@ -4269,12 +4401,16 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
         "import_probe": import_probe,
         "attempt_transitions": {},
         "model_execution": (
-            "weight_free_flow_euler_fixture"
-            if args.flow_euler_contract_only
+            "weight_free_stochastic_flow_euler_fixture"
+            if args.stochastic_flow_euler_contract_only
             else (
-                "not_performed_contract_only"
-                if args.sampler_state_contract_only
-                else "weight_free_model_sampling_fixture"
+                "weight_free_flow_euler_fixture"
+                if args.flow_euler_contract_only
+                else (
+                    "not_performed_contract_only"
+                    if args.sampler_state_contract_only
+                    else "weight_free_model_sampling_fixture"
+                )
             )
         ),
     }
@@ -4316,10 +4452,12 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
                     "MiniMax H3 host is missing one or more Sigmax node IDs"
                 )
             test_ids = (
-                {"SigmaxTest.FlowEulerContractProbe"}
-                if args.flow_euler_contract_only
+                {"SigmaxTest.StochasticFlowEulerContractProbe"}
+                if args.stochastic_flow_euler_contract_only
                 else (
-                    {"SigmaxTest.SamplerStateContractProbe"}
+                    {"SigmaxTest.FlowEulerContractProbe"}
+                    if args.flow_euler_contract_only
+                    else {"SigmaxTest.SamplerStateContractProbe"}
                     if args.sampler_state_contract_only
                     else {
                         "SigmaxTest.MiniMaxH3ScheduleProbe",
@@ -4432,6 +4570,33 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
                 )
                 evidence["flow_euler_contract"] = flow_summary
                 attempts["flow_euler_contract"] = flow_transition
+                succeeded = True
+                return evidence
+            if args.stochastic_flow_euler_contract_only:
+
+                def submit_stochastic_flow_euler(ordinal: int) -> tuple[str, dict[str, object]]:
+                    return _submit_successful_prompt(
+                        base_url=base_url,
+                        client_id=f"sigmax-m5-04-stochastic-flow-euler-attempt-{ordinal}",
+                        prompt=build_stochastic_flow_euler_contract_api_prompt(),
+                        execution_timeout=args.execution_timeout,
+                    )
+
+                def verify_stochastic_flow_euler(
+                    history: object,
+                    prompt_id: str,
+                ) -> dict[str, object]:
+                    return verify_stochastic_flow_euler_contract_history(
+                        history, prompt_id=prompt_id
+                    )
+
+                stochastic_summary, stochastic_transition = execute_verified_host_repeat(
+                    lane="H2_STOCHASTIC_FLOW_EULER_CONTRACT_M5_04",
+                    submit=submit_stochastic_flow_euler,
+                    verify=verify_stochastic_flow_euler,
+                )
+                evidence["stochastic_flow_euler_contract"] = stochastic_summary
+                attempts["stochastic_flow_euler_contract"] = stochastic_transition
                 succeeded = True
                 return evidence
             h2_results: list[dict[str, object]] = []
@@ -5648,6 +5813,11 @@ def _parser() -> argparse.ArgumentParser:
         help="run only the M5-03 model-free deterministic Flow Euler contract",
     )
     parser.add_argument(
+        "--stochastic-flow-euler-contract-only",
+        action="store_true",
+        help="run only the M5-04 model-free caller-RNG stochastic Flow Euler contract",
+    )
+    parser.add_argument(
         "--minimax-h3-scheduler-matrix",
         action="store_true",
         help="extend --minimax-h3-only with the frozen M7-15 ten-scheduler host matrix",
@@ -5743,6 +5913,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             or args.minimax_h3_only
             or args.sampler_state_contract_only
             or args.flow_euler_contract_only
+            or args.stochastic_flow_euler_contract_only
         ):
             parser.error("--minimax-h3-model-plan cannot be combined with an execution-only lane")
         if not args.minimax_h3_model_variant:
@@ -5778,7 +5949,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     if not args.host_python:
         parser.error("SIGMAX_COMFYUI_PYTHON or --host-python is required")
     if args.validation_lane == _MINIMAX_H3_LATEST_LANE and not (
-        args.minimax_h3_only or args.sampler_state_contract_only or args.flow_euler_contract_only
+        args.minimax_h3_only
+        or args.sampler_state_contract_only
+        or args.flow_euler_contract_only
+        or args.stochastic_flow_euler_contract_only
     ):
         parser.error("--validation-lane latest is reserved for an exact reviewed host lane")
     if args.minimax_h3_scheduler_matrix and not args.minimax_h3_only:
@@ -5789,6 +5963,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             args.minimax_h3_only,
             args.sampler_state_contract_only,
             args.flow_euler_contract_only,
+            args.stochastic_flow_euler_contract_only,
         )
         if sum(exclusive_lanes) > 1:
             parser.error("execution-only lanes are mutually exclusive")
@@ -5796,6 +5971,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             args.minimax_h3_only
             or args.sampler_state_contract_only
             or args.flow_euler_contract_only
+            or args.stochastic_flow_euler_contract_only
         ):
             evidence = run_minimax_h3(args)
         elif args.conditioning_only:

@@ -18,6 +18,7 @@ from comfy.k_diffusion.sampling import sample_euler  # type: ignore[import-not-f
 from comfy.model_sampling import CONST  # type: ignore[import-not-found]
 from comfyui_sigmax.adapters.comfyui_flow_euler import (
     ComfyDenoisedFlowVelocityEvaluator,
+    TorchFlowEulerNoiseProvider,
     TorchFlowEulerStateOperations,
 )
 from comfyui_sigmax.core import (
@@ -38,6 +39,7 @@ from comfyui_sigmax.core import (
     deserialize_sampler_execution_spec,
     deserialize_sampler_state_snapshot,
     execute_deterministic_flow_euler,
+    execute_stochastic_flow_euler,
     sampler_execution_spec_fingerprint,
     sampler_state_snapshot_fingerprint,
     serialize_sampler_execution_spec,
@@ -76,6 +78,7 @@ _KREA2_LORA_UI_KEY = "sigmax_krea2_lora_experimental"
 _KREA2_CONDITIONING_UI_KEY = "sigmax_krea2_conditioning"
 _SAMPLER_STATE_UI_KEY = "sigmax_sampler_state_contract"
 _FLOW_EULER_UI_KEY = "sigmax_flow_euler_contract"
+_STOCHASTIC_FLOW_EULER_UI_KEY = "sigmax_stochastic_flow_euler_contract"
 _KREA2_CONDITIONING_FEATURES = 12 * 2560
 
 
@@ -394,6 +397,36 @@ def _flow_euler_spec(*, begin_index: int, transitions: int) -> SamplerExecutionS
     )
 
 
+def _stochastic_flow_euler_spec() -> SamplerExecutionSpec:
+    return SamplerExecutionSpec(
+        capabilities=SamplerCapabilities(
+            sampler_id="sigmax.flow_euler_stochastic",
+            sampler_version="1",
+            accepted_prediction_types=(PredictionType.FLOW_VELOCITY,),
+            accepted_sigma_domains=(SigmaDomain.UNIT_FLOW,),
+            accepted_ownerships=(ScheduleOwnership.EXTERNAL_SIGMAS,),
+            terminal_requirement=TerminalRequirement.REQUIRES_ZERO,
+            execution_behavior=ExecutionBehavior.STOCHASTIC,
+            noise_ownership=NoiseOwnership.CALLER,
+            required_state=(
+                SamplerState.BEGIN_INDEX,
+                SamplerState.STEP_INDEX,
+                SamplerState.MULTISTEP_HISTORY,
+            ),
+            supports_partial_denoise=False,
+            supports_per_token_timesteps=False,
+        ),
+        scheduler_index=0,
+        begin_index=0,
+        solver_order=1,
+        timestep_spacing="explicit_unit_flow",
+        random_source_ownership=NoiseOwnership.CALLER,
+        per_token_time=None,
+        requested_transitions=3,
+        requested_model_evaluations=3,
+    )
+
+
 def _flow_model(call_sigmas: list[float]) -> Any:
     bias = torch.tensor([_BIASES], dtype=torch.float32, device="cpu")
 
@@ -577,6 +610,89 @@ class FlowEulerContractProbe:
         return {
             "ui": {
                 _FLOW_EULER_UI_KEY: [
+                    json.dumps(
+                        trace,
+                        allow_nan=False,
+                        ensure_ascii=False,
+                        separators=(",", ":"),
+                        sort_keys=True,
+                    )
+                ]
+            }
+        }
+
+
+class StochasticFlowEulerContractProbe:
+    """Execute M5-04 with local CPU generators and no model weights."""
+
+    CATEGORY = "SigmaxTest"
+    DESCRIPTION = "Test-only M5-04 caller-RNG stochastic Flow Euler contract probe."
+    FUNCTION = "execute"
+    OUTPUT_NODE = True
+    RETURN_TYPES: tuple[()] = ()
+    RETURN_NAMES: tuple[()] = ()
+
+    @classmethod
+    def INPUT_TYPES(cls) -> dict[str, dict[str, tuple[object, ...]]]:
+        return {"required": {}}
+
+    def execute(self) -> dict[str, object]:
+        before_call = torch.nn.Module.__call__
+        before_schedulers = tuple(comfy_samplers.SCHEDULER_NAMES)
+        before_rng = torch.random.get_rng_state().clone()
+        sigmas = (1.0, 0.75, 0.25, 0.0)
+        initial = torch.tensor([_INITIAL], dtype=torch.float32, device="cpu")
+        operations = TorchFlowEulerStateOperations(torch_module=torch)
+        spec = _stochastic_flow_euler_spec()
+
+        def evaluator(state: torch.Tensor, sigma: float, scheduler_index: int) -> torch.Tensor:
+            return state * 0.25 + sigma + scheduler_index * 0.125
+
+        def run(seed: int) -> Any:
+            generator = torch.Generator(device="cpu").manual_seed(seed)
+            return execute_stochastic_flow_euler(
+                spec=spec,
+                sigmas=sigmas,
+                state=initial.clone(),
+                evaluator=evaluator,
+                noise_provider=TorchFlowEulerNoiseProvider(
+                    generator=generator,
+                    torch_module=torch,
+                ),
+                operations=operations,
+            )
+
+        first = run(123)
+        repeat = run(123)
+        alternate = run(124)
+        global_mutation = (
+            torch.nn.Module.__call__ is not before_call
+            or tuple(comfy_samplers.SCHEDULER_NAMES) != before_schedulers
+            or not torch.equal(torch.random.get_rng_state(), before_rng)
+        )
+        trace = {
+            "alternate_result_fingerprint": alternate.result_fingerprint,
+            "different_seed_diverges": alternate.result_fingerprint != first.result_fingerprint,
+            "full_effective_model_evaluations": first.snapshot.effective_model_evaluations,
+            "full_effective_noise_draws": len(first.noise_fingerprints),
+            "full_effective_transitions": first.snapshot.effective_transitions,
+            "full_result_fingerprint": first.result_fingerprint,
+            "global_mutation": global_mutation,
+            "model_weights_used": False,
+            "noise_fingerprints": list(first.noise_fingerprints),
+            "python_version": platform.python_version(),
+            "repeat_result_fingerprint": repeat.result_fingerprint,
+            "same_seed_repeat": repeat.result_fingerprint == first.result_fingerprint,
+            "sampler_execution_performed": True,
+            "schedule_fingerprint": first.schedule_fingerprint,
+            "schema": "sigmax.stochastic-flow-euler-host-contract/1",
+            "status": "succeeded",
+            "terminal_noise_draw": len(first.noise_fingerprints) == len(sigmas) - 1,
+            "torch_version": str(torch.__version__),
+        }
+        return {
+            "ui": {
+                _STOCHASTIC_FLOW_EULER_UI_KEY: [
                     json.dumps(
                         trace,
                         allow_nan=False,
@@ -1981,6 +2097,7 @@ NODE_CLASS_MAPPINGS = {
     "SigmaxTest.Krea2ConditioningSource": Krea2ConditioningSource,
     "SigmaxTest.NativeEulerProbe": NativeEulerProbe,
     "SigmaxTest.FlowEulerContractProbe": FlowEulerContractProbe,
+    "SigmaxTest.StochasticFlowEulerContractProbe": StochasticFlowEulerContractProbe,
     "SigmaxTest.SamplerStateContractProbe": SamplerStateContractProbe,
     "SigmaxTest.ScheduleAlgebraProbe": ScheduleAlgebraProbe,
     "SigmaxTest.ZImageScheduleProbe": ZImageScheduleProbe,
@@ -2007,6 +2124,9 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "SigmaxTest.Krea2ConditioningSource": "Sigmax Test — Krea 2 Conditioning Source",
     "SigmaxTest.NativeEulerProbe": "Sigmax Test — Native Euler Probe",
     "SigmaxTest.FlowEulerContractProbe": "Sigmax Test — Flow Euler Contract Probe",
+    "SigmaxTest.StochasticFlowEulerContractProbe": (
+        "Sigmax Test — Stochastic Flow Euler Contract Probe"
+    ),
     "SigmaxTest.SamplerStateContractProbe": "Sigmax Test — Sampler State Contract Probe",
     "SigmaxTest.ScheduleAlgebraProbe": "Sigmax Test — Schedule Algebra Probe",
     "SigmaxTest.ZImageScheduleProbe": "Sigmax Test — Z-Image Schedule Probe",

@@ -23,6 +23,7 @@ def _model(
     module: ModuleType,
     *,
     family_id: str = "minimax_h3",
+    task: str = "fl2va",
     is_model_sampling_av: bool = True,
     video_shift: float = 12.0,
     audio_shift: float = 3.0,
@@ -30,10 +31,35 @@ def _model(
 ) -> object:
     return module.MiniMaxH3ModelSamplingEvidence(
         family_id=family_id,
+        task=task,
         is_model_sampling_av=is_model_sampling_av,
         video_shift=video_shift,
         audio_shift=audio_shift,
         already_shifted=already_shifted,
+    )
+
+
+def _qualified(
+    module: ModuleType,
+    scheduler: str,
+    steps: int,
+    *,
+    model_sampling: object | None = None,
+    recipe_id: str | None = None,
+) -> object:
+    if scheduler == "h3_endpoint":
+        return module.qualify_minimax_h3_scheduler_request(
+            scheduler=scheduler,
+            steps=steps,
+            recipe_id=recipe_id,
+        )
+    return module.qualify_minimax_h3_scheduler_request(
+        scheduler=scheduler,
+        steps=steps,
+        model_sampling=_model(module) if model_sampling is None else model_sampling,
+        recipe_id=recipe_id,
+        host_revision=module.MINIMAX_H3_SCHEDULER_HOSTS[1].revision,
+        available_handlers=module.MINIMAX_H3_NATIVE_SCHEDULERS,
     )
 
 
@@ -43,6 +69,7 @@ def test_m6_14_is_a_non_public_pure_seam() -> None:
         "sigmax.minimax-h3-ten-scheduler-contract/1"
     )
     assert module.MINIMAX_H3_SCHEDULER_CONTRACT_SCHEMA_VERSION == "1"
+    assert module.MINIMAX_H3_SCHEDULER_RESULT_SCHEMA_ID == ("sigmax.minimax-h3-scheduler-result/1")
     schema = MiniMaxH3SigmaScheduler.INPUT_TYPES()
     assert "scheduler" not in schema["required"]
     assert "scheduler" not in schema["optional"]
@@ -245,6 +272,30 @@ def test_m6_14_turbo_recipe_shift_matrix_is_exact() -> None:
         )
     assert mismatch.value.reason_code is module.MiniMaxH3SchedulerReasonCode.SHIFT_MISMATCH
 
+    with pytest.raises(module.MiniMaxH3SchedulerContractError) as task_mismatch:
+        module.qualify_minimax_h3_scheduler_request(
+            scheduler="normal",
+            steps=4,
+            recipe_id="h3.ref2va.lightx2v-turbo-4-v0.1-544p",
+            model_sampling=_model(module, task="fl2va"),
+            host_revision=module.MINIMAX_H3_SCHEDULER_HOSTS[1].revision,
+            available_handlers=module.MINIMAX_H3_NATIVE_SCHEDULERS,
+        )
+    assert task_mismatch.value.reason_code is (
+        module.MiniMaxH3SchedulerReasonCode.MODEL_TASK_MISMATCH
+    )
+
+    ref2va = module.qualify_minimax_h3_scheduler_request(
+        scheduler="normal",
+        steps=4,
+        recipe_id="h3.ref2va.lightx2v-turbo-4-v0.1-544p",
+        model_sampling=_model(module, task="ref2va"),
+        host_revision=module.MINIMAX_H3_SCHEDULER_HOSTS[1].revision,
+        available_handlers=module.MINIMAX_H3_NATIVE_SCHEDULERS,
+    )
+    assert ref2va.model_task == "ref2va"
+    assert ref2va.recipe_task == "ref2va"
+
 
 def test_m6_14_unknown_scheduler_host_handler_and_recipe_fail_closed() -> None:
     module = _module()
@@ -283,8 +334,7 @@ def test_m6_14_native_result_tracks_raw_basic_tail_and_sigmax_slice_counts() -> 
     module = _module()
     # Synthetic monotonic values model a raw DDIM handler result longer than steps+1.
     result = module.validate_minimax_h3_scheduler_result(
-        scheduler="ddim_uniform",
-        requested_steps=4,
+        qualification=_qualified(module, "ddim_uniform", 4),
         raw_sigmas=(1.0, 0.9, 0.7, 0.5, 0.3, 0.1, 0.0),
         dtype="float32",
         start_step=1,
@@ -297,8 +347,7 @@ def test_m6_14_native_result_tracks_raw_basic_tail_and_sigmax_slice_counts() -> 
     assert result.output_transitions == 2
 
     beta = module.validate_minimax_h3_scheduler_result(
-        scheduler="beta",
-        requested_steps=8,
+        qualification=_qualified(module, "beta", 8),
         raw_sigmas=(1.0, 0.4, 0.0),
         dtype="float32",
     )
@@ -309,11 +358,11 @@ def test_m6_14_native_result_tracks_raw_basic_tail_and_sigmax_slice_counts() -> 
 
 def test_m6_14_pure_result_preserves_exact_endpoint_count_and_dtypes() -> None:
     module = _module()
+    qualification = _qualified(module, "h3_endpoint", 4)
     values = (1.0, 0.75, 0.5, 0.25, 0.0)
     for dtype in ("float64", "float32"):
         result = module.validate_minimax_h3_scheduler_result(
-            scheduler="h3_endpoint",
-            requested_steps=4,
+            qualification=qualification,
             raw_sigmas=values,
             dtype=dtype,
         )
@@ -324,8 +373,7 @@ def test_m6_14_pure_result_preserves_exact_endpoint_count_and_dtypes() -> None:
 
     with pytest.raises(module.MiniMaxH3SchedulerContractError) as count:
         module.validate_minimax_h3_scheduler_result(
-            scheduler="h3_endpoint",
-            requested_steps=4,
+            qualification=qualification,
             raw_sigmas=(1.0, 0.5, 0.0),
             dtype="float64",
         )
@@ -338,6 +386,7 @@ def test_m6_14_pure_result_preserves_exact_endpoint_count_and_dtypes() -> None:
         ((1.0, float("nan"), 0.0), "float32", "RESULT_NON_FINITE"),
         ((1.0, 0.2, 0.3, 0.0), "float32", "RESULT_NOT_MONOTONIC"),
         ((1.0, 0.2, 0.1), "float32", "RESULT_TERMINAL_INVALID"),
+        ((1.0, 0.2, 1e-12), "float32", "RESULT_TERMINAL_INVALID"),
         ((1.0, 0.2, 0.0), "float64", "RESULT_DTYPE_INVALID"),
     ],
 )
@@ -347,12 +396,32 @@ def test_m6_14_native_result_validation_fails_closed(
     module = _module()
     with pytest.raises(module.MiniMaxH3SchedulerContractError) as error:
         module.validate_minimax_h3_scheduler_result(
-            scheduler="normal",
-            requested_steps=4,
+            qualification=_qualified(module, "normal", 4),
             raw_sigmas=sigmas,
             dtype=dtype,
         )
     assert error.value.reason_code.value == reason
+
+
+def test_m6_14_result_fingerprint_binds_complete_scheduler_identity() -> None:
+    module = _module()
+    values = (1.0, 0.5, 0.0)
+    simple = module.validate_minimax_h3_scheduler_result(
+        qualification=_qualified(module, "simple", 4),
+        raw_sigmas=values,
+        dtype="float32",
+    )
+    normal = module.validate_minimax_h3_scheduler_result(
+        qualification=_qualified(module, "normal", 4),
+        raw_sigmas=values,
+        dtype="float32",
+    )
+    assert simple.output_sigmas == normal.output_sigmas
+    assert simple.output_fingerprint != normal.output_fingerprint
+    assert simple.contract_fingerprint == module.minimax_h3_scheduler_contract_fingerprint()
+    assert simple.host_revision == module.MINIMAX_H3_SCHEDULER_HOSTS[1].revision
+    assert simple.start_step == 0
+    assert simple.end_step == 2
 
 
 def test_m6_14_manifest_serialization_and_fingerprint_are_deterministic_and_public_safe() -> None:
@@ -372,3 +441,18 @@ def test_m6_14_manifest_serialization_and_fingerprint_are_deterministic_and_publ
     assert first["default"] == "h3_endpoint"
     assert first["native_formula_copied"] is False
     assert first["runtime_registered"] is False
+    assert first["qualification"] == {
+        "family_id": "minimax_h3",
+        "model_tasks": ["fl2va", "ref2va"],
+        "native_model_required": True,
+        "native_recipe_task_match": True,
+        "native_requires_already_shifted": True,
+        "pure_model_forbidden": True,
+    }
+    assert first["result_identity"]["result_schema_id"] == (
+        module.MINIMAX_H3_SCHEDULER_RESULT_SCHEMA_ID
+    )
+    assert first["result_identity"]["terminal_policy"] == "require_exact_zero_preserve"
+    assert "scheduler" in first["result_identity"]["fields"]
+    assert "model_task" in first["result_identity"]["fields"]
+    assert "raw_values" in first["result_identity"]["fields"]

@@ -19,6 +19,7 @@ from typing import Final, Literal, NoReturn
 from comfyui_sigmax.core import ScheduleContractError, SigmaDomain, float_to_ieee_hex
 from comfyui_sigmax.profiles.minimax_h3 import (
     MINIMAX_H3_AUDIO_SHIFT,
+    MINIMAX_H3_DIFFUSERS_REVISION,
     MINIMAX_H3_MAX_STEPS,
     MINIMAX_H3_VIDEO_SHIFT,
 )
@@ -28,6 +29,7 @@ from comfyui_sigmax.profiles.minimax_h3_acceleration import (
 
 MINIMAX_H3_SCHEDULER_CONTRACT_SCHEMA_ID: Final = "sigmax.minimax-h3-ten-scheduler-contract/1"
 MINIMAX_H3_SCHEDULER_CONTRACT_SCHEMA_VERSION: Final = "1"
+MINIMAX_H3_SCHEDULER_RESULT_SCHEMA_ID: Final = "sigmax.minimax-h3-scheduler-result/1"
 MINIMAX_H3_SCHEDULER_CHOICES: Final = (
     "h3_endpoint",
     "simple",
@@ -44,7 +46,6 @@ MINIMAX_H3_DEFAULT_SCHEDULER: Final = MINIMAX_H3_SCHEDULER_CHOICES[0]
 MINIMAX_H3_NATIVE_SCHEDULERS: Final = MINIMAX_H3_SCHEDULER_CHOICES[1:]
 
 _COMMIT_PATTERN: Final = re.compile(r"^[0-9a-f]{40}$")
-_TERMINAL_TOLERANCE: Final = 1e-8
 FloatPrecision = Literal["float32", "float64"]
 
 
@@ -84,6 +85,7 @@ class MiniMaxH3SchedulerReasonCode(str, Enum):
     MODEL_FORBIDDEN = "MODEL_FORBIDDEN"
     MODEL_REQUIRED = "MODEL_REQUIRED"
     MODEL_FAMILY_MISMATCH = "MODEL_FAMILY_MISMATCH"
+    MODEL_TASK_MISMATCH = "MODEL_TASK_MISMATCH"
     MODEL_SAMPLING_NOT_AV = "MODEL_SAMPLING_NOT_AV"
     MODEL_NOT_ALREADY_SHIFTED = "MODEL_NOT_ALREADY_SHIFTED"
     SHIFT_MISMATCH = "SHIFT_MISMATCH"
@@ -97,6 +99,7 @@ class MiniMaxH3SchedulerReasonCode(str, Enum):
     RESULT_DOMAIN_INVALID = "RESULT_DOMAIN_INVALID"
     RESULT_TERMINAL_INVALID = "RESULT_TERMINAL_INVALID"
     RESULT_DTYPE_INVALID = "RESULT_DTYPE_INVALID"
+    RESULT_QUALIFICATION_INVALID = "RESULT_QUALIFICATION_INVALID"
     RESULT_SLICE_INVALID = "RESULT_SLICE_INVALID"
 
 
@@ -251,6 +254,7 @@ class MiniMaxH3ModelSamplingEvidence:
     """Adapter-supplied observations needed before native scheduler delegation."""
 
     family_id: str
+    task: str
     is_model_sampling_av: bool
     video_shift: float
     audio_shift: float
@@ -258,6 +262,8 @@ class MiniMaxH3ModelSamplingEvidence:
 
     def __post_init__(self) -> None:
         _require_nonempty_text("model family_id", self.family_id)
+        if self.task not in {"fl2va", "ref2va"}:
+            raise ScheduleContractError("model task must be fl2va or ref2va")
         if not isinstance(self.is_model_sampling_av, bool):
             raise ScheduleContractError("is_model_sampling_av must be boolean")
         if not isinstance(self.already_shifted, bool):
@@ -287,7 +293,11 @@ class MiniMaxH3QualifiedSchedulerRequest:
     expected_video_shift: float
     expected_audio_shift: float
     recipe_id: str | None
+    recipe_task: str | None
+    model_family_id: str | None
+    model_task: str | None
     host_revision: str | None
+    contract_fingerprint: str
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -297,11 +307,17 @@ class MiniMaxH3SchedulerResultValidation:
     scheduler: str
     requested_steps: int
     dtype: FloatPrecision
+    contract_fingerprint: str
+    host_revision: str | None
+    model_task: str | None
+    recipe_id: str | None
     raw_count: int
     basic_scheduler_count: int
     basic_scheduler_sigmas: tuple[float, ...]
     output_sigmas: tuple[float, ...]
     output_transitions: int
+    start_step: int
+    end_step: int
     output_fingerprint: str
 
 
@@ -370,18 +386,17 @@ def _validate_raw_sigmas(raw_sigmas: object) -> tuple[float, ...]:
             MiniMaxH3SchedulerReasonCode.RESULT_NOT_MONOTONIC,
             "raw scheduler result must be monotonically non-increasing",
         )
-    if abs(values[-1]) > _TERMINAL_TOLERANCE:
+    if values[-1] != 0.0:
         _result_error(
             MiniMaxH3SchedulerReasonCode.RESULT_TERMINAL_INVALID,
-            "raw scheduler result must end at terminal zero",
+            "raw scheduler result must preserve an exact terminal zero",
         )
-    values[-1] = 0.0
     return tuple(values)
 
 
 def _slice_result(
     values: tuple[float, ...], *, start_step: object, end_step: object
-) -> tuple[float, ...]:
+) -> tuple[tuple[float, ...], int, int]:
     available_steps = len(values) - 1
     if (
         not isinstance(start_step, int)
@@ -402,14 +417,57 @@ def _slice_result(
             MiniMaxH3SchedulerReasonCode.RESULT_SLICE_INVALID,
             "end_step is outside the normalized scheduler result",
         )
-    return values[start_step : effective_end + 1]
+    return values[start_step : effective_end + 1], start_step, effective_end
 
 
-def _schedule_fingerprint(values: tuple[float, ...], precision: FloatPrecision) -> str:
+def _schedule_fingerprint(
+    *,
+    qualification: MiniMaxH3QualifiedSchedulerRequest,
+    contract: MiniMaxH3SchedulerContract,
+    precision: FloatPrecision,
+    raw_values: tuple[float, ...],
+    normalized: tuple[float, ...],
+    output: tuple[float, ...],
+    start_step: int,
+    end_step: int,
+) -> str:
+    source_revision = (
+        MINIMAX_H3_DIFFUSERS_REVISION
+        if contract.owner is MiniMaxH3SchedulerOwner.SIGMAX_PURE
+        else qualification.host_revision
+    )
     projection = {
+        "additional_shift_allowed": qualification.additional_shift_allowed,
+        "audio_shift": float_to_ieee_hex(qualification.expected_audio_shift, "float64"),
+        "basic_scheduler_count": len(normalized),
+        "basic_scheduler_tail": contract.basic_scheduler_tail,
+        "contract_fingerprint": qualification.contract_fingerprint,
+        "count_policy": contract.count_policy.value,
         "domain": SigmaDomain.UNIT_FLOW.value,
-        "precision": precision,
-        "values": [float_to_ieee_hex(value, precision) for value in values],
+        "end_step": end_step,
+        "handler_name": qualification.handler_name,
+        "host_revision": qualification.host_revision,
+        "model_family_id": qualification.model_family_id,
+        "model_task": qualification.model_task,
+        "normalized_values": [float_to_ieee_hex(value, precision) for value in normalized],
+        "output_transitions": len(output) - 1,
+        "output_values": [float_to_ieee_hex(value, precision) for value in output],
+        "owner": qualification.owner.value,
+        "dtype": precision,
+        "raw_count": len(raw_values),
+        "raw_values": [float_to_ieee_hex(value, precision) for value in raw_values],
+        "recipe_id": qualification.recipe_id,
+        "recipe_task": qualification.recipe_task,
+        "requested_steps": qualification.steps,
+        "scheduler": qualification.scheduler,
+        "contract_schema_id": MINIMAX_H3_SCHEDULER_CONTRACT_SCHEMA_ID,
+        "schema_version": MINIMAX_H3_SCHEDULER_CONTRACT_SCHEMA_VERSION,
+        "schema_id": MINIMAX_H3_SCHEDULER_RESULT_SCHEMA_ID,
+        "source_revision": source_revision,
+        "start_step": start_step,
+        "terminal_policy": "require_exact_zero_preserve",
+        "terminal_value": float_to_ieee_hex(raw_values[-1], precision),
+        "video_shift": float_to_ieee_hex(qualification.expected_video_shift, "float64"),
     }
     encoded = json.dumps(projection, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return f"sha256:{hashlib.sha256(encoded).hexdigest()}"
@@ -460,7 +518,11 @@ def qualify_minimax_h3_scheduler_request(
             expected_video_shift=expected_video_shift,
             expected_audio_shift=expected_audio_shift,
             recipe_id=recipe_id,
+            recipe_task=None if recipe is None else recipe.task,
+            model_family_id=None,
+            model_task=None,
             host_revision=None,
+            contract_fingerprint=minimax_h3_scheduler_contract_fingerprint(),
         )
 
     if model_sampling is None:
@@ -483,6 +545,11 @@ def qualify_minimax_h3_scheduler_request(
         raise MiniMaxH3SchedulerContractError(
             MiniMaxH3SchedulerReasonCode.MODEL_FAMILY_MISMATCH,
             "MODEL sampling evidence does not identify MiniMax H3",
+        )
+    if recipe is not None and model_sampling.task != recipe.task:
+        raise MiniMaxH3SchedulerContractError(
+            MiniMaxH3SchedulerReasonCode.MODEL_TASK_MISMATCH,
+            "MODEL task differs from the selected Turbo recipe",
         )
     if not model_sampling.is_model_sampling_av:
         raise MiniMaxH3SchedulerContractError(
@@ -510,14 +577,90 @@ def qualify_minimax_h3_scheduler_request(
         expected_video_shift=expected_video_shift,
         expected_audio_shift=expected_audio_shift,
         recipe_id=recipe_id,
+        recipe_task=None if recipe is None else recipe.task,
+        model_family_id=model_sampling.family_id,
+        model_task=model_sampling.task,
         host_revision=host.revision,
+        contract_fingerprint=minimax_h3_scheduler_contract_fingerprint(),
     )
+
+
+def _validate_qualification(
+    qualification: object,
+) -> tuple[MiniMaxH3QualifiedSchedulerRequest, MiniMaxH3SchedulerContract]:
+    if not isinstance(qualification, MiniMaxH3QualifiedSchedulerRequest):
+        _result_error(
+            MiniMaxH3SchedulerReasonCode.RESULT_QUALIFICATION_INVALID,
+            "result validation requires a qualified scheduler request",
+        )
+    contract = _scheduler_contract(qualification.scheduler)
+    _require_steps(contract, qualification.steps)
+    if qualification.contract_fingerprint != minimax_h3_scheduler_contract_fingerprint():
+        _result_error(
+            MiniMaxH3SchedulerReasonCode.RESULT_QUALIFICATION_INVALID,
+            "qualified request belongs to a different scheduler contract",
+        )
+    if (
+        qualification.owner is not contract.owner
+        or qualification.handler_name != contract.handler_name
+        or qualification.additional_shift_allowed != contract.additional_shift_allowed
+    ):
+        _result_error(
+            MiniMaxH3SchedulerReasonCode.RESULT_QUALIFICATION_INVALID,
+            "qualified request ownership or handler identity drifted",
+        )
+    recipe = None
+    if qualification.recipe_id is not None:
+        recipe = _RECIPES_BY_ID.get(qualification.recipe_id)
+        if recipe is None or qualification.recipe_task != recipe.task:
+            _result_error(
+                MiniMaxH3SchedulerReasonCode.RESULT_QUALIFICATION_INVALID,
+                "qualified request recipe identity drifted",
+            )
+        if (
+            qualification.steps not in recipe.allowed_nfe
+            or qualification.expected_video_shift != recipe.video_shift
+            or qualification.expected_audio_shift != recipe.audio_shift
+        ):
+            _result_error(
+                MiniMaxH3SchedulerReasonCode.RESULT_QUALIFICATION_INVALID,
+                "qualified request recipe steps or shifts drifted",
+            )
+    elif (
+        qualification.recipe_task is not None
+        or qualification.expected_video_shift != MINIMAX_H3_VIDEO_SHIFT
+        or qualification.expected_audio_shift != MINIMAX_H3_AUDIO_SHIFT
+    ):
+        _result_error(
+            MiniMaxH3SchedulerReasonCode.RESULT_QUALIFICATION_INVALID,
+            "qualified Base request identity drifted",
+        )
+    if contract.owner is MiniMaxH3SchedulerOwner.SIGMAX_PURE:
+        if (
+            qualification.host_revision is not None
+            or qualification.model_family_id is not None
+            or qualification.model_task is not None
+        ):
+            _result_error(
+                MiniMaxH3SchedulerReasonCode.RESULT_QUALIFICATION_INVALID,
+                "pure qualification cannot carry host or MODEL identity",
+            )
+    elif (
+        qualification.host_revision not in _HOSTS_BY_REVISION
+        or qualification.model_family_id != "minimax_h3"
+        or qualification.model_task not in {"fl2va", "ref2va"}
+        or (recipe is not None and qualification.model_task != recipe.task)
+    ):
+        _result_error(
+            MiniMaxH3SchedulerReasonCode.RESULT_QUALIFICATION_INVALID,
+            "native qualification lacks exact host or MODEL task identity",
+        )
+    return qualification, contract
 
 
 def validate_minimax_h3_scheduler_result(
     *,
-    scheduler: object,
-    requested_steps: object,
+    qualification: object,
     raw_sigmas: object,
     dtype: object,
     start_step: object = 0,
@@ -525,8 +668,8 @@ def validate_minimax_h3_scheduler_result(
 ) -> MiniMaxH3SchedulerResultValidation:
     """Validate host output, then mirror BasicScheduler tail and Sigmax step slicing."""
 
-    contract = _scheduler_contract(scheduler)
-    steps = _require_steps(contract, requested_steps)
+    selected, contract = _validate_qualification(qualification)
+    steps = selected.steps
     if dtype not in contract.allowed_dtypes:
         raise MiniMaxH3SchedulerContractError(
             MiniMaxH3SchedulerReasonCode.RESULT_DTYPE_INVALID,
@@ -545,17 +688,34 @@ def validate_minimax_h3_scheduler_result(
         # IMPORTANT: this mirrors ComfyUI BasicScheduler after its native handler returns.
         # Some handlers return more or fewer than requested_steps + 1; preserve that behavior.
         normalized = raw_values[-(steps + 1) :]
-    output = _slice_result(normalized, start_step=start_step, end_step=end_step)
+    output, effective_start, effective_end = _slice_result(
+        normalized, start_step=start_step, end_step=end_step
+    )
     return MiniMaxH3SchedulerResultValidation(
         scheduler=contract.name,
         requested_steps=steps,
         dtype=precision,
+        contract_fingerprint=selected.contract_fingerprint,
+        host_revision=selected.host_revision,
+        model_task=selected.model_task,
+        recipe_id=selected.recipe_id,
         raw_count=len(raw_values),
         basic_scheduler_count=len(normalized),
         basic_scheduler_sigmas=normalized,
         output_sigmas=output,
         output_transitions=len(output) - 1,
-        output_fingerprint=_schedule_fingerprint(output, precision),
+        start_step=effective_start,
+        end_step=effective_end,
+        output_fingerprint=_schedule_fingerprint(
+            qualification=selected,
+            contract=contract,
+            precision=precision,
+            raw_values=raw_values,
+            normalized=normalized,
+            output=output,
+            start_step=effective_start,
+            end_step=effective_end,
+        ),
     )
 
 
@@ -567,6 +727,56 @@ def serialize_minimax_h3_scheduler_contract() -> dict[str, object]:
         "schema_version": MINIMAX_H3_SCHEDULER_CONTRACT_SCHEMA_VERSION,
         "choices": list(MINIMAX_H3_SCHEDULER_CHOICES),
         "default": MINIMAX_H3_DEFAULT_SCHEDULER,
+        "qualification": {
+            "family_id": "minimax_h3",
+            "model_tasks": ["fl2va", "ref2va"],
+            "native_model_required": True,
+            "native_recipe_task_match": True,
+            "native_requires_already_shifted": True,
+            "pure_model_forbidden": True,
+        },
+        "pure_source": {
+            "license_id": "Apache-2.0",
+            "revision": MINIMAX_H3_DIFFUSERS_REVISION,
+            "source_locators": [
+                "src/diffusers/schedulers/scheduling_minimax_h3.py",
+            ],
+            "url": "https://github.com/huggingface/diffusers",
+        },
+        "result_identity": {
+            "fields": [
+                "additional_shift_allowed",
+                "audio_shift",
+                "basic_scheduler_count",
+                "basic_scheduler_tail",
+                "contract_fingerprint",
+                "count_policy",
+                "domain",
+                "dtype",
+                "end_step",
+                "handler_name",
+                "host_revision",
+                "model_family_id",
+                "model_task",
+                "normalized_values",
+                "output_transitions",
+                "output_values",
+                "owner",
+                "raw_count",
+                "raw_values",
+                "recipe_id",
+                "recipe_task",
+                "requested_steps",
+                "scheduler",
+                "source_revision",
+                "start_step",
+                "terminal_policy",
+                "terminal_value",
+                "video_shift",
+            ],
+            "result_schema_id": MINIMAX_H3_SCHEDULER_RESULT_SCHEMA_ID,
+            "terminal_policy": "require_exact_zero_preserve",
+        },
         "contracts": [
             {
                 "additional_shift_allowed": item.additional_shift_allowed,
@@ -701,6 +911,7 @@ __all__ = [
     "MINIMAX_H3_SCHEDULER_CONTRACT_SCHEMA_VERSION",
     "MINIMAX_H3_SCHEDULER_HOSTS",
     "MINIMAX_H3_SCHEDULER_RECIPES",
+    "MINIMAX_H3_SCHEDULER_RESULT_SCHEMA_ID",
     "MiniMaxH3CountPolicy",
     "MiniMaxH3ModelPolicy",
     "MiniMaxH3ModelSamplingEvidence",

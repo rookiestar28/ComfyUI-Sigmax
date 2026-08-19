@@ -1,0 +1,54 @@
+{
+  "schema": "sigmax.minimax-h3-turbo-golden/1",
+  "source_revision_chunks": ["a7e148b8", "dc7db8ad", "97696606", "0dcc022a", "df11fc8d"],
+  "generator": {
+    "method": "independent-direct-ratio-v1",
+    "float32_quantization": "ieee754-binary32-round-to-nearest-even"
+  },
+  "tolerances": {
+    "float64_max_abs": "1e-8",
+    "float32_max_abs": "1e-6"
+  },
+  "cases": [
+    {
+      "recipe_id": "h3.fl2va.lightx2v-turbo-4-v0.1-544p",
+      "nfe": 4,
+      "video_float64": [1.0, 0.972972972972973, 0.9230769230769231, 0.8, 0.0],
+      "audio_float64": [1.0, 0.9, 0.75, 0.5, 0.0],
+      "video_float32": [1.0, 0.9729729890823364, 0.9230769276618958, 0.800000011920929, 0.0],
+      "audio_float32": [1.0, 0.8999999761581421, 0.75, 0.5, 0.0],
+      "fingerprint_float64": "sha256:bd481c34ceb343d8a4f511eeb6e41bada34202e2c1ea97b0eebeadf7eff2bc36",
+      "fingerprint_float32": "sha256:45e02cbb6bc9bd7b1e00ea83799e685572c7c36739e81a705277b61d6e20d156"
+    },
+    {
+      "recipe_id": "h3.fl2va.lightx2v-turbo-4-v1.0-768p",
+      "nfe": 4,
+      "video_float64": [1.0, 0.9473684210526315, 0.8571428571428571, 0.6666666666666666, 0.0],
+      "audio_float64": [1.0, 0.9, 0.75, 0.5, 0.0],
+      "video_float32": [1.0, 0.9473684430122375, 0.8571428656578064, 0.6666666865348816, 0.0],
+      "audio_float32": [1.0, 0.8999999761581421, 0.75, 0.5, 0.0],
+      "fingerprint_float64": "sha256:f7be6327eb7a696867968e03a9a0ec0ebe5eed989ea1587e80963a3581c7d680",
+      "fingerprint_float32": "sha256:e34820d79acf42d40b5b5b0047208cecc6a786964bf1cdc907e7abb2cf4b140c"
+    },
+    {
+      "recipe_id": "h3.fl2va.lightx2v-turbo-8-v1.0-544p",
+      "nfe": 8,
+      "video_float64": [1.0, 0.9882352941176471, 0.972972972972973, 0.9523809523809523, 0.9230769230769231, 0.8780487804878049, 0.8, 0.631578947368421, 0.0],
+      "audio_float64": [1.0, 0.9545454545454546, 0.9, 0.8333333333333334, 0.75, 0.6428571428571429, 0.5, 0.3, 0.0],
+      "video_float32": [1.0, 0.9882352948188782, 0.9729729890823364, 0.9523809552192688, 0.9230769276618958, 0.8780487775802612, 0.800000011920929, 0.6315789222717285, 0.0],
+      "audio_float32": [1.0, 0.9545454382896423, 0.8999999761581421, 0.8333333134651184, 0.75, 0.6428571343421936, 0.5, 0.30000001192092896, 0.0],
+      "fingerprint_float64": "sha256:8793d95054ed5023dbd949ac41b36c459e1f1889125d35ca3f2211f94ba21d68",
+      "fingerprint_float32": "sha256:a6dc0537b7de233af35df8f118e9b1d37abd06954b2326c947c408eba44f96c3"
+    },
+    {
+      "recipe_id": "h3.ref2va.lightx2v-turbo-4-v0.1-544p",
+      "nfe": 4,
+      "video_float64": [1.0, 0.972972972972973, 0.9230769230769231, 0.8, 0.0],
+      "audio_float64": [1.0, 0.9, 0.75, 0.5, 0.0],
+      "video_float32": [1.0, 0.9729729890823364, 0.9230769276618958, 0.800000011920929, 0.0],
+      "audio_float32": [1.0, 0.8999999761581421, 0.75, 0.5, 0.0],
+      "fingerprint_float64": "sha256:afae48b73ae862e19ba3088d4f2f9c8b27d743eee56eccd1e59a913853af4b61",
+      "fingerprint_float32": "sha256:b765885ee03fa7c6989836461bf5a06af25f60a74c390c45e6fc1de483e987e5"
+    }
+  ]
+}

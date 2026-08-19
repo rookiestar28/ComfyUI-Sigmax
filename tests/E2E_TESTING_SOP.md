@@ -1,5 +1,17 @@
 # ComfyUI-Sigmax End-to-End Testing SOP
 
+<!-- CURRENT-TEST-GOVERNANCE:START -->
+## Current Test Governance
+
+- Pure text/documentation changes and version-field-only `pyproject.toml` updates require no test
+  contract, Full Gate, or host E2E run. Behavior-bearing `pyproject.toml` changes are not exempt.
+- For non-exempt work, a passing Windows Full Gate is the authoritative repository-wide result.
+  Push and Hosted CI are not prerequisites and need not bind evidence to a pushed commit.
+- Real-host, parity, GPU, release, or publication evidence remains item-scoped and additive when the
+  affected boundary explicitly requires it. Linux/WSL and Hosted CI repetitions are otherwise
+  optional diagnostics.
+<!-- CURRENT-TEST-GOVERNANCE:END -->
+
 ## 1. Scope
 
 This SOP defines end-to-end validation against a real ComfyUI host.

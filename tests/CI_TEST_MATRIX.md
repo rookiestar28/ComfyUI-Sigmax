@@ -1,5 +1,19 @@
 # ComfyUI-Sigmax CI and Test Matrix
 
+<!-- CURRENT-TEST-GOVERNANCE:START -->
+## Current Test Governance
+
+- Pure text/documentation changes and version-field-only `pyproject.toml` updates require no test
+  contract, Full Gate, E2E, PR lane, or Hosted CI run. Behavior-bearing `pyproject.toml` changes are
+  not exempt.
+- For non-exempt implementation work, the Windows Full Gate is the authoritative repository-wide
+  acceptance result. Push and Hosted CI are not prerequisites and need not bind evidence to a
+  pushed commit. The CI jobs below describe available automation, not an additional acceptance
+  authority.
+- Linux/WSL, Hosted CI, scheduled, parity, host, GPU, release, and publication lanes are optional
+  diagnostics unless the active item explicitly activates one for its actual risk boundary.
+<!-- CURRENT-TEST-GOVERNANCE:END -->
+
 ## 1. Purpose
 
 This document maps regression risks to executable test layers and CI lanes. It prevents a
@@ -54,10 +68,10 @@ decision only.
 | Gate | Intended use | Required content | Acceptance authority |
 | --- | --- | --- | --- |
 | `fast` | Developer inner loop | Changed-area targeted tests | Never sufficient alone |
-| `pr-core` | Every pull request | Policy, static, pure core, golden, packaging as available | Blocking |
-| `pr-host` | Node, adapter, workflow, or host changes | H0, H1, H2 on known-good host | Blocking when applicable |
-| `full-local` | Pre-push and implementation acceptance | Every applicable implemented stage | Blocking |
-| `scheduled-compat` | Nightly/weekly | Latest-host, wider matrix, mutation/fuzz | Review required |
+| `pr-core` | Optional pull-request diagnostics | Policy, static, pure core, golden, packaging as available | Advisory |
+| `pr-host` | Item-scoped node, adapter, workflow, or host diagnostics | H0, H1, H2 on known-good host | Blocking only when explicitly activated by the item |
+| `full-local` | Implementation acceptance | Windows Full Gate and every applicable implemented stage | Authoritative |
+| `scheduled-compat` | Nightly/weekly diagnostics | Latest-host, wider matrix, mutation/fuzz | Advisory |
 | `release` | Release candidate | Full gate, known-good host, clean install, audit, parity | Blocking |
 | `optional-heavy` | Approved GPU/real-model run | Explicit H4 protocol | Blocking only when required |
 
@@ -65,8 +79,9 @@ Strictly documentation-only changes do not run `full-local`, `pr-host`, or other
 lanes. Pure prose unrelated to executable behavior must not be added as a pytest, CI, or hook
 contract. Review that prose directly under `tests/TEST_SOP.md` Section 5.
 
-For changes with any executable subject, change-aware selection may accelerate `fast`. It must
-not remove a required `pr-core`, `pr-host`, `full-local`, or `release` lane.
+For changes with any executable subject, change-aware selection may accelerate `fast`. It must not
+remove the Windows `full-local` gate or any item-scoped host/release lane explicitly activated for
+the affected risk boundary. PR and Hosted CI lanes remain optional diagnostics.
 
 ## 4. Regression Risk Matrix
 

@@ -21,7 +21,7 @@ from collections.abc import Callable, Mapping, Sequence
 from contextlib import suppress
 from itertools import pairwise
 from pathlib import Path
-from typing import Any, Final, cast
+from typing import Any, Final, NamedTuple, cast
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
@@ -58,6 +58,11 @@ from comfyui_sigmax.profiles import KREA2_TURBO_SCHEMA  # noqa: E402
 from comfyui_sigmax.profiles.minimax_h3 import (  # noqa: E402
     MINIMAX_H3_COMFYUI_REVISION,
 )
+from comfyui_sigmax.profiles.minimax_h3_scheduler_contract import (  # noqa: E402
+    MINIMAX_H3_DEFAULT_SCHEDULER,
+    MINIMAX_H3_NATIVE_SCHEDULERS,
+    MINIMAX_H3_SCHEDULER_CHOICES,
+)
 from comfyui_sigmax.workflows import (  # noqa: E402
     WorkflowValidationLane,
     load_canonical_workflow_fixtures,
@@ -90,11 +95,44 @@ _OUTPUT_NODE_ID: Final = "3"
 _H3_OUTPUT_NODE_ID: Final = "4"
 _BUNDLE_KEY: Final = "sigmax_execution_bundle"
 _H3_TRACE_KEY: Final = "sigmax_native_euler_trace"
+_SAMPLER_STATE_OUTPUT_NODE_ID: Final = "10"
+_SAMPLER_STATE_TRACE_KEY: Final = "sigmax_sampler_state_contract"
+_SAMPLER_STATE_HOST_SCHEMA: Final = "sigmax.sampler-state-host-contract/1"
+_FLOW_EULER_OUTPUT_NODE_ID: Final = "11"
+_FLOW_EULER_TRACE_KEY: Final = "sigmax_flow_euler_contract"
+_FLOW_EULER_HOST_SCHEMA: Final = "sigmax.flow-euler-host-contract/1"
+_STOCHASTIC_FLOW_EULER_OUTPUT_NODE_ID: Final = "12"
+_STOCHASTIC_FLOW_EULER_TRACE_KEY: Final = "sigmax_stochastic_flow_euler_contract"
+_STOCHASTIC_FLOW_EULER_HOST_SCHEMA: Final = "sigmax.stochastic-flow-euler-host-contract/1"
+_ADVANCED_WORKFLOW_OUTPUT_NODE_ID: Final = "13"
+_ADVANCED_WORKFLOW_TRACE_KEY: Final = "sigmax_advanced_workflow_compatibility_contract"
+_ADVANCED_WORKFLOW_HOST_SCHEMA: Final = "sigmax.advanced-workflow-host-contract/1"
+_FLOW_EULER_FULL_RESULT_FINGERPRINT: Final = (
+    "sha256:a24cbd32a60a671ef5c69d3def61caeacc550d224922d94d73d87caa7c360cc7"
+)
+_FLOW_EULER_PARTIAL_RESULT_FINGERPRINT: Final = (
+    "sha256:6b2967fc320ce24cd4beeb1c70863742461c78462106bef5f0491b2cbe3582b8"
+)
+_FLOW_EULER_SCHEDULE_FINGERPRINT: Final = (
+    "sha256:d63e9988942758f87cf65135dbfd48371536d466abfa38f942652c72674a772f"
+)
 _MINIMAX_H3_OUTPUT_NODE_ID: Final = "5"
 _MINIMAX_H3_TRACE_KEY: Final = "sigmax_minimax_h3_h2"
+_MINIMAX_H3_NATIVE_TRACE_KEY: Final = "sigmax_minimax_h3_native_h2"
 _MINIMAX_H3_HOST_VERSION: Final = "0.30.0"
+_MINIMAX_H3_MIN_LATEST_HOST_VERSION: Final = (0, 31, 0)
+_MINIMAX_H3_LATEST_LANE: Final = "latest"
 _MINIMAX_H3_MODEL_LANE_SCHEMA: Final = "sigmax.minimax-h3-model-lane/1"
 _MINIMAX_H3_PUBLIC_VARIANTS: Final = ("H3 Base FL2VA", "H3 Base Ref2VA")
+_MINIMAX_H3_M7_15_SCHEMA: Final = "sigmax.minimax-h3-m7-15-host-matrix/1"
+_MINIMAX_H3_M7_15_TRACE_SCHEMA: Final = "sigmax.minimax-h3-native-matrix-trace/1"
+_MINIMAX_H3_M7_15_STEPS: Final = (2, 4, 8, 20)
+_MINIMAX_H3_M7_15_TURBO_CASES: Final = (
+    ("H3 Base FL2VA", "h3.fl2va.lightx2v-turbo-4-v0.1-544p", 4, 12.0, 3.0),
+    ("H3 Base FL2VA", "h3.fl2va.lightx2v-turbo-8-v1.0-544p", 8, 12.0, 3.0),
+    ("H3 Base FL2VA", "h3.fl2va.lightx2v-turbo-4-v1.0-768p", 4, 6.0, 3.0),
+    ("H3 Base Ref2VA", "h3.ref2va.lightx2v-turbo-4-v0.1-544p", 4, 12.0, 3.0),
+)
 _ALGEBRA_OUTPUT_NODE_ID: Final = "7"
 _ALGEBRA_TRACE_KEY: Final = "sigmax_schedule_algebra"
 _CHECKPOINT_OUTPUT_NODE_ID: Final = "2"
@@ -131,6 +169,168 @@ _H3_TEST_PACK_SOURCE: Final = (
 _EXPECTED_NUMERICAL_FINGERPRINT: Final = (
     "sha256:24984ad4412a3c47103a52cfe3af16bb9df8789f98401d9fc281b3f6ca0892ac"
 )
+
+
+def _minimax_h3_task(variant: str) -> str:
+    if variant == "H3 Base FL2VA":
+        return "fl2va"
+    if variant == "H3 Base Ref2VA":
+        return "ref2va"
+    raise ScheduleContractError("MiniMax H3 matrix variant must be selected explicitly")
+
+
+class MiniMaxH3NativeMatrixCase(NamedTuple):
+    """One deterministic weight-free M7-15 supported-host comparison."""
+
+    case_id: str
+    lane: str
+    variant: str
+    scheduler: str
+    steps: int
+    start_step: int
+    end_step: int
+    recipe_id: str | None
+    video_shift: float
+    audio_shift: float
+    dtype: str
+
+    def validate(self) -> None:
+        task = _minimax_h3_task(self.variant)
+        if self.scheduler not in MINIMAX_H3_NATIVE_SCHEDULERS:
+            raise ScheduleContractError("MiniMax H3 matrix scheduler is outside the fixed set")
+        if self.dtype != "float32":
+            raise ScheduleContractError("MiniMax H3 native matrix must preserve host float32")
+        if self.lane not in {"base_full", "base_slice", "turbo_full"}:
+            raise ScheduleContractError("MiniMax H3 matrix lane is unsupported")
+        if (
+            isinstance(self.steps, bool)
+            or not isinstance(self.steps, int)
+            or self.steps < 1
+            or isinstance(self.start_step, bool)
+            or not isinstance(self.start_step, int)
+            or isinstance(self.end_step, bool)
+            or not isinstance(self.end_step, int)
+        ):
+            raise ScheduleContractError("MiniMax H3 matrix step fields are invalid")
+        if not all(math.isfinite(value) and value > 0.0 for value in self.shifts):
+            raise ScheduleContractError("MiniMax H3 matrix shifts must be finite and positive")
+        if self.lane == "base_full":
+            expected_id = f"base.{task}.{self.scheduler}.s{self.steps}.full"
+            valid = (
+                self.recipe_id is None
+                and self.steps in _MINIMAX_H3_M7_15_STEPS
+                and (self.start_step, self.end_step) == (0, -1)
+                and self.shifts == (12.0, 3.0)
+            )
+        elif self.lane == "base_slice":
+            expected_id = f"base.{task}.{self.scheduler}.s8.slice-1-4"
+            valid = (
+                self.recipe_id is None
+                and self.steps == 8
+                and (self.start_step, self.end_step) == (1, 4)
+                and self.shifts == (12.0, 3.0)
+            )
+        else:
+            expected_id = f"turbo.{task}.{self.recipe_id}.{self.scheduler}.s{self.steps}.full"
+            valid = (
+                self.variant,
+                self.recipe_id,
+                self.steps,
+                self.video_shift,
+                self.audio_shift,
+            ) in _MINIMAX_H3_M7_15_TURBO_CASES and (self.start_step, self.end_step) == (0, -1)
+        if not valid or self.case_id != expected_id:
+            raise ScheduleContractError("MiniMax H3 matrix case identity is inconsistent")
+
+    @property
+    def task(self) -> str:
+        return _minimax_h3_task(self.variant)
+
+    @property
+    def shifts(self) -> tuple[float, float]:
+        return self.video_shift, self.audio_shift
+
+    def projection(self) -> dict[str, object]:
+        self.validate()
+        return {
+            "audio_shift": self.audio_shift,
+            "case_id": self.case_id,
+            "dtype": self.dtype,
+            "end_step": self.end_step,
+            "lane": self.lane,
+            "recipe_id": self.recipe_id,
+            "scheduler": self.scheduler,
+            "start_step": self.start_step,
+            "steps": self.steps,
+            "task": self.task,
+            "variant": self.variant,
+            "video_shift": self.video_shift,
+        }
+
+
+def build_minimax_h3_m7_15_cases() -> tuple[MiniMaxH3NativeMatrixCase, ...]:
+    """Build the frozen 126-case positive matrix without host or filesystem access."""
+
+    cases: list[MiniMaxH3NativeMatrixCase] = []
+    for variant in _MINIMAX_H3_PUBLIC_VARIANTS:
+        task = _minimax_h3_task(variant)
+        for scheduler in MINIMAX_H3_NATIVE_SCHEDULERS:
+            for steps in _MINIMAX_H3_M7_15_STEPS:
+                cases.append(
+                    MiniMaxH3NativeMatrixCase(
+                        case_id=f"base.{task}.{scheduler}.s{steps}.full",
+                        lane="base_full",
+                        variant=variant,
+                        scheduler=scheduler,
+                        steps=steps,
+                        start_step=0,
+                        end_step=-1,
+                        recipe_id=None,
+                        video_shift=12.0,
+                        audio_shift=3.0,
+                        dtype="float32",
+                    )
+                )
+            cases.append(
+                MiniMaxH3NativeMatrixCase(
+                    case_id=f"base.{task}.{scheduler}.s8.slice-1-4",
+                    lane="base_slice",
+                    variant=variant,
+                    scheduler=scheduler,
+                    steps=8,
+                    start_step=1,
+                    end_step=4,
+                    recipe_id=None,
+                    video_shift=12.0,
+                    audio_shift=3.0,
+                    dtype="float32",
+                )
+            )
+    for variant, recipe_id, steps, video_shift, audio_shift in _MINIMAX_H3_M7_15_TURBO_CASES:
+        task = _minimax_h3_task(variant)
+        for scheduler in MINIMAX_H3_NATIVE_SCHEDULERS:
+            cases.append(
+                MiniMaxH3NativeMatrixCase(
+                    case_id=f"turbo.{task}.{recipe_id}.{scheduler}.s{steps}.full",
+                    lane="turbo_full",
+                    variant=variant,
+                    scheduler=scheduler,
+                    steps=steps,
+                    start_step=0,
+                    end_step=-1,
+                    recipe_id=recipe_id,
+                    video_shift=video_shift,
+                    audio_shift=audio_shift,
+                    dtype="float32",
+                )
+            )
+    if len(cases) != 126 or len({case.case_id for case in cases}) != len(cases):
+        raise ScheduleContractError("MiniMax H3 M7-15 matrix cardinality drifted")
+    for case in cases:
+        case.validate()
+    return tuple(cases)
+
+
 _RAW_CASES: Final = {
     "krea2-raw-official-square-1024": {
         "steps": 52,
@@ -243,6 +443,160 @@ def build_minimax_h3_h2_api_prompt(variant: str) -> dict[str, object]:
             },
         },
     }
+
+
+def build_minimax_h3_native_h2_api_prompt(variant: str) -> dict[str, object]:
+    """Return a weight-free native-simple scheduler -> differential probe graph."""
+
+    if variant not in {"H3 Base FL2VA", "H3 Base Ref2VA"}:
+        raise ScheduleContractError("MiniMax H3 native H2 variant must be selected explicitly")
+    return {
+        "1": {
+            "class_type": "SigmaxTest.MiniMaxH3NativeModelSource",
+            "inputs": {},
+        },
+        "2": {
+            "class_type": "Sigmax.MiniMaxH3SigmaScheduler",
+            "inputs": {
+                "end_step": -1,
+                "model": ["1", 0],
+                "scheduler": "simple",
+                "steps": 4,
+                "start_step": 0,
+                "variant": variant,
+            },
+        },
+        _MINIMAX_H3_OUTPUT_NODE_ID: {
+            "class_type": "SigmaxTest.MiniMaxH3NativeScheduleProbe",
+            "inputs": {
+                "model": ["1", 0],
+                "schedule_info": ["2", 1],
+                "scheduler": "simple",
+                "sigmas": ["2", 0],
+                "steps": 4,
+            },
+        },
+    }
+
+
+def build_minimax_h3_native_matrix_h2_api_prompt(
+    case: MiniMaxH3NativeMatrixCase,
+) -> dict[str, object]:
+    """Return one exact M7-15 public-node -> same-object differential graph."""
+
+    if not isinstance(case, MiniMaxH3NativeMatrixCase):
+        raise ScheduleContractError("MiniMax H3 native matrix requires a frozen case")
+    case.validate()
+    schedule_inputs: dict[str, object] = {
+        "end_step": case.end_step,
+        "model": ["1", 0],
+        "scheduler": case.scheduler,
+        "start_step": case.start_step,
+        "steps": case.steps,
+        "variant": case.variant,
+    }
+    if case.recipe_id is not None:
+        schedule_inputs["turbo"] = case.recipe_id
+    return {
+        "1": {
+            "class_type": "SigmaxTest.MiniMaxH3NativeModelSource",
+            "inputs": {
+                "audio_shift": case.audio_shift,
+                "source_mode": "h3",
+                "video_shift": case.video_shift,
+            },
+        },
+        "2": {
+            "class_type": "Sigmax.MiniMaxH3SigmaScheduler",
+            "inputs": schedule_inputs,
+        },
+        _MINIMAX_H3_OUTPUT_NODE_ID: {
+            "class_type": "SigmaxTest.MiniMaxH3NativeScheduleProbe",
+            "inputs": {
+                "audio_shift": case.audio_shift,
+                "case_id": case.case_id,
+                "end_step": case.end_step,
+                "model": ["1", 0],
+                "recipe_id": case.recipe_id or "",
+                "schedule_info": ["2", 1],
+                "scheduler": case.scheduler,
+                "sigmas": ["2", 0],
+                "start_step": case.start_step,
+                "steps": case.steps,
+                "variant": case.variant,
+                "video_shift": case.video_shift,
+            },
+        },
+    }
+
+
+_MINIMAX_H3_M7_15_REJECTION_REASONS: Final = {
+    "missing_model": "MODEL_REQUIRED",
+    "non_h3_model": "MODEL_FAMILY_MISMATCH",
+    "base_shift_mismatch": "SHIFT_MISMATCH",
+    "turbo_shift_mismatch": "SHIFT_MISMATCH",
+}
+_MINIMAX_H3_M7_15_RECEIPT_REASONS: Final = {
+    "missing_model": "minimax_h3.model_required",
+    "non_h3_model": "minimax_h3.model_family_mismatch",
+    "base_shift_mismatch": "minimax_h3.base_shift_mismatch",
+    "turbo_shift_mismatch": "minimax_h3.turbo_shift_mismatch",
+}
+
+
+def minimax_h3_native_matrix_rejection_reason(case_id: str) -> str:
+    """Return the stable production reason expected for one bounded live negative."""
+
+    reason = _MINIMAX_H3_M7_15_REJECTION_REASONS.get(case_id)
+    if reason is None:
+        raise ScheduleContractError("MiniMax H3 native matrix rejection case is unsupported")
+    return reason
+
+
+def minimax_h3_native_matrix_rejection_receipt_reason(case_id: str) -> str:
+    """Return a receipt-safe, case-specific code for one verified rejection."""
+
+    reason = _MINIMAX_H3_M7_15_RECEIPT_REASONS.get(case_id)
+    if reason is None:
+        raise ScheduleContractError("MiniMax H3 native matrix rejection case is unsupported")
+    return reason
+
+
+def build_minimax_h3_native_matrix_rejection_prompt(case_id: str) -> dict[str, object]:
+    """Build one graph that must fail in the public node before its output probe executes."""
+
+    minimax_h3_native_matrix_rejection_reason(case_id)
+    schedule_inputs: dict[str, object] = {
+        "end_step": -1,
+        "scheduler": "simple",
+        "start_step": 0,
+        "steps": 4,
+        "variant": "H3 Base FL2VA",
+    }
+    prompt: dict[str, object] = {}
+    if case_id != "missing_model":
+        source_mode = "non_h3" if case_id == "non_h3_model" else "h3"
+        video_shift = 6.0 if case_id == "base_shift_mismatch" else 12.0
+        prompt["1"] = {
+            "class_type": "SigmaxTest.MiniMaxH3NativeModelSource",
+            "inputs": {
+                "audio_shift": 3.0,
+                "source_mode": source_mode,
+                "video_shift": video_shift,
+            },
+        }
+        schedule_inputs["model"] = ["1", 0]
+    if case_id == "turbo_shift_mismatch":
+        schedule_inputs["turbo"] = "h3.fl2va.lightx2v-turbo-4-v1.0-768p"
+    prompt["2"] = {
+        "class_type": "Sigmax.MiniMaxH3SigmaScheduler",
+        "inputs": schedule_inputs,
+    }
+    prompt[_MINIMAX_H3_OUTPUT_NODE_ID] = {
+        "class_type": "SigmaxTest.MiniMaxH3NativeUnexpectedSuccessProbe",
+        "inputs": {"schedule_info": ["2", 1], "sigmas": ["2", 0]},
+    }
+    return prompt
 
 
 def build_krea2_lora_experimental_h2_api_prompt(variant: str) -> dict[str, object]:
@@ -1405,6 +1759,50 @@ def build_native_euler_h3_api_prompt() -> dict[str, object]:
     return prompt
 
 
+def build_sampler_state_contract_api_prompt() -> dict[str, object]:
+    """Return the release-excluded M5-02 contract-only output graph."""
+
+    return {
+        _SAMPLER_STATE_OUTPUT_NODE_ID: {
+            "class_type": "SigmaxTest.SamplerStateContractProbe",
+            "inputs": {},
+        }
+    }
+
+
+def build_flow_euler_contract_api_prompt() -> dict[str, object]:
+    """Return the release-excluded M5-03 model-free execution graph."""
+
+    return {
+        _FLOW_EULER_OUTPUT_NODE_ID: {
+            "class_type": "SigmaxTest.FlowEulerContractProbe",
+            "inputs": {},
+        }
+    }
+
+
+def build_stochastic_flow_euler_contract_api_prompt() -> dict[str, object]:
+    """Return the release-excluded M5-04 caller-RNG execution graph."""
+
+    return {
+        _STOCHASTIC_FLOW_EULER_OUTPUT_NODE_ID: {
+            "class_type": "SigmaxTest.StochasticFlowEulerContractProbe",
+            "inputs": {},
+        }
+    }
+
+
+def build_advanced_workflow_contract_api_prompt() -> dict[str, object]:
+    """Return the release-excluded M5-05 model-free compatibility graph."""
+
+    return {
+        _ADVANCED_WORKFLOW_OUTPUT_NODE_ID: {
+            "class_type": "SigmaxTest.AdvancedWorkflowCompatibilityProbe",
+            "inputs": {},
+        }
+    }
+
+
 def build_native_euler_h3_partial_rejection_prompt() -> dict[str, object]:
     """Return a partial schedule that M5-01 must reject instead of misclaiming."""
 
@@ -1899,6 +2297,296 @@ def verify_minimax_h3_h2_history(
     }
 
 
+def verify_minimax_h3_native_h2_history(
+    history: object,
+    *,
+    prompt_id: str,
+    variant: str,
+) -> dict[str, object]:
+    """Verify native-simple output against the same host-qualified sampling reference."""
+
+    if variant not in {"H3 Base FL2VA", "H3 Base Ref2VA"}:
+        raise ScheduleContractError("MiniMax H3 native H2 variant must be selected explicitly")
+    root = _object(history, label="MiniMax H3 native H2 history")
+    entry = _object(root.get(prompt_id), label="MiniMax H3 native H2 history entry")
+    status = _object(entry.get("status"), label="MiniMax H3 native H2 prompt status")
+    if status.get("completed") is not True or status.get("status_str") != "success":
+        raise ScheduleContractError("MiniMax H3 native H2 does not prove completed success")
+    prompt_tuple = _array(entry.get("prompt"), label="MiniMax H3 native H2 retained prompt")
+    if len(prompt_tuple) < 3 or prompt_tuple[2] != build_minimax_h3_native_h2_api_prompt(variant):
+        raise ScheduleContractError("MiniMax H3 native H2 graph or variant is stale")
+    outputs = _object(entry.get("outputs"), label="MiniMax H3 native H2 outputs")
+    output = _object(
+        outputs.get(_MINIMAX_H3_OUTPUT_NODE_ID),
+        label="MiniMax H3 native H2 probe output",
+    )
+    traces = _array(
+        output.get(_MINIMAX_H3_NATIVE_TRACE_KEY),
+        label="MiniMax H3 native H2 trace",
+    )
+    if len(traces) != 1 or not isinstance(traces[0], str) or len(traces[0]) > 100_000:
+        raise ScheduleContractError("MiniMax H3 native H2 trace is malformed")
+    trace = _object(
+        _decode_json(traces[0].encode(), label="MiniMax H3 native H2 trace"),
+        label="MiniMax H3 native H2 decoded trace",
+    )
+    canonical = json.dumps(
+        trace,
+        allow_nan=False,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    )
+    sigmas = _array(trace.get("sigmas"), label="MiniMax H3 native H2 sigmas")
+    reference = _array(trace.get("reference_sigmas"), label="MiniMax H3 native H2 reference sigmas")
+    info = _object(trace.get("schedule_info"), label="MiniMax H3 native H2 metadata")
+    scheduler = _object(info.get("scheduler"), label="MiniMax H3 native scheduler metadata")
+    counts = _object(scheduler.get("counts"), label="MiniMax H3 native counts")
+    terminal = _object(scheduler.get("terminal"), label="MiniMax H3 native terminal")
+    fingerprints = _object(scheduler.get("fingerprints"), label="MiniMax H3 native fingerprints")
+    host = _object(scheduler.get("host"), label="MiniMax H3 native host")
+    host_version = host.get("observed_version")
+    expected_sampling_api = (
+        {
+            "0.30.0": "model_sampling_discrete_flow_h3_v030",
+            "0.32.0": "model_sampling_av_v032",
+        }.get(host_version)
+        if isinstance(host_version, str)
+        else None
+    )
+    expected_task = "fl2va" if variant == "H3 Base FL2VA" else "ref2va"
+    if (
+        traces[0] != canonical
+        or trace.get("scheduler") != "simple"
+        or trace.get("steps") != 4
+        or trace.get("max_abs_error") != 0.0
+        or len(sigmas) != 5
+        or sigmas != reference
+        or any(
+            not isinstance(value, int | float)
+            or isinstance(value, bool)
+            or not math.isfinite(value)
+            for value in sigmas
+        )
+        or scheduler.get("owner") != "comfyui_native"
+        or scheduler.get("scheduler") != "simple"
+        or scheduler.get("model_task") != expected_task
+        or expected_sampling_api is None
+        or scheduler.get("sampling_api") != expected_sampling_api
+        or counts.get("requested_steps") != 4
+        or counts.get("actual_sigmas") != 5
+        or counts.get("actual_transitions") != 4
+        or terminal.get("included") is not True
+        or terminal.get("value") != 0.0
+        or not isinstance(fingerprints.get("contract"), str)
+        or not isinstance(fingerprints.get("output"), str)
+    ):
+        raise ScheduleContractError("MiniMax H3 native H2 execution evidence drifted")
+    return {
+        "actual_sigmas": len(sigmas),
+        "actual_transitions": len(sigmas) - 1,
+        "contract_fingerprint": fingerprints["contract"],
+        "max_abs_error": 0.0,
+        "model_task": expected_task,
+        "output_fingerprint": fingerprints["output"],
+        "sampling_api": expected_sampling_api,
+        "scheduler": "simple",
+        "status": "succeeded",
+        "variant": variant,
+    }
+
+
+def _sha256_text(value: object) -> str:
+    if (
+        not isinstance(value, str)
+        or not value.startswith("sha256:")
+        or len(value) != 71
+        or any(character not in "0123456789abcdef" for character in value[7:])
+    ):
+        raise ScheduleContractError("MiniMax H3 matrix fingerprint is malformed")
+    return value
+
+
+def verify_minimax_h3_native_matrix_h2_history(
+    history: object,
+    *,
+    prompt_id: str,
+    case: MiniMaxH3NativeMatrixCase,
+) -> dict[str, object]:
+    """Verify one canonical M7-15 same-object BasicScheduler differential."""
+
+    if not isinstance(case, MiniMaxH3NativeMatrixCase):
+        raise ScheduleContractError("MiniMax H3 native matrix requires a frozen case")
+    case.validate()
+    root = _object(history, label="MiniMax H3 matrix history")
+    entry = _object(root.get(prompt_id), label="MiniMax H3 matrix history entry")
+    status = _object(entry.get("status"), label="MiniMax H3 matrix prompt status")
+    if status.get("completed") is not True or status.get("status_str") != "success":
+        raise ScheduleContractError("MiniMax H3 matrix does not prove completed success")
+    prompt_tuple = _array(entry.get("prompt"), label="MiniMax H3 matrix retained prompt")
+    if len(prompt_tuple) < 3 or prompt_tuple[2] != build_minimax_h3_native_matrix_h2_api_prompt(
+        case
+    ):
+        raise ScheduleContractError("MiniMax H3 matrix graph or case identity is stale")
+    outputs = _object(entry.get("outputs"), label="MiniMax H3 matrix outputs")
+    output = _object(
+        outputs.get(_MINIMAX_H3_OUTPUT_NODE_ID),
+        label="MiniMax H3 matrix probe output",
+    )
+    traces = _array(
+        output.get(_MINIMAX_H3_NATIVE_TRACE_KEY),
+        label="MiniMax H3 matrix trace",
+    )
+    if len(traces) != 1 or not isinstance(traces[0], str) or len(traces[0]) > 100_000:
+        raise ScheduleContractError("MiniMax H3 matrix trace is malformed")
+    trace = _object(
+        _decode_json(traces[0].encode(), label="MiniMax H3 matrix trace"),
+        label="MiniMax H3 matrix decoded trace",
+    )
+    canonical = json.dumps(
+        trace,
+        allow_nan=False,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    )
+    raw = _array(trace.get("raw_reference_sigmas"), label="MiniMax H3 raw reference")
+    basic = _array(trace.get("basic_scheduler_sigmas"), label="MiniMax H3 BasicScheduler vector")
+    reference = _array(trace.get("reference_sigmas"), label="MiniMax H3 sliced reference")
+    sigmas = _array(trace.get("sigmas"), label="MiniMax H3 public output")
+    info = _object(trace.get("schedule_info"), label="MiniMax H3 matrix metadata")
+    scheduler = _object(info.get("scheduler"), label="MiniMax H3 matrix scheduler metadata")
+    counts = _object(scheduler.get("counts"), label="MiniMax H3 matrix counts")
+    terminal = _object(scheduler.get("terminal"), label="MiniMax H3 matrix terminal")
+    slicing = _object(scheduler.get("slicing"), label="MiniMax H3 matrix slicing")
+    shifts = _object(scheduler.get("shift"), label="MiniMax H3 matrix shifts")
+    fingerprints = _object(scheduler.get("fingerprints"), label="MiniMax H3 matrix fingerprints")
+    host = _object(scheduler.get("host"), label="MiniMax H3 matrix host")
+    host_version = host.get("observed_version")
+    sampling_api = (
+        {
+            "0.30.0": "model_sampling_discrete_flow_h3_v030",
+            "0.32.0": "model_sampling_av_v032",
+        }.get(host_version)
+        if isinstance(host_version, str)
+        else None
+    )
+    effective_end = len(basic) - 1 if case.end_step == -1 else case.end_step
+    if any(len(values) < 2 for values in (raw, basic, reference, sigmas)):
+        raise ScheduleContractError("MiniMax H3 matrix vectors are incomplete")
+    expected_output = basic[case.start_step : effective_end + 1]
+    numeric_vectors = (raw, basic, reference, sigmas)
+    finite = all(
+        isinstance(value, int | float)
+        and not isinstance(value, bool)
+        and math.isfinite(float(value))
+        for values in numeric_vectors
+        for value in values
+    )
+    monotonic = all(
+        float(left) >= float(right)
+        for values in numeric_vectors
+        for left, right in pairwise(values)
+    )
+    contract_fingerprint = _sha256_text(fingerprints.get("contract"))
+    output_fingerprint = _sha256_text(fingerprints.get("output"))
+    if (
+        traces[0] != canonical
+        or trace.get("schema") != _MINIMAX_H3_M7_15_TRACE_SCHEMA
+        or trace.get("case_id") != case.case_id
+        or trace.get("scheduler") != case.scheduler
+        or trace.get("steps") != case.steps
+        or trace.get("max_abs_error") != 0.0
+        or trace.get("mean_abs_error") != 0.0
+        or trace.get("finite") is not True
+        or trace.get("monotonic_nonincreasing") is not True
+        or not finite
+        or not monotonic
+        or len(raw) < 2
+        or basic != raw[-(case.steps + 1) :]
+        or reference != expected_output
+        or sigmas != reference
+        or info.get("lane") != "m4_17_comfyui_native_scheduler"
+        or info.get("mode") != "experimental_comfyui_native_scheduler"
+        or scheduler.get("owner") != "comfyui_native"
+        or scheduler.get("scheduler") != case.scheduler
+        or scheduler.get("model_task") != case.task
+        or scheduler.get("recipe_id") != case.recipe_id
+        or scheduler.get("dtype") != case.dtype
+        or sampling_api is None
+        or scheduler.get("sampling_api") != sampling_api
+        or shifts
+        != {
+            "already_applied": True,
+            "audio": case.audio_shift,
+            "video": case.video_shift,
+        }
+        or counts.get("requested_steps") != case.steps
+        or counts.get("raw_sigmas") != len(raw)
+        or counts.get("actual_sigmas") != len(sigmas)
+        or counts.get("actual_transitions") != len(sigmas) - 1
+        or slicing != {"end_step": effective_end, "start_step": case.start_step}
+        or terminal != {"included": sigmas[-1] == 0.0, "value": sigmas[-1]}
+    ):
+        raise ScheduleContractError("MiniMax H3 native matrix execution evidence drifted")
+    return {
+        "actual_sigmas": len(sigmas),
+        "actual_transitions": len(sigmas) - 1,
+        "basic_scheduler_sigmas": list(basic),
+        "case": case.projection(),
+        "contract_fingerprint": contract_fingerprint,
+        "dtype": case.dtype,
+        "host_version": host_version,
+        "max_abs_error": 0.0,
+        "mean_abs_error": 0.0,
+        "output_fingerprint": output_fingerprint,
+        "raw_reference_sigmas": list(raw),
+        "reference_sigmas": list(reference),
+        "sampling_api": sampling_api,
+        "sigmas": list(sigmas),
+        "status": "succeeded",
+        "terminal_included": sigmas[-1] == 0.0,
+        "terminal_value": sigmas[-1],
+    }
+
+
+def verify_minimax_h3_native_matrix_rejection_history(
+    history: object,
+    *,
+    prompt_id: str,
+    case_id: str,
+) -> dict[str, object]:
+    """Verify a bounded public-node runtime rejection without leaking its traceback."""
+
+    expected_reason = minimax_h3_native_matrix_rejection_reason(case_id)
+    root = _object(history, label="MiniMax H3 matrix rejection history")
+    entry = _object(root.get(prompt_id), label="MiniMax H3 matrix rejection entry")
+    status = _object(entry.get("status"), label="MiniMax H3 matrix rejection status")
+    if status.get("completed") is not False or status.get("status_str") != "error":
+        raise ScheduleContractError("MiniMax H3 matrix negative is not a terminal rejection")
+    prompt_tuple = _array(entry.get("prompt"), label="MiniMax H3 rejection retained prompt")
+    if len(prompt_tuple) < 3 or prompt_tuple[2] != build_minimax_h3_native_matrix_rejection_prompt(
+        case_id
+    ):
+        raise ScheduleContractError("MiniMax H3 matrix rejection graph is stale")
+    messages = _array(status.get("messages"), label="MiniMax H3 matrix rejection messages")
+    if not messages:
+        raise ScheduleContractError("MiniMax H3 matrix rejection has no execution event")
+    event = _array(messages[-1], label="MiniMax H3 matrix rejection event")
+    if len(event) != 2 or event[0] != "execution_error":
+        raise ScheduleContractError("MiniMax H3 matrix rejection lacks execution_error")
+    detail = _object(event[1], label="MiniMax H3 matrix rejection detail")
+    message = detail.get("exception_message")
+    if not isinstance(message, str) or not message.startswith(expected_reason + ":"):
+        raise ScheduleContractError("MiniMax H3 matrix rejection reason drifted")
+    return {
+        "case_id": case_id,
+        "production_reason": expected_reason,
+        "reason_code": minimax_h3_native_matrix_rejection_receipt_reason(case_id),
+        "status": "rejected",
+    }
+
+
 def verify_native_euler_h3_history(
     history: object,
     *,
@@ -2046,6 +2734,389 @@ def verify_native_euler_h3_history(
             "stochastic_euler",
         ],
     }
+
+
+def verify_sampler_state_contract_history(
+    history: object,
+    *,
+    prompt_id: str,
+) -> dict[str, object]:
+    """Verify exact, public, model-free M5-02 host contract evidence."""
+
+    root = _object(history, label="sampler-state contract history")
+    entry = _object(root.get(prompt_id), label="sampler-state contract entry")
+    status = _object(entry.get("status"), label="sampler-state contract status")
+    if status.get("completed") is not True or status.get("status_str") != "success":
+        raise ScheduleContractError("sampler-state contract did not complete successfully")
+    prompt_tuple = _array(entry.get("prompt"), label="sampler-state contract prompt")
+    if len(prompt_tuple) < 3 or prompt_tuple[2] != build_sampler_state_contract_api_prompt():
+        raise ScheduleContractError("sampler-state contract retained graph is stale")
+    outputs = _object(entry.get("outputs"), label="sampler-state contract outputs")
+    output = _object(
+        outputs.get(_SAMPLER_STATE_OUTPUT_NODE_ID),
+        label="sampler-state contract output",
+    )
+    traces = _array(
+        output.get(_SAMPLER_STATE_TRACE_KEY),
+        label="sampler-state contract trace",
+    )
+    if len(traces) != 1 or not isinstance(traces[0], str):
+        raise ScheduleContractError("sampler-state contract trace is malformed")
+    try:
+        raw = traces[0].encode("utf-8")
+    except UnicodeError as error:
+        raise ScheduleContractError("sampler-state contract trace is not valid Unicode") from error
+    trace = _object(
+        _decode_json(raw, label="sampler-state contract trace"),
+        label="sampler-state contract trace",
+    )
+    canonical = json.dumps(
+        trace,
+        allow_nan=False,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    )
+    python_version = trace.get("python_version")
+    expected = {
+        "bound_snapshot_fingerprint": (
+            "sha256:6ba2e932400f6f63be7d0e9e626ea79d3add14493bcd313b102443ec789d61ae"
+        ),
+        "execution_receipt_fingerprint": (
+            "sha256:a93ea0f52a55111376ec3c9c78a2b452a53e72df7989f9cbfe0439a7ded6775e"
+        ),
+        "global_mutation": False,
+        "history_length": 0,
+        "initial_snapshot_fingerprint": (
+            "sha256:25a5a7a47f7a5220ccb04d2c7819ac13bb30c84d0f7a36b43041229f67f8faff"
+        ),
+        "receipt_bound": True,
+        "receipt_status": "not_executed",
+        "round_trip_stable": True,
+        "sampler_execution_performed": False,
+        "schema": _SAMPLER_STATE_HOST_SCHEMA,
+        "spec_fingerprint": (
+            "sha256:b0433c362287832b9e92868894ea03d4cb78520a90ef3054aee824da14c86887"
+        ),
+        "status": "ready",
+    }
+    observed = {key: value for key, value in trace.items() if key != "python_version"}
+    if (
+        traces[0] != canonical
+        or observed != expected
+        or not isinstance(python_version, str)
+        or re.fullmatch(r"\d+\.\d+\.\d+(?:[a-z0-9.+-]*)?", python_version) is None
+    ):
+        raise ScheduleContractError("sampler-state contract evidence drifted")
+    return trace
+
+
+def verify_flow_euler_contract_history(
+    history: object,
+    *,
+    prompt_id: str,
+) -> dict[str, object]:
+    """Verify bounded M5-03 execution, native parity, state, and non-mutation evidence."""
+
+    root = _object(history, label="flow-euler contract history")
+    entry = _object(root.get(prompt_id), label="flow-euler contract entry")
+    status = _object(entry.get("status"), label="flow-euler contract status")
+    if status.get("completed") is not True or status.get("status_str") != "success":
+        raise ScheduleContractError("flow-euler contract did not complete successfully")
+    prompt_tuple = _array(entry.get("prompt"), label="flow-euler contract prompt")
+    if len(prompt_tuple) < 3 or prompt_tuple[2] != build_flow_euler_contract_api_prompt():
+        raise ScheduleContractError("flow-euler contract retained graph is stale")
+    outputs = _object(entry.get("outputs"), label="flow-euler contract outputs")
+    output = _object(outputs.get(_FLOW_EULER_OUTPUT_NODE_ID), label="flow-euler contract output")
+    traces = _array(output.get(_FLOW_EULER_TRACE_KEY), label="flow-euler contract trace")
+    if len(traces) != 1 or not isinstance(traces[0], str):
+        raise ScheduleContractError("flow-euler contract trace is malformed")
+    try:
+        raw = traces[0].encode("utf-8")
+    except UnicodeError as error:
+        raise ScheduleContractError("flow-euler contract trace is not valid Unicode") from error
+    trace = _object(
+        _decode_json(raw, label="flow-euler contract trace"),
+        label="flow-euler contract trace",
+    )
+    canonical = json.dumps(
+        trace,
+        allow_nan=False,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    )
+    expected = {
+        "full_effective_model_evaluations": 3,
+        "full_effective_transitions": 3,
+        "full_result_fingerprint": _FLOW_EULER_FULL_RESULT_FINGERPRINT,
+        "full_scheduler_indexes": [0, 1, 2],
+        "global_mutation": False,
+        "model_weights_used": False,
+        "negative_rejections": {
+            "invalid_terminal_evaluator_calls": 0,
+            "resume_mismatch_evaluator_calls": 0,
+        },
+        "native_full_max_abs_error_hex": "0x0.0p+0",
+        "native_full_mean_abs_error_hex": "0x0.0p+0",
+        "native_partial_max_abs_error_hex": "0x0.0p+0",
+        "partial_effective_model_evaluations": 2,
+        "partial_effective_transitions": 2,
+        "partial_result_fingerprint": _FLOW_EULER_PARTIAL_RESULT_FINGERPRINT,
+        "partial_scheduler_indexes": [1, 2],
+        "resumed_matches_full": True,
+        "resumed_result_fingerprint": _FLOW_EULER_FULL_RESULT_FINGERPRINT,
+        "sampler_execution_performed": True,
+        "schedule_fingerprint": _FLOW_EULER_SCHEDULE_FINGERPRINT,
+        "schema": _FLOW_EULER_HOST_SCHEMA,
+        "status": "succeeded",
+        "terminal_model_evaluations": 0,
+    }
+    dynamic_keys = {"python_version", "torch_version"}
+    if set(trace) != set(expected) | dynamic_keys:
+        raise ScheduleContractError("flow-euler contract fields drifted")
+    if any(trace.get(key) != value for key, value in expected.items()):
+        raise ScheduleContractError("flow-euler contract evidence drifted")
+    fingerprint_pattern = re.compile(r"sha256:[0-9a-f]{64}")
+    fingerprints = {
+        key: trace.get(key)
+        for key in (
+            "full_result_fingerprint",
+            "partial_result_fingerprint",
+            "resumed_result_fingerprint",
+            "schedule_fingerprint",
+        )
+    }
+    if any(
+        not isinstance(value, str) or fingerprint_pattern.fullmatch(value) is None
+        for value in fingerprints.values()
+    ):
+        raise ScheduleContractError("flow-euler contract fingerprint is malformed")
+    if (
+        fingerprints["full_result_fingerprint"] != fingerprints["resumed_result_fingerprint"]
+        or fingerprints["partial_result_fingerprint"] == fingerprints["full_result_fingerprint"]
+    ):
+        raise ScheduleContractError("flow-euler contract resume or partial identity drifted")
+    version_pattern = re.compile(r"\d+\.\d+\.\d+(?:[a-z0-9.+-]*)?")
+    if any(
+        not isinstance(trace.get(key), str)
+        or version_pattern.fullmatch(cast(str, trace[key])) is None
+        for key in ("python_version", "torch_version")
+    ):
+        raise ScheduleContractError("flow-euler contract runtime version is malformed")
+    if traces[0] != canonical:
+        raise ScheduleContractError("flow-euler contract trace is not canonical")
+    return trace
+
+
+def verify_stochastic_flow_euler_contract_history(
+    history: object,
+    *,
+    prompt_id: str,
+) -> dict[str, object]:
+    """Verify bounded M5-04 caller-RNG execution and non-mutation evidence."""
+
+    root = _object(history, label="stochastic-flow-euler contract history")
+    entry = _object(root.get(prompt_id), label="stochastic-flow-euler contract entry")
+    status = _object(entry.get("status"), label="stochastic-flow-euler contract status")
+    if status.get("completed") is not True or status.get("status_str") != "success":
+        raise ScheduleContractError("stochastic-flow-euler contract did not complete successfully")
+    prompt_tuple = _array(entry.get("prompt"), label="stochastic-flow-euler contract prompt")
+    if (
+        len(prompt_tuple) < 3
+        or prompt_tuple[2] != build_stochastic_flow_euler_contract_api_prompt()
+    ):
+        raise ScheduleContractError("stochastic-flow-euler contract retained graph is stale")
+    outputs = _object(entry.get("outputs"), label="stochastic-flow-euler contract outputs")
+    output = _object(
+        outputs.get(_STOCHASTIC_FLOW_EULER_OUTPUT_NODE_ID),
+        label="stochastic-flow-euler contract output",
+    )
+    traces = _array(
+        output.get(_STOCHASTIC_FLOW_EULER_TRACE_KEY),
+        label="stochastic-flow-euler contract trace",
+    )
+    if len(traces) != 1 or not isinstance(traces[0], str):
+        raise ScheduleContractError("stochastic-flow-euler contract trace is malformed")
+    trace = _object(
+        _decode_json(traces[0].encode("utf-8"), label="stochastic-flow-euler contract trace"),
+        label="stochastic-flow-euler contract trace",
+    )
+    expected = {
+        "different_seed_diverges": True,
+        "full_effective_model_evaluations": 3,
+        "full_effective_noise_draws": 3,
+        "full_effective_transitions": 3,
+        "global_mutation": False,
+        "model_weights_used": False,
+        "same_seed_repeat": True,
+        "sampler_execution_performed": True,
+        "schema": _STOCHASTIC_FLOW_EULER_HOST_SCHEMA,
+        "status": "succeeded",
+        "terminal_noise_draw": True,
+    }
+    dynamic = {
+        "alternate_result_fingerprint",
+        "full_result_fingerprint",
+        "noise_fingerprints",
+        "python_version",
+        "repeat_result_fingerprint",
+        "schedule_fingerprint",
+        "torch_version",
+    }
+    if set(trace) != set(expected) | dynamic:
+        raise ScheduleContractError("stochastic-flow-euler contract fields drifted")
+    if any(trace.get(key) != value for key, value in expected.items()):
+        raise ScheduleContractError("stochastic-flow-euler contract evidence drifted")
+    fingerprint_pattern = re.compile(r"sha256:[0-9a-f]{64}")
+    fingerprints = {
+        key: trace.get(key)
+        for key in (
+            "alternate_result_fingerprint",
+            "full_result_fingerprint",
+            "repeat_result_fingerprint",
+            "schedule_fingerprint",
+        )
+    }
+    if any(
+        not isinstance(value, str) or fingerprint_pattern.fullmatch(value) is None
+        for value in fingerprints.values()
+    ):
+        raise ScheduleContractError("stochastic-flow-euler contract fingerprint is malformed")
+    noise_fingerprints = trace.get("noise_fingerprints")
+    if (
+        not isinstance(noise_fingerprints, list)
+        or len(noise_fingerprints) != 3
+        or any(
+            not isinstance(value, str) or fingerprint_pattern.fullmatch(value) is None
+            for value in noise_fingerprints
+        )
+    ):
+        raise ScheduleContractError("stochastic-flow-euler noise trace is malformed")
+    if (
+        fingerprints["full_result_fingerprint"] != fingerprints["repeat_result_fingerprint"]
+        or fingerprints["full_result_fingerprint"] == fingerprints["alternate_result_fingerprint"]
+    ):
+        raise ScheduleContractError("stochastic-flow-euler seed identity drifted")
+    version_pattern = re.compile(r"\d+\.\d+\.\d+(?:[a-z0-9.+-]*)?")
+    if any(
+        not isinstance(trace.get(key), str)
+        or version_pattern.fullmatch(cast(str, trace[key])) is None
+        for key in ("python_version", "torch_version")
+    ):
+        raise ScheduleContractError("stochastic-flow-euler runtime version is malformed")
+    canonical = json.dumps(
+        trace,
+        allow_nan=False,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    )
+    if traces[0] != canonical:
+        raise ScheduleContractError("stochastic-flow-euler trace is not canonical")
+    return trace
+
+
+def verify_advanced_workflow_contract_history(
+    history: object,
+    *,
+    prompt_id: str,
+) -> dict[str, object]:
+    """Verify M5-05 ownership, rejection, receipt, and non-mutation evidence."""
+
+    root = _object(history, label="advanced-workflow contract history")
+    entry = _object(root.get(prompt_id), label="advanced-workflow contract entry")
+    status = _object(entry.get("status"), label="advanced-workflow contract status")
+    if status.get("completed") is not True or status.get("status_str") != "success":
+        raise ScheduleContractError("advanced-workflow contract did not complete successfully")
+    prompt_tuple = _array(entry.get("prompt"), label="advanced-workflow contract prompt")
+    if len(prompt_tuple) < 3 or prompt_tuple[2] != build_advanced_workflow_contract_api_prompt():
+        raise ScheduleContractError("advanced-workflow contract retained graph is stale")
+    outputs = _object(entry.get("outputs"), label="advanced-workflow contract outputs")
+    output = _object(
+        outputs.get(_ADVANCED_WORKFLOW_OUTPUT_NODE_ID),
+        label="advanced-workflow contract output",
+    )
+    traces = _array(
+        output.get(_ADVANCED_WORKFLOW_TRACE_KEY),
+        label="advanced-workflow contract trace",
+    )
+    if len(traces) != 1 or not isinstance(traces[0], str):
+        raise ScheduleContractError("advanced-workflow contract trace is malformed")
+    trace = _object(
+        _decode_json(traces[0].encode("utf-8"), label="advanced-workflow contract trace"),
+        label="advanced-workflow contract trace",
+    )
+    expected = {
+        "cleanup": True,
+        "expected_rejections": 3,
+        "global_mutation": False,
+        "model_weights_used": False,
+        "registry_mutation": False,
+        "round_trip_stable": True,
+        "schema": _ADVANCED_WORKFLOW_HOST_SCHEMA,
+        "status": "succeeded",
+    }
+    expected_levels = {
+        "deterministic_controller": "allow",
+        "deterministic_resume": "allow",
+        "native_interruption": "warn",
+        "native_missing_capability": "reject",
+        "pure_inpainting_rejected": "reject",
+        "stochastic_rejected": "reject",
+    }
+    expected_statuses = {
+        "deterministic_controller": "not_executed",
+        "deterministic_resume": "resumable",
+        "native_interruption": "interrupted",
+        "native_missing_capability": "rejected",
+        "pure_inpainting_rejected": "rejected",
+        "stochastic_rejected": "rejected",
+    }
+    dynamic = {
+        "decision_fingerprints",
+        "decision_levels",
+        "python_version",
+        "receipt_fingerprints",
+        "receipt_statuses",
+        "torch_version",
+    }
+    if set(trace) != set(expected) | dynamic:
+        raise ScheduleContractError("advanced-workflow contract fields drifted")
+    if any(trace.get(key) != value for key, value in expected.items()):
+        raise ScheduleContractError("advanced-workflow contract evidence drifted")
+    if trace.get("decision_levels") != expected_levels:
+        raise ScheduleContractError("advanced-workflow decision levels drifted")
+    if trace.get("receipt_statuses") != expected_statuses:
+        raise ScheduleContractError("advanced-workflow receipt statuses drifted")
+    for field_name in ("decision_fingerprints", "receipt_fingerprints"):
+        values = trace.get(field_name)
+        if (
+            not isinstance(values, dict)
+            or set(values) != set(expected_levels)
+            or any(
+                not isinstance(value, str) or re.fullmatch(r"sha256:[0-9a-f]{64}", value) is None
+                for value in values.values()
+            )
+        ):
+            raise ScheduleContractError("advanced-workflow fingerprints are malformed")
+    version_pattern = re.compile(r"\d+\.\d+\.\d+(?:[a-z0-9.+-]*)?")
+    if any(
+        not isinstance(trace.get(key), str)
+        or version_pattern.fullmatch(cast(str, trace[key])) is None
+        for key in ("python_version", "torch_version")
+    ):
+        raise ScheduleContractError("advanced-workflow runtime version is malformed")
+    canonical = json.dumps(
+        trace,
+        allow_nan=False,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    )
+    if traces[0] != canonical:
+        raise ScheduleContractError("advanced-workflow trace is not canonical")
+    return trace
 
 
 def verify_native_euler_h3_partial_rejection(
@@ -2419,6 +3490,18 @@ def redact_text(text: object, *, sensitive_paths: Sequence[Path] = ()) -> str:
     return rendered[-_MAX_LOG_BYTES:]
 
 
+def _host_python_redaction_paths(host_python: Path) -> tuple[Path, ...]:
+    """Return the executable and environment root so host warnings cannot leak either path."""
+
+    # CRITICAL: package warnings print sibling Lib paths, so executable-only redaction leaks hosts.
+    environment_root = (
+        host_python.parent.parent
+        if host_python.parent.name.casefold() in {"bin", "scripts"}
+        else host_python.parent
+    )
+    return (host_python, environment_root)
+
+
 def _json_unique_pairs(pairs: list[tuple[str, object]]) -> dict[str, object]:
     result: dict[str, object] = {}
     for key, value in pairs:
@@ -2564,6 +3647,106 @@ def _git_revision(root: Path) -> str:
     return revision
 
 
+def _minimax_h3_validation_lane(value: object) -> WorkflowValidationLane:
+    """Resolve the H3-specific latest alias without changing other lane semantics."""
+
+    if value == _MINIMAX_H3_LATEST_LANE:
+        return WorkflowValidationLane.LATEST_HOST
+    try:
+        return WorkflowValidationLane(value)
+    except (TypeError, ValueError) as exc:
+        raise ScheduleContractError("MiniMax H3 validation lane is unsupported") from exc
+
+
+def _minimax_h3_host_version(value: object) -> tuple[int, int, int]:
+    if not isinstance(value, str) or not re.fullmatch(r"\d+\.\d+\.\d+", value):
+        raise ScheduleContractError("MiniMax H3 host version must be semantic X.Y.Z text")
+    parts = tuple(int(item) for item in value.split("."))
+    if len(parts) != 3:
+        raise ScheduleContractError("MiniMax H3 host version must contain three components")
+    return parts
+
+
+def _validate_minimax_h3_host_identity(
+    *,
+    lane: WorkflowValidationLane,
+    host_version: object,
+    expected_revision: object,
+    actual_revision: object,
+) -> None:
+    """Fail closed on caller/checkout identity before an H3 host process starts."""
+
+    if not isinstance(expected_revision, str) or not re.fullmatch(
+        r"[0-9a-f]{40}", expected_revision
+    ):
+        raise ScheduleContractError("MiniMax H3 expected host revision must be a 40-digit SHA")
+    if not isinstance(actual_revision, str) or not re.fullmatch(r"[0-9a-f]{40}", actual_revision):
+        raise ScheduleContractError("MiniMax H3 selected host revision is invalid")
+    if expected_revision != actual_revision:
+        raise ScheduleContractError(
+            "selected ComfyUI revision does not match the exact MiniMax H3 host revision"
+        )
+    version = _minimax_h3_host_version(host_version)
+    if lane is WorkflowValidationLane.KNOWN_GOOD:
+        if version != _minimax_h3_host_version(_MINIMAX_H3_HOST_VERSION):
+            raise ScheduleContractError("MiniMax H3 known-good host version is not pinned")
+        if expected_revision != MINIMAX_H3_COMFYUI_REVISION:
+            raise ScheduleContractError("MiniMax H3 known-good host revision is not pinned")
+        return
+    if lane is not WorkflowValidationLane.LATEST_HOST:
+        raise ScheduleContractError("MiniMax H3 host lane must be known_good or latest")
+    if version < _MINIMAX_H3_MIN_LATEST_HOST_VERSION:
+        raise ScheduleContractError("MiniMax H3 latest host lane requires ComfyUI 0.31.0 or newer")
+
+
+def _verify_minimax_h3_live_host_version(system_stats: object, *, expected_version: object) -> str:
+    """Verify the version reported by the running host without retaining private stats."""
+
+    expected = _minimax_h3_host_version(expected_version)
+    root = _object(system_stats, label="MiniMax H3 live system stats")
+    system = _object(root.get("system"), label="MiniMax H3 live system identity")
+    reported = system.get("comfyui_version")
+    if _minimax_h3_host_version(reported) != expected:
+        raise ScheduleContractError(
+            "running ComfyUI version does not match the exact H3 host version"
+        )
+    return cast(str, reported)
+
+
+def _verify_minimax_h3_scheduler_live_schema(object_info: object) -> dict[str, object]:
+    """Verify the exact additive M4-17 selector without retaining unrelated host schema."""
+
+    root = _object(object_info, label="MiniMax H3 live object_info")
+    node = _object(
+        root.get("Sigmax.MiniMaxH3SigmaScheduler"),
+        label="MiniMax H3 live scheduler node",
+    )
+    input_root = _object(node.get("input"), label="MiniMax H3 live scheduler inputs")
+    optional = _object(input_root.get("optional"), label="MiniMax H3 live optional inputs")
+    if tuple(optional) != ("turbo", "recipe_id", "scheduler", "model"):
+        raise ScheduleContractError("MiniMax H3 live optional input order drifted")
+    scheduler = _array(optional.get("scheduler"), label="MiniMax H3 live scheduler COMBO")
+    if len(scheduler) != 2:
+        raise ScheduleContractError("MiniMax H3 live scheduler COMBO is malformed")
+    choices = _array(scheduler[0], label="MiniMax H3 live scheduler choices")
+    options = _object(scheduler[1], label="MiniMax H3 live scheduler options")
+    model = _array(optional.get("model"), label="MiniMax H3 live MODEL input")
+    if (
+        tuple(choices) != MINIMAX_H3_SCHEDULER_CHOICES
+        or options.get("default") != MINIMAX_H3_DEFAULT_SCHEDULER
+        or model != ["MODEL"]
+    ):
+        raise ScheduleContractError("MiniMax H3 live scheduler/model schema drifted")
+    tooltip = options.get("tooltip")
+    if not isinstance(tooltip, str) or "Experimental" not in tooltip:
+        raise ScheduleContractError("MiniMax H3 live native scheduler warning is missing")
+    return {
+        "model_type": "MODEL",
+        "scheduler_choices": list(choices),
+        "scheduler_default": options["default"],
+    }
+
+
 def _stage_extension(run_path: Path) -> Path:
     custom_node = run_path / "base" / "custom_nodes" / "ComfyUI-Sigmax"
     custom_node.mkdir(parents=True)
@@ -2652,7 +3835,12 @@ print(json.dumps({
     if result.returncode != 0:
         diagnostic = redact_text(
             result.stderr.decode("utf-8", errors="replace"),
-            sensitive_paths=(REPOSITORY_ROOT, comfyui_root, staged_node, host_python),
+            sensitive_paths=(
+                REPOSITORY_ROOT,
+                comfyui_root,
+                staged_node,
+                *_host_python_redaction_paths(host_python),
+            ),
         )[-2_000:]
         raise ScheduleContractError(f"host interpreter import-safety probe failed: {diagnostic}")
     data = _object(
@@ -3114,7 +4302,12 @@ def run_conditioning(args: argparse.Namespace) -> dict[str, object]:
         if log_path.exists():
             evidence["host_log_tail"] = redact_text(
                 log_path.read_text(encoding="utf-8", errors="replace"),
-                sensitive_paths=(REPOSITORY_ROOT, comfyui_root, run_path, host_python),
+                sensitive_paths=(
+                    REPOSITORY_ROOT,
+                    comfyui_root,
+                    run_path,
+                    *_host_python_redaction_paths(host_python),
+                ),
             )[-8_000:]
         evidence["cleanup"] = "removed" if succeeded else "retained_failure_artifacts"
         _write_evidence(Path(args.evidence_file) if args.evidence_file else None, evidence)
@@ -3227,7 +4420,7 @@ def build_minimax_h3_model_lane_plan(
 
 
 def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
-    """Execute the model-free MiniMax H3 H1/H2 contract on the pinned H3 host."""
+    """Execute an exact-host H3 lane or one bounded M5 contract lane."""
 
     started = time.time()
     comfyui_root = Path(args.comfyui_root).resolve()
@@ -3237,13 +4430,13 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
     if not host_python.is_file():
         raise ScheduleContractError("SIGMAX_COMFYUI_PYTHON is not a file")
     host_revision = _git_revision(comfyui_root)
-    expected_revision = args.minimax_h3_expected_revision
-    if host_revision != expected_revision:
-        raise ScheduleContractError(
-            "selected ComfyUI revision does not match the exact MiniMax H3 host revision"
-        )
-    if args.minimax_h3_host_version != _MINIMAX_H3_HOST_VERSION:
-        raise ScheduleContractError("MiniMax H3 host version must be the pinned 0.30.0 baseline")
+    validation_lane = _minimax_h3_validation_lane(args.validation_lane)
+    _validate_minimax_h3_host_identity(
+        lane=validation_lane,
+        host_version=args.minimax_h3_host_version,
+        expected_revision=args.minimax_h3_expected_revision,
+        actual_revision=host_revision,
+    )
 
     owned_root = Path(args.temp_root).resolve()
     run_path = require_owned_run_path(
@@ -3268,10 +4461,59 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
     process: subprocess.Popen[bytes] | None = None
     shutdown: dict[str, object] = {}
     succeeded = False
-    validation_lane = WorkflowValidationLane.LATEST_HOST
+    contract_only = (
+        args.sampler_state_contract_only
+        or args.flow_euler_contract_only
+        or args.stochastic_flow_euler_contract_only
+        or args.advanced_workflow_contract_only
+    )
     evidence: dict[str, object] = {
-        "schema": "sigmax.minimax-h3-host-e2e/1",
-        "lanes": ["H1", "H2_MINIMAX_H3_M6_05"],
+        "schema": (
+            _ADVANCED_WORKFLOW_HOST_SCHEMA
+            if args.advanced_workflow_contract_only
+            else (
+                _STOCHASTIC_FLOW_EULER_HOST_SCHEMA
+                if args.stochastic_flow_euler_contract_only
+                else (
+                    "sigmax.flow-euler-host-e2e/1"
+                    if args.flow_euler_contract_only
+                    else (
+                        "sigmax.sampler-state-host-e2e/1"
+                        if args.sampler_state_contract_only
+                        else (
+                            _MINIMAX_H3_M7_15_SCHEMA
+                            if args.minimax_h3_scheduler_matrix
+                            else "sigmax.minimax-h3-host-e2e/1"
+                        )
+                    )
+                )
+            )
+        ),
+        "lanes": (
+            ["H1", "H2_ADVANCED_WORKFLOW_CONTRACT_M5_05"]
+            if args.advanced_workflow_contract_only
+            else (
+                ["H1", "H2_STOCHASTIC_FLOW_EULER_CONTRACT_M5_04"]
+                if args.stochastic_flow_euler_contract_only
+                else (
+                    ["H1", "H2_FLOW_EULER_CONTRACT_M5_03"]
+                    if args.flow_euler_contract_only
+                    else ["H1", "H2_SAMPLER_STATE_CONTRACT_M5_02"]
+                    if args.sampler_state_contract_only
+                    else [
+                        "H1",
+                        "H2_MINIMAX_H3_M6_05",
+                        "H2_MINIMAX_H3_M4_17_NATIVE_SIMPLE",
+                        *(
+                            ["H2_MINIMAX_H3_M7_15_NATIVE_MATRIX"]
+                            if args.minimax_h3_scheduler_matrix
+                            else []
+                        ),
+                    ]
+                )
+            )
+        ),
+        "validation_lane": validation_lane.value,
         "host": {
             "id": "comfyui",
             "version": args.minimax_h3_host_version,
@@ -3283,7 +4525,23 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
         "port": port,
         "import_probe": import_probe,
         "attempt_transitions": {},
-        "model_execution": "not_loaded",
+        "model_execution": (
+            "weight_free_advanced_workflow_fixture"
+            if args.advanced_workflow_contract_only
+            else (
+                "weight_free_stochastic_flow_euler_fixture"
+                if args.stochastic_flow_euler_contract_only
+                else (
+                    "weight_free_flow_euler_fixture"
+                    if args.flow_euler_contract_only
+                    else (
+                        "not_performed_contract_only"
+                        if args.sampler_state_contract_only
+                        else "weight_free_model_sampling_fixture"
+                    )
+                )
+            )
+        ),
     }
     try:
         creationflags = (
@@ -3308,6 +4566,11 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
                 process=process,
                 deadline=time.monotonic() + args.readiness_timeout,
             )
+            reported_host_version = _verify_minimax_h3_live_host_version(
+                _http_json(f"{base_url}/system_stats"),
+                expected_version=args.minimax_h3_host_version,
+            )
+            cast(dict[str, object], evidence["host"])["reported_version"] = reported_host_version
             registry = builtin_node_registry()
             expected_ids = tuple(registry.class_mappings())
             filtered = {
@@ -3317,7 +4580,29 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
                 raise ScheduleContractError(
                     "MiniMax H3 host is missing one or more Sigmax node IDs"
                 )
-            test_ids = {"SigmaxTest.MiniMaxH3ScheduleProbe"}
+            test_ids = (
+                {"SigmaxTest.AdvancedWorkflowCompatibilityProbe"}
+                if args.advanced_workflow_contract_only
+                else (
+                    {"SigmaxTest.StochasticFlowEulerContractProbe"}
+                    if args.stochastic_flow_euler_contract_only
+                    else (
+                        {"SigmaxTest.FlowEulerContractProbe"}
+                        if args.flow_euler_contract_only
+                        else (
+                            {"SigmaxTest.SamplerStateContractProbe"}
+                            if args.sampler_state_contract_only
+                            else {
+                                "SigmaxTest.MiniMaxH3ScheduleProbe",
+                                "SigmaxTest.MiniMaxH3NativeModelSource",
+                                "SigmaxTest.MiniMaxH3NativeScheduleProbe",
+                            }
+                        )
+                    )
+                )
+            )
+            if args.minimax_h3_scheduler_matrix and not contract_only:
+                test_ids.add("SigmaxTest.MiniMaxH3NativeUnexpectedSuccessProbe")
             if not test_ids <= set(object_info):
                 raise ScheduleContractError("MiniMax H3 H2 test probe is not registered")
             live_report = validate_live_workflow_fixtures(
@@ -3334,6 +4619,10 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
                 "registered": True,
                 "status": "succeeded",
             }
+            if not contract_only:
+                h1_summary["scheduler_schema"] = _verify_minimax_h3_scheduler_live_schema(
+                    object_info
+                )
             repeat_info = _object(
                 _http_json(f"{base_url}/object_info"),
                 label="MiniMax H3 repeat live object_info",
@@ -3357,12 +4646,119 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
                 ),
                 "status": "succeeded",
             }
+            if not contract_only:
+                repeat_h1_summary["scheduler_schema"] = _verify_minimax_h3_scheduler_live_schema(
+                    repeat_info
+                )
             attempts = cast(dict[str, object], evidence["attempt_transitions"])
             attempts["h1"] = build_verified_host_repeat_transition(
                 lane="H1",
                 first_summary=h1_summary,
                 repeat_summary=repeat_h1_summary,
             )
+            evidence["h1"] = h1_summary
+            if args.sampler_state_contract_only:
+
+                def submit_sampler_state(ordinal: int) -> tuple[str, dict[str, object]]:
+                    return _submit_successful_prompt(
+                        base_url=base_url,
+                        client_id=f"sigmax-m5-02-sampler-state-attempt-{ordinal}",
+                        prompt=build_sampler_state_contract_api_prompt(),
+                        execution_timeout=args.execution_timeout,
+                    )
+
+                def verify_sampler_state(
+                    history: object,
+                    prompt_id: str,
+                ) -> dict[str, object]:
+                    return verify_sampler_state_contract_history(history, prompt_id=prompt_id)
+
+                sampler_summary, sampler_transition = execute_verified_host_repeat(
+                    lane="H2_SAMPLER_STATE_CONTRACT_M5_02",
+                    submit=submit_sampler_state,
+                    verify=verify_sampler_state,
+                )
+                evidence["sampler_state_contract"] = sampler_summary
+                attempts["sampler_state_contract"] = sampler_transition
+                succeeded = True
+                return evidence
+            if args.flow_euler_contract_only:
+
+                def submit_flow_euler(ordinal: int) -> tuple[str, dict[str, object]]:
+                    return _submit_successful_prompt(
+                        base_url=base_url,
+                        client_id=f"sigmax-m5-03-flow-euler-attempt-{ordinal}",
+                        prompt=build_flow_euler_contract_api_prompt(),
+                        execution_timeout=args.execution_timeout,
+                    )
+
+                def verify_flow_euler(
+                    history: object,
+                    prompt_id: str,
+                ) -> dict[str, object]:
+                    return verify_flow_euler_contract_history(history, prompt_id=prompt_id)
+
+                flow_summary, flow_transition = execute_verified_host_repeat(
+                    lane="H2_FLOW_EULER_CONTRACT_M5_03",
+                    submit=submit_flow_euler,
+                    verify=verify_flow_euler,
+                )
+                evidence["flow_euler_contract"] = flow_summary
+                attempts["flow_euler_contract"] = flow_transition
+                succeeded = True
+                return evidence
+            if args.stochastic_flow_euler_contract_only:
+
+                def submit_stochastic_flow_euler(ordinal: int) -> tuple[str, dict[str, object]]:
+                    return _submit_successful_prompt(
+                        base_url=base_url,
+                        client_id=f"sigmax-m5-04-stochastic-flow-euler-attempt-{ordinal}",
+                        prompt=build_stochastic_flow_euler_contract_api_prompt(),
+                        execution_timeout=args.execution_timeout,
+                    )
+
+                def verify_stochastic_flow_euler(
+                    history: object,
+                    prompt_id: str,
+                ) -> dict[str, object]:
+                    return verify_stochastic_flow_euler_contract_history(
+                        history, prompt_id=prompt_id
+                    )
+
+                stochastic_summary, stochastic_transition = execute_verified_host_repeat(
+                    lane="H2_STOCHASTIC_FLOW_EULER_CONTRACT_M5_04",
+                    submit=submit_stochastic_flow_euler,
+                    verify=verify_stochastic_flow_euler,
+                )
+                evidence["stochastic_flow_euler_contract"] = stochastic_summary
+                attempts["stochastic_flow_euler_contract"] = stochastic_transition
+                succeeded = True
+                return evidence
+            if args.advanced_workflow_contract_only:
+
+                def submit_advanced_workflow(ordinal: int) -> tuple[str, dict[str, object]]:
+                    return _submit_successful_prompt(
+                        base_url=base_url,
+                        client_id=f"sigmax-m5-05-advanced-workflow-attempt-{ordinal}",
+                        prompt=build_advanced_workflow_contract_api_prompt(),
+                        execution_timeout=args.execution_timeout,
+                    )
+
+                def verify_advanced_workflow(
+                    history: object,
+                    prompt_id: str,
+                ) -> dict[str, object]:
+                    return verify_advanced_workflow_contract_history(history, prompt_id=prompt_id)
+
+                advanced_summary, advanced_transition = execute_verified_host_repeat(
+                    lane="H2_ADVANCED_WORKFLOW_CONTRACT_M5_05",
+                    submit=submit_advanced_workflow,
+                    verify=verify_advanced_workflow,
+                )
+                evidence["advanced_workflow_contract"] = advanced_summary
+                attempts["advanced_workflow_contract"] = advanced_transition
+                succeeded = True
+                return evidence
             h2_results: list[dict[str, object]] = []
             for variant, variant_id in (
                 ("H3 Base FL2VA", "fl2va"),
@@ -3401,8 +4797,139 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
                 )
                 h2_results.append(summary)
                 attempts[f"h2_minimax_h3.{variant_id}"] = transition
-            evidence["h1"] = h1_summary
+            native_h2_results: list[dict[str, object]] = []
+            for variant, variant_id in (
+                ("H3 Base FL2VA", "fl2va"),
+                ("H3 Base Ref2VA", "ref2va"),
+            ):
+
+                def submit_native_h2(
+                    ordinal: int,
+                    *,
+                    selected_variant: str = variant,
+                    selected_id: str = variant_id,
+                ) -> tuple[str, dict[str, object]]:
+                    return _submit_successful_prompt(
+                        base_url=base_url,
+                        client_id=(
+                            f"sigmax-m4-17-minimax-h3-native-{selected_id}-attempt-{ordinal}"
+                        ),
+                        prompt=build_minimax_h3_native_h2_api_prompt(selected_variant),
+                        execution_timeout=args.execution_timeout,
+                    )
+
+                def verify_native_h2(
+                    history: object,
+                    prompt_id: str,
+                    *,
+                    selected_variant: str = variant,
+                ) -> dict[str, object]:
+                    return verify_minimax_h3_native_h2_history(
+                        history,
+                        prompt_id=prompt_id,
+                        variant=selected_variant,
+                    )
+
+                native_summary, native_transition = execute_verified_host_repeat(
+                    lane="H2_MINIMAX_H3_M4_17_NATIVE_SIMPLE",
+                    submit=submit_native_h2,
+                    verify=verify_native_h2,
+                )
+                native_h2_results.append(native_summary)
+                attempts[f"h2_minimax_h3_native_simple.{variant_id}"] = native_transition
             evidence["h2_minimax_h3"] = h2_results
+            evidence["h2_minimax_h3_native_simple"] = native_h2_results
+            if args.minimax_h3_scheduler_matrix:
+                matrix_results: list[dict[str, object]] = []
+                for case in build_minimax_h3_m7_15_cases():
+                    case_token = hashlib.sha256(case.case_id.encode("utf-8")).hexdigest()[:16]
+
+                    def submit_matrix(
+                        ordinal: int,
+                        *,
+                        selected_case: MiniMaxH3NativeMatrixCase = case,
+                        selected_token: str = case_token,
+                    ) -> tuple[str, dict[str, object]]:
+                        return _submit_successful_prompt(
+                            base_url=base_url,
+                            client_id=(
+                                f"sigmax-m7-15-minimax-h3-{selected_token}-attempt-{ordinal}"
+                            ),
+                            prompt=build_minimax_h3_native_matrix_h2_api_prompt(selected_case),
+                            execution_timeout=args.execution_timeout,
+                        )
+
+                    def verify_matrix(
+                        history: object,
+                        prompt_id: str,
+                        *,
+                        selected_case: MiniMaxH3NativeMatrixCase = case,
+                    ) -> dict[str, object]:
+                        return verify_minimax_h3_native_matrix_h2_history(
+                            history,
+                            prompt_id=prompt_id,
+                            case=selected_case,
+                        )
+
+                    matrix_summary, matrix_transition = execute_verified_host_repeat(
+                        lane="H2_MINIMAX_H3_M7_15_NATIVE_MATRIX",
+                        submit=submit_matrix,
+                        verify=verify_matrix,
+                    )
+                    matrix_results.append(matrix_summary)
+                    attempts[f"h2_minimax_h3_native_matrix.{case.case_id}"] = matrix_transition
+                rejection_results: list[dict[str, object]] = []
+                for rejection_id in _MINIMAX_H3_M7_15_REJECTION_REASONS:
+                    rejection_token = hashlib.sha256(rejection_id.encode("utf-8")).hexdigest()[:16]
+
+                    def submit_rejection(
+                        ordinal: int,
+                        *,
+                        selected_id: str = rejection_id,
+                        selected_token: str = rejection_token,
+                    ) -> tuple[str, dict[str, object]]:
+                        return _submit_rejected_runtime_prompt(
+                            base_url=base_url,
+                            client_id=(
+                                "sigmax-m7-15-minimax-h3-negative-"
+                                f"{selected_token}-attempt-{ordinal}"
+                            ),
+                            prompt=build_minimax_h3_native_matrix_rejection_prompt(selected_id),
+                            execution_timeout=args.execution_timeout,
+                        )
+
+                    def verify_rejection(
+                        history: object,
+                        prompt_id: str,
+                        *,
+                        selected_id: str = rejection_id,
+                    ) -> dict[str, object]:
+                        return verify_minimax_h3_native_matrix_rejection_history(
+                            history,
+                            prompt_id=prompt_id,
+                            case_id=selected_id,
+                        )
+
+                    rejection_summary, rejection_transition = execute_verified_host_repeat(
+                        lane="H2_MINIMAX_H3_M7_15_NATIVE_NEGATIVE",
+                        submit=submit_rejection,
+                        verify=verify_rejection,
+                    )
+                    rejection_results.append(rejection_summary)
+                    attempts[f"h2_minimax_h3_native_matrix_negative.{rejection_id}"] = (
+                        rejection_transition
+                    )
+                evidence["h2_minimax_h3_native_matrix"] = matrix_results
+                evidence["h2_minimax_h3_native_matrix_rejections"] = rejection_results
+                evidence["matrix_contract"] = {
+                    "case_count": len(matrix_results),
+                    "dtype": "float32",
+                    "first_repeat": True,
+                    "max_abs_error": 0.0,
+                    "mean_abs_error": 0.0,
+                    "negative_case_count": len(rejection_results),
+                    "same_model_sampling_object": True,
+                }
             succeeded = True
     finally:
         if process is not None:
@@ -3413,7 +4940,12 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
         if log_path.exists():
             evidence["host_log_tail"] = redact_text(
                 log_path.read_text(encoding="utf-8", errors="replace"),
-                sensitive_paths=(REPOSITORY_ROOT, comfyui_root, run_path, host_python),
+                sensitive_paths=(
+                    REPOSITORY_ROOT,
+                    comfyui_root,
+                    run_path,
+                    *_host_python_redaction_paths(host_python),
+                ),
             )[-8_000:]
         evidence["cleanup"] = "removed" if succeeded else "retained_failure_artifacts"
         _write_evidence(Path(args.evidence_file) if args.evidence_file else None, evidence)
@@ -4404,7 +5936,12 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         if log_path.exists():
             evidence["host_log_tail"] = redact_text(
                 log_path.read_text(encoding="utf-8", errors="replace"),
-                sensitive_paths=(REPOSITORY_ROOT, comfyui_root, run_path, host_python),
+                sensitive_paths=(
+                    REPOSITORY_ROOT,
+                    comfyui_root,
+                    run_path,
+                    *_host_python_redaction_paths(host_python),
+                ),
             )[-8_000:]
         evidence["cleanup"] = "removed" if succeeded else "retained_failure_artifacts"
         _write_evidence(Path(args.evidence_file) if args.evidence_file else None, evidence)
@@ -4424,6 +5961,31 @@ def _parser() -> argparse.ArgumentParser:
         "--minimax-h3-only",
         action="store_true",
         help="run only the model-free MiniMax H3 H1/H2 contract on the pinned 0.30.0 host",
+    )
+    parser.add_argument(
+        "--sampler-state-contract-only",
+        action="store_true",
+        help="run only the M5-02 model-free sampler-state contract on an exact reviewed host",
+    )
+    parser.add_argument(
+        "--flow-euler-contract-only",
+        action="store_true",
+        help="run only the M5-03 model-free deterministic Flow Euler contract",
+    )
+    parser.add_argument(
+        "--stochastic-flow-euler-contract-only",
+        action="store_true",
+        help="run only the M5-04 model-free caller-RNG stochastic Flow Euler contract",
+    )
+    parser.add_argument(
+        "--advanced-workflow-contract-only",
+        action="store_true",
+        help="run only the M5-05 model-free advanced-workflow compatibility contract",
+    )
+    parser.add_argument(
+        "--minimax-h3-scheduler-matrix",
+        action="store_true",
+        help="extend --minimax-h3-only with the frozen M7-15 ten-scheduler host matrix",
     )
     parser.add_argument(
         "--minimax-h3-model-plan",
@@ -4494,7 +6056,7 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--validation-lane",
-        choices=[item.value for item in WorkflowValidationLane],
+        choices=[item.value for item in WorkflowValidationLane] + [_MINIMAX_H3_LATEST_LANE],
         default=WorkflowValidationLane.KNOWN_GOOD.value,
     )
     parser.add_argument(
@@ -4511,10 +6073,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = _parser()
     args = parser.parse_args(argv)
     if args.minimax_h3_model_plan:
-        if args.conditioning_only or args.minimax_h3_only:
-            parser.error(
-                "--minimax-h3-model-plan cannot be combined with --conditioning-only or --minimax-h3-only"
-            )
+        if (
+            args.conditioning_only
+            or args.minimax_h3_only
+            or args.sampler_state_contract_only
+            or args.flow_euler_contract_only
+            or args.stochastic_flow_euler_contract_only
+            or args.advanced_workflow_contract_only
+        ):
+            parser.error("--minimax-h3-model-plan cannot be combined with an execution-only lane")
         if not args.minimax_h3_model_variant:
             parser.error("--minimax-h3-model-variant is required with --minimax-h3-model-plan")
         if not args.minimax_h3_model_prompt:
@@ -4547,10 +6114,34 @@ def main(argv: Sequence[str] | None = None) -> int:
         parser.error("COMFYUI_ROOT or --comfyui-root is required")
     if not args.host_python:
         parser.error("SIGMAX_COMFYUI_PYTHON or --host-python is required")
+    if args.validation_lane == _MINIMAX_H3_LATEST_LANE and not (
+        args.minimax_h3_only
+        or args.sampler_state_contract_only
+        or args.flow_euler_contract_only
+        or args.stochastic_flow_euler_contract_only
+        or args.advanced_workflow_contract_only
+    ):
+        parser.error("--validation-lane latest is reserved for an exact reviewed host lane")
+    if args.minimax_h3_scheduler_matrix and not args.minimax_h3_only:
+        parser.error("--minimax-h3-scheduler-matrix requires --minimax-h3-only")
     try:
-        if args.conditioning_only and args.minimax_h3_only:
-            parser.error("--conditioning-only and --minimax-h3-only are mutually exclusive")
-        if args.minimax_h3_only:
+        exclusive_lanes = (
+            args.conditioning_only,
+            args.minimax_h3_only,
+            args.sampler_state_contract_only,
+            args.flow_euler_contract_only,
+            args.stochastic_flow_euler_contract_only,
+            args.advanced_workflow_contract_only,
+        )
+        if sum(exclusive_lanes) > 1:
+            parser.error("execution-only lanes are mutually exclusive")
+        if (
+            args.minimax_h3_only
+            or args.sampler_state_contract_only
+            or args.flow_euler_contract_only
+            or args.stochastic_flow_euler_contract_only
+            or args.advanced_workflow_contract_only
+        ):
             evidence = run_minimax_h3(args)
         elif args.conditioning_only:
             evidence = run_conditioning(args)

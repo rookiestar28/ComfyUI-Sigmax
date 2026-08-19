@@ -86,7 +86,22 @@ def _receipt(
     spec: SamplerExecutionSpec,
     *,
     sampler_rng: str = "none",
+    sampler_id: str = "comfy.euler",
+    sampler_version: str = "native",
+    execution_status: str = "succeeded",
+    execution_reason_code: str | None = None,
+    effective_transitions: int | None = None,
+    effective_model_evaluations: int | None = None,
+    host_revision: str = "test-revision",
 ) -> ExecutionReceipt:
+    actual_transitions = (
+        spec.requested_transitions if effective_transitions is None else effective_transitions
+    )
+    actual_model_evaluations = (
+        spec.requested_model_evaluations
+        if effective_model_evaluations is None
+        else effective_model_evaluations
+    )
     projection: dict[str, object] = {
         "artifact": {
             "construction_fingerprint": _fingerprint("a"),
@@ -98,8 +113,8 @@ def _receipt(
             "reasons": ["compatible"],
         },
         "counts": {
-            "effective_model_evaluations": spec.requested_model_evaluations,
-            "effective_transitions": spec.requested_transitions,
+            "effective_model_evaluations": actual_model_evaluations,
+            "effective_transitions": actual_transitions,
             "requested_model_evaluations": spec.requested_model_evaluations,
             "requested_transitions": spec.requested_transitions,
         },
@@ -112,11 +127,14 @@ def _receipt(
             "steps": spec.requested_transitions,
             "width": None,
         },
-        "execution": {"reason_code": None, "status": "succeeded"},
+        "execution": {
+            "reason_code": execution_reason_code,
+            "status": execution_status,
+        },
         "host": {
             "api_version": "test",
             "id": "comfyui",
-            "revision": "test-revision",
+            "revision": host_revision,
             "version": "0.30.0",
         },
         "model": {
@@ -128,8 +146,8 @@ def _receipt(
         "rng_ownership": {"model": "none", "sampler": sampler_rng, "schedule": "none"},
         "sampler": {
             "fingerprint": _fingerprint("d"),
-            "id": "comfy.euler",
-            "version": "native",
+            "id": sampler_id,
+            "version": sampler_version,
         },
         "schema": "sigmax.execution-receipt/1",
     }
@@ -188,6 +206,47 @@ def test_round_trip_and_fingerprint_are_byte_deterministic() -> None:
     assert restored == state
 
 
+def test_schema_v1_spec_and_snapshot_goldens_are_frozen() -> None:
+    spec = _spec()
+    state = SamplerStateSnapshot.initial(spec).append_step(spec, _step(0))
+    expected_spec = (
+        b'{"begin_index":2,"capabilities":{"accepted_ownerships":["EXTERNAL_SIGMAS"],'
+        b'"accepted_prediction_types":["flow_velocity"],"accepted_sigma_domains":'
+        b'["UNIT_FLOW"],"execution_behavior":"deterministic","noise_ownership":"none",'
+        b'"required_state":["begin_index","step_index","multistep_history","resume"],'
+        b'"sampler_id":"comfy.euler","sampler_version":"native",'
+        b'"supports_partial_denoise":true,"supports_per_token_timesteps":true,'
+        b'"terminal_requirement":"requires_zero"},"per_token_time":'
+        b'["3fd0000000000000","3fe0000000000000"],"random_source_ownership":"none",'
+        b'"requested_model_evaluations":2,"requested_transitions":2,'
+        b'"scheduler_index":4,"schema":"sigmax.sampler-execution-spec/1",'
+        b'"solver_order":1,"timestep_spacing":"native"}'
+    )
+    expected_state = (
+        b'{"effective_model_evaluations":1,"effective_transitions":1,'
+        b'"execution_receipt_fingerprint":null,"history":'
+        b'[{"input_state_fingerprint":"sha256:'
+        b'1111111111111111111111111111111111111111111111111111111111111111",'
+        b'"model_evaluations":1,"next_sigma":"3fe8000000000000",'
+        b'"output_state_fingerprint":"sha256:'
+        b'3333333333333333333333333333333333333333333333333333333333333333",'
+        b'"scheduler_index":4,"sigma":"3ff0000000000000","step_index":0}],'
+        b'"next_step_index":1,"schema":"sigmax.sampler-state-snapshot/1",'
+        b'"spec_fingerprint":"sha256:'
+        b'b0433c362287832b9e92868894ea03d4cb78520a90ef3054aee824da14c86887",'
+        b'"status":"running"}'
+    )
+
+    assert serialize_sampler_execution_spec(spec) == expected_spec
+    assert sampler_execution_spec_fingerprint(spec) == (
+        "sha256:b0433c362287832b9e92868894ea03d4cb78520a90ef3054aee824da14c86887"
+    )
+    assert serialize_sampler_state_snapshot(state, spec) == expected_state
+    assert sampler_state_module.sampler_state_snapshot_fingerprint(state, spec) == (
+        "sha256:d5a8c1c2b657feedd53fdbbb495f24dca06d0aebdf0815323e88afcbc7abe416"
+    )
+
+
 def test_snapshot_fingerprint_is_state_bound_and_round_trip_stable() -> None:
     spec = _spec()
     initial = SamplerStateSnapshot.initial(spec)
@@ -232,6 +291,74 @@ def test_execution_receipt_binding_is_spec_and_state_consistent() -> None:
         binding(completed, spec, _receipt(spec, sampler_rng="caller"))
 
 
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [("sampler_id", "other.euler"), ("sampler_version", "other-version")],
+)
+def test_execution_receipt_binding_requires_exact_sampler_identity(
+    field: str,
+    value: str,
+) -> None:
+    spec = _spec()
+    completed = (
+        SamplerStateSnapshot.initial(spec)
+        .append_step(spec, _step(0))
+        .append_step(spec, _step(1))
+        .complete(spec)
+    )
+
+    receipt = (
+        _receipt(spec, sampler_id=value)
+        if field == "sampler_id"
+        else _receipt(spec, sampler_version=value)
+    )
+    with pytest.raises(ScheduleContractError, match="sampler identity"):
+        completed.attach_execution_receipt_evidence(spec, receipt)
+
+
+def test_receipt_binding_is_terminal_and_same_receipt_is_idempotent() -> None:
+    spec = _spec()
+    ready_receipt = _receipt(
+        spec,
+        execution_status="not_executed",
+        effective_transitions=0,
+        effective_model_evaluations=0,
+    )
+    ready = SamplerStateSnapshot.initial(spec).attach_execution_receipt_evidence(
+        spec,
+        ready_receipt,
+    )
+    with pytest.raises(ScheduleContractError, match="receipt-bound"):
+        ready.append_step(spec, _step(0))
+    with pytest.raises(ScheduleContractError, match="receipt-bound"):
+        ready.interrupt(spec)
+
+    interrupted = SamplerStateSnapshot.initial(spec).append_step(spec, _step(0)).interrupt(spec)
+    interrupted_receipt = _receipt(
+        spec,
+        execution_status="interrupted",
+        execution_reason_code="interrupted",
+        effective_transitions=1,
+        effective_model_evaluations=1,
+    )
+    bound_interrupted = interrupted.attach_execution_receipt_evidence(
+        spec,
+        interrupted_receipt,
+    )
+    with pytest.raises(ScheduleContractError, match="receipt-bound"):
+        bound_interrupted.resume(spec)
+
+    completed = interrupted.resume(spec).append_step(spec, _step(1)).complete(spec)
+    receipt = _receipt(spec)
+    attached = completed.attach_execution_receipt_evidence(spec, receipt)
+    assert attached.attach_execution_receipt_evidence(spec, receipt) == attached
+    with pytest.raises(ScheduleContractError, match="cannot be replaced"):
+        attached.attach_execution_receipt_evidence(
+            spec,
+            _receipt(spec, host_revision="other-revision"),
+        )
+
+
 def test_state_requires_matching_spec_and_contiguous_steps() -> None:
     spec = _spec()
     different = SamplerExecutionSpec(
@@ -267,12 +394,12 @@ def test_state_rejects_inconsistent_counts_and_unknown_fields() -> None:
     payload = json.loads(serialize_sampler_state_snapshot(state, spec))
     payload["effective_transitions"] = 0
     with pytest.raises(ScheduleContractError, match="transition count"):
-        deserialize_sampler_state_snapshot(json.dumps(payload), spec)
+        deserialize_sampler_state_snapshot(canonical_projection_bytes(payload), spec)
 
     payload = json.loads(serialize_sampler_state_snapshot(state, spec))
     payload["unexpected"] = True
     with pytest.raises(ScheduleContractError, match="fields"):
-        deserialize_sampler_state_snapshot(json.dumps(payload), spec)
+        deserialize_sampler_state_snapshot(canonical_projection_bytes(payload), spec)
 
 
 def test_state_rejects_inconsistent_lifecycle_status_on_restore() -> None:
@@ -282,12 +409,12 @@ def test_state_rejects_inconsistent_lifecycle_status_on_restore() -> None:
 
     payload["status"] = SamplerStateStatus.READY.value
     with pytest.raises(ScheduleContractError, match="ready state cannot contain executed steps"):
-        deserialize_sampler_state_snapshot(json.dumps(payload), spec)
+        deserialize_sampler_state_snapshot(canonical_projection_bytes(payload), spec)
 
     payload["status"] = SamplerStateStatus.COMPLETED.value
 
     with pytest.raises(ScheduleContractError, match="completed state counts"):
-        deserialize_sampler_state_snapshot(json.dumps(payload), spec)
+        deserialize_sampler_state_snapshot(canonical_projection_bytes(payload), spec)
 
     completed = (
         running.append_step(spec, _step(1))
@@ -298,7 +425,60 @@ def test_state_rejects_inconsistent_lifecycle_status_on_restore() -> None:
     payload["status"] = SamplerStateStatus.RUNNING.value
 
     with pytest.raises(ScheduleContractError, match="running state cannot carry receipt"):
-        deserialize_sampler_state_snapshot(json.dumps(payload), spec)
+        deserialize_sampler_state_snapshot(canonical_projection_bytes(payload), spec)
+
+
+def test_spec_requires_capability_consistent_rng_and_per_token_time() -> None:
+    spec = _spec()
+    caller_owned = replace(
+        spec.capabilities,
+        execution_behavior=ExecutionBehavior.STOCHASTIC,
+        noise_ownership=NoiseOwnership.CALLER,
+    )
+    with pytest.raises(ScheduleContractError, match="noise ownership"):
+        replace(spec, capabilities=caller_owned)
+
+    no_per_token = replace(spec.capabilities, supports_per_token_timesteps=False)
+    with pytest.raises(ScheduleContractError, match="per-token"):
+        replace(spec, capabilities=no_per_token)
+    assert replace(spec, capabilities=no_per_token, per_token_time=None).per_token_time is None
+
+
+@pytest.mark.parametrize(
+    ("payload", "message"),
+    [
+        (b"\xef\xbb\xbf{}", "BOM"),
+        ("\ufeff{}", "BOM"),
+        (b'{"schema":"x","schema":"x"}', "duplicate JSON object name"),
+        (b'{"value":0.25}', "untyped JSON float"),
+        (b'{"value":NaN}', "non-finite JSON constant"),
+        (b"{\xff}", "valid JSON"),
+        ('{"schema":"x"} ', "canonical JSON"),
+        ("\ud800", "valid Unicode"),
+    ],
+)
+def test_sampler_transport_rejects_ambiguous_or_noncanonical_json(
+    payload: bytes | str,
+    message: str,
+) -> None:
+    with pytest.raises(ScheduleContractError, match=message):
+        deserialize_sampler_execution_spec(payload)
+
+
+def test_sampler_transport_rejects_oversized_payload() -> None:
+    with pytest.raises(ScheduleContractError, match="size"):
+        deserialize_sampler_execution_spec(b"{" + b" " * 1_048_576)
+
+
+@pytest.mark.parametrize(
+    "timestep_spacing",
+    [r"A:\\Users\\Ray\\private-grid", "/home/ray/private-grid", "api_token"],
+)
+def test_spec_rejects_private_or_secret_like_timestep_spacing(
+    timestep_spacing: str,
+) -> None:
+    with pytest.raises(ScheduleContractError, match="public text"):
+        replace(_spec(), timestep_spacing=timestep_spacing)
 
 
 @pytest.mark.parametrize(

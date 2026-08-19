@@ -4,9 +4,13 @@ from __future__ import annotations
 
 import importlib
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Final
 
+from comfyui_sigmax.adapters.minimax_h3_scheduler import (
+    MiniMaxH3NativeScheduleResult,
+    build_minimax_h3_native_schedule,
+)
 from comfyui_sigmax.core import (
     ScheduleContractError,
     SigmaDomain,
@@ -26,12 +30,32 @@ from comfyui_sigmax.profiles.minimax_h3 import (
     MiniMaxH3Variant,
     build_minimax_h3_schedule,
 )
+from comfyui_sigmax.profiles.minimax_h3_scheduler_contract import (
+    MINIMAX_H3_DEFAULT_SCHEDULER,
+    MINIMAX_H3_SCHEDULER_CHOICES,
+    MiniMaxH3SchedulerContractError,
+    MiniMaxH3SchedulerReasonCode,
+)
+from comfyui_sigmax.profiles.minimax_h3_turbo import (
+    MiniMaxH3TurboError,
+    MiniMaxH3TurboProfile,
+    MiniMaxH3TurboReasonCode,
+    build_minimax_h3_turbo_schedule,
+    get_minimax_h3_turbo_profile,
+)
+from comfyui_sigmax.profiles.minimax_h3_turbo_public import (
+    MINIMAX_H3_TURBO_PUBLIC_SCHEMA_ID,
+    MINIMAX_H3_TURBO_RECIPE_IDS,
+    build_minimax_h3_turbo_public_receipt,
+    deserialize_minimax_h3_turbo_public_receipt,
+)
 
 MINIMAX_H3_SIGMA_NODE_ID: Final = "Sigmax.MiniMaxH3SigmaScheduler"
 MINIMAX_H3_SIGMA_NODE_SCHEMA_ID: Final = "sigmax.minimax-h3-sigma-node/1"
 _FL2VA_MODE: Final = "H3 Base FL2VA"
 _REF2VA_MODE: Final = "H3 Base Ref2VA"
 _MODES: Final = (_FL2VA_MODE, _REF2VA_MODE)
+MINIMAX_H3_TURBO_RECIPE_CHOICES: Final = ("disabled", *MINIMAX_H3_TURBO_RECIPE_IDS)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -42,6 +66,7 @@ class MiniMaxH3SigmaNodeResult:
     domain: SigmaDomain
     sigmas: tuple[float, ...]
     schedule_info_json: str
+    recipe_id: str | None = None
 
     def __post_init__(self) -> None:
         if self.variant not in _MODES:
@@ -100,21 +125,62 @@ def _canonical_info(value: dict[str, object]) -> str:
         ) from exc
 
 
-def build_minimax_h3_sigma_schedule(
+def _turbo_profile(
+    *, public_variant: str, selector: object
+) -> tuple[str, MiniMaxH3TurboProfile] | None:
+    if selector is None:
+        return None
+    if not isinstance(selector, str):
+        raise ScheduleContractError("MiniMax H3 Turbo selector must be selected explicitly")
+    if selector in {"", "disabled"}:
+        return None
+    try:
+        profile = get_minimax_h3_turbo_profile(selector)
+    except MiniMaxH3TurboError:
+        raise
+    expected_task = "fl2va" if public_variant == _FL2VA_MODE else "ref2va"
+    if profile.task != expected_task:
+        raise MiniMaxH3TurboError(
+            MiniMaxH3TurboReasonCode.WRONG_TASK,
+            "recipe task does not match the selected H3 variant",
+        )
+    return selector, profile
+
+
+def _resolve_turbo_profile(
+    *, public_variant: str, turbo: object, recipe_id: object
+) -> tuple[str, MiniMaxH3TurboProfile, str] | None:
+    """Resolve the new selector and the legacy alias through one fail-closed path."""
+
+    selected: list[tuple[str, MiniMaxH3TurboProfile, str]] = []
+    for source, value in (("turbo", turbo), ("recipe_id", recipe_id)):
+        resolved = _turbo_profile(public_variant=public_variant, selector=value)
+        if resolved is not None:
+            selected_recipe, profile = resolved
+            selected.append((selected_recipe, profile, source))
+    if len(selected) == 2:
+        first_recipe, first_profile, first_source = selected[0]
+        second_recipe, _second_profile, second_source = selected[1]
+        if first_recipe != second_recipe:
+            raise ScheduleContractError(
+                "MiniMax H3 Turbo selectors conflict: "
+                f"{first_source}={first_recipe!r} and {second_source}={second_recipe!r}"
+            )
+        return first_recipe, first_profile, "turbo+recipe_id"
+    if selected:
+        return selected[0]
+    return None
+
+
+def _build_base_schedule(
     *,
-    variant: object,
-    steps: object,
+    public_variant: str,
+    selected_variant: MiniMaxH3Variant,
+    profile: MiniMaxH3Profile,
+    requested_steps: int,
     start_step: object,
     end_step: object,
 ) -> MiniMaxH3SigmaNodeResult:
-    """Build and slice the explicit Diffusers endpoint lane without host imports.
-
-    ``steps`` is the number of sigma transitions.  The source-facing parity builder retains its
-    ``grid_points`` vocabulary, so this adapter deliberately maps public ``N`` to ``N + 1``.
-    """
-
-    public_variant, selected_variant, profile = _variant(variant)
-    requested_steps = _steps(steps)
     requested_points = requested_steps + 1
     complete = build_minimax_h3_schedule(
         variant=selected_variant,
@@ -193,6 +259,148 @@ def build_minimax_h3_sigma_schedule(
     )
 
 
+def _build_turbo_schedule(
+    *,
+    public_variant: str,
+    profile: MiniMaxH3TurboProfile,
+    recipe_id: str,
+    selector_source: str,
+    requested_steps: int,
+    start_step: object,
+    end_step: object,
+) -> MiniMaxH3SigmaNodeResult:
+    complete = build_minimax_h3_turbo_schedule(
+        recipe_id,
+        nfe=requested_steps,
+        precision="float64",
+        task=profile.task,
+    )
+    available_steps = complete.nfe
+    start, end = _slice_bounds(
+        start_step=start_step,
+        end_step=end_step,
+        available_steps=available_steps,
+    )
+    output = slice_step_range(complete.video_sigmas, start_step=start, end_step=end)
+    effective_end = available_steps if end is None else end
+    receipt = build_minimax_h3_turbo_public_receipt(
+        recipe_id=recipe_id,
+        task=profile.task,
+        nfe=requested_steps,
+        schedule_fingerprint=sigma_output_fingerprint(output, domain=SigmaDomain.UNIT_FLOW),
+    )
+    info: dict[str, object] = {
+        "audio": {
+            "derivative": "model_native",
+            "ownership": "model_native",
+            "shift": profile.audio_shift,
+            "video_mapping": "paired_coordinate_inversion",
+        },
+        "counts": {
+            "effective_grid_points": len(complete.video_sigmas),
+            "effective_model_evaluations": available_steps,
+            "effective_steps": available_steps,
+            "effective_transitions": available_steps,
+            "requested_grid_points": requested_steps + 1,
+            "requested_model_evaluations": requested_steps,
+            "requested_steps": requested_steps,
+            "requested_transitions": requested_steps,
+        },
+        "fingerprints": {
+            "complete": complete.fingerprint,
+            "output": sigma_output_fingerprint(output, domain=SigmaDomain.UNIT_FLOW),
+        },
+        "lane": "m6_13_recipe_owned_endpoint_inclusive_readiness",
+        "license_boundary": "code_only_no_weight_or_lora_redistribution",
+        "mode": "turbo_experimental_community",
+        "experimental": {
+            "enabled": True,
+            "evidence": "experimental",
+            "promotion": "not_claimed",
+            "scope": "community_unofficial_turbo_lora",
+            "selector": selector_source,
+        },
+        "profile": {
+            "id": profile.profile_id,
+            "recipe_id": recipe_id,
+            "version": profile.profile_version,
+        },
+        "schema": MINIMAX_H3_TURBO_PUBLIC_SCHEMA_ID,
+        "shift": {
+            "audio": profile.audio_shift,
+            "kind": "direct_ratio",
+            "transform_order": "endpoint_grid_then_video_audio_direct_ratio_then_terminal_zero",
+            "video": profile.video_shift,
+        },
+        "slicing": {
+            "available_steps": available_steps,
+            "end_step": effective_end,
+            "output_steps": len(output) - 1,
+            "start_step": start,
+        },
+        "timestep": {
+            "clean": 1.0,
+            "convention": "t_equals_one_minus_sigma",
+            "terminal_sigma": 0.0,
+        },
+        "turbo_receipt": receipt.projection(),
+        "warnings": [
+            "readiness_only_no_eligible_artifact",
+            "model_bound_workflow_requires_caller_verified_artifact",
+        ],
+    }
+    return MiniMaxH3SigmaNodeResult(
+        variant=public_variant,
+        domain=SigmaDomain.UNIT_FLOW,
+        sigmas=output,
+        schedule_info_json=_canonical_info(info),
+        recipe_id=recipe_id,
+    )
+
+
+def build_minimax_h3_sigma_schedule(
+    *,
+    variant: object,
+    steps: object,
+    start_step: object,
+    end_step: object,
+    recipe_id: object = None,
+    turbo: object = None,
+) -> MiniMaxH3SigmaNodeResult:
+    """Build and slice the explicit Diffusers endpoint lane without host imports.
+
+    ``steps`` is the number of sigma transitions.  The source-facing parity builder retains its
+    ``grid_points`` vocabulary, so this adapter deliberately maps public ``N`` to ``N + 1``.
+    """
+
+    public_variant, selected_variant, base_profile = _variant(variant)
+    requested_steps = _steps(steps)
+    selected_turbo = _resolve_turbo_profile(
+        public_variant=public_variant,
+        turbo=turbo,
+        recipe_id=recipe_id,
+    )
+    if selected_turbo is not None:
+        selected_recipe, turbo_profile, selector_source = selected_turbo
+        return _build_turbo_schedule(
+            public_variant=public_variant,
+            profile=turbo_profile,
+            recipe_id=selected_recipe,
+            selector_source=selector_source,
+            requested_steps=requested_steps,
+            start_step=start_step,
+            end_step=end_step,
+        )
+    return _build_base_schedule(
+        public_variant=public_variant,
+        selected_variant=selected_variant,
+        profile=base_profile,
+        requested_steps=requested_steps,
+        start_step=start_step,
+        end_step=end_step,
+    )
+
+
 def bind_minimax_h3_sigma_output_info(
     result: MiniMaxH3SigmaNodeResult, *, output_sigmas: tuple[float, ...]
 ) -> str:
@@ -210,15 +418,93 @@ def bind_minimax_h3_sigma_output_info(
     if not isinstance(info, dict) or not isinstance(info.get("fingerprints"), dict):
         raise ScheduleContractError("MiniMax H3 schedule information is malformed")
     info["fingerprints"]["output"] = sigma_output_fingerprint(values, domain=result.domain)
+    if result.recipe_id is not None:
+        receipt_projection = info.get("turbo_receipt")
+        receipt = deserialize_minimax_h3_turbo_public_receipt(
+            json.dumps(
+                receipt_projection, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+            )
+        )
+        info["turbo_receipt"] = replace(
+            receipt,
+            schedule_fingerprint=sigma_output_fingerprint(values, domain=result.domain),
+        ).projection()
     return _canonical_info(info)
 
 
+def _native_node_result(
+    *,
+    compatibility_result: MiniMaxH3SigmaNodeResult,
+    native_result: MiniMaxH3NativeScheduleResult,
+) -> MiniMaxH3SigmaNodeResult:
+    """Replace only the schedule-owned fields of accepted Base/Turbo metadata."""
+
+    validation = native_result.validation
+    info = json.loads(compatibility_result.schedule_info_json)
+    if not isinstance(info, dict):
+        raise ScheduleContractError("MiniMax H3 compatibility metadata is malformed")
+    info["lane"] = "m4_17_comfyui_native_scheduler"
+    info["mode"] = "experimental_comfyui_native_scheduler"
+    info["scheduler"] = native_result.projection()
+    info["license_boundary"] = "delegation_only_installed_comfyui_gpl"
+    counts = info.get("counts")
+    if not isinstance(counts, dict):
+        raise ScheduleContractError("MiniMax H3 count metadata is malformed")
+    counts.update(
+        {
+            "effective_grid_points": len(validation.output_sigmas),
+            "effective_model_evaluations": validation.output_transitions,
+            "effective_steps": validation.output_transitions,
+            "effective_transitions": validation.output_transitions,
+            "native_raw_sigmas": validation.raw_count,
+            "native_basic_scheduler_sigmas": validation.basic_scheduler_count,
+        }
+    )
+    slicing = info.get("slicing")
+    if not isinstance(slicing, dict):
+        raise ScheduleContractError("MiniMax H3 slicing metadata is malformed")
+    slicing.update(
+        {
+            "available_steps": validation.basic_scheduler_count - 1,
+            "end_step": validation.end_step,
+            "output_steps": validation.output_transitions,
+            "start_step": validation.start_step,
+        }
+    )
+    shift = info.get("shift")
+    if not isinstance(shift, dict):
+        raise ScheduleContractError("MiniMax H3 shift metadata is malformed")
+    shift["transform_order"] = "model_native_shift_then_host_scheduler_then_basic_tail"
+    fingerprints = info.get("fingerprints")
+    if not isinstance(fingerprints, dict):
+        raise ScheduleContractError("MiniMax H3 fingerprint metadata is malformed")
+    fingerprints["complete"] = sigma_output_fingerprint(
+        validation.basic_scheduler_sigmas,
+        domain=SigmaDomain.UNIT_FLOW,
+    )
+    fingerprints["output"] = validation.output_fingerprint
+    warnings = info.get("warnings")
+    if not isinstance(warnings, list):
+        raise ScheduleContractError("MiniMax H3 warning metadata is malformed")
+    warnings.append("experimental_comfyui_native_scheduler_not_official_minimax")
+    return MiniMaxH3SigmaNodeResult(
+        variant=compatibility_result.variant,
+        domain=SigmaDomain.UNIT_FLOW,
+        sigmas=validation.output_sigmas,
+        schedule_info_json=_canonical_info(info),
+        recipe_id=compatibility_result.recipe_id,
+    )
+
+
 class MiniMaxH3SigmaScheduler:
-    """Construct explicit MiniMax H3 Base video sigmas without model patching."""
+    """Construct pure or delegated MiniMax H3 video sigmas without model patching."""
 
     DESCRIPTION = (
         "Builds an explicit MiniMax H3 Base FL2VA or Ref2VA video sigma schedule; "
-        "audio mapping remains model-owned."
+        "the scheduler selector includes experimental ComfyUI-native alternatives that require "
+        "an already-shifted H3 MODEL; "
+        "the optional turbo selector is Experimental — community, unsupported and only "
+        "constructs sigmas. Load any matching community LoRA separately in the host workflow."
     )
     CATEGORY = "Sigmax/scheduling"
     FUNCTION = "build"
@@ -249,7 +535,42 @@ class MiniMaxH3SigmaScheduler:
                     "INT",
                     {"default": -1, "min": -1, "max": MINIMAX_H3_MAX_STEPS},
                 ),
-            }
+            },
+            "optional": {
+                "turbo": (
+                    MINIMAX_H3_TURBO_RECIPE_CHOICES,
+                    {
+                        "default": "disabled",
+                        "tooltip": (
+                            "Turbo LoRA (Experimental — community, unsupported). "
+                            "Select an exact recipe; the Scheduler does not load or patch a LoRA."
+                        ),
+                    },
+                ),
+                "recipe_id": (
+                    MINIMAX_H3_TURBO_RECIPE_CHOICES,
+                    {
+                        "default": "disabled",
+                        "advanced": True,
+                        "tooltip": (
+                            "Legacy recipe_id compatibility alias for the experimental turbo "
+                            "selector; prefer turbo."
+                        ),
+                    },
+                ),
+                "scheduler": (
+                    MINIMAX_H3_SCHEDULER_CHOICES,
+                    {
+                        "default": MINIMAX_H3_DEFAULT_SCHEDULER,
+                        "tooltip": (
+                            "Scheduler (Experimental for native choices). h3_endpoint preserves "
+                            "the Sigmax compatibility schedule; all other choices require an "
+                            "already-shifted MiniMax H3 MODEL and delegate to ComfyUI."
+                        ),
+                    },
+                ),
+                "model": ("MODEL",),
+            },
         }
 
     def build(
@@ -258,13 +579,40 @@ class MiniMaxH3SigmaScheduler:
         steps: object,
         start_step: object,
         end_step: object,
+        recipe_id: object = None,
+        turbo: object = None,
+        scheduler: object = MINIMAX_H3_DEFAULT_SCHEDULER,
+        model: object = None,
     ) -> tuple[object, str]:
-        result = build_minimax_h3_sigma_schedule(
+        compatibility_result = build_minimax_h3_sigma_schedule(
             variant=variant,
             steps=steps,
             start_step=start_step,
             end_step=end_step,
+            recipe_id=recipe_id,
+            turbo=turbo,
         )
+        if scheduler == MINIMAX_H3_DEFAULT_SCHEDULER:
+            if model is not None:
+                raise MiniMaxH3SchedulerContractError(
+                    MiniMaxH3SchedulerReasonCode.MODEL_FORBIDDEN,
+                    "MODEL input is inert and therefore forbidden for h3_endpoint",
+                )
+            result = compatibility_result
+        else:
+            native_result = build_minimax_h3_native_schedule(
+                model=model,
+                scheduler=scheduler,
+                variant=compatibility_result.variant,
+                steps=steps,
+                start_step=start_step,
+                end_step=end_step,
+                recipe_id=compatibility_result.recipe_id,
+            )
+            result = _native_node_result(
+                compatibility_result=compatibility_result,
+                native_result=native_result,
+            )
         try:
             torch = importlib.import_module("torch")
             tensor = torch.__dict__["tensor"]
@@ -283,8 +631,10 @@ class MiniMaxH3SigmaScheduler:
 
 
 __all__ = [
+    "MINIMAX_H3_SCHEDULER_CHOICES",
     "MINIMAX_H3_SIGMA_NODE_ID",
     "MINIMAX_H3_SIGMA_NODE_SCHEMA_ID",
+    "MINIMAX_H3_TURBO_RECIPE_CHOICES",
     "MiniMaxH3SigmaNodeResult",
     "MiniMaxH3SigmaScheduler",
     "bind_minimax_h3_sigma_output_info",

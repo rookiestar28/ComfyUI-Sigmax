@@ -1,5 +1,24 @@
 # ComfyUI-Sigmax Test SOP
 
+<!-- CURRENT-TEST-GOVERNANCE:START -->
+## Current Test Governance
+
+This section supersedes narrower platform-selection, pre-push, and Hosted CI requirements later in
+this document.
+
+- Pure text/documentation changes and version-field-only `pyproject.toml` updates require no test
+  contract, independent review, Full Gate, or E2E run. A `pyproject.toml` change that affects
+  dependencies, build behavior, tool configuration, entry points, packaging, or runtime semantics
+  is not version-only and is not exempt.
+- For non-exempt implementation work, a passing Windows Full Gate is the authoritative
+  repository-wide acceptance result. Push and Hosted CI are not acceptance prerequisites, and
+  evidence need not be bound to a pushed commit. Linux/WSL and Hosted CI are optional diagnostics
+  unless the active item explicitly requires additional platform, release, publication, or live-host
+  evidence.
+- Item-scoped parity, host, GPU, security, release, or publication checks remain additive when their
+  actual risk boundary is in scope; none replaces the Windows Full Gate.
+<!-- CURRENT-TEST-GOVERNANCE:END -->
+
 ## 1. Purpose
 
 This document defines the mandatory validation workflow for ComfyUI-Sigmax.
@@ -42,10 +61,11 @@ On 2026-08-07 the user waived M7-09 scoring as an acceptance blocker. Its execut
 receipt may close the local item, but the waiver does not create a prompt-adherence, image-quality,
 or profile-promotion claim. Until later roadmap owners create any other heavy gates:
 
-- the OS-specific full-gate wrapper is mandatory acceptance evidence;
+- the Windows Full Gate is mandatory repository-wide acceptance evidence;
 - direct commands remain available for targeted diagnosis;
 - missing future gates remain `NOT_IMPLEMENTED`, not passed;
-- documentation-only work uses the exception in Section 5 and does not run the full gate.
+- documentation-only and version-field-only `pyproject.toml` work uses the exception in Section 5
+  and does not run the full gate.
 
 ## 3. Required Reading Order
 
@@ -64,25 +84,25 @@ Non-documentation work is accepted only when:
 - every applicable full-gate stage passes;
 - required parity and host E2E lanes pass;
 - critical no-skip seams execute without skips;
-- CI and local commands exercise the same underlying stage definitions;
-- CI and local verification output is retained for the reviewed change; when a hosted lane is
-  unavailable, an explicit user-authorized item-level waiver may close the item from complete local
-  evidence, but the missing hosted artifact must never be described as a pass;
+- the Windows Full Gate output is retained for the reviewed change;
+- any optional Hosted CI result is reported accurately as supplemental evidence and is not required
+  for acceptance or bound to a pushed commit;
 - the public PR, issue, or change description maps evidence to each acceptance criterion.
 
 Do not treat a missing, skipped, or unavailable gate as a pass.
 
-## 5. Documentation-Only Exception
+## 5. Documentation and Version-Only Exception
 
-Pure prose that is unrelated to executable behavior is not a test contract. Do not add pytest,
-CI, hook, or other automated acceptance assertions that freeze document wording, headings, line
-counts, link layout, file inventory, or narrative freshness. A documentation-only change does not
-run the full gate and does not require a dedicated test suite when it does not modify:
+Pure prose that is unrelated to executable behavior is not a test contract. A version-field-only
+change to `pyproject.toml` is also exempt. Neither change requires a plan, independent reviewer,
+pytest/CI/hook contract, Full Gate, or E2E run. Do not add automated acceptance assertions that
+freeze document wording, headings, line counts, link layout, file inventory, or narrative
+freshness. The exemption applies when the change does not modify:
 
 - Python, JavaScript, or other executable code;
 - test code or fixtures;
 - scripts, hooks, or CI workflows;
-- dependency or package manifests;
+- dependency declarations or package/build behavior beyond the `pyproject.toml` version field;
 - model/profile schemas consumed at runtime;
 - configuration or generated artifacts;
 - node definitions, workflow JSON, or runtime behavior.
@@ -204,7 +224,7 @@ reproduction and pinning is insufficient bugfix evidence.
 
 ## 9. Full Validation Gate
 
-M0 provides equivalent Windows and Linux/WSL entry scripts:
+M0 provides a Windows acceptance entrypoint and an optional Linux/WSL diagnostic entrypoint:
 
 ```powershell
 powershell -File scripts/run_full_tests_windows.ps1
@@ -215,7 +235,8 @@ bash scripts/run_full_tests_linux.sh
 ```
 
 Both wrappers call `scripts/run_full_gate.py`, which is the canonical stage ordering. Direct
-commands remain useful for targeted diagnosis, but acceptance uses the OS wrapper.
+commands and the Linux/WSL wrapper remain useful for targeted diagnosis, but repository-wide
+acceptance uses the Windows wrapper.
 
 The common runner executes `core-independence` and `frontend-policy` after static/type checks and
 before parity-contract and pytest stages.

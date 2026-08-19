@@ -18,6 +18,12 @@ from comfyui_sigmax.profiles.minimax_h3 import (
     MINIMAX_H3_MAX_STEPS,
     MINIMAX_H3_VIDEO_SHIFT,
 )
+from comfyui_sigmax.profiles.minimax_h3_scheduler_contract import (
+    MINIMAX_H3_DEFAULT_SCHEDULER,
+    MINIMAX_H3_SCHEDULER_CHOICES,
+)
+from comfyui_sigmax.profiles.minimax_h3_turbo import get_minimax_h3_turbo_profile
+from comfyui_sigmax.profiles.minimax_h3_turbo_public import require_minimax_h3_turbo_artifact
 
 MiniMaxH3PublicVariant = Literal["H3 Base FL2VA", "H3 Base Ref2VA"]
 WorkflowPrompt = dict[str, dict[str, object]]
@@ -147,6 +153,10 @@ class MiniMaxH3WorkflowSpec:
     last_frame: str | None = None
     reference_images: tuple[str, ...] = ()
     model_files: MiniMaxH3ModelFiles | None = None
+    scheduler: str = MINIMAX_H3_DEFAULT_SCHEDULER
+    recipe_id: str | None = None
+    artifact_id: str | None = None
+    artifact_sha256: str | None = None
 
     def __post_init__(self) -> None:
         selected = _require_variant(self.variant)
@@ -192,6 +202,12 @@ class MiniMaxH3WorkflowSpec:
             raise ScheduleContractError(
                 "MiniMax H3 host workflow currently exposes the pinned euler sampler only"
             )
+        if self.scheduler not in MINIMAX_H3_SCHEDULER_CHOICES:
+            raise ScheduleContractError("MiniMax H3 workflow scheduler is unsupported")
+        if self.scheduler in {"beta", "kl_optimal"} and self.steps < 2:
+            raise ScheduleContractError(
+                f"MiniMax H3 workflow scheduler {self.scheduler} requires at least two steps"
+            )
         if self.ref_image_size not in {"match", "max"}:
             raise ScheduleContractError("MiniMax H3 ref_image_size must be match or max")
         if not isinstance(self.reference_images, tuple):
@@ -226,6 +242,38 @@ class MiniMaxH3WorkflowSpec:
                 raise ScheduleContractError(
                     "MiniMax H3 Ref2VA workflow received a contradictory FL2VA diffusion artifact"
                 )
+        if self.recipe_id is None:
+            if self.artifact_id is not None or self.artifact_sha256 is not None:
+                raise ScheduleContractError(
+                    "MiniMax H3 workflow artifact evidence requires an exact recipe_id"
+                )
+        else:
+            if not isinstance(self.recipe_id, str) or not self.recipe_id:
+                raise ScheduleContractError("MiniMax H3 Turbo recipe_id must be explicit")
+            profile = get_minimax_h3_turbo_profile(self.recipe_id)
+            expected_task = "fl2va" if selected == _FL2VA else "ref2va"
+            if profile.task != expected_task:
+                raise ScheduleContractError(
+                    "MiniMax H3 Turbo recipe task conflicts with the selected workflow variant"
+                )
+            if self.artifact_id is None or self.artifact_sha256 is None:
+                raise ScheduleContractError(
+                    "MiniMax H3 Turbo model workflow requires exact artifact identity and SHA-256 evidence"
+                )
+            if not isinstance(self.artifact_id, str) or not self.artifact_id:
+                raise ScheduleContractError("MiniMax H3 Turbo artifact_id must be explicit")
+            if not isinstance(self.artifact_sha256, str) or not self.artifact_sha256:
+                raise ScheduleContractError("MiniMax H3 Turbo artifact_sha256 must be explicit")
+            # Fail closed before graph construction; no loader, host, or model state is touched.
+            require_minimax_h3_turbo_artifact(
+                recipe_id=self.recipe_id,
+                artifact_id=self.artifact_id,
+                artifact_sha256=self.artifact_sha256,
+                nfe=self.steps,
+            )
+            raise ScheduleContractError(
+                "MiniMax H3 Turbo model execution is deferred to the authorization-gated M7-13 lane"
+            )
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -242,6 +290,8 @@ class MiniMaxH3HostWorkflowContract:
     audio_ownership: str
     external_video_shift_applied_once: bool
     external_audio_schedule: bool
+    scheduler: str = MINIMAX_H3_DEFAULT_SCHEDULER
+    recipe_id: str | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -340,15 +390,18 @@ def build_minimax_h3_host_workflow(spec: MiniMaxH3WorkflowSpec) -> MiniMaxH3Host
     )
     prompt[_CONDITION_ID] = condition
     prompt.update(input_nodes)
-    prompt[_SCHEDULE_ID] = _node(
-        "Sigmax.MiniMaxH3SigmaScheduler",
-        {
-            "variant": spec.variant,
-            "steps": spec.steps,
-            "start_step": 0,
-            "end_step": -1,
-        },
-    )
+    scheduler_inputs: dict[str, object] = {
+        "variant": spec.variant,
+        "steps": spec.steps,
+        "start_step": 0,
+        "end_step": -1,
+    }
+    if spec.recipe_id is not None:
+        scheduler_inputs["recipe_id"] = spec.recipe_id
+    if spec.scheduler != MINIMAX_H3_DEFAULT_SCHEDULER:
+        scheduler_inputs["scheduler"] = spec.scheduler
+        scheduler_inputs["model"] = _link(_SHIFT_ID)
+    prompt[_SCHEDULE_ID] = _node("Sigmax.MiniMaxH3SigmaScheduler", scheduler_inputs)
     prompt[_SAMPLER_ID] = _node("KSamplerSelect", {"sampler_name": spec.sampler_name})
     prompt[_GUIDER_ID] = _node(
         "BasicGuider",
@@ -385,10 +438,16 @@ def build_minimax_h3_host_workflow(spec: MiniMaxH3WorkflowSpec) -> MiniMaxH3Host
         schedule_node_id=_SCHEDULE_ID,
         native_shift_node_id=_SHIFT_ID,
         sampler_node_id=_SAMPLE_ID,
-        schedule_ownership="external_video_only",
+        schedule_ownership=(
+            "external_video_only"
+            if spec.scheduler == MINIMAX_H3_DEFAULT_SCHEDULER
+            else "comfyui_native_model_sampling"
+        ),
         audio_ownership="model_native",
         external_video_shift_applied_once=True,
         external_audio_schedule=False,
+        scheduler=spec.scheduler,
+        recipe_id=spec.recipe_id,
     )
     # next_node_id is intentionally calculated above so malformed future dynamic-input changes
     # remain visible to a reviewer; it is not a hidden execution side effect.

@@ -36,8 +36,18 @@ from comfyui_sigmax.core.schedule_contracts import (
 SAMPLER_EXECUTION_SPEC_SCHEMA = "sigmax.sampler-execution-spec/1"
 SAMPLER_STATE_SNAPSHOT_SCHEMA = "sigmax.sampler-state-snapshot/1"
 _SHA256_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
+_PRIVATE_PATH_PATTERN = re.compile(
+    r"(?:^|[\s\"'=(])(?:[a-z]:[\\/]|\\\\[^\\]|/(?:home|users|mnt)/)",
+    re.IGNORECASE,
+)
+_SECRET_PATTERN = re.compile(
+    r"(?:^|[_.-])(?:api_?key|access_key|private_key|secret|password|passwd|credential|"
+    r"cookie|token|authorization|auth)(?:[_.-]|$)",
+    re.IGNORECASE,
+)
 _MAX_HISTORY = 10_000
 _MAX_PER_TOKEN_TIME = 16_384
+_MAX_TRANSPORT_BYTES = 1_048_576
 
 
 class SamplerStateStatus(str, Enum):
@@ -84,7 +94,13 @@ def _require_fingerprint(field_name: str, value: object, *, allow_none: bool = F
 
 
 def _require_public_text(field_name: str, value: object, *, maximum: int = 128) -> str:
-    if not isinstance(value, str) or not value or len(value) > maximum:
+    if (
+        not isinstance(value, str)
+        or not value
+        or len(value) > maximum
+        or _PRIVATE_PATH_PATTERN.search(value)
+        or _SECRET_PATTERN.search(value)
+    ):
         raise ScheduleContractError(f"{field_name} must be bounded public text")
     if any(ord(character) < 0x20 for character in value):
         raise ScheduleContractError(f"{field_name} contains control characters")
@@ -188,7 +204,15 @@ class SamplerExecutionSpec:
         _require_public_text("timestep_spacing", self.timestep_spacing)
         if not isinstance(self.random_source_ownership, NoiseOwnership):
             raise ScheduleContractError("random_source_ownership is unsupported")
+        if self.random_source_ownership is not self.capabilities.noise_ownership:
+            raise ScheduleContractError(
+                "random-source noise ownership must match sampler capabilities"
+            )
         if self.per_token_time is not None:
+            if not self.capabilities.supports_per_token_timesteps:
+                raise ScheduleContractError(
+                    "per-token time requires sampler per-token timestep support"
+                )
             if not isinstance(self.per_token_time, tuple):
                 raise ScheduleContractError("per_token_time must be a tuple or None")
             if len(self.per_token_time) > _MAX_PER_TOKEN_TIME:
@@ -318,6 +342,12 @@ class SamplerStateSnapshot:
         if self.spec_fingerprint != expected:
             raise ScheduleContractError("sampler state does not match execution specification")
 
+    def _require_receipt_unbound(self) -> None:
+        # IMPORTANT: receipt evidence finalizes this immutable lifecycle; mutating it would
+        # relabel execution evidence that was produced for a different state.
+        if self.execution_receipt_fingerprint is not None:
+            raise ScheduleContractError("receipt-bound sampler state is terminal")
+
     def _validate_lifecycle(self, spec: SamplerExecutionSpec) -> None:
         if self.status is SamplerStateStatus.READY and (
             self.effective_transitions != 0 or self.effective_model_evaluations != 0
@@ -337,6 +367,7 @@ class SamplerStateSnapshot:
         """Return a new running snapshot with one contiguous step appended."""
 
         self._require_spec(spec)
+        self._require_receipt_unbound()
         if self.status in (SamplerStateStatus.INTERRUPTED, SamplerStateStatus.COMPLETED):
             raise ScheduleContractError("resume or reset the snapshot before appending a step")
         if step.step_index != self.next_step_index:
@@ -367,18 +398,21 @@ class SamplerStateSnapshot:
 
     def interrupt(self, spec: SamplerExecutionSpec) -> SamplerStateSnapshot:
         self._require_spec(spec)
+        self._require_receipt_unbound()
         if self.status is SamplerStateStatus.COMPLETED:
             raise ScheduleContractError("completed sampler state cannot be interrupted")
         return replace(self, status=SamplerStateStatus.INTERRUPTED)
 
     def resume(self, spec: SamplerExecutionSpec) -> SamplerStateSnapshot:
         self._require_spec(spec)
+        self._require_receipt_unbound()
         if self.status is not SamplerStateStatus.INTERRUPTED:
             raise ScheduleContractError("only interrupted sampler state can be resumed")
         return replace(self, status=SamplerStateStatus.RUNNING)
 
     def complete(self, spec: SamplerExecutionSpec) -> SamplerStateSnapshot:
         self._require_spec(spec)
+        self._require_receipt_unbound()
         if self.effective_transitions != spec.requested_transitions:
             raise ScheduleContractError("cannot complete before all transitions execute")
         if self.effective_model_evaluations != spec.requested_model_evaluations:
@@ -399,13 +433,21 @@ class SamplerStateSnapshot:
         spec: SamplerExecutionSpec,
         receipt: ExecutionReceipt,
     ) -> SamplerStateSnapshot:
-        """Attach a receipt only when its counts, RNG owner, and lifecycle agree."""
+        """Attach a receipt only when its identity, counts, RNG owner, and lifecycle agree."""
 
         self._require_spec(spec)
         self._validate_lifecycle(spec)
         if not isinstance(receipt, ExecutionReceipt):
             raise ScheduleContractError("receipt must be an ExecutionReceipt")
         projection = receipt.projection()
+        sampler = projection.get("sampler")
+        if not isinstance(sampler, dict):
+            raise ScheduleContractError("receipt sampler identity is missing")
+        if (
+            sampler.get("id") != spec.capabilities.sampler_id
+            or sampler.get("version") != spec.capabilities.sampler_version
+        ):
+            raise ScheduleContractError("receipt sampler identity does not match execution spec")
         counts = projection.get("counts")
         if not isinstance(counts, dict):
             raise ScheduleContractError("receipt counts are missing")
@@ -444,6 +486,10 @@ class SamplerStateSnapshot:
         }.get(self.status)
         if expected_status is not None and status is not expected_status:
             raise ScheduleContractError("receipt execution status does not match sampler state")
+        if self.execution_receipt_fingerprint is not None:
+            if self.execution_receipt_fingerprint == receipt.receipt_fingerprint:
+                return self
+            raise ScheduleContractError("receipt-bound evidence cannot be replaced")
         return replace(self, execution_receipt_fingerprint=receipt.receipt_fingerprint)
 
     def projection(self, spec: SamplerExecutionSpec) -> dict[str, object]:
@@ -607,21 +653,51 @@ def deserialize_sampler_state_snapshot(
     return snapshot
 
 
+def _duplicate_pairs(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    result: dict[str, object] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ScheduleContractError(f"duplicate JSON object name: {key}")
+        result[key] = value
+    return result
+
+
+def _reject_float(value: str) -> object:
+    raise ScheduleContractError(f"untyped JSON float is forbidden: {value}")
+
+
+def _reject_constant(value: str) -> object:
+    raise ScheduleContractError(f"non-finite JSON constant is forbidden: {value}")
+
+
 def _decode_json(payload: bytes | str) -> dict[str, Any]:
-    if isinstance(payload, bytes):
-        if len(payload) > 1_048_576:
-            raise ScheduleContractError("sampler state payload exceeds byte limit")
-        source = payload.decode("utf-8")
-    elif isinstance(payload, str):
-        if len(payload.encode("utf-8")) > 1_048_576:
-            raise ScheduleContractError("sampler state payload exceeds byte limit")
-        source = payload
+    if isinstance(payload, str):
+        if payload.startswith("\ufeff"):
+            raise ScheduleContractError("sampler state transport must not contain a BOM")
+        try:
+            raw_bytes = payload.encode("utf-8")
+        except UnicodeError as error:
+            raise ScheduleContractError("sampler state transport must be valid Unicode") from error
+    elif isinstance(payload, bytes):
+        raw_bytes = payload
+        if raw_bytes.startswith(b"\xef\xbb\xbf"):
+            raise ScheduleContractError("sampler state transport must not contain a BOM")
     else:
         raise ScheduleContractError("sampler state payload must be bytes or text")
+    if not raw_bytes or len(raw_bytes) > _MAX_TRANSPORT_BYTES:
+        raise ScheduleContractError("sampler state payload size is outside the allowed range")
     try:
-        raw = json.loads(source)
+        decoded = json.loads(
+            raw_bytes,
+            object_pairs_hook=_duplicate_pairs,
+            parse_float=_reject_float,
+            parse_constant=_reject_constant,
+        )
     except (UnicodeDecodeError, json.JSONDecodeError) as error:
         raise ScheduleContractError("sampler state payload is not valid JSON") from error
-    if not isinstance(raw, dict):
+    if not isinstance(decoded, dict):
         raise ScheduleContractError("sampler state payload root must be an object")
-    return cast(dict[str, Any], raw)
+    raw = cast(dict[str, Any], decoded)
+    if canonical_projection_bytes(raw) != raw_bytes:
+        raise ScheduleContractError("sampler state transport must use canonical JSON")
+    return raw

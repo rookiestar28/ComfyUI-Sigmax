@@ -1,5 +1,16 @@
 # End-to-End Testing Notice
 
+<!-- CURRENT-TEST-GOVERNANCE:START -->
+## Current Test Governance
+
+- Pure text/documentation changes and version-field-only `pyproject.toml` updates require no test
+  contract, Full Gate, or E2E run. Behavior-bearing `pyproject.toml` changes are not exempt.
+- For non-exempt work, a passing Windows Full Gate is the authoritative repository-wide result.
+  Push and Hosted CI are not prerequisites and need not bind evidence to a pushed commit.
+- Host, parity, GPU, release, or publication E2E remains item-scoped and additive when the affected
+  boundary explicitly requires it; Linux/WSL and Hosted CI repetitions are otherwise optional.
+<!-- CURRENT-TEST-GOVERNANCE:END -->
+
 All ComfyUI-Sigmax end-to-end tests must follow:
 
 - `tests/TEST_SOP.md` for the full acceptance gate;

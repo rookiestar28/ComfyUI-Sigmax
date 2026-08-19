@@ -56,7 +56,7 @@ FORBIDDEN_REGISTRY_FILES: Final = frozenset(
 _ALLOWED_ROOT_FILES: Final = frozenset(
     {".comfyignore", "LICENSE.TXT", "NOTICE", "README.md", "__init__.py", "pyproject.toml"}
 )
-_ALLOWED_ROOT_PREFIXES: Final = ("comfyui_sigmax/", "web/")
+_ALLOWED_ROOT_PREFIXES: Final = ("assets/", "comfyui_sigmax/", "web/")
 _REQUIRED_FILES: Final = frozenset(
     {
         "LICENSE.TXT",

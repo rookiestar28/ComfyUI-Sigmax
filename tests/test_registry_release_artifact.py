@@ -96,6 +96,7 @@ def test_registry_member_audit_rejects_paths_links_size_and_missing_contracts() 
         ("README.md", b"public\n", False),
         ("LICENSE.TXT", b"MIT\n", False),
         ("NOTICE", b"notice\n", False),
+        ("assets/overview.png", b"png", False),
         ("pyproject.toml", b"[project]\n", False),
         ("comfyui_sigmax/__init__.py", b"pass\n", False),
         ("comfyui_sigmax/contracts/manifest_v1.json", b"{}\n", False),

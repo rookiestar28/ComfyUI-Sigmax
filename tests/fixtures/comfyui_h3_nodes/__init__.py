@@ -32,6 +32,17 @@ _WAN_UI_KEY = "sigmax_wan_schedule"
 _LTX_UI_KEY = "sigmax_ltx_schedule"
 _MINIMAX_H3_H2_UI_KEY = "sigmax_minimax_h3_h2"
 _MINIMAX_H3_NATIVE_H2_UI_KEY = "sigmax_minimax_h3_native_h2"
+_MINIMAX_H3_NATIVE_SCHEDULERS = (
+    "simple",
+    "sgm_uniform",
+    "karras",
+    "exponential",
+    "ddim_uniform",
+    "beta",
+    "normal",
+    "linear_quadratic",
+    "kl_optimal",
+)
 _KREA2_LORA_UI_KEY = "sigmax_krea2_lora_experimental"
 _KREA2_CONDITIONING_UI_KEY = "sigmax_krea2_conditioning"
 _KREA2_CONDITIONING_FEATURES = 12 * 2560
@@ -257,7 +268,21 @@ class MiniMaxH3ScheduleProbe:
 class _SyntheticMiniMaxH3Model:
     """Weight-free MODEL seam around the real host's H3 sampling implementation."""
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        *,
+        video_shift: float = 12.0,
+        audio_shift: float = 3.0,
+        source_mode: str = "h3",
+    ) -> None:
+        if (
+            not math.isfinite(video_shift)
+            or video_shift <= 0.0
+            or not math.isfinite(audio_shift)
+            or audio_shift <= 0.0
+            or source_mode not in {"h3", "non_h3"}
+        ):
+            raise ValueError("MiniMax H3 native model source inputs are invalid")
         config = supported_models.MiniMaxH3({"image_model": "minimax_h3"})
 
         sampling_base = getattr(
@@ -271,11 +296,19 @@ class _SyntheticMiniMaxH3Model:
             pass
 
         self._sampling = SyntheticSampling(config)
-        self.model = SimpleNamespace(model_config=config)
+        setter = getattr(self._sampling, "set_parameters", None)
+        if not callable(setter):
+            raise ValueError("MiniMax H3 native sampling source lacks set_parameters")
+        if hasattr(comfy_model_sampling, "ModelSamplingAV"):
+            setter(shift=video_shift, audio_shift=audio_shift)
+        else:
+            # IMPORTANT: ComfyUI 0.30 owns audio shift through complete H3 option markers.
+            setter(shift=video_shift)
+        self.model = SimpleNamespace(model_config=config if source_mode == "h3" else object())
         self.model_options = {
             "transformer_options": {
-                "minimax_h3_sigma_shift_video": 12.0,
-                "minimax_h3_sigma_shift_audio": 3.0,
+                "minimax_h3_sigma_shift_video": video_shift,
+                "minimax_h3_sigma_shift_audio": audio_shift,
             }
         }
 
@@ -296,10 +329,34 @@ class MiniMaxH3NativeModelSource:
 
     @classmethod
     def INPUT_TYPES(cls) -> dict[str, dict[str, tuple[object, ...]]]:
-        return {"required": {}}
+        return {
+            "required": {},
+            "optional": {
+                "video_shift": (
+                    "FLOAT",
+                    {"default": 12.0, "min": 0.01, "max": 100.0, "step": 0.01},
+                ),
+                "audio_shift": (
+                    "FLOAT",
+                    {"default": 3.0, "min": 0.01, "max": 100.0, "step": 0.01},
+                ),
+                "source_mode": (("h3", "non_h3"), {"default": "h3"}),
+            },
+        }
 
-    def build(self) -> tuple[object]:
-        return (_SyntheticMiniMaxH3Model(),)
+    def build(
+        self,
+        video_shift: float = 12.0,
+        audio_shift: float = 3.0,
+        source_mode: str = "h3",
+    ) -> tuple[object]:
+        return (
+            _SyntheticMiniMaxH3Model(
+                video_shift=video_shift,
+                audio_shift=audio_shift,
+                source_mode=source_mode,
+            ),
+        )
 
 
 class MiniMaxH3NativeScheduleProbe:
@@ -319,9 +376,24 @@ class MiniMaxH3NativeScheduleProbe:
                 "model": ("MODEL",),
                 "sigmas": ("SIGMAS",),
                 "schedule_info": ("STRING", {"default": "", "multiline": True}),
-                "scheduler": (("simple",), {"default": "simple"}),
+                "scheduler": (_MINIMAX_H3_NATIVE_SCHEDULERS, {"default": "simple"}),
                 "steps": ("INT", {"default": 4, "min": 1, "max": 1000}),
-            }
+            },
+            "optional": {
+                "case_id": ("STRING", {"default": "m4-17.simple"}),
+                "variant": (("", "H3 Base FL2VA", "H3 Base Ref2VA"), {"default": ""}),
+                "recipe_id": ("STRING", {"default": ""}),
+                "start_step": ("INT", {"default": 0, "min": 0, "max": 999}),
+                "end_step": ("INT", {"default": -1, "min": -1, "max": 1000}),
+                "video_shift": (
+                    "FLOAT",
+                    {"default": 12.0, "min": 0.01, "max": 100.0, "step": 0.01},
+                ),
+                "audio_shift": (
+                    "FLOAT",
+                    {"default": 3.0, "min": 0.01, "max": 100.0, "step": 0.01},
+                ),
+            },
         }
 
     def execute(
@@ -331,9 +403,44 @@ class MiniMaxH3NativeScheduleProbe:
         schedule_info: object,
         scheduler: object,
         steps: object,
+        case_id: object = "m4-17.simple",
+        variant: object = "",
+        recipe_id: object = "",
+        start_step: object = 0,
+        end_step: object = -1,
+        video_shift: object = 12.0,
+        audio_shift: object = 3.0,
     ) -> dict[str, object]:
-        if scheduler != "simple" or steps != 4:
-            raise ValueError("MiniMax H3 native H2 supports the bounded simple/4 case")
+        if scheduler not in _MINIMAX_H3_NATIVE_SCHEDULERS:
+            raise ValueError("MiniMax H3 native H2 scheduler is outside the fixed set")
+        if not isinstance(steps, int) or isinstance(steps, bool) or steps < 1:
+            raise ValueError("MiniMax H3 native H2 steps are invalid")
+        if not isinstance(case_id, str) or not case_id or len(case_id) > 256:
+            raise ValueError("MiniMax H3 native H2 case ID is invalid")
+        if variant not in {"", "H3 Base FL2VA", "H3 Base Ref2VA"}:
+            raise ValueError("MiniMax H3 native H2 variant is invalid")
+        if not isinstance(recipe_id, str) or len(recipe_id) > 128:
+            raise ValueError("MiniMax H3 native H2 recipe ID is invalid")
+        if (
+            not isinstance(start_step, int)
+            or isinstance(start_step, bool)
+            or start_step < 0
+            or not isinstance(end_step, int)
+            or isinstance(end_step, bool)
+            or end_step < -1
+        ):
+            raise ValueError("MiniMax H3 native H2 slice is invalid")
+        if (
+            not isinstance(video_shift, int | float)
+            or isinstance(video_shift, bool)
+            or not math.isfinite(float(video_shift))
+            or float(video_shift) <= 0.0
+            or not isinstance(audio_shift, int | float)
+            or isinstance(audio_shift, bool)
+            or not math.isfinite(float(audio_shift))
+            or float(audio_shift) <= 0.0
+        ):
+            raise ValueError("MiniMax H3 native H2 shifts are invalid")
         if not isinstance(sigmas, torch.Tensor) or sigmas.dtype != torch.float32:
             raise ValueError("MiniMax H3 native H2 sigmas must be float32")
         if not isinstance(schedule_info, str):
@@ -341,10 +448,15 @@ class MiniMaxH3NativeScheduleProbe:
         getter = getattr(model, "get_model_object", None)
         if not callable(getter):
             raise ValueError("MiniMax H3 native H2 MODEL lacks model sampling")
-        reference = comfy_samplers.calculate_sigmas(
+        raw_reference = comfy_samplers.calculate_sigmas(
             getter("model_sampling"), scheduler, steps
         ).cpu()
-        reference = reference[-(steps + 1) :]
+        basic_reference = raw_reference[-(steps + 1) :]
+        available_steps = len(basic_reference) - 1
+        effective_end = available_steps if end_step == -1 else end_step
+        if not 0 <= start_step < effective_end <= available_steps:
+            raise ValueError("MiniMax H3 native H2 slice is outside the BasicScheduler result")
+        reference = basic_reference[start_step : effective_end + 1]
         if sigmas.device.type != "cpu" or reference.dtype != torch.float32:
             raise ValueError("MiniMax H3 native H2 must remain on the float32 CPU boundary")
         if sigmas.shape != reference.shape or not torch.equal(sigmas, reference):
@@ -364,6 +476,20 @@ class MiniMaxH3NativeScheduleProbe:
             if isinstance(host_version, str)
             else None
         )
+        expected_task = (
+            "fl2va"
+            if variant == "H3 Base FL2VA"
+            else "ref2va"
+            if variant == "H3 Base Ref2VA"
+            else None
+        )
+        expected_recipe = recipe_id or None
+        expected_terminal = float(reference[-1])
+        native_counts = native.get("counts") if isinstance(native, dict) else None
+        native_terminal = native.get("terminal") if isinstance(native, dict) else None
+        native_shift = native.get("shift") if isinstance(native, dict) else None
+        native_slice = native.get("slicing") if isinstance(native, dict) else None
+        native_fingerprints = native.get("fingerprints") if isinstance(native, dict) else None
         if (
             info.get("lane") != "m4_17_comfyui_native_scheduler"
             or info.get("mode") != "experimental_comfyui_native_scheduler"
@@ -371,23 +497,60 @@ class MiniMaxH3NativeScheduleProbe:
             or native.get("owner") != "comfyui_native"
             or native.get("scheduler") != scheduler
             or native.get("model_task") not in {"fl2va", "ref2va"}
+            or (expected_task is not None and native.get("model_task") != expected_task)
+            or native.get("recipe_id") != expected_recipe
+            or native.get("dtype") != "float32"
             or not isinstance(native.get("host"), dict)
             or expected_sampling_api is None
             or native.get("sampling_api") != expected_sampling_api
-            or not isinstance(native.get("counts"), dict)
-            or native["counts"].get("requested_steps") != steps
-            or native["counts"].get("actual_sigmas") != len(sigmas)
-            or native["counts"].get("actual_transitions") != len(sigmas) - 1
-            or not isinstance(native.get("terminal"), dict)
-            or native["terminal"].get("value") != 0.0
+            or not isinstance(native_counts, dict)
+            or native_counts.get("requested_steps") != steps
+            or native_counts.get("raw_sigmas") != len(raw_reference)
+            or native_counts.get("actual_sigmas") != len(sigmas)
+            or native_counts.get("actual_transitions") != len(sigmas) - 1
+            or native_shift
+            != {
+                "already_applied": True,
+                "audio": float(audio_shift),
+                "video": float(video_shift),
+            }
+            or native_slice != {"end_step": effective_end, "start_step": start_step}
+            or native_terminal != {"included": expected_terminal == 0.0, "value": expected_terminal}
+            or not isinstance(native_fingerprints, dict)
+            or not isinstance(native_fingerprints.get("contract"), str)
+            or not isinstance(native_fingerprints.get("output"), str)
         ):
             raise ValueError("MiniMax H3 native scheduler metadata drifted")
+        errors = torch.abs(sigmas - reference)
+        max_abs_error = float(errors.max().item()) if errors.numel() else 0.0
+        mean_abs_error = float(errors.mean().item()) if errors.numel() else 0.0
+        raw_values = _vector(raw_reference)
+        basic_values = _vector(basic_reference)
+        reference_values = _vector(reference)
+        sigma_values = _vector(sigmas)
+        finite = all(
+            math.isfinite(value)
+            for values in (raw_values, basic_values, reference_values, sigma_values)
+            for value in values
+        )
+        monotonic = all(
+            left >= right
+            for values in (raw_values, basic_values, reference_values, sigma_values)
+            for left, right in pairwise(values)
+        )
         trace = {
-            "max_abs_error": 0.0,
-            "reference_sigmas": _vector(reference),
+            "basic_scheduler_sigmas": basic_values,
+            "case_id": case_id,
+            "finite": finite,
+            "max_abs_error": max_abs_error,
+            "mean_abs_error": mean_abs_error,
+            "monotonic_nonincreasing": monotonic,
+            "raw_reference_sigmas": raw_values,
+            "reference_sigmas": reference_values,
             "schedule_info": info,
             "scheduler": scheduler,
-            "sigmas": _vector(sigmas),
+            "schema": "sigmax.minimax-h3-native-matrix-trace/1",
+            "sigmas": sigma_values,
             "steps": steps,
         }
         return {
@@ -403,6 +566,30 @@ class MiniMaxH3NativeScheduleProbe:
                 ]
             }
         }
+
+
+class MiniMaxH3NativeUnexpectedSuccessProbe:
+    """Make a negative graph executable while rejecting any unexpected upstream success."""
+
+    CATEGORY = "SigmaxTest"
+    DESCRIPTION = "Test-only MiniMax H3 negative execution boundary."
+    FUNCTION = "execute"
+    OUTPUT_NODE = True
+    RETURN_TYPES: tuple[()] = ()
+    RETURN_NAMES: tuple[()] = ()
+
+    @classmethod
+    def INPUT_TYPES(cls) -> dict[str, dict[str, tuple[object, ...]]]:
+        return {
+            "required": {
+                "sigmas": ("SIGMAS",),
+                "schedule_info": ("STRING", {"default": "", "multiline": True}),
+            }
+        }
+
+    def execute(self, sigmas: object, schedule_info: object) -> dict[str, object]:
+        del sigmas, schedule_info
+        raise ValueError("MiniMax H3 negative graph unexpectedly reached its output probe")
 
 
 class ScheduleAlgebraProbe:
@@ -1370,6 +1557,7 @@ NODE_CLASS_MAPPINGS = {
     "SigmaxTest.MiniMaxH3ScheduleProbe": MiniMaxH3ScheduleProbe,
     "SigmaxTest.MiniMaxH3NativeModelSource": MiniMaxH3NativeModelSource,
     "SigmaxTest.MiniMaxH3NativeScheduleProbe": MiniMaxH3NativeScheduleProbe,
+    "SigmaxTest.MiniMaxH3NativeUnexpectedSuccessProbe": MiniMaxH3NativeUnexpectedSuccessProbe,
     "SigmaxTest.CheckpointEvidenceProbe": CheckpointEvidenceProbe,
     "SigmaxTest.Krea2LoraExperimentalProbe": Krea2LoraExperimentalProbe,
     "SigmaxTest.Krea2ConditioningProbe": Krea2ConditioningProbe,
@@ -1391,6 +1579,9 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "SigmaxTest.MiniMaxH3ScheduleProbe": "Sigmax Test — MiniMax H3 Schedule Probe",
     "SigmaxTest.MiniMaxH3NativeModelSource": "Sigmax Test — MiniMax H3 Native Model Source",
     "SigmaxTest.MiniMaxH3NativeScheduleProbe": "Sigmax Test — MiniMax H3 Native Schedule Probe",
+    "SigmaxTest.MiniMaxH3NativeUnexpectedSuccessProbe": (
+        "Sigmax Test — MiniMax H3 Native Unexpected Success Probe"
+    ),
     "SigmaxTest.CheckpointEvidenceProbe": "Sigmax Test — Checkpoint Evidence Probe",
     "SigmaxTest.Krea2LoraExperimentalProbe": "Sigmax Test — Krea 2 LoRA Experimental Probe",
     "SigmaxTest.Krea2ConditioningProbe": "Sigmax Test — Krea 2 Conditioning Probe",

@@ -21,7 +21,7 @@ from collections.abc import Callable, Mapping, Sequence
 from contextlib import suppress
 from itertools import pairwise
 from pathlib import Path
-from typing import Any, Final, cast
+from typing import Any, Final, NamedTuple, cast
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
@@ -60,6 +60,7 @@ from comfyui_sigmax.profiles.minimax_h3 import (  # noqa: E402
 )
 from comfyui_sigmax.profiles.minimax_h3_scheduler_contract import (  # noqa: E402
     MINIMAX_H3_DEFAULT_SCHEDULER,
+    MINIMAX_H3_NATIVE_SCHEDULERS,
     MINIMAX_H3_SCHEDULER_CHOICES,
 )
 from comfyui_sigmax.workflows import (  # noqa: E402
@@ -102,6 +103,15 @@ _MINIMAX_H3_MIN_LATEST_HOST_VERSION: Final = (0, 31, 0)
 _MINIMAX_H3_LATEST_LANE: Final = "latest"
 _MINIMAX_H3_MODEL_LANE_SCHEMA: Final = "sigmax.minimax-h3-model-lane/1"
 _MINIMAX_H3_PUBLIC_VARIANTS: Final = ("H3 Base FL2VA", "H3 Base Ref2VA")
+_MINIMAX_H3_M7_15_SCHEMA: Final = "sigmax.minimax-h3-m7-15-host-matrix/1"
+_MINIMAX_H3_M7_15_TRACE_SCHEMA: Final = "sigmax.minimax-h3-native-matrix-trace/1"
+_MINIMAX_H3_M7_15_STEPS: Final = (2, 4, 8, 20)
+_MINIMAX_H3_M7_15_TURBO_CASES: Final = (
+    ("H3 Base FL2VA", "h3.fl2va.lightx2v-turbo-4-v0.1-544p", 4, 12.0, 3.0),
+    ("H3 Base FL2VA", "h3.fl2va.lightx2v-turbo-8-v1.0-544p", 8, 12.0, 3.0),
+    ("H3 Base FL2VA", "h3.fl2va.lightx2v-turbo-4-v1.0-768p", 4, 6.0, 3.0),
+    ("H3 Base Ref2VA", "h3.ref2va.lightx2v-turbo-4-v0.1-544p", 4, 12.0, 3.0),
+)
 _ALGEBRA_OUTPUT_NODE_ID: Final = "7"
 _ALGEBRA_TRACE_KEY: Final = "sigmax_schedule_algebra"
 _CHECKPOINT_OUTPUT_NODE_ID: Final = "2"
@@ -138,6 +148,168 @@ _H3_TEST_PACK_SOURCE: Final = (
 _EXPECTED_NUMERICAL_FINGERPRINT: Final = (
     "sha256:24984ad4412a3c47103a52cfe3af16bb9df8789f98401d9fc281b3f6ca0892ac"
 )
+
+
+def _minimax_h3_task(variant: str) -> str:
+    if variant == "H3 Base FL2VA":
+        return "fl2va"
+    if variant == "H3 Base Ref2VA":
+        return "ref2va"
+    raise ScheduleContractError("MiniMax H3 matrix variant must be selected explicitly")
+
+
+class MiniMaxH3NativeMatrixCase(NamedTuple):
+    """One deterministic weight-free M7-15 supported-host comparison."""
+
+    case_id: str
+    lane: str
+    variant: str
+    scheduler: str
+    steps: int
+    start_step: int
+    end_step: int
+    recipe_id: str | None
+    video_shift: float
+    audio_shift: float
+    dtype: str
+
+    def validate(self) -> None:
+        task = _minimax_h3_task(self.variant)
+        if self.scheduler not in MINIMAX_H3_NATIVE_SCHEDULERS:
+            raise ScheduleContractError("MiniMax H3 matrix scheduler is outside the fixed set")
+        if self.dtype != "float32":
+            raise ScheduleContractError("MiniMax H3 native matrix must preserve host float32")
+        if self.lane not in {"base_full", "base_slice", "turbo_full"}:
+            raise ScheduleContractError("MiniMax H3 matrix lane is unsupported")
+        if (
+            isinstance(self.steps, bool)
+            or not isinstance(self.steps, int)
+            or self.steps < 1
+            or isinstance(self.start_step, bool)
+            or not isinstance(self.start_step, int)
+            or isinstance(self.end_step, bool)
+            or not isinstance(self.end_step, int)
+        ):
+            raise ScheduleContractError("MiniMax H3 matrix step fields are invalid")
+        if not all(math.isfinite(value) and value > 0.0 for value in self.shifts):
+            raise ScheduleContractError("MiniMax H3 matrix shifts must be finite and positive")
+        if self.lane == "base_full":
+            expected_id = f"base.{task}.{self.scheduler}.s{self.steps}.full"
+            valid = (
+                self.recipe_id is None
+                and self.steps in _MINIMAX_H3_M7_15_STEPS
+                and (self.start_step, self.end_step) == (0, -1)
+                and self.shifts == (12.0, 3.0)
+            )
+        elif self.lane == "base_slice":
+            expected_id = f"base.{task}.{self.scheduler}.s8.slice-1-4"
+            valid = (
+                self.recipe_id is None
+                and self.steps == 8
+                and (self.start_step, self.end_step) == (1, 4)
+                and self.shifts == (12.0, 3.0)
+            )
+        else:
+            expected_id = f"turbo.{task}.{self.recipe_id}.{self.scheduler}.s{self.steps}.full"
+            valid = (
+                self.variant,
+                self.recipe_id,
+                self.steps,
+                self.video_shift,
+                self.audio_shift,
+            ) in _MINIMAX_H3_M7_15_TURBO_CASES and (self.start_step, self.end_step) == (0, -1)
+        if not valid or self.case_id != expected_id:
+            raise ScheduleContractError("MiniMax H3 matrix case identity is inconsistent")
+
+    @property
+    def task(self) -> str:
+        return _minimax_h3_task(self.variant)
+
+    @property
+    def shifts(self) -> tuple[float, float]:
+        return self.video_shift, self.audio_shift
+
+    def projection(self) -> dict[str, object]:
+        self.validate()
+        return {
+            "audio_shift": self.audio_shift,
+            "case_id": self.case_id,
+            "dtype": self.dtype,
+            "end_step": self.end_step,
+            "lane": self.lane,
+            "recipe_id": self.recipe_id,
+            "scheduler": self.scheduler,
+            "start_step": self.start_step,
+            "steps": self.steps,
+            "task": self.task,
+            "variant": self.variant,
+            "video_shift": self.video_shift,
+        }
+
+
+def build_minimax_h3_m7_15_cases() -> tuple[MiniMaxH3NativeMatrixCase, ...]:
+    """Build the frozen 126-case positive matrix without host or filesystem access."""
+
+    cases: list[MiniMaxH3NativeMatrixCase] = []
+    for variant in _MINIMAX_H3_PUBLIC_VARIANTS:
+        task = _minimax_h3_task(variant)
+        for scheduler in MINIMAX_H3_NATIVE_SCHEDULERS:
+            for steps in _MINIMAX_H3_M7_15_STEPS:
+                cases.append(
+                    MiniMaxH3NativeMatrixCase(
+                        case_id=f"base.{task}.{scheduler}.s{steps}.full",
+                        lane="base_full",
+                        variant=variant,
+                        scheduler=scheduler,
+                        steps=steps,
+                        start_step=0,
+                        end_step=-1,
+                        recipe_id=None,
+                        video_shift=12.0,
+                        audio_shift=3.0,
+                        dtype="float32",
+                    )
+                )
+            cases.append(
+                MiniMaxH3NativeMatrixCase(
+                    case_id=f"base.{task}.{scheduler}.s8.slice-1-4",
+                    lane="base_slice",
+                    variant=variant,
+                    scheduler=scheduler,
+                    steps=8,
+                    start_step=1,
+                    end_step=4,
+                    recipe_id=None,
+                    video_shift=12.0,
+                    audio_shift=3.0,
+                    dtype="float32",
+                )
+            )
+    for variant, recipe_id, steps, video_shift, audio_shift in _MINIMAX_H3_M7_15_TURBO_CASES:
+        task = _minimax_h3_task(variant)
+        for scheduler in MINIMAX_H3_NATIVE_SCHEDULERS:
+            cases.append(
+                MiniMaxH3NativeMatrixCase(
+                    case_id=f"turbo.{task}.{recipe_id}.{scheduler}.s{steps}.full",
+                    lane="turbo_full",
+                    variant=variant,
+                    scheduler=scheduler,
+                    steps=steps,
+                    start_step=0,
+                    end_step=-1,
+                    recipe_id=recipe_id,
+                    video_shift=video_shift,
+                    audio_shift=audio_shift,
+                    dtype="float32",
+                )
+            )
+    if len(cases) != 126 or len({case.case_id for case in cases}) != len(cases):
+        raise ScheduleContractError("MiniMax H3 M7-15 matrix cardinality drifted")
+    for case in cases:
+        case.validate()
+    return tuple(cases)
+
+
 _RAW_CASES: Final = {
     "krea2-raw-official-square-1024": {
         "steps": 52,
@@ -284,6 +456,111 @@ def build_minimax_h3_native_h2_api_prompt(variant: str) -> dict[str, object]:
             },
         },
     }
+
+
+def build_minimax_h3_native_matrix_h2_api_prompt(
+    case: MiniMaxH3NativeMatrixCase,
+) -> dict[str, object]:
+    """Return one exact M7-15 public-node -> same-object differential graph."""
+
+    if not isinstance(case, MiniMaxH3NativeMatrixCase):
+        raise ScheduleContractError("MiniMax H3 native matrix requires a frozen case")
+    case.validate()
+    schedule_inputs: dict[str, object] = {
+        "end_step": case.end_step,
+        "model": ["1", 0],
+        "scheduler": case.scheduler,
+        "start_step": case.start_step,
+        "steps": case.steps,
+        "variant": case.variant,
+    }
+    if case.recipe_id is not None:
+        schedule_inputs["turbo"] = case.recipe_id
+    return {
+        "1": {
+            "class_type": "SigmaxTest.MiniMaxH3NativeModelSource",
+            "inputs": {
+                "audio_shift": case.audio_shift,
+                "source_mode": "h3",
+                "video_shift": case.video_shift,
+            },
+        },
+        "2": {
+            "class_type": "Sigmax.MiniMaxH3SigmaScheduler",
+            "inputs": schedule_inputs,
+        },
+        _MINIMAX_H3_OUTPUT_NODE_ID: {
+            "class_type": "SigmaxTest.MiniMaxH3NativeScheduleProbe",
+            "inputs": {
+                "audio_shift": case.audio_shift,
+                "case_id": case.case_id,
+                "end_step": case.end_step,
+                "model": ["1", 0],
+                "recipe_id": case.recipe_id or "",
+                "schedule_info": ["2", 1],
+                "scheduler": case.scheduler,
+                "sigmas": ["2", 0],
+                "start_step": case.start_step,
+                "steps": case.steps,
+                "variant": case.variant,
+                "video_shift": case.video_shift,
+            },
+        },
+    }
+
+
+_MINIMAX_H3_M7_15_REJECTION_REASONS: Final = {
+    "missing_model": "MODEL_REQUIRED",
+    "non_h3_model": "MODEL_FAMILY_MISMATCH",
+    "base_shift_mismatch": "SHIFT_MISMATCH",
+    "turbo_shift_mismatch": "SHIFT_MISMATCH",
+}
+
+
+def minimax_h3_native_matrix_rejection_reason(case_id: str) -> str:
+    """Return the stable production reason expected for one bounded live negative."""
+
+    reason = _MINIMAX_H3_M7_15_REJECTION_REASONS.get(case_id)
+    if reason is None:
+        raise ScheduleContractError("MiniMax H3 native matrix rejection case is unsupported")
+    return reason
+
+
+def build_minimax_h3_native_matrix_rejection_prompt(case_id: str) -> dict[str, object]:
+    """Build one graph that must fail in the public node before its output probe executes."""
+
+    minimax_h3_native_matrix_rejection_reason(case_id)
+    schedule_inputs: dict[str, object] = {
+        "end_step": -1,
+        "scheduler": "simple",
+        "start_step": 0,
+        "steps": 4,
+        "variant": "H3 Base FL2VA",
+    }
+    prompt: dict[str, object] = {}
+    if case_id != "missing_model":
+        source_mode = "non_h3" if case_id == "non_h3_model" else "h3"
+        video_shift = 6.0 if case_id == "base_shift_mismatch" else 12.0
+        prompt["1"] = {
+            "class_type": "SigmaxTest.MiniMaxH3NativeModelSource",
+            "inputs": {
+                "audio_shift": 3.0,
+                "source_mode": source_mode,
+                "video_shift": video_shift,
+            },
+        }
+        schedule_inputs["model"] = ["1", 0]
+    if case_id == "turbo_shift_mismatch":
+        schedule_inputs["turbo"] = "h3.fl2va.lightx2v-turbo-4-v1.0-768p"
+    prompt["2"] = {
+        "class_type": "Sigmax.MiniMaxH3SigmaScheduler",
+        "inputs": schedule_inputs,
+    }
+    prompt[_MINIMAX_H3_OUTPUT_NODE_ID] = {
+        "class_type": "SigmaxTest.MiniMaxH3NativeUnexpectedSuccessProbe",
+        "inputs": {"schedule_info": ["2", 1], "sigmas": ["2", 0]},
+    }
+    return prompt
 
 
 def build_krea2_lora_experimental_h2_api_prompt(variant: str) -> dict[str, object]:
@@ -2039,6 +2316,196 @@ def verify_minimax_h3_native_h2_history(
     }
 
 
+def _sha256_text(value: object) -> str:
+    if (
+        not isinstance(value, str)
+        or not value.startswith("sha256:")
+        or len(value) != 71
+        or any(character not in "0123456789abcdef" for character in value[7:])
+    ):
+        raise ScheduleContractError("MiniMax H3 matrix fingerprint is malformed")
+    return value
+
+
+def verify_minimax_h3_native_matrix_h2_history(
+    history: object,
+    *,
+    prompt_id: str,
+    case: MiniMaxH3NativeMatrixCase,
+) -> dict[str, object]:
+    """Verify one canonical M7-15 same-object BasicScheduler differential."""
+
+    if not isinstance(case, MiniMaxH3NativeMatrixCase):
+        raise ScheduleContractError("MiniMax H3 native matrix requires a frozen case")
+    case.validate()
+    root = _object(history, label="MiniMax H3 matrix history")
+    entry = _object(root.get(prompt_id), label="MiniMax H3 matrix history entry")
+    status = _object(entry.get("status"), label="MiniMax H3 matrix prompt status")
+    if status.get("completed") is not True or status.get("status_str") != "success":
+        raise ScheduleContractError("MiniMax H3 matrix does not prove completed success")
+    prompt_tuple = _array(entry.get("prompt"), label="MiniMax H3 matrix retained prompt")
+    if len(prompt_tuple) < 3 or prompt_tuple[2] != build_minimax_h3_native_matrix_h2_api_prompt(
+        case
+    ):
+        raise ScheduleContractError("MiniMax H3 matrix graph or case identity is stale")
+    outputs = _object(entry.get("outputs"), label="MiniMax H3 matrix outputs")
+    output = _object(
+        outputs.get(_MINIMAX_H3_OUTPUT_NODE_ID),
+        label="MiniMax H3 matrix probe output",
+    )
+    traces = _array(
+        output.get(_MINIMAX_H3_NATIVE_TRACE_KEY),
+        label="MiniMax H3 matrix trace",
+    )
+    if len(traces) != 1 or not isinstance(traces[0], str) or len(traces[0]) > 100_000:
+        raise ScheduleContractError("MiniMax H3 matrix trace is malformed")
+    trace = _object(
+        _decode_json(traces[0].encode(), label="MiniMax H3 matrix trace"),
+        label="MiniMax H3 matrix decoded trace",
+    )
+    canonical = json.dumps(
+        trace,
+        allow_nan=False,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    )
+    raw = _array(trace.get("raw_reference_sigmas"), label="MiniMax H3 raw reference")
+    basic = _array(trace.get("basic_scheduler_sigmas"), label="MiniMax H3 BasicScheduler vector")
+    reference = _array(trace.get("reference_sigmas"), label="MiniMax H3 sliced reference")
+    sigmas = _array(trace.get("sigmas"), label="MiniMax H3 public output")
+    info = _object(trace.get("schedule_info"), label="MiniMax H3 matrix metadata")
+    scheduler = _object(info.get("scheduler"), label="MiniMax H3 matrix scheduler metadata")
+    counts = _object(scheduler.get("counts"), label="MiniMax H3 matrix counts")
+    terminal = _object(scheduler.get("terminal"), label="MiniMax H3 matrix terminal")
+    slicing = _object(scheduler.get("slicing"), label="MiniMax H3 matrix slicing")
+    shifts = _object(scheduler.get("shift"), label="MiniMax H3 matrix shifts")
+    fingerprints = _object(scheduler.get("fingerprints"), label="MiniMax H3 matrix fingerprints")
+    host = _object(scheduler.get("host"), label="MiniMax H3 matrix host")
+    host_version = host.get("observed_version")
+    sampling_api = (
+        {
+            "0.30.0": "model_sampling_discrete_flow_h3_v030",
+            "0.32.0": "model_sampling_av_v032",
+        }.get(host_version)
+        if isinstance(host_version, str)
+        else None
+    )
+    effective_end = len(basic) - 1 if case.end_step == -1 else case.end_step
+    if any(len(values) < 2 for values in (raw, basic, reference, sigmas)):
+        raise ScheduleContractError("MiniMax H3 matrix vectors are incomplete")
+    expected_output = basic[case.start_step : effective_end + 1]
+    numeric_vectors = (raw, basic, reference, sigmas)
+    finite = all(
+        isinstance(value, int | float)
+        and not isinstance(value, bool)
+        and math.isfinite(float(value))
+        for values in numeric_vectors
+        for value in values
+    )
+    monotonic = all(
+        float(left) >= float(right)
+        for values in numeric_vectors
+        for left, right in pairwise(values)
+    )
+    contract_fingerprint = _sha256_text(fingerprints.get("contract"))
+    output_fingerprint = _sha256_text(fingerprints.get("output"))
+    if (
+        traces[0] != canonical
+        or trace.get("schema") != _MINIMAX_H3_M7_15_TRACE_SCHEMA
+        or trace.get("case_id") != case.case_id
+        or trace.get("scheduler") != case.scheduler
+        or trace.get("steps") != case.steps
+        or trace.get("max_abs_error") != 0.0
+        or trace.get("mean_abs_error") != 0.0
+        or trace.get("finite") is not True
+        or trace.get("monotonic_nonincreasing") is not True
+        or not finite
+        or not monotonic
+        or len(raw) < 2
+        or basic != raw[-(case.steps + 1) :]
+        or reference != expected_output
+        or sigmas != reference
+        or info.get("lane") != "m4_17_comfyui_native_scheduler"
+        or info.get("mode") != "experimental_comfyui_native_scheduler"
+        or scheduler.get("owner") != "comfyui_native"
+        or scheduler.get("scheduler") != case.scheduler
+        or scheduler.get("model_task") != case.task
+        or scheduler.get("recipe_id") != case.recipe_id
+        or scheduler.get("dtype") != case.dtype
+        or sampling_api is None
+        or scheduler.get("sampling_api") != sampling_api
+        or shifts
+        != {
+            "already_applied": True,
+            "audio": case.audio_shift,
+            "video": case.video_shift,
+        }
+        or counts.get("requested_steps") != case.steps
+        or counts.get("raw_sigmas") != len(raw)
+        or counts.get("actual_sigmas") != len(sigmas)
+        or counts.get("actual_transitions") != len(sigmas) - 1
+        or slicing != {"end_step": effective_end, "start_step": case.start_step}
+        or terminal != {"included": sigmas[-1] == 0.0, "value": sigmas[-1]}
+    ):
+        raise ScheduleContractError("MiniMax H3 native matrix execution evidence drifted")
+    return {
+        "actual_sigmas": len(sigmas),
+        "actual_transitions": len(sigmas) - 1,
+        "basic_scheduler_sigmas": list(basic),
+        "case": case.projection(),
+        "contract_fingerprint": contract_fingerprint,
+        "dtype": case.dtype,
+        "host_version": host_version,
+        "max_abs_error": 0.0,
+        "mean_abs_error": 0.0,
+        "output_fingerprint": output_fingerprint,
+        "raw_reference_sigmas": list(raw),
+        "reference_sigmas": list(reference),
+        "sampling_api": sampling_api,
+        "sigmas": list(sigmas),
+        "status": "succeeded",
+        "terminal_included": sigmas[-1] == 0.0,
+        "terminal_value": sigmas[-1],
+    }
+
+
+def verify_minimax_h3_native_matrix_rejection_history(
+    history: object,
+    *,
+    prompt_id: str,
+    case_id: str,
+) -> dict[str, object]:
+    """Verify a bounded public-node runtime rejection without leaking its traceback."""
+
+    expected_reason = minimax_h3_native_matrix_rejection_reason(case_id)
+    root = _object(history, label="MiniMax H3 matrix rejection history")
+    entry = _object(root.get(prompt_id), label="MiniMax H3 matrix rejection entry")
+    status = _object(entry.get("status"), label="MiniMax H3 matrix rejection status")
+    if status.get("completed") is not False or status.get("status_str") != "error":
+        raise ScheduleContractError("MiniMax H3 matrix negative is not a terminal rejection")
+    prompt_tuple = _array(entry.get("prompt"), label="MiniMax H3 rejection retained prompt")
+    if len(prompt_tuple) < 3 or prompt_tuple[2] != build_minimax_h3_native_matrix_rejection_prompt(
+        case_id
+    ):
+        raise ScheduleContractError("MiniMax H3 matrix rejection graph is stale")
+    messages = _array(status.get("messages"), label="MiniMax H3 matrix rejection messages")
+    if not messages:
+        raise ScheduleContractError("MiniMax H3 matrix rejection has no execution event")
+    event = _array(messages[-1], label="MiniMax H3 matrix rejection event")
+    if len(event) != 2 or event[0] != "execution_error":
+        raise ScheduleContractError("MiniMax H3 matrix rejection lacks execution_error")
+    detail = _object(event[1], label="MiniMax H3 matrix rejection detail")
+    message = detail.get("exception_message")
+    if not isinstance(message, str) or not message.startswith(expected_reason + ":"):
+        raise ScheduleContractError("MiniMax H3 matrix rejection reason drifted")
+    return {
+        "case_id": case_id,
+        "reason_code": expected_reason,
+        "status": "rejected",
+    }
+
+
 def verify_native_euler_h3_history(
     history: object,
     *,
@@ -3509,8 +3976,17 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
     shutdown: dict[str, object] = {}
     succeeded = False
     evidence: dict[str, object] = {
-        "schema": "sigmax.minimax-h3-host-e2e/1",
-        "lanes": ["H1", "H2_MINIMAX_H3_M6_05", "H2_MINIMAX_H3_M4_17_NATIVE_SIMPLE"],
+        "schema": (
+            _MINIMAX_H3_M7_15_SCHEMA
+            if args.minimax_h3_scheduler_matrix
+            else "sigmax.minimax-h3-host-e2e/1"
+        ),
+        "lanes": [
+            "H1",
+            "H2_MINIMAX_H3_M6_05",
+            "H2_MINIMAX_H3_M4_17_NATIVE_SIMPLE",
+            *(["H2_MINIMAX_H3_M7_15_NATIVE_MATRIX"] if args.minimax_h3_scheduler_matrix else []),
+        ],
         "validation_lane": validation_lane.value,
         "host": {
             "id": "comfyui",
@@ -3567,6 +4043,8 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
                 "SigmaxTest.MiniMaxH3NativeModelSource",
                 "SigmaxTest.MiniMaxH3NativeScheduleProbe",
             }
+            if args.minimax_h3_scheduler_matrix:
+                test_ids.add("SigmaxTest.MiniMaxH3NativeUnexpectedSuccessProbe")
             if not test_ids <= set(object_info):
                 raise ScheduleContractError("MiniMax H3 H2 test probe is not registered")
             live_report = validate_live_workflow_fixtures(
@@ -3697,6 +4175,97 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
             evidence["h1"] = h1_summary
             evidence["h2_minimax_h3"] = h2_results
             evidence["h2_minimax_h3_native_simple"] = native_h2_results
+            if args.minimax_h3_scheduler_matrix:
+                matrix_results: list[dict[str, object]] = []
+                for case in build_minimax_h3_m7_15_cases():
+                    case_token = hashlib.sha256(case.case_id.encode("utf-8")).hexdigest()[:16]
+
+                    def submit_matrix(
+                        ordinal: int,
+                        *,
+                        selected_case: MiniMaxH3NativeMatrixCase = case,
+                        selected_token: str = case_token,
+                    ) -> tuple[str, dict[str, object]]:
+                        return _submit_successful_prompt(
+                            base_url=base_url,
+                            client_id=(
+                                f"sigmax-m7-15-minimax-h3-{selected_token}-attempt-{ordinal}"
+                            ),
+                            prompt=build_minimax_h3_native_matrix_h2_api_prompt(selected_case),
+                            execution_timeout=args.execution_timeout,
+                        )
+
+                    def verify_matrix(
+                        history: object,
+                        prompt_id: str,
+                        *,
+                        selected_case: MiniMaxH3NativeMatrixCase = case,
+                    ) -> dict[str, object]:
+                        return verify_minimax_h3_native_matrix_h2_history(
+                            history,
+                            prompt_id=prompt_id,
+                            case=selected_case,
+                        )
+
+                    matrix_summary, matrix_transition = execute_verified_host_repeat(
+                        lane="H2_MINIMAX_H3_M7_15_NATIVE_MATRIX",
+                        submit=submit_matrix,
+                        verify=verify_matrix,
+                    )
+                    matrix_results.append(matrix_summary)
+                    attempts[f"h2_minimax_h3_native_matrix.{case.case_id}"] = matrix_transition
+                rejection_results: list[dict[str, object]] = []
+                for rejection_id in _MINIMAX_H3_M7_15_REJECTION_REASONS:
+                    rejection_token = hashlib.sha256(rejection_id.encode("utf-8")).hexdigest()[:16]
+
+                    def submit_rejection(
+                        ordinal: int,
+                        *,
+                        selected_id: str = rejection_id,
+                        selected_token: str = rejection_token,
+                    ) -> tuple[str, dict[str, object]]:
+                        return _submit_rejected_runtime_prompt(
+                            base_url=base_url,
+                            client_id=(
+                                "sigmax-m7-15-minimax-h3-negative-"
+                                f"{selected_token}-attempt-{ordinal}"
+                            ),
+                            prompt=build_minimax_h3_native_matrix_rejection_prompt(selected_id),
+                            execution_timeout=args.execution_timeout,
+                        )
+
+                    def verify_rejection(
+                        history: object,
+                        prompt_id: str,
+                        *,
+                        selected_id: str = rejection_id,
+                    ) -> dict[str, object]:
+                        return verify_minimax_h3_native_matrix_rejection_history(
+                            history,
+                            prompt_id=prompt_id,
+                            case_id=selected_id,
+                        )
+
+                    rejection_summary, rejection_transition = execute_verified_host_repeat(
+                        lane="H2_MINIMAX_H3_M7_15_NATIVE_NEGATIVE",
+                        submit=submit_rejection,
+                        verify=verify_rejection,
+                    )
+                    rejection_results.append(rejection_summary)
+                    attempts[f"h2_minimax_h3_native_matrix_negative.{rejection_id}"] = (
+                        rejection_transition
+                    )
+                evidence["h2_minimax_h3_native_matrix"] = matrix_results
+                evidence["h2_minimax_h3_native_matrix_rejections"] = rejection_results
+                evidence["matrix_contract"] = {
+                    "case_count": len(matrix_results),
+                    "dtype": "float32",
+                    "first_repeat": True,
+                    "max_abs_error": 0.0,
+                    "mean_abs_error": 0.0,
+                    "negative_case_count": len(rejection_results),
+                    "same_model_sampling_object": True,
+                }
             succeeded = True
     finally:
         if process is not None:
@@ -4720,6 +5289,11 @@ def _parser() -> argparse.ArgumentParser:
         help="run only the model-free MiniMax H3 H1/H2 contract on the pinned 0.30.0 host",
     )
     parser.add_argument(
+        "--minimax-h3-scheduler-matrix",
+        action="store_true",
+        help="extend --minimax-h3-only with the frozen M7-15 ten-scheduler host matrix",
+    )
+    parser.add_argument(
         "--minimax-h3-model-plan",
         action="store_true",
         help="build an authorization-gated H3 model workflow plan without executing weights",
@@ -4843,6 +5417,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         parser.error("SIGMAX_COMFYUI_PYTHON or --host-python is required")
     if args.validation_lane == _MINIMAX_H3_LATEST_LANE and not args.minimax_h3_only:
         parser.error("--validation-lane latest is reserved for --minimax-h3-only")
+    if args.minimax_h3_scheduler_matrix and not args.minimax_h3_only:
+        parser.error("--minimax-h3-scheduler-matrix requires --minimax-h3-only")
     try:
         if args.conditioning_only and args.minimax_h3_only:
             parser.error("--conditioning-only and --minimax-h3-only are mutually exclusive")

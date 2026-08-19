@@ -1,7 +1,7 @@
 # Compatibility
 
 This page summarizes the supported user-facing boundary for tagged ComfyUI-Sigmax 1.0.0 and the
-current 1.0.2 source-tree additions described below. The 1.0.2 package version is present in the
+current 1.1.0 source-tree additions described below. The 1.1.0 package version is present in the
 current tree; it is not a claim that a corresponding public tag or Registry publication exists.
 
 ## Environment
@@ -59,7 +59,7 @@ experimental; this boundary does not claim prompt adherence or image-quality imp
 The generic advanced FlowMatch node constructs explicit schedule math only. It is experimental
 and does not establish compatibility with an arbitrary model.
 
-MiniMax H3 Base FL2VA/Ref2VA is an accepted post-v1.0.0 profile in the current 1.0.2 source
+MiniMax H3 Base FL2VA/Ref2VA is an accepted post-v1.0.0 profile in the current 1.1.0 source
 tree, not part of the tagged 1.0.0 boundary. Public `steps` counts transitions and produces `steps + 1`
 endpoint-inclusive video sigmas. The Sigmax scheduler owns that externally shifted video lane;
 ComfyUI's upstream `MiniMaxH3SigmaShift` supplies the matching video/audio shifts to the model so

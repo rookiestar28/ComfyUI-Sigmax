@@ -1,6 +1,6 @@
 # Contributing
 
-ComfyUI-Sigmax retains the stable 1.0.0 public-contract baseline in the current 1.0.2 source tree.
+ComfyUI-Sigmax retains the stable 1.0.0 public-contract baseline in the current 1.1.0 source tree.
 Contributions must preserve the separation between model semantics, schedule construction,
 numerical samplers, and model profiles.
 
@@ -111,7 +111,7 @@ Registry-facing changes must additionally stage the intended files and validate 
 Git-indexed candidate without publishing:
 
 ```powershell
-python scripts/validate_registry_artifact.py --archive .tmp/comfy-registry/comfyui-sigmax-1.0.2.zip --check-manifest --observe-registry --output .tmp/comfy-registry/report.json
+python scripts/validate_registry_artifact.py --archive .tmp/comfy-registry/comfyui-sigmax-1.1.0.zip --check-manifest --observe-registry --output .tmp/comfy-registry/report.json
 ```
 
 Review `.comfyignore`, the canonical manifest, archive fingerprint, normalized-directory import,

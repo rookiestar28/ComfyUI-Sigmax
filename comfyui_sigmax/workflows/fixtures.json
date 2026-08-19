@@ -48,7 +48,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.2"
+        "version": "1.1.0"
       },
       "profile": {
         "id": "anima.aesthetic.framework-reference",
@@ -107,7 +107,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:15e4cc235b9269218e86232cfb94701437a7b618a751bc5e7fafb354184d0932",
+                "construction_fingerprint": "sha256:2d2f2a69bf8f00c72ca273e503158520e8d06b428a1745171d6d3bae6220a899",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:de0cff68e0b219fae873cd6beb4d7468e7fdc0d472381ddaf225edb97804e406",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -150,12 +150,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.2"
+                  "version": "1.1.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:d061f2d9d3d1f4e3cdcefd5582889d57ba768206c3f5bf502ecfb1b2cbd70e8c",
+            "metadata_fingerprint": "sha256:385f794df39f4d02c443131567b21218be29d3560f23794dc4f0ea4134ab2a7a",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -209,7 +209,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.2"
+        "version": "1.1.0"
       },
       "profile": {
         "id": "anima.base.framework-reference",
@@ -268,7 +268,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:713d63edf1606684feebe5caab01ff3f138d4bfdf7fbefbedea13a1cd1ddf521",
+                "construction_fingerprint": "sha256:b0070b5fbfd239fc9371abc412816e9429c63ccb62406f7c7b427d162e63997b",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:de0cff68e0b219fae873cd6beb4d7468e7fdc0d472381ddaf225edb97804e406",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -311,12 +311,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.2"
+                  "version": "1.1.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:73d9595e8ac42d5059624ed5b29cc9b0f025c8c8dfc2f89884cff766cef8641a",
+            "metadata_fingerprint": "sha256:183b855372b36639e65929e07082036643c9030ac4d59661ea277e5905d62ab5",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -370,7 +370,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.2"
+        "version": "1.1.0"
       },
       "profile": {
         "id": "anima.turbo.framework-reference",
@@ -429,7 +429,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:c54bb637103bc7e951f13f88acd2480cf32e4a9de400e5c6a5c388792fd85bb9",
+                "construction_fingerprint": "sha256:40a44f66fe1a7de71576aa3e6dfb57919c1182fba19998babf85d3e491345d48",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:a8a2d4dc7ff9001bdf7ef8fe931ebe1c7116a2da3d9d12f56da4ce7b65e68835",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -472,12 +472,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.2"
+                  "version": "1.1.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:e065e473fec2f3fa539ffa11838f6bb2a24730deca54673df5f692a69d07c6dc",
+            "metadata_fingerprint": "sha256:3a1869151c6b0c50d6c7bd3011a17230dae330f263b9d1b2732c1bb38006e761",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -531,7 +531,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.2"
+        "version": "1.1.0"
       },
       "profile": {
         "id": "auraflow.v0-2.official",
@@ -590,7 +590,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:bba9e701f2dbaef26727b66b32af7d6007cdd320858efd938fecaf776812dbe9",
+                "construction_fingerprint": "sha256:c81132c693f4f0c127f971ec067061ea422f48ed24a0b081928eb989d9661576",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:03cc59724ee62b15c28bfeb4fdab6c2cba56574ff3559b086df9c41bda439cde",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -633,12 +633,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.2"
+                  "version": "1.1.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:8c23417ac1f413ca8c002389df3e1e14bc1cd22ca382759276938d8901174fd7",
+            "metadata_fingerprint": "sha256:d88cc5cceb3c9c3a8a7843473b8d7f2b1d85a265bda80638b9b4f8af4337a866",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -683,7 +683,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.2"
+        "version": "1.1.0"
       },
       "profile": {
         "id": "flux1.schnell.official",
@@ -740,7 +740,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:a7f15760eb1fe3bcc33b980dd09ebb8c6c5ea174cc4076e9ad532a06c7208b75",
+                "construction_fingerprint": "sha256:8f2fcdaec9024388e51d571080162bde632dd17c31c9c480822fe75299d49b52",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:958cbb51e05aa008f8786fbd363b6542afab2056e304b7a5655ad54384d62beb",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -783,12 +783,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.2"
+                  "version": "1.1.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:d9bf1a4019590131833a7647290a035f03f5b90fdf7d50a2d538ff18c7729181",
+            "metadata_fingerprint": "sha256:9ac087538848312accf3c4173ffdc4678dcd7c9bf9349a34c07beec62d4f7099",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -842,7 +842,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.2"
+        "version": "1.1.0"
       },
       "profile": {
         "id": "hunyuan-image-2-1.base.official",
@@ -901,7 +901,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:6eaa324d91122b1fa094be51a47e2ecfd77f77418526fd72a918f0fb11521732",
+                "construction_fingerprint": "sha256:40b47111bb7bf45278cf4f69bf90fffae4b28cee297c17dd9a57e0f6bf5698af",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:63640d1f280b8208ef399d45bd14a3ef6eecd651431cc12c3e25be45eeea7739",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -944,12 +944,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.2"
+                  "version": "1.1.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:4aa258a265771bd3341ff0f1a8cec49ac7d903136d7aad67a695b8ee0243c4d8",
+            "metadata_fingerprint": "sha256:8369745fedf0ec09c78e871ae5b22d0e0e821d4c5accfea2be22fd5f1d77cc38",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -1003,7 +1003,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.2"
+        "version": "1.1.0"
       },
       "profile": {
         "id": "hunyuan-image-2-1.distilled.official",
@@ -1062,7 +1062,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:52236bbb704833c2f2b0bd1ae1b6a97fa3ff6b52500b0816ff56a63beb12c012",
+                "construction_fingerprint": "sha256:22a37474e84af125dd4faeb38187fe82bcd518cf36efa86ce0b6378a9900dd93",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:1e441977aa4d99acfc1fa81c7ddf1c66e1336dfa05af348e87b6bd71103d6f8e",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -1105,12 +1105,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.2"
+                  "version": "1.1.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:08ebda7c0fe3e34ed485714e96de94233254721e450b194871bc44c7f734557e",
+            "metadata_fingerprint": "sha256:090e5033a2b46fb3bd1c1c3c80967ae4eda228aaef3b58ef11a9bc00687980bd",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -1186,7 +1186,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.2"
+        "version": "1.1.0"
       },
       "profile": {
         "id": "krea2.raw.official",
@@ -1434,12 +1434,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.2"
+                  "version": "1.1.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:5a04d1c05c9adb03b10b51d26ee398ead327d8f85861c63448990df760c1d4f2",
+            "metadata_fingerprint": "sha256:38e008deb15f31fe1ddc0972299d2fd2482348755b71f896f9c59d6949e2ad7e",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -1515,7 +1515,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.2"
+        "version": "1.1.0"
       },
       "profile": {
         "id": "krea2.raw.official",
@@ -1763,12 +1763,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.2"
+                  "version": "1.1.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:2f43926907af0fd72cb28cb9bdfe6246e127d7e2916c8f7b817021ca7e155b0f",
+            "metadata_fingerprint": "sha256:6fa2d1347b6ddf120f53c6468153c71714df5da3499e16fc318939e1a364be88",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -1844,7 +1844,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.2"
+        "version": "1.1.0"
       },
       "profile": {
         "id": "krea2.raw.official",
@@ -2092,12 +2092,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.2"
+                  "version": "1.1.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:6de0ec3b8b158f9e7bc0dae01f28eff3922c6ab956bcd270ae5c710d69d6b584",
+            "metadata_fingerprint": "sha256:05c7115f702d24dc97f5bc91ddb352d1b46a3069d3712583eb2b8bcb8806f487",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -2173,7 +2173,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.2"
+        "version": "1.1.0"
       },
       "profile": {
         "id": "krea2.turbo.official",
@@ -2421,12 +2421,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.2"
+                  "version": "1.1.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:d9c372ed80e6962bbe1679b77a8581ec75411a137c251a59d18b851bc436f5fd",
+            "metadata_fingerprint": "sha256:25fb3f6d9d2e98149dcd3157ad15ff489f288f7315b1396e7b8441d3809b75bf",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -2493,7 +2493,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.2"
+        "version": "1.1.0"
       },
       "profile": {
         "id": "ltx2.19b.dev",
@@ -2555,7 +2555,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:0ddb3733bb3fd62ebe2e793effa8783a48fa3503887086c9a316a0e41d1ebb1a",
+                "construction_fingerprint": "sha256:b9f3871a50d070f5d731e5c9dab74dd59822b837738a041d03615ece839eaf88",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:676dd3a673777862209e2eb4a222e6da8bf73b907da65a6c853111fd0d978942",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -2598,12 +2598,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.2"
+                  "version": "1.1.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:f330abb28b311e8d1839eebb59cc1ab2619ec60ab9591b297b22d6b741318e40",
+            "metadata_fingerprint": "sha256:f2ae7e9d3d70d800dccad80f47c7ec549aead404159d6a6862c0056770d8019a",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -2670,7 +2670,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.2"
+        "version": "1.1.0"
       },
       "profile": {
         "id": "ltx2.19b.distilled.stage1",
@@ -2732,7 +2732,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:535ac250fba5ac90b0103001100dcb8bee1073241166e90fa17c64254dbf6445",
+                "construction_fingerprint": "sha256:252619ed01a977b40ef6dd104fa5870d419ce5928a769ccf4bb040067529394e",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:b05d62a55c706700dffe15da9270c07bf95e775559aaccc13563e404a1b264ad",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -2775,12 +2775,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.2"
+                  "version": "1.1.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:2f780be63d4bd8cd8e9c8671b4159f60cf519ee7b47a07738ba8fac373b90a0f",
+            "metadata_fingerprint": "sha256:36b01af085db9d45ea304f2a63e425ecae149dbd2c73bcfda57b8c8fcc6aa462",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -2847,7 +2847,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.2"
+        "version": "1.1.0"
       },
       "profile": {
         "id": "ltx2.3.22b.dev",
@@ -2909,7 +2909,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:65fb26733efbbd2d1bc3dd9d2c1ce35be8bb3a361b540a383486c328ce7a9695",
+                "construction_fingerprint": "sha256:1c93f5dba50b9993e94bf6689cb55fadfb6e385e9908c7a63c30eaafbc65a9c0",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:08aab65059e1b4f5c086d08f2983a7b5a1f7d1c1d5029e1eacef91b41ace2c8f",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -2952,12 +2952,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.2"
+                  "version": "1.1.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:34d64ca375d7189871b56e128b00e8af54bc97ebec257e3313705d04a56a7fdb",
+            "metadata_fingerprint": "sha256:fad01026013fbd898ce63f6a8bb893bca0db93b15a76f249de44bcc84992b901",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -3024,7 +3024,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.2"
+        "version": "1.1.0"
       },
       "profile": {
         "id": "ltx2.3.22b.distilled.stage2",
@@ -3086,7 +3086,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:69f2ae304a691c84a2d2a3e4be3077bf3a842efb890a1930724cec1ee98b2bb4",
+                "construction_fingerprint": "sha256:ad74ae94878923b29201b69d436d6c4daaa7472e99c96a18b833cb1d8adf2559",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:c3f2609287314ab0b4f944929490e7f35da7beca4179be0f8440c20d125040b4",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -3129,12 +3129,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.2"
+                  "version": "1.1.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:f10bd6d68bf7045b30ffab57352f12f0cebfe5a95e492d6f115055bf46c19278",
+            "metadata_fingerprint": "sha256:9f1eaed01215a74081b93ba1ec379c7456dee2c290c2b61ccff8b0c60cf6e413",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -3201,7 +3201,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.2"
+        "version": "1.1.0"
       },
       "profile": {
         "id": "ltxv.0.9.8.dev",
@@ -3263,7 +3263,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:457f77bc4e47d6a4bababb3faf272440a085e1c5210f42424caf901977ebc52d",
+                "construction_fingerprint": "sha256:1678e615f05eef90e2722244963df4a5e5ead3f7e71a7d0168a11186424a3338",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:a8d35f69b72de301f28a8345107ad82b7756a1fad8cae7055b094c648561b91a",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -3306,12 +3306,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.2"
+                  "version": "1.1.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:3d0326cec22c5138e47273746916819c6baa188e3e2f50e5de3812f0623888aa",
+            "metadata_fingerprint": "sha256:6e922dddda030edc3ec14e12616deae6b3772d51ab605e6fa25680f60bd79295",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -3365,7 +3365,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.2"
+        "version": "1.1.0"
       },
       "profile": {
         "id": "lumina2.v2.official",
@@ -3424,7 +3424,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:052097f0ac2cc4798208122726900bdc7485064763d5eb0557cd1a9f667ddc8b",
+                "construction_fingerprint": "sha256:fb40a1f6a16ab11caffc72a666c760fbe2d7b07f7cba428728651eaec9b26387",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:9fda2fba7c87d0182786ccf4c5dc1fb236bbfe592a35d2b173f21447abc38729",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -3467,12 +3467,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.2"
+                  "version": "1.1.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:5297cc5f07acc562872fec9d57a2a967c988473408a6e12e246e14656bce51c8",
+            "metadata_fingerprint": "sha256:67a1b8c20ee682f5d7f550caa14bd3120ca8e291b83db4b9a039b7480e07eae7",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -3525,7 +3525,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.2"
+        "version": "1.1.0"
       },
       "profile": {
         "id": "qwen_image.comfy-fixed.official",
@@ -3627,12 +3627,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.2"
+                  "version": "1.1.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:9e282f73acbfb1bc6440cb4e2c4b9a1938bd7653720d90b1f2697274f30ebbc0",
+            "metadata_fingerprint": "sha256:404136c82e99aa6d01eb7ce3f6759efb57c4aa727ca197102243a563a021c7f4",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -3686,7 +3686,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.2"
+        "version": "1.1.0"
       },
       "profile": {
         "id": "sd3.comfy-diffusers-fixed.framework-reference",
@@ -3745,7 +3745,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:9a8558dea86787c5eb2cd31728ea1efb32236feedd7e95a69ffb1be0b172703f",
+                "construction_fingerprint": "sha256:a35f7f03ffdb7b8ff7ceea77d32d903d57b316140cacce6dc357a680dcfa5fe0",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:edb818de6b9a4717dc0a276855ebc22500a1e508e60881e95a9e56018f9a8776",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -3788,12 +3788,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.2"
+                  "version": "1.1.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:903fc6df240221c663039b98a6c1ba942968321131363cd486b366d241aa35ae",
+            "metadata_fingerprint": "sha256:782f7c8c2a92c88b7a2917c63b35d64ba34139e3d4e2c9b9fc3512974468749c",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -3847,7 +3847,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.2"
+        "version": "1.1.0"
       },
       "profile": {
         "id": "sd3.publisher-reference.official",
@@ -3906,7 +3906,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:e3f27e328b9b3ffe3b5c568a14bd52bf5eff61e4c9e1c0680ba6517dee07a1cd",
+                "construction_fingerprint": "sha256:acbf21f37cb7fdd789e620d77eb5e1d3097ac7e4ac44bd5d8f000724c1145f60",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:289550b18520211eba7bc25bb99857a73527de13e121156a6c6a193de0525805",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -3949,12 +3949,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.2"
+                  "version": "1.1.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:ceb099bede034b29f73477efaabd501bebcf567b6c833cdf39fb8fbeaaa0c572",
+            "metadata_fingerprint": "sha256:8a78c70e2afa94047254c7be9ef5948d178e1bd12795bfbc4393c1bef764ef4e",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -4023,7 +4023,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.2"
+        "version": "1.1.0"
       },
       "profile": {
         "id": "wan-animate2.14b.base.official-native",
@@ -4091,7 +4091,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:56bfdd30560803e574e24ec583d1de3cbdad39ea8d9315c90eb309219b743f62",
+                "construction_fingerprint": "sha256:ce5d2c48a960cc0598f721e173ab1e849c551fd691a3ebd9bb712ebdcf2cb243",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:b63061f223fb88503755a788e198bb2ce2501880c4fbe3d92f5bda3aa0f757b3",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -4134,12 +4134,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.2"
+                  "version": "1.1.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:58357fa4f0220d88c19aa1a41a5c1f01e2531fbc6d6fb7ab5871a4ea1c1e9e06",
+            "metadata_fingerprint": "sha256:78de76e453d4153acbbc137271ee0944747f601fc9e1d5ef96dba7f5f180c400",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -4208,7 +4208,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.2"
+        "version": "1.1.0"
       },
       "profile": {
         "id": "wan-animate2.14b.distilled.official-native",
@@ -4276,7 +4276,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:2d74b2a492d387437635f98b0565a31049562f2e3971472fa0b98233bf396ca3",
+                "construction_fingerprint": "sha256:0bf463b4539600a5aa47d2113e8ba3cd1ddadcb6152287b2996a3649547f3324",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:049be0cb724103f3ea898d52b5dbef060635afc2d5250ced0f365190c23aa5ff",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -4319,12 +4319,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.2"
+                  "version": "1.1.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:be5d7e54d3e8057a0efdcfbe8dd494d68e40bbe73715372b382fc3cb57fcd14a",
+            "metadata_fingerprint": "sha256:9e734c3e5779f5c01e09b634c550e321570c9ab5e8c931c6150dadc881dbea0d",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -4393,7 +4393,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.2"
+        "version": "1.1.0"
       },
       "profile": {
         "id": "wan2.1.flf2v.14b.720p.official-native",
@@ -4461,7 +4461,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:d733d3960859cc3f344add9beac7ec60fe0c89afe1c9184fad1b8cf5e5992391",
+                "construction_fingerprint": "sha256:52fd75c698cf455def35d3139effc28bb845b95650459fc3594e42481ef7409c",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:67ed8a87707583b5c9076ee413c6f42954d7e7928291fc3430036720a277e1a5",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -4504,12 +4504,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.2"
+                  "version": "1.1.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:79edb713f895f0f783fb582a1328f70577fc4b1dd11d5e932695594204a677d9",
+            "metadata_fingerprint": "sha256:dbc9f743034727381ff2aa7f0954ad12858c53006af836dc59390b36ac1387c0",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -4578,7 +4578,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.2"
+        "version": "1.1.0"
       },
       "profile": {
         "id": "wan2.1.i2v.480p.official-native",
@@ -4646,7 +4646,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:a88cd64efbe4662878215149d1297a364f889ce4c11addc72780aecdf8cd7a83",
+                "construction_fingerprint": "sha256:1d81ea215b0bdf48f48aee279c72f5acd4cefcde6be717e13c07a5abe57b4851",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:200b7ff3ca8c7a5fc5dd8149617cf831383967f11977aa3ead14b710bf891332",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -4689,12 +4689,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.2"
+                  "version": "1.1.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:a117bb52747f46b0561493d659dad887e5cc08ace631deb873772008f7e35340",
+            "metadata_fingerprint": "sha256:a58a20211b915181ce54d9dd07ca09e216d7cc1d215ae405c9fdbe6d0d797b5e",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -4763,7 +4763,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.2"
+        "version": "1.1.0"
       },
       "profile": {
         "id": "wan2.1.t2v.official-native",
@@ -4831,7 +4831,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:bd80289bce7476d806ea3ebba3055de9d9337e97fb3d38617afaa6bb8d8f82dc",
+                "construction_fingerprint": "sha256:5797a93ba4288325e9549ecc7da06457ac8a79bb9ea886ee1457d93911c61150",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:63640d1f280b8208ef399d45bd14a3ef6eecd651431cc12c3e25be45eeea7739",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -4874,12 +4874,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.2"
+                  "version": "1.1.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:3e09292131d3d097fcf62b9413325c72a56d9dc9095ff24e8658232b937a134b",
+            "metadata_fingerprint": "sha256:ec345ffaa7967b855740099a1612e800be98ed417cde6edec0d664514beb7923",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -4948,7 +4948,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.2"
+        "version": "1.1.0"
       },
       "profile": {
         "id": "wan2.1.vace.1.3b.official-native",
@@ -5016,7 +5016,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:8890128de0c44584c1d2fe757ba03f9ad498ce9433fb6dda39a4b489cc4662ef",
+                "construction_fingerprint": "sha256:dc65f67d5b22b638f9337d3f48ccb4cd4334611bca36ea7488e5ece329c9e7eb",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:67ed8a87707583b5c9076ee413c6f42954d7e7928291fc3430036720a277e1a5",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -5059,12 +5059,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.2"
+                  "version": "1.1.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:bd4328c6b17b1d6d10f74c4bb09a9abb60bfafda561ad8b79556b6b52e3b06de",
+            "metadata_fingerprint": "sha256:e1e3be35b66bb39e105ff4b640338961e800582cf9552265d0d25f5c4e923da5",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -5133,7 +5133,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.2"
+        "version": "1.1.0"
       },
       "profile": {
         "id": "wan2.1.vace.14b.official-native",
@@ -5201,7 +5201,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:f05a7c6bca7497a7a167cd145adc8cf18eb5d79860a0fd37e98d928af33b060c",
+                "construction_fingerprint": "sha256:d3a2f983b70a29f58b7182e3438f84b690cb9b96d6093c933333a0bd472844e4",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:67ed8a87707583b5c9076ee413c6f42954d7e7928291fc3430036720a277e1a5",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -5244,12 +5244,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.2"
+                  "version": "1.1.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:b279344d4328ddd700b758c7595660844436ccfd889bc4f55b429f3d3513bc20",
+            "metadata_fingerprint": "sha256:84745972169f0f1c8498fcde24e4c90539c67ca66ce549c457af0303af6e7c4a",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -5318,7 +5318,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.2"
+        "version": "1.1.0"
       },
       "profile": {
         "id": "wan2.2.animate.14b.official-native",
@@ -5386,7 +5386,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:ddb2e42c5990e71a2c52dda6ea45384f2dae91e242f58c3e9fb30d006a220262",
+                "construction_fingerprint": "sha256:c320d281dfaed2df522470308e84606d6c6fbffd2b62d03723bd99f38c480876",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:72eb672e152833922f0e314f8934a5348371014af9077f6cdb2338f8299b06e0",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -5429,12 +5429,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.2"
+                  "version": "1.1.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:3a19c741f3a336cd2e631375b724c4e5a250c1bb9747a02eddc37d0abb1573d6",
+            "metadata_fingerprint": "sha256:598b5440ff2438125a062cd5641da339cd792dff7646ab8a00eb56d593d30a01",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -5503,7 +5503,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.2"
+        "version": "1.1.0"
       },
       "profile": {
         "id": "wan2.2.s2v.14b.official-native",
@@ -5571,7 +5571,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:128749ffd58151a895ec884fd6061748a138cd040d7e816e4486d82479e25ce9",
+                "construction_fingerprint": "sha256:e39445b79555cc1825eddc821302927fa0469812217771d644257d862c15432c",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:200b7ff3ca8c7a5fc5dd8149617cf831383967f11977aa3ead14b710bf891332",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -5614,12 +5614,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.2"
+                  "version": "1.1.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:59fcae7fa7dce9213543093f0775ac2ce28d0cd9e1e8f9267eb96c070c0eb440",
+            "metadata_fingerprint": "sha256:843bc401b9da25576b1966f3f5c9bc770cd2c19632496595040aaba5db5ef044",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -5688,7 +5688,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.2"
+        "version": "1.1.0"
       },
       "profile": {
         "id": "wan2.2.t2v-a14b.official-native",
@@ -5756,7 +5756,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:060c11ad528830d075ae12efaa7c67ea9ab2fc42236655a3eab2c1ee3acabfc4",
+                "construction_fingerprint": "sha256:2c275d255efddf1c10c8534ff6c766b0e3a896d06146dea75ad7bf5a0b331d2b",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:42b6524db8e2f827a84480d5ec4aff8336a3e2615f6456ea4780c4eeae0b7e31",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -5799,12 +5799,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.2"
+                  "version": "1.1.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:964732446c6814af591102fc13e0637405df3f23f0121980db94d684ee5778b6",
+            "metadata_fingerprint": "sha256:47845639eed40f10c166c2cda71f9c7a8d78182da5a600942be4e4aac6352017",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -5873,7 +5873,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.2"
+        "version": "1.1.0"
       },
       "profile": {
         "id": "wan2.2.ti2v.5b.comfy-native",
@@ -5941,7 +5941,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:50488f39b8bed30709f6a5f45b6d3d6156be9b0b99bdb9df66ae920eafce74d1",
+                "construction_fingerprint": "sha256:e8c4e0b953f37a8d72f1c86d86e439af4a47e9ea9fb83e9cddc7a5db88330649",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:63640d1f280b8208ef399d45bd14a3ef6eecd651431cc12c3e25be45eeea7739",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -5984,12 +5984,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.2"
+                  "version": "1.1.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:e1a0880ed5a663cf4308c7eed70566d58a1cade30c383b2c69865f934b713107",
+            "metadata_fingerprint": "sha256:eda89902a59d6f96a398a9fcef53b0eec5b12fd0813704b56010aab5ac86cc9e",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -6039,7 +6039,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.2"
+        "version": "1.1.0"
       },
       "profile": {
         "id": "z_image.base.official",
@@ -6097,7 +6097,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:705f17e19642d484cbd6f97514d25fdfbf81c0b8bc90f52e691be7c7bdbba61c",
+                "construction_fingerprint": "sha256:2643941ece1018833d423002506a15895db3f5c356043b9d7637d6ed87a69db8",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:9fda2fba7c87d0182786ccf4c5dc1fb236bbfe592a35d2b173f21447abc38729",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -6140,12 +6140,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.2"
+                  "version": "1.1.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:68ffa439e5013e00c83ea3eafdf3b262ae3756a5473215af000eb209f3e616e6",
+            "metadata_fingerprint": "sha256:adc3bdde600e74de9bf8450bef65b87d6bc7560984dbfd88d64707f62ab39e1b",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }
@@ -6195,7 +6195,7 @@
       ],
       "package": {
         "id": "comfyui-sigmax",
-        "version": "1.0.2"
+        "version": "1.1.0"
       },
       "profile": {
         "id": "z_image.turbo.official",
@@ -6253,7 +6253,7 @@
           "comfyui_sigmax": {
             "metadata": {
               "artifact": {
-                "construction_fingerprint": "sha256:5fedebf97d27274d2f780c0a2ad522384fc1d3682abccd7a05625ae70fc3de1b",
+                "construction_fingerprint": "sha256:ee766905629788cf8fc4d6c0d287763e627364530965cfe48d1f886f84055241",
                 "construction_schema": "sigmax.schedule-artifact/1",
                 "numerical_fingerprint": "sha256:a8a2d4dc7ff9001bdf7ef8fe931ebe1c7116a2da3d9d12f56da4ce7b65e68835",
                 "receipt_schema": "sigmax.execution-receipt-envelope/1"
@@ -6296,12 +6296,12 @@
                 ],
                 "package": {
                   "id": "comfyui-sigmax",
-                  "version": "1.0.2"
+                  "version": "1.1.0"
                 }
               },
               "schema": "sigmax.workflow-metadata/1"
             },
-            "metadata_fingerprint": "sha256:c010ed13bb717810227905c1a0902ee6d724feafa6901f43e6a2db45af3e3fe5",
+            "metadata_fingerprint": "sha256:aa19a2f07c04e44acd472d84de24fec3bd3620144524e11059d2d4d096e6e434",
             "schema": "sigmax.workflow-metadata-envelope/1"
           }
         }

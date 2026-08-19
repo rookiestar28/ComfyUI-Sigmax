@@ -20,7 +20,7 @@ class PackageContractTests(unittest.TestCase):
 
         project = metadata["project"]
         self.assertEqual("comfyui-sigmax", project["name"])
-        self.assertEqual("1.0.2", project["version"])
+        self.assertEqual("1.1.0", project["version"])
         self.assertEqual(">=3.10", project["requires-python"])
         self.assertEqual([], project["dependencies"])
         self.assertEqual("MIT", project["license"])
@@ -165,7 +165,7 @@ class PackageContractTests(unittest.TestCase):
         package = importlib.import_module("comfyui_sigmax")
         self.addCleanup(sys.modules.pop, "comfyui_sigmax", None)
 
-        self.assertEqual("1.0.2", package.__version__)
+        self.assertEqual("1.1.0", package.__version__)
         self.assertEqual(
             [
                 "Sigmax.AdvancedFlowMatchScheduler",

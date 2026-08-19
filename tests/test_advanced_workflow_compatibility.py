@@ -206,6 +206,18 @@ def test_receipt_round_trip_is_bounded_and_fingerprint_stable() -> None:
     assert len(payload) < 16_384
 
 
+def test_receipt_rejects_noncanonical_transport() -> None:
+    request = _request(
+        AdvancedWorkflowFeature.IMAGE_TO_IMAGE,
+        mode=AdvancedExecutionMode.DETERMINISTIC_PURE,
+    )
+    decision = resolve_advanced_workflow(request)
+    receipt = build_advanced_workflow_receipt(request, decision)
+
+    with pytest.raises(ScheduleContractError, match="canonical JSON"):
+        deserialize_advanced_workflow_receipt(b" " + serialize_advanced_workflow_receipt(receipt))
+
+
 def test_receipt_rejects_mismatched_decision_and_private_result_identity() -> None:
     request = _request(
         AdvancedWorkflowFeature.IMAGE_TO_IMAGE,

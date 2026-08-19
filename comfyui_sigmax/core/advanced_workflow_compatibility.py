@@ -193,7 +193,14 @@ def _decode_json(payload: bytes | str) -> dict[str, object]:
         raise ScheduleContractError("compatibility payload must be canonical JSON") from error
     if not isinstance(raw, dict):
         raise ScheduleContractError("compatibility payload must be an object")
-    return cast(dict[str, object], raw)
+    projection = cast(dict[str, object], raw)
+    try:
+        canonical = canonical_projection_bytes(projection)
+    except ScheduleContractError as error:
+        raise ScheduleContractError("compatibility payload must be canonical JSON") from error
+    if canonical != raw_payload:
+        raise ScheduleContractError("compatibility payload must be canonical JSON")
+    return projection
 
 
 def _exact_fields(value: dict[str, object], expected: set[str], field_name: str) -> None:

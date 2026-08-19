@@ -15,6 +15,20 @@ tracked independently from the frozen profile-schema version.
   schedule while the generated workflow configures ComfyUI's upstream `MiniMaxH3SigmaShift` with
   matching video/audio values `12.0`/`3.0`; audio remapping and derivative correction remain
   model-owned.
+- An experimental MiniMax H3 Turbo selector with four source-qualified community recipes: 544p
+  FL2VA at 4 or 8 NFE, 768p FL2VA at 4 NFE, and 544p Ref2VA at 4 NFE. The 544p recipes use
+  video/audio shifts `12.0`/`3.0`; the 768p recipe uses `6.0`/`3.0`. The node constructs
+  recipe-owned sigmas and readiness receipts only; it does not load or patch a LoRA, attention
+  backend, or model, and makes no official-method, quality, speed, memory, NFE, or acceleration
+  claim.
+- A BasicScheduler-style MiniMax H3 scheduler selector with the fixed choices `h3_endpoint`,
+  `simple`, `sgm_uniform`, `karras`, `exponential`, `ddim_uniform`, `beta`, `normal`,
+  `linear_quadratic`, and `kl_optimal`. `h3_endpoint` remains the dependency-free default; the
+  other nine choices are experimental ComfyUI-native compatibility lanes that require an already-
+  shifted H3 `MODEL` and a single upstream `MiniMaxH3SigmaShift`.
+- Internal, dependency-free sampler-state and Flow Euler contracts covering deterministic and
+  stochastic research paths. They are not registered public sampler nodes, do not replace the
+  ComfyUI sampler, and do not establish model-backed acceleration or quality claims.
 - Source-qualified Anima Base, Aesthetic, and Turbo schedules with
   `Sigmax.AnimaSigmaScheduler`. Variants are explicit, use the fixed framework-reference shift
   `3.0`, and remain schedule-only without weight loading or image-quality claims.

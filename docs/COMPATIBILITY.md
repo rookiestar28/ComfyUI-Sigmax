@@ -1,7 +1,8 @@
 # Compatibility
 
 This page summarizes the supported user-facing boundary for tagged ComfyUI-Sigmax 1.0.0 and the
-current unreleased development additions described below.
+current 1.0.2 source-tree additions described below. The 1.0.2 package version is present in the
+current tree; it is not a claim that a corresponding public tag or Registry publication exists.
 
 ## Environment
 
@@ -36,7 +37,7 @@ real-model execution or video-quality parity.
 | Lumina-Image 2.0 | Fixed unit-flow `6.0` ratio shift, original 50-step recipe | Use `Sigmax.Lumina2SigmaScheduler`; select `Official Fixed (6.0)` explicitly |
 | HunyuanImage 2.1 Base | Fixed unit-flow `5.0` ratio shift, official 50-step recipe; schedule-only | Use `Sigmax.HunyuanImage21SigmaScheduler`; select `Base (5.0)` explicitly |
 | HunyuanImage 2.1 Distilled | Fixed unit-flow `4.0` ratio shift, official 8-step publisher recipe; native host path unqualified | Use `Sigmax.HunyuanImage21SigmaScheduler`; select `Distilled (4.0)` explicitly |
-| MiniMax H3 Base FL2VA/Ref2VA | Pure endpoint-inclusive `h3_endpoint` default plus nine experimental ComfyUI-native scheduler choices; Base video/audio shifts remain `12.0`/`3.0` | Use `Sigmax.MiniMaxH3SigmaScheduler`; native choices require the H3 `MODEL` after upstream `MiniMaxH3SigmaShift` |
+| MiniMax H3 Base FL2VA/Ref2VA | Pure endpoint-inclusive `h3_endpoint` default plus nine experimental ComfyUI-native scheduler choices; optional community Turbo recipes are readiness-only; Base video/audio shifts remain `12.0`/`3.0` | Use `Sigmax.MiniMaxH3SigmaScheduler`; native choices require the H3 `MODEL` after upstream `MiniMaxH3SigmaShift`; Turbo requires an exact recipe selector |
 | Anima Base / Aesthetic | Fixed unit-flow rational `3.0` shift, 30-50 step framework-reference recipe; schedule-only | Use `Sigmax.AnimaSigmaScheduler`; select `Base` or `Aesthetic` explicitly |
 | Anima Turbo | Fixed unit-flow rational `3.0` shift, 8-12 step framework-reference recipe; schedule-only | Use `Sigmax.AnimaSigmaScheduler`; select `Turbo` explicitly |
 | Wan 2.1 T2V | Source-qualified unit-flow direct-ratio shift (`5.0` official, `8.0` ComfyUI-native, `3.0` Diffusers reference), 50-step recipes | Use `Sigmax.WanSigmaScheduler`; select generation, task, source, and `None` resolution explicitly |
@@ -58,8 +59,8 @@ experimental; this boundary does not claim prompt adherence or image-quality imp
 The generic advanced FlowMatch node constructs explicit schedule math only. It is experimental
 and does not establish compatibility with an arbitrary model.
 
-MiniMax H3 Base FL2VA/Ref2VA is an accepted post-v1.0.0 development profile on `dev`, not part
-of the tagged 1.0.0 boundary. Public `steps` counts transitions and produces `steps + 1`
+MiniMax H3 Base FL2VA/Ref2VA is an accepted post-v1.0.0 profile in the current 1.0.2 source
+tree, not part of the tagged 1.0.0 boundary. Public `steps` counts transitions and produces `steps + 1`
 endpoint-inclusive video sigmas. The Sigmax scheduler owns that externally shifted video lane;
 ComfyUI's upstream `MiniMaxH3SigmaShift` supplies the matching video/audio shifts to the model so
 audio remapping remains model-owned. These are complementary responsibilities, not two schedule
@@ -75,18 +76,24 @@ speed, memory, NFE, or acceleration claim. Full cross-host validation of every n
 completed development check on the exact 0.30.0 and 0.32.0 host roles; this remains functional
 experimental evidence, not a quality recommendation.
 
-The current `dev` branch also contains the dependency-free M5-02 sampler-state schema-v1
-contract. It represents a sampler capability declaration, scheduler/begin cursor, solver order,
-timestep spacing, random-source ownership, optional per-token time, requested/effective counts,
-immutable step history, lifecycle status, and exact execution-receipt binding. This is a pure
-portable contract and has no production ComfyUI node.
+The optional `turbo` selector exposes four source-qualified community recipes: 544p FL2VA at 4 or
+8 NFE, 768p FL2VA at 4 NFE, and 544p Ref2VA at 4 NFE. The 544p recipes use video/audio shifts
+`12.0`/`3.0`; the 768p recipe uses `6.0`/`3.0`. The selector constructs recipe-owned sigmas and
+readiness receipts only. It does not load or patch a LoRA, attention backend, or model, and it
+does not claim an official MiniMax method, quality, speed, memory, NFE, or acceleration result.
 
-The unreleased M5-03 development layer adds an internal, experimental deterministic Flow Euler
-controller over that state contract. Its pure core executes an explicit descending unit-flow
-schedule, supports full, partial, interrupt-boundary, and in-process resume paths, and keeps the
-Torch/Comfy denoised adapter optional. Model-free CPU probes match ComfyUI native Euler exactly on
-the qualified 0.30.0 and 0.32.0 host roles. This does not add a public `SAMPLER` node, replace the
-native `euler` workflow path, persist tensor data, or claim real-model quality or acceleration.
+The current source tree also contains the dependency-free M5-02 sampler-state schema-v1 contract.
+It represents a sampler capability declaration, scheduler/begin cursor, solver order, timestep
+spacing, random-source ownership, optional per-token time, requested/effective counts, immutable
+step history, lifecycle status, and exact execution-receipt binding. This is a pure portable
+contract and has no production ComfyUI node.
+
+The source tree adds internal, experimental deterministic and stochastic Flow Euler controllers
+over that state contract. The deterministic path supports full, partial, interrupt-boundary, and
+in-process resume probes; the stochastic path preserves the pinned Diffusers v0.39.0 expression
+order and parity boundary. Both keep the Torch/Comfy adapter optional and remain model-free
+contracts: they do not add a public `SAMPLER` node, replace the native `euler` workflow path,
+persist latent/RNG state, or claim real-model quality or acceleration.
 
 ## Usage boundary
 
@@ -141,9 +148,9 @@ native `euler` workflow path, persist tensor data, or claim real-model quality o
 - General real-model GPU compatibility or image-quality parity. One bounded local Krea 2 H4
   execution/provenance lane completed, but blind scoring and threshold review were explicitly
   waived, so it does not support a quality or profile-promotion claim.
-- Executed stochastic sampling, persisted latent/RNG state, host interruption plumbing, or
-  cross-process resume. M5-03 proves only deterministic in-process boundary resume over supplied
-  state in a model-free host fixture.
+- Executed model-backed stochastic sampling, persisted latent/RNG state, host interruption
+  plumbing, or cross-process resume. M5-03/M5-04 prove only model-free state/controller and
+  Diffusers-expression parity boundaries over supplied state.
 - General partial-denoise execution or advanced model-patch compatibility beyond the explicitly
   documented MiniMax H3 host workflow.
 - Automatic compatibility with unlisted model families.

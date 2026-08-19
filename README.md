@@ -1,6 +1,6 @@
 # ComfyUI-Sigmax
 
-ComfyUI-Sigmax provides model-aware sigma schedules for ComfyUI, with supported Krea 2, Z-Image, FLUX.1-schnell, Qwen Image, SD3, AuraFlow v0.2, Lumina-Image 2.0, HunyuanImage 2.1, MiniMax H3 Base FL2VA/Ref2VA, Anima, Wan 2.1/2.2, Wan Animate 2, and LTX profiles plus editing tools.
+ComfyUI-Sigmax provides model-aware sigma schedules for ComfyUI, with supported Krea 2, Z-Image, FLUX.1-schnell, Qwen Image, SD3, AuraFlow v0.2, Lumina-Image 2.0, HunyuanImage 2.1, MiniMax H3 Base FL2VA/Ref2VA plus experimental community Turbo recipes, Anima, Wan 2.1/2.2, Wan Animate 2, and LTX profiles plus editing tools.
 
 ![Model-aware sigma schedules, sampler compatibility validation, and versioned inference profiles for ComfyUI.](assets/overview.png)
 
@@ -24,6 +24,9 @@ ComfyUI-Sigmax provides model-aware sigma schedules for ComfyUI, with supported 
 - Schedule slicing, concatenation, resampling, inspection, and comparison.
 - Experimental Krea 2 `CONDITIONING` tap rebalancing for explicitly selected RAW or Turbo workflows, with fixed RMS preservation and no scheduler/model patching.
 - MiniMax H3 Base workflow construction with explicit FL2VA/Ref2VA selection, upstream model-shift integration, and model-free `/object_info` schema preflight.
+- Experimental MiniMax H3 Turbo recipe selection for source-qualified community lanes. The selector constructs recipe-owned sigmas and receipts only; it does not load or patch a LoRA, attention backend, or model.
+- A BasicScheduler-style MiniMax H3 scheduler menu with one dependency-free `h3_endpoint` default and nine experimental ComfyUI-native choices that require an already-shifted H3 `MODEL`.
+- Internal, dependency-free sampler-state and Flow Euler contracts for deterministic/stochastic research; they are not registered public sampler nodes and do not replace ComfyUI's sampler.
 - Checkpoint header inspection without loading model weights.
 - Versioned schedule information and fingerprints for reproducible workflows.
 - No mandatory third-party runtime dependencies beyond the libraries provided by ComfyUI.
@@ -91,7 +94,7 @@ Connect an image scheduler's `SIGMAS` directly to a custom-sampling path that ac
 
 | Model | Node | Recommended settings |
 | --- | --- | --- |
-| MiniMax H3 Base | `Sigmax.MiniMaxH3SigmaScheduler` | Select FL2VA or Ref2VA explicitly. `h3_endpoint` remains the default pure schedule; nine additional ComfyUI-native scheduler choices are experimental and require the already-shifted H3 `MODEL` |
+| MiniMax H3 Base / experimental Turbo | `Sigmax.MiniMaxH3SigmaScheduler` | Select FL2VA or Ref2VA explicitly. `h3_endpoint` remains the default pure schedule; nine additional ComfyUI-native scheduler choices are experimental and require the already-shifted H3 `MODEL`. The optional Turbo selector exposes source-qualified community recipes and is readiness-only. |
 | Wan 2.1 T2V / I2V | `Sigmax.WanSigmaScheduler` | Select generation, task, source, and resolution explicitly; official T2V 50 steps (`5.0`), official I2V 480P/720P 40 steps (`3.0`/`5.0`) |
 | Wan 2.1 FLF2V / VACE | `Sigmax.WanSigmaScheduler` | Official-native FLF2V 14B 720P uses 50 steps (`16.0`); VACE 1.3B/14B use 50 steps (`16.0`) |
 | Wan 2.2 TI2V 5B / A14B T2V/I2V | `Sigmax.WanSigmaScheduler` | Native or Diffusers-reference source lanes; TI2V 5B uses `5.0`; A14B T2V/I2V use `12.0`/`5.0` with caller-owned boundary metadata |
@@ -101,7 +104,7 @@ Connect an image scheduler's `SIGMAS` directly to a custom-sampling path that ac
 
 Connect a video scheduler's `SIGMAS` directly to the matching custom-sampling path. Do not add another scheduler or time shift, and inspect `schedule_info` for the selected generation mode, stage, resolution, boundary ownership, and warnings.
 
-- **MiniMax H3:** Select Base FL2VA or Ref2VA explicitly. The `scheduler` menu contains `h3_endpoint`, `simple`, `sgm_uniform`, `karras`, `exponential`, `ddim_uniform`, `beta`, `normal`, `linear_quadratic`, and `kl_optimal`. The default `h3_endpoint` path is the existing pure endpoint-inclusive schedule and needs no `MODEL`. Every other choice is an experimental ComfyUI-native lane: connect the `MODEL` after upstream `MiniMaxH3SigmaShift`, keep its video/audio shifts aligned with the selected Base or Turbo recipe, and do not add a separate `BasicScheduler` or another time shift. These native choices are functional compatibility options, not MiniMax recommendations or quality, speed, memory, NFE, or acceleration claims. The complete nine-scheduler/two-host validation matrix is tracked separately.
+- **MiniMax H3:** Select Base FL2VA or Ref2VA explicitly. The `scheduler` menu contains `h3_endpoint`, `simple`, `sgm_uniform`, `karras`, `exponential`, `ddim_uniform`, `beta`, `normal`, `linear_quadratic`, and `kl_optimal`. The default `h3_endpoint` path is the existing pure endpoint-inclusive schedule and needs no `MODEL`. Every other choice is an experimental ComfyUI-native lane: connect the `MODEL` after upstream `MiniMaxH3SigmaShift`, keep its video/audio shifts aligned with the selected Base or Turbo recipe, and do not add a separate `BasicScheduler` or another time shift. These native choices are functional compatibility options, not MiniMax recommendations or quality, speed, memory, NFE, or acceleration claims. The complete nine-scheduler/two-host validation matrix is tracked separately. The optional `turbo` selector exposes four source-qualified community recipes: 544p FL2VA at 4 or 8 NFE, 768p FL2VA at 4 NFE, and 544p Ref2VA at 4 NFE. The 544p recipes use video/audio shifts `12.0`/`3.0`; the 768p recipe uses `6.0`/`3.0`. It only constructs recipe-owned sigmas and readiness receipts, does not load or patch a LoRA or attention backend, and makes no official-method, quality, speed, memory, NFE, or acceleration claim.
 - **Wan 2.1/2.2 and Wan Animate 2:** Select generation, task, source, and resolution explicitly. Wan 2.1 I2V requires `480P` or `720P`; Wan 2.2 A14B boundaries are caller-owned metadata and never route experts. FLF2V, VACE, S2V, Animate, and Wan Animate 2 rows are official-native schedule math only; Diffusers-reference lanes describe scheduler construction only. Execution, weights, expert routing, conditioning, and video-quality parity are excluded.
 - **LTX:** Select LTXV 0.9.8, LTX-2 19B, or LTX-2.3 22B plus generation/stage explicitly. Dev mode derives one token-count shift; distilled modes use immutable publisher vectors. Sigmax does not load video weights, run encoders, or claim video-quality parity.
 

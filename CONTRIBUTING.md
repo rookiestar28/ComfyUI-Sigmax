@@ -1,7 +1,8 @@
 # Contributing
 
-ComfyUI-Sigmax 1.0.0 has a stable public-contract baseline. Contributions must preserve the
-separation between model semantics, schedule construction, numerical samplers, and model profiles.
+ComfyUI-Sigmax retains the stable 1.0.0 public-contract baseline in the current 1.0.2 source tree.
+Contributions must preserve the separation between model semantics, schedule construction,
+numerical samplers, and model profiles.
 
 ## Environment
 
@@ -135,9 +136,11 @@ Do not describe attractive output alone as schedule correctness. Numerical const
 provenance, and reproducibility are required.
 
 Review is incomplete without the observed failing regression when applicable, targeted pass,
-dependent generator/parity/host evidence, complete Windows and WSL gate results, environment and
-interpreter identity, migration/rollback assessment, and known limitations. A retry cannot erase a
-first-attempt P0 regression; record the cause and corrective rerun.
+dependent generator/parity/host evidence, the authoritative Windows Full Gate, any explicitly
+activated item-scoped host or platform evidence, environment and interpreter identity,
+migration/rollback assessment, and known limitations. WSL and Hosted CI diagnostics are
+supplemental unless the active item explicitly activates them; a retry cannot erase a first-attempt
+P0 regression, so record the cause and corrective rerun.
 
 ## Model Profile Contributions
 

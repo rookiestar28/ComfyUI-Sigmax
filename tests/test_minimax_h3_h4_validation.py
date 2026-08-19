@@ -623,6 +623,8 @@ def test_posix_host_command_keeps_direct_main_entrypoint(
 def test_terminate_uses_cooperative_windows_ctrl_break_after_interrupt(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    expected_ctrl_break = 1
+
     class FakeProcess:
         pid = 1234
 
@@ -650,6 +652,7 @@ def test_terminate_uses_cooperative_windows_ctrl_break_after_interrupt(
 
     process = FakeProcess()
     monkeypatch.setattr(os, "name", "nt")
+    monkeypatch.setattr(signal, "CTRL_BREAK_EVENT", expected_ctrl_break, raising=False)
     monkeypatch.setattr(h4, "_http_no_content", lambda *args, **kwargs: None)
     monkeypatch.setattr(
         os,
@@ -664,7 +667,7 @@ def test_terminate_uses_cooperative_windows_ctrl_break_after_interrupt(
     assert result["termination"] == "graceful"
     assert result["termination_method"] == "cooperative_ctrl_break"
     assert result["return_code"] == 0
-    assert process.sent_signals == [signal.CTRL_BREAK_EVENT]
+    assert process.sent_signals == [expected_ctrl_break]
     assert process.terminate_called is False
 
 
@@ -679,7 +682,7 @@ def test_terminate_fails_closed_when_windows_ctrl_break_is_unavailable(
             return self.returncode
 
     monkeypatch.setattr(os, "name", "nt")
-    monkeypatch.delattr(signal, "CTRL_BREAK_EVENT")
+    monkeypatch.delattr(signal, "CTRL_BREAK_EVENT", raising=False)
     monkeypatch.setattr(h4, "_http_no_content", lambda *args, **kwargs: None)
 
     with pytest.raises(ScheduleContractError, match=r"CTRL\+BREAK"):

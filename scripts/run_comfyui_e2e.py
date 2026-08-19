@@ -3131,6 +3131,18 @@ def redact_text(text: object, *, sensitive_paths: Sequence[Path] = ()) -> str:
     return rendered[-_MAX_LOG_BYTES:]
 
 
+def _host_python_redaction_paths(host_python: Path) -> tuple[Path, ...]:
+    """Return the executable and environment root so host warnings cannot leak either path."""
+
+    # CRITICAL: package warnings print sibling Lib paths, so executable-only redaction leaks hosts.
+    environment_root = (
+        host_python.parent.parent
+        if host_python.parent.name.casefold() in {"bin", "scripts"}
+        else host_python.parent
+    )
+    return (host_python, environment_root)
+
+
 def _json_unique_pairs(pairs: list[tuple[str, object]]) -> dict[str, object]:
     result: dict[str, object] = {}
     for key, value in pairs:
@@ -3464,7 +3476,12 @@ print(json.dumps({
     if result.returncode != 0:
         diagnostic = redact_text(
             result.stderr.decode("utf-8", errors="replace"),
-            sensitive_paths=(REPOSITORY_ROOT, comfyui_root, staged_node, host_python),
+            sensitive_paths=(
+                REPOSITORY_ROOT,
+                comfyui_root,
+                staged_node,
+                *_host_python_redaction_paths(host_python),
+            ),
         )[-2_000:]
         raise ScheduleContractError(f"host interpreter import-safety probe failed: {diagnostic}")
     data = _object(
@@ -3926,7 +3943,12 @@ def run_conditioning(args: argparse.Namespace) -> dict[str, object]:
         if log_path.exists():
             evidence["host_log_tail"] = redact_text(
                 log_path.read_text(encoding="utf-8", errors="replace"),
-                sensitive_paths=(REPOSITORY_ROOT, comfyui_root, run_path, host_python),
+                sensitive_paths=(
+                    REPOSITORY_ROOT,
+                    comfyui_root,
+                    run_path,
+                    *_host_python_redaction_paths(host_python),
+                ),
             )[-8_000:]
         evidence["cleanup"] = "removed" if succeeded else "retained_failure_artifacts"
         _write_evidence(Path(args.evidence_file) if args.evidence_file else None, evidence)
@@ -4430,7 +4452,12 @@ def run_minimax_h3(args: argparse.Namespace) -> dict[str, object]:
         if log_path.exists():
             evidence["host_log_tail"] = redact_text(
                 log_path.read_text(encoding="utf-8", errors="replace"),
-                sensitive_paths=(REPOSITORY_ROOT, comfyui_root, run_path, host_python),
+                sensitive_paths=(
+                    REPOSITORY_ROOT,
+                    comfyui_root,
+                    run_path,
+                    *_host_python_redaction_paths(host_python),
+                ),
             )[-8_000:]
         evidence["cleanup"] = "removed" if succeeded else "retained_failure_artifacts"
         _write_evidence(Path(args.evidence_file) if args.evidence_file else None, evidence)
@@ -5421,7 +5448,12 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         if log_path.exists():
             evidence["host_log_tail"] = redact_text(
                 log_path.read_text(encoding="utf-8", errors="replace"),
-                sensitive_paths=(REPOSITORY_ROOT, comfyui_root, run_path, host_python),
+                sensitive_paths=(
+                    REPOSITORY_ROOT,
+                    comfyui_root,
+                    run_path,
+                    *_host_python_redaction_paths(host_python),
+                ),
             )[-8_000:]
         evidence["cleanup"] = "removed" if succeeded else "retained_failure_artifacts"
         _write_evidence(Path(args.evidence_file) if args.evidence_file else None, evidence)

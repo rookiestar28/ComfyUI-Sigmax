@@ -2255,6 +2255,26 @@ def test_owned_temp_guard_and_redaction_fail_closed(tmp_path: Path) -> None:
 
 
 @pytest.mark.parametrize(
+    ("host_python", "environment_root"),
+    [
+        (Path(r"C:\envs\comfyui\python.exe"), Path(r"C:\envs\comfyui")),
+        (Path(r"C:\venvs\comfyui\Scripts\python.exe"), Path(r"C:\venvs\comfyui")),
+        (Path("/opt/venvs/comfyui/bin/python"), Path("/opt/venvs/comfyui")),
+    ],
+)
+def test_host_python_redaction_paths_cover_environment_root(
+    host_python: Path,
+    environment_root: Path,
+) -> None:
+    harness = _harness()
+
+    assert harness._host_python_redaction_paths(host_python) == (
+        host_python,
+        environment_root,
+    )
+
+
+@pytest.mark.parametrize(
     "url",
     (
         "file:///tmp/host",

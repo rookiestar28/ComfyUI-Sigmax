@@ -51,6 +51,19 @@ real-model execution or video-quality parity.
 | Wan Animate 2 Base / Distilled 14B | Official-native unit-flow `5.0` shift, 40-step Base or 10-step Distilled recipes | Use `Sigmax.WanSigmaScheduler`; select `Wan Animate 2` and the explicit Base/Distilled task |
 | LTXV 0.9.8 / LTX-2 19B / LTX-2.3 22B | Dev token-count adaptive shift; LTX-2/LTX-2.3 distilled Stage 1/2 immutable vectors; schedule-only | Use `Sigmax.LTXSigmaScheduler`; select generation and stage explicitly |
 
+### Profile evidence ledger
+
+The `known_limitations` stored in a versioned profile schema are part of that profile's immutable,
+fingerprinted identity. They preserve the declaration made when that profile revision was frozen;
+they are not a mutable ledger of every later repository acceptance result. Current evidence is
+tracked separately by the roadmap and executable test matrix.
+
+For Krea 2, the current repository evidence includes complete Turbo/RAW golden and framework-parity
+lanes, native/real-host schedule contracts, and one bounded local H4 execution/provenance lane. The
+H4 scoring and threshold review were waived, so this evidence does not add a quality or profile-
+promotion claim. Updating the frozen profile text would require an explicit versioned migration,
+not an in-place wording correction.
+
 The experimental `Sigmax.Krea2ConditioningRebalance` node accepts explicit RAW or Turbo
 `CONDITIONING` tensors with shape `(batch, sequence, 30720)`. It preserves standard ComfyUI
 metadata and performs no scheduler or model mutation. Its profiles are community-derived and

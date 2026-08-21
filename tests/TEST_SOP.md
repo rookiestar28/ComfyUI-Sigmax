@@ -45,18 +45,21 @@ The pure numerical, artifact, capability, core-independence, deterministic prope
 variant-resolution, Turbo golden-vector, Krea 2 RAW golden-vector, and Turbo/RAW framework
 parity lanes now exist. Validated product nodes, adapter/integration tests, the isolated
 real-ComfyUI H1 harness, and the M2-05 strict Turbo and M3-06 RAW H2 workflow lanes now exist.
-The M5-01 deterministic native-Euler H3 proof lane now exists for controlled, model-free native
-execution, exact transition/evaluation counts, artifact-linked success receipts, and fail-closed
-unsupported features. Partial-denoise execution is rejected; stateful/resumable, stochastic,
-advanced-workflow, real-checkpoint, and image-quality behavior remains unimplemented.
+The accepted M5-01 through M5-05 model-free H3 surface now includes deterministic native-Euler
+proof, the portable sampler-state contract, deterministic full/partial and in-process resume
+probes, caller-RNG stochastic Flow Euler with pinned Diffusers-v0.39.0 expression parity, and
+advanced-workflow compatibility decisions/receipts. These are internal test/controller contracts,
+not a public sampler. They do not establish model-backed stochastic execution, persisted latent/RNG
+state, cross-process resume, general advanced-workflow execution, or image-quality behavior.
 The accepted M6-05 MiniMax H3 slice also has a separate pinned-ComfyUI 0.30.0 model-free H1/H2
 contract for explicit FL2VA and Ref2VA node execution; first/repeat H1/H2 evidence passed without
 loading H3 weights. It does not replace the separately authorized model-host gate. M4-13 closed
 its public transition-count vocabulary and downstream schema requalification with passing
 WSL/Windows full gates and exact pinned-host H1/H2. GitHub Actions hosted CI was explicitly
 waived for M4-13 on 2026-08-06 because the user's quota was exhausted; no hosted pass is claimed.
-Remaining sampler H3 capabilities remain owned by later roadmap items. M7-09 owns an explicit,
-local optional-heavy H4 lane under its frozen plan; it is separate from the default CPU/full gate.
+Unsupported model-backed sampler and advanced-workflow capabilities remain unclaimed; no active
+roadmap successor owns them. M7-09 owns an explicit, local optional-heavy H4 lane under its frozen
+plan; it is separate from the default CPU/full gate.
 On 2026-08-07 the user waived M7-09 scoring as an acceptance blocker. Its execution/provenance
 receipt may close the local item, but the waiver does not create a prompt-adherence, image-quality,
 or profile-promotion claim. Until later roadmap owners create any other heavy gates:

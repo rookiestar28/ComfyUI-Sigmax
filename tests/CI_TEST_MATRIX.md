@@ -34,6 +34,7 @@ Command definitions remain in `tests/TEST_SOP.md`. Real-host lifecycle requireme
 | Krea 2 RAW golden vectors | Implemented | M3-03 |
 | Krea 2 variant-resolution contracts | Implemented | M3-04 |
 | Framework parity tests | Implemented | M2-03, M3-05 |
+| Stochastic Flow Euler framework parity | Implemented against pinned Diffusers v0.39.0 with every-step expression parity | M5-04 |
 | Native ComfyUI parity tests | Implemented | M2-04 |
 | MiniMax H3 Diffusers/native parity lanes | Accepted source pins, complete 4/8/12/16/20 fixtures, isolated jobs, local CPython 3.13 CPU reports, and hosted artifact publication in Foundation CI run `30982915308`; public `steps` requalification is M4-13 | M6-05 and M4-13 accepted locally |
 | Numerical benchmark matrix | Implemented | M7-02 |
@@ -48,7 +49,7 @@ Command definitions remain in `tests/TEST_SOP.md`. Real-host lifecycle requireme
 | Adapter/integration tests | Implemented | M4-01 through M4-10 |
 | Real ComfyUI H1 | Implemented | M2-05 harness |
 | Real ComfyUI H2 | Turbo and RAW/auto implemented | M2-05; M3-06 |
-| Real ComfyUI H3 | M5-01 deterministic native-Euler H3 implemented; partial-denoise execution is rejected | M5-01 |
+| Real ComfyUI H3 | M5-01 native Euler, M5-02 state, M5-03 deterministic full/partial/resume, M5-04 caller-RNG stochastic, and M5-05 compatibility decision/receipt model-free lanes are implemented on the accepted current/pinned host roles; no public sampler, persisted latent/RNG state, model-backed stochastic execution, or native advanced-workflow execution is claimed | M5-01 through M5-05 |
 | MiniMax H3 model-free host contract | Exact pinned ComfyUI 0.30.0 first/repeat H1/H2 passed for explicit FL2VA and Ref2VA, including the M4-13 public-steps requalification on native Windows; weight-backed H4 remains separately authorization-gated | M6-05 and M4-13 host gates passed locally |
 | Frontend policy | Implemented in the default full gate with Node.js 18+; hosted CI uses Node.js 20 | M4-11 amendment |
 | Browser E2E | Bounded M4-11 item-specific browser evidence accepted; reusable automated Playwright lane `NOT_IMPLEMENTED` | Activate when frontend behavior requires maintained real-browser regression coverage |

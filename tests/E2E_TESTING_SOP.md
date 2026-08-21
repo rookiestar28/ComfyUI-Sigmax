@@ -49,6 +49,14 @@ Current implemented scope:
   rejection, and invalid-step prequeue HTTP 400 rejection;
 - M5-01 deterministic native-Euler H3 controlled execution, step/count parity, deterministic
   rerun, artifact-linked succeeded receipt, and explicit partial-denoise rejection.
+- M5-02 portable sampler-state H3 contract probes with exact receipt binding and no numerical
+  sampler claim.
+- M5-03 model-free deterministic Flow Euler H3 probes for full/partial execution,
+  interrupt-boundary handling, and in-process resume consistency.
+- M5-04 model-free caller-RNG stochastic Flow Euler H3 probes for fixed-seed reproducibility,
+  changed-seed divergence, terminal noise behavior, and pinned Diffusers-expression parity.
+- M5-05 model-free advanced-workflow compatibility decisions and receipts, including explicit
+  allow/warn/reject outcomes without claiming native advanced-workflow execution.
 - M4-13 native Windows requalification of the public H3 `steps` schema on exact pinned ComfyUI
   0.30.0, including first/repeat H1 and explicit FL2VA/Ref2VA H2 execution.
 - M4-13 is closed from passing local WSL/native Windows and pinned-host evidence. GitHub Actions
@@ -64,9 +72,10 @@ Current implemented scope:
 - a blocking Node.js frontend-policy gate for the scoped Krea 2 experimental-variant widget
   behavior, plus the accepted M4-11 item-specific browser evidence.
 
-Remaining H3 capabilities and H4 retain their later activation rules below. A missing later lane
-is never a pass. The frontend-policy gate is not H1/H2 and does not substitute for reusable
-real-browser regression coverage.
+Unsupported model-backed H3 capabilities and H4 retain their explicit activation rules below. A
+missing lane is never a pass, and no active roadmap successor currently authorizes broader sampler
+claims. The frontend-policy gate is not H1/H2 and does not substitute for reusable real-browser
+regression coverage.
 
 ## 3. Test Lanes
 
@@ -109,7 +118,7 @@ H2 is mandatory for node and workflow behavior changes.
 
 Purpose:
 
-- execute deterministic and future stochastic samplers;
+- execute activated deterministic and stochastic controller probes;
 - test partial denoise, image-to-image, inpainting, ControlNet/model patches, interruption, and
   resume where supported;
 - detect double shifting and sampler-state errors.
@@ -218,9 +227,9 @@ The scripts must:
 4. expose ComfyUI-Sigmax without modifying the user's normal custom-node installation;
 5. start ComfyUI on loopback with a unique port;
 6. poll a bounded readiness endpoint while also watching for early process exit;
-7. run H1, the implemented M2-05 Turbo plus M3-06 RAW H2 lanes, the activated M5-01
-   deterministic native-Euler H3 lane, and the accepted pinned M6-05 MiniMax H3 model-free
-   H1/H2 contract when its host revision is available; run other later lanes only after activation;
+7. run H1, the implemented M2-05 Turbo plus M3-06 RAW H2 lanes, the accepted M5-01 through M5-05
+   model-free H3 proof/contract lanes, and the accepted pinned M6-05 MiniMax H3 model-free H1/H2
+   contract when its host revision is available; run other lanes only after explicit activation;
 8. collect redacted logs and results;
 9. request graceful shutdown when supported, wait a bounded interval, then terminate the
    verified process tree if required;

@@ -11,7 +11,7 @@ current tree; it is not a claim that a corresponding public tag or Registry publ
 | Python | 3.10 or newer |
 | ComfyUI package requirement | 0.29.0 or newer |
 | General validated host baseline | ComfyUI 0.29.0 (pinned known-good lane) |
-| Current Wan qualification lane | ComfyUI 0.31.0 on Windows (model-free H1/H2 registration, schema, schedule, and metadata checks) |
+| Current Wan qualification lane | ComfyUI 0.32.0 on Windows (model-free H1/H2 registration, schema, schedule, and metadata checks) |
 | MiniMax H3 qualified host roles | ComfyUI 0.30.0 and 0.32.0 with the upstream H3 nodes; the complete ten-scheduler model-free matrix is validated on both exact host roles |
 | Operating systems covered by project gates | Windows and Linux/WSL |
 | Mandatory additional Python packages | None |
@@ -19,7 +19,7 @@ current tree; it is not a claim that a corresponding public tag or Registry publ
 
 A newer ComfyUI version may work, but is not automatically promoted to the validated host baseline; reproduce workflows on that baseline first after an update.
 
-The current ComfyUI 0.31.0 lane is limited to model-free Wan qualification and does not establish
+The current ComfyUI 0.32.0 lane is limited to model-free Wan qualification and does not establish
 real-model execution or video-quality parity.
 
 ## Supported model profiles
@@ -49,6 +49,7 @@ real-model execution or video-quality parity.
 | Wan 2.2 S2V 14B | Official-native unit-flow `3.0` shift, 40-step recipe | Use `Sigmax.WanSigmaScheduler`; select `S2V` and `Official native` explicitly |
 | Wan 2.2 Animate 14B | Official-native unit-flow `5.0` shift, 20-step recipe | Use `Sigmax.WanSigmaScheduler`; select `Animate` and `Official native` explicitly |
 | Wan Animate 2 Base / Distilled 14B | Official-native unit-flow `5.0` shift, 40-step Base or 10-step Distilled recipes | Use `Sigmax.WanSigmaScheduler`; select `Wan Animate 2` and the explicit Base/Distilled task |
+| Wan Animate 2 Comfy optimized 14B | Framework-reference 480P `LCM + simple + 6` recipe, CFG 1.0 and unit-flow `5.0` shift, coupled to the exact Comfy-hosted model and step-distilled LoRA | Use `Sigmax.WanSigmaScheduler`; select `Animate Optimized`, `ComfyUI native`, and `480P`; 81 frames is tested chunk guidance, not a hard maximum |
 | LTXV 0.9.8 / LTX-2 19B / LTX-2.3 22B | Dev token-count adaptive shift; LTX-2/LTX-2.3 distilled Stage 1/2 immutable vectors; schedule-only | Use `Sigmax.LTXSigmaScheduler`; select generation and stage explicitly |
 
 ### Profile evidence ledger
@@ -142,9 +143,11 @@ persist latent/RNG state, or claim real-model quality or acceleration.
   Anima weight files remain under CircleStone Labs and applicable derivative licenses.
 - Wan profiles keep ComfyUI-native, official-native, and Diffusers-reference shift ownership
   separate. A Wan 2.1 I2V resolution is mandatory, and unsupported derivatives fail closed.
-  The released FLF2V, VACE, S2V, Wan 2.2 Animate, and Wan Animate 2 rows are official-native
-  schedule lanes only; they do not imply model loading, conditioning, expert routing, or quality
-  parity.
+  The released FLF2V, VACE, S2V, Wan 2.2 Animate, and Wan Animate 2 Base/Distilled rows are
+  official-native schedule lanes only. The Comfy optimized Wan Animate 2 row is a separate
+  framework-reference lane coupled to its exact model and LoRA; Sigmax supplies its external
+  sigmas but does not load those weights. None of these lanes implies model execution,
+  conditioning, expert routing, automatic chunking, or quality parity.
 - Wan 2.2 A14B boundaries are descriptive caller-owned split metadata; Sigmax does not select high
   or low experts, load video weights, patch the model, or implement a video sampler.
 - Automatic Wan 2.2 A14B expert dispatch and controlled shift/quality experiments remain outside

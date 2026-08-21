@@ -4,8 +4,20 @@ ComfyUI-Sigmax provides model-aware sigma schedules for ComfyUI, with supported 
 
 ![Model-aware sigma schedules, sampler compatibility validation, and versioned inference profiles for ComfyUI.](assets/overview.png)
 
+## Last Update
+
+- Added a ComfyUI-optimized Wan Animate 2 14B profile for the matching Comfy-hosted model and
+  step-distilled LoRA: 480P, LCM sampler, Simple schedule, 6 steps, CFG 1.0, and shift 5.0.
+- Expanded the public Wan scheduler with explicit FLF2V, VACE, S2V, Animate, and Wan Animate 2
+  task profiles while keeping source, resolution, and schedule ownership visible.
+- Added source-qualified experimental MiniMax H3 Turbo recipes and a ten-choice scheduler menu;
+  native scheduler choices require an already-shifted H3 model and remain compatibility options.
+- Strengthened deterministic and stochastic Flow Euler research contracts and current/pinned-host
+  validation without registering a replacement public sampler.
+
 ## Table of contents
 
+- [Last Update](#last-update)
 - [Features](#features)
 - [Installation](#installation): [ComfyUI Manager](#comfyui-manager) · [Git](#git)
 - [Use in ComfyUI](#use-in-comfyui)
@@ -100,6 +112,7 @@ Connect an image scheduler's `SIGMAS` directly to a custom-sampling path that ac
 | Wan 2.2 TI2V 5B / A14B T2V/I2V | `Sigmax.WanSigmaScheduler` | Native or Diffusers-reference source lanes; TI2V 5B uses `5.0`; A14B T2V/I2V use `12.0`/`5.0` with caller-owned boundary metadata |
 | Wan 2.2 S2V / Animate | `Sigmax.WanSigmaScheduler` | Official-native S2V 14B uses 40 steps (`3.0`); Animate 14B uses 20 steps (`5.0`) |
 | Wan Animate 2 Base / Distilled | `Sigmax.WanSigmaScheduler` | Official-native Base uses 40 steps (`5.0`); Distilled uses 10 steps (`5.0`); select the task explicitly |
+| Wan Animate 2 Comfy optimized | `Sigmax.WanSigmaScheduler` | Select `Animate Optimized`, `ComfyUI native`, and `480P`; use the matching model and step-distilled LoRA with LCM, the supplied Simple sigmas, 6 steps, CFG 1.0, and shift `5.0` |
 | LTXV 0.9.8 / LTX-2 19B / LTX-2.3 22B | `Sigmax.LTXSigmaScheduler` | Dev adaptive token shift (20/40/30 default steps) or explicit LTX-2/LTX-2.3 distilled Stage 1/2 vectors; generation and stage are explicit |
 
 Connect a video scheduler's `SIGMAS` directly to the matching custom-sampling path. Do not add another scheduler or time shift, and inspect `schedule_info` for the selected generation mode, stage, resolution, boundary ownership, and warnings.
@@ -118,7 +131,7 @@ Connect a video scheduler's `SIGMAS` directly to the matching custom-sampling pa
   | `h3.ref2va.lightx2v-turbo-4-v0.1-544p` | 4 | `12.0 / 3.0` | Ref2VA, 544p |
 
   These Turbo recipes are experimental community compatibility lanes. They make no official-method, quality, speed, memory, NFE, or acceleration claim. For an official current `BasicScheduler` workflow, the model path is normally `UNETLoader -> (optional) LoraLoaderModelOnly -> (optional, only when needed) ModelSamplingMiniMaxH3 -> BasicGuider/BasicScheduler`. When using Sigmax's scheduler node, connect its `SIGMAS` output directly to the custom-sampling path; do not add a second scheduler or shift.
-- **Wan 2.1/2.2 and Wan Animate 2:** Select generation, task, source, and resolution explicitly. Wan 2.1 I2V requires `480P` or `720P`; Wan 2.2 A14B boundaries are caller-owned metadata and never route experts. FLF2V, VACE, S2V, Animate, and Wan Animate 2 rows are official-native schedule math only; Diffusers-reference lanes describe scheduler construction only. Execution, weights, expert routing, conditioning, and video-quality parity are excluded.
+- **Wan 2.1/2.2 and Wan Animate 2:** Select generation, task, source, and resolution explicitly. Wan 2.1 I2V requires `480P` or `720P`; Wan 2.2 A14B boundaries are caller-owned metadata and never route experts. FLF2V, VACE, S2V, Animate, and Wan Animate 2 Base/Distilled rows are official-native schedule math only; Diffusers-reference lanes describe scheduler construction only. The separate Comfy optimized lane reproduces the first-party 480P `LCM + simple + 6` recipe for its exact model and LoRA. Its 81-frame value is tested chunk guidance, not a hard host-node maximum or automatic chunking feature. Execution, weight loading, expert routing, conditioning, and video-quality parity are excluded.
 - **LTX:** Select LTXV 0.9.8, LTX-2 19B, or LTX-2.3 22B plus generation/stage explicitly. Dev mode derives one token-count shift; distilled modes use immutable publisher vectors. Sigmax does not load video weights, run encoders, or claim video-quality parity.
 
 ### Inspect or modify a schedule

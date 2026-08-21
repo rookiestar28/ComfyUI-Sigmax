@@ -9,6 +9,10 @@ tracked independently from the frozen profile-schema version.
 
 ### Added
 
+- A separate ComfyUI-optimized Wan Animate 2 14B framework-reference profile for the exact
+  Comfy-hosted model and step-distilled LoRA. It reproduces the 480P `LCM + simple + 6` recipe with
+  CFG 1.0 and shift `5.0`; 81 frames is retained as tested chunk guidance rather than a hard host
+  maximum or automatic chunking claim.
 - A MiniMax H3 Base qualification slice with `Sigmax.MiniMaxH3SigmaScheduler`, explicit FL2VA and
   Ref2VA selection, endpoint-inclusive Diffusers video sigmas, model-free host workflow/schema
   preflight, and pinned Diffusers/native ComfyUI parity. The Sigmax node owns the external video
@@ -40,7 +44,7 @@ tracked independently from the frozen profile-schema version.
   resolution, and documented shift/step recipe ownership; A14B boundary metadata remains
   caller-owned, with no expert-routing, model-execution, or video-quality claim.
 - Completed model-free Wan compatibility and release qualification on the pinned ComfyUI 0.29.0
-  known-good lane and the current ComfyUI 0.31.0 lane, covering first/repeat registration,
+  known-good lane and the current ComfyUI 0.32.0 lane, covering first/repeat registration,
   schema, schedule/metadata, package, and co-installation checks. These lanes do not establish
   real-model execution or video-quality parity.
 - Source-qualified LTXV 0.9.8, LTX-2 19B, and LTX-2.3 22B schedules with

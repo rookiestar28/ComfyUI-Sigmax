@@ -95,6 +95,7 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
         "sd3-comfy-diffusers-fixed-framework-28",
         "sd3-publisher-reference-official-50",
         "wan-animate2-base-14b-official-40",
+        "wan-animate2-comfy-optimized-14b-480p-6",
         "wan-animate2-distilled-14b-official-10",
         "wan21-flf2v-720p-official-50",
         "wan21-i2v-480p-official-40",
@@ -130,6 +131,7 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
         "SD3",
         "SD3",
         "Wan Animate 2 Base 14B",
+        "Wan Animate 2 Comfy Optimized 14B 480P",
         "Wan Animate 2 Distilled 14B",
         "Wan 2.1 FLF2V 14B 720P",
         "Wan 2.1 I2V 480P",
@@ -239,6 +241,17 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
             "Official native",
             "None",
             40,
+            True,
+            0,
+            -1,
+            False,
+        ],
+        "wan-animate2-comfy-optimized-14b-480p-6": [
+            "Wan Animate 2",
+            "Animate Optimized",
+            "ComfyUI native",
+            "480P",
+            6,
             True,
             0,
             -1,
@@ -370,6 +383,7 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
             "HunyuanImage 2.1 Base",
             "HunyuanImage 2.1 Distilled",
             "Wan Animate 2 Base 14B",
+            "Wan Animate 2 Comfy Optimized 14B 480P",
             "Wan Animate 2 Distilled 14B",
             "Wan 2.1 FLF2V 14B 720P",
             "Wan 2.1 I2V 480P",
@@ -472,6 +486,7 @@ def test_packaged_canonical_workflows_are_complete_and_portable() -> None:
             "Wan 2.2 T2V A14B": "wan2.2.t2v-a14b.official-native",
             "Wan 2.2 TI2V 5B": "wan2.2.ti2v.5b.comfy-native",
             "Wan Animate 2 Base 14B": "wan-animate2.14b.base.official-native",
+            "Wan Animate 2 Comfy Optimized 14B 480P": "wan-animate2.14b.comfy-optimized-6.framework-reference",
             "Wan Animate 2 Distilled 14B": "wan-animate2.14b.distilled.official-native",
             "LTXV 0.9.8 Dev": "ltxv.0.9.8.dev",
             "LTX-2 19B Dev": "ltx2.19b.dev",
@@ -518,7 +533,7 @@ def test_pinned_static_baseline_is_explicit_and_known_good() -> None:
     assert report.lane is WorkflowValidationLane.KNOWN_GOOD
     assert report.host_version == CANONICAL_HOST_VERSION
     assert report.host_revision == CANONICAL_HOST_REVISION
-    assert report.workflow_count == 33
+    assert report.workflow_count == 34
     assert report.compatible is True
     assert report.gate_passed is True
     assert report.observational is False

@@ -130,11 +130,14 @@ def test_packaged_protocol_has_fixed_cases_settings_hashes_and_evidence() -> Non
 def test_protocol_binds_numerical_matrix_and_declares_unapproved_heavy_state() -> None:
     projection = load_image_benchmark_protocol().projection()
 
-    assert projection["numerical_prerequisite"] == {
-        "matrix_fingerprint": "sha256:a6a04f2b3ec0d105632f44c1ec73be3f2c0feb2eab9812ba7b3548e795e6cf7a",
-        "required_status": "PASS",
-        "schema": "sigmax.numerical-benchmark-matrix/1",
-    }
+    assert (
+        projection["numerical_prerequisite"]
+        == {
+            "matrix_fingerprint": "sha256:f670886856d3607391fc9795a9e4c456fa6d9a9b25c21d447ed3271bfa778fd0",  # pragma: allowlist secret
+            "required_status": "PASS",
+            "schema": "sigmax.numerical-benchmark-matrix/1",
+        }
+    )
     assert projection["execution_state"] == {
         "component_hashes": None,
         "image_hashes": None,

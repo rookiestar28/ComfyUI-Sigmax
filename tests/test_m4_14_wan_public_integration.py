@@ -92,6 +92,7 @@ def test_m4_14_expands_axes_without_changing_the_released_prefix() -> None:
         "Animate",
         "Animate Base",
         "Animate Distilled",
+        "Animate Optimized",
     )
     assert "shift" not in module.WanSigmaScheduler.INPUT_TYPES()["required"]
     assert "model" not in module.WanSigmaScheduler.INPUT_TYPES()["required"]

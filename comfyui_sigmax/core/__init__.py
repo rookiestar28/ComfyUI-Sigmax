@@ -31,6 +31,7 @@ from comfyui_sigmax.core.artifacts import (
     serialize_schedule_artifact,
 )
 from comfyui_sigmax.core.base_grids import (
+    comfyui_simple_discrete_flow_grid,
     flowmatch_reciprocal_step_grid,
     krea_reciprocal_step_grid,
     linear_endpoint_grid,
@@ -315,6 +316,7 @@ __all__ = [
     "build_schedule_report",
     "build_schedule_report_from_bundle",
     "canonical_projection_bytes",
+    "comfyui_simple_discrete_flow_grid",
     "construction_fingerprint",
     "denoise_construction_steps",
     "deserialize_advanced_workflow_receipt",

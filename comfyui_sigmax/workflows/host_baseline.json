@@ -727,7 +727,8 @@
             "S2V",
             "Animate",
             "Animate Base",
-            "Animate Distilled"
+            "Animate Distilled",
+            "Animate Optimized"
           ]
         },
         "source": {
@@ -1697,7 +1698,8 @@
               "S2V",
               "Animate",
               "Animate Base",
-              "Animate Distilled"
+              "Animate Distilled",
+              "Animate Optimized"
             ]
           ],
           "source": [

@@ -47,7 +47,7 @@ def test_private_catalog_has_exact_recipe_identity_and_no_public_registration() 
     registry = importlib.import_module(
         "comfyui_sigmax.profiles.registry"
     ).builtin_profile_registry()
-    assert len(registry.entries) == 46
+    assert len(registry.entries) == 47
     assert not any(
         entry.schema.profile_id.startswith("minimax-h3.turbo") for entry in registry.entries
     )

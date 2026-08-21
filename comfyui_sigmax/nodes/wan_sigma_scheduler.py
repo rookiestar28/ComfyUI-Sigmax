@@ -35,6 +35,7 @@ from comfyui_sigmax.profiles.wan import (
     WAN22_TI2V_5B_DIFFUSERS_PROFILE,
     WAN22_TI2V_5B_NATIVE_PROFILE,
     WAN_ANIMATE2_BASE_14B_OFFICIAL_PROFILE,
+    WAN_ANIMATE2_COMFY_OPTIMIZED_6_PROFILE,
     WAN_ANIMATE2_DISTILLED_14B_OFFICIAL_PROFILE,
     WanProfile,
     WanProfileId,
@@ -60,6 +61,7 @@ _TASKS: Final = (
     "Animate",
     "Animate Base",
     "Animate Distilled",
+    "Animate Optimized",
 )
 _SOURCES: Final = ("ComfyUI native", "Official native", "Diffusers reference")
 _RESOLUTIONS: Final = ("None", "480P", "720P")
@@ -145,6 +147,10 @@ _PROFILES: dict[tuple[str, str, str, str], tuple[WanProfileId, WanResolution]] =
         WanProfileId.WAN_ANIMATE2_DISTILLED_14B_OFFICIAL,
         WanResolution.NONE,
     ),
+    ("Wan Animate 2", "Animate Optimized", "ComfyUI native", "480P"): (
+        WanProfileId.WAN_ANIMATE2_COMFY_OPTIMIZED_6,
+        WanResolution.P480,
+    ),
 }
 
 _PROFILE_OBJECTS: dict[WanProfileId, WanProfile] = {
@@ -167,6 +173,7 @@ _PROFILE_OBJECTS: dict[WanProfileId, WanProfile] = {
     WanProfileId.WAN22_T2V_A14B_DIFFUSERS: WAN22_T2V_A14B_DIFFUSERS_PROFILE,
     WanProfileId.WAN22_I2V_A14B_DIFFUSERS: WAN22_I2V_A14B_DIFFUSERS_PROFILE,
     WanProfileId.WAN_ANIMATE2_BASE_14B_OFFICIAL: WAN_ANIMATE2_BASE_14B_OFFICIAL_PROFILE,
+    WanProfileId.WAN_ANIMATE2_COMFY_OPTIMIZED_6: WAN_ANIMATE2_COMFY_OPTIMIZED_6_PROFILE,
     WanProfileId.WAN_ANIMATE2_DISTILLED_14B_OFFICIAL: WAN_ANIMATE2_DISTILLED_14B_OFFICIAL_PROFILE,
 }
 
@@ -288,6 +295,7 @@ def build_wan_sigma_schedule(
     start, end = _slice_bounds(start_step=start_step, end_step=end_step, available_steps=steps)
     output = slice_step_range(complete.sigmas, start_step=start, end_step=end)
     profile = _PROFILE_OBJECTS[profile_id]
+    profile_parameters = {field.name: field.value for field in profile.schema.parameters}
     evidence = complete.request.provenance.evidence
     boundary_step = -1 if complete.boundary is None else complete.boundary.transition_index
     effective_end = steps if end is None else end
@@ -346,16 +354,22 @@ def build_wan_sigma_schedule(
             "output_steps": len(output) - 1,
             "start_step": start,
         },
-        "solver_ownership": profile.schema.parameters[
-            next(
-                index
-                for index, field in enumerate(profile.schema.parameters)
-                if field.name == "solver"
-            )
-        ].value,
+        "solver_ownership": profile_parameters["solver"],
         "strict_source": strict_source,
         "warnings": list(complete.warnings),
     }
+    if "scheduler" in profile_parameters:
+        info["scheduler"] = profile_parameters["scheduler"]
+        info["frame_guidance"] = {
+            name: profile_parameters[name]
+            for name in (
+                "fps_max",
+                "fps_min",
+                "frame_overlap",
+                "frame_step",
+                "recommended_frames",
+            )
+        }
     return WanSigmaNodeResult(
         generation=public_generation,
         task=public_task,

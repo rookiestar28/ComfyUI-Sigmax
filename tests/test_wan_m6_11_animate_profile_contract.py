@@ -154,8 +154,9 @@ def test_m6_11_axes_and_exact_native_identities_are_present() -> None:
         "wan2.2.animate.14b.official-native",
         "wan-animate2.14b.base.official-native",
         "wan-animate2.14b.distilled.official-native",
+        "wan-animate2.14b.comfy-optimized-6.framework-reference",
     )
-    assert len(module.WanProfileId) == 20
+    assert len(module.WanProfileId) == 21
 
 
 @pytest.mark.parametrize("profile_id,expected", _EXPECTED_NATIVE.items())
@@ -254,7 +255,7 @@ def test_m6_11_native_profiles_are_exported_registered_in_the_successor_wan_node
         for profile_id, _resolution in node._PROFILES.values()
         if profile_id in native_ids
     }
-    assert len(registry.entries) == 46
+    assert len(registry.entries) == 47
 
 
 def test_m6_11_schedule_semantics_are_strict_and_single_shifted() -> None:

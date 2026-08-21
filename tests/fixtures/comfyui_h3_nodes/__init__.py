@@ -1997,6 +1997,12 @@ class WanScheduleProbe:
             "wan2.2.animate.14b.official-native": ("official", 5.0, 20, None),
             "wan-animate2.14b.base.official-native": ("official", 5.0, 40, None),
             "wan-animate2.14b.distilled.official-native": ("official", 5.0, 10, None),
+            "wan-animate2.14b.comfy-optimized-6.framework-reference": (
+                "framework_reference",
+                5.0,
+                6,
+                None,
+            ),
         }.get(profile.get("id"))
         steps = slicing.get("output_steps")
         float_sigmas = _vector(sigmas)

@@ -140,7 +140,7 @@ def test_four_exact_m6_10_profile_identities_exist() -> None:
     assert module.WanTask.FLF2V.value == "flf2v"
     assert module.WanTask.VACE.value == "vace"
     assert module.WanTask.S2V.value == "s2v"
-    assert len(module.WanProfileId) == 20
+    assert len(module.WanProfileId) == 21
 
 
 @pytest.mark.parametrize("member_name", _NEW_PROFILE_NAMES)
@@ -197,6 +197,7 @@ def test_new_profiles_are_exported_and_registered_in_the_successor_wan_node_v1()
         "Animate",
         "Animate Base",
         "Animate Distilled",
+        "Animate Optimized",
     )
     new_ids = {getattr(module.WanProfileId, name) for name in _NEW_PROFILE_NAMES}
     assert new_ids == {

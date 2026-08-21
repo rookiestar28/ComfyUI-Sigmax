@@ -1504,6 +1504,7 @@ def build_wan_h2_api_prompt(
         ("Wan 2.2", "Animate", "Official native", "None", 20),
         ("Wan Animate 2", "Animate Base", "Official native", "None", 40),
         ("Wan Animate 2", "Animate Distilled", "Official native", "None", 10),
+        ("Wan Animate 2", "Animate Optimized", "ComfyUI native", "480P", 6),
     }
     if (generation, task, source, resolution, steps) not in allowed:
         raise ScheduleContractError("Wan H2 selection must be one of the pinned dense cases")
@@ -1607,6 +1608,12 @@ def verify_wan_h2_history(
         ("Wan Animate 2", "Animate Distilled", "Official native", "None", 10): (
             "wan-animate2.14b.distilled.official-native",
             "official",
+            5.0,
+            None,
+        ),
+        ("Wan Animate 2", "Animate Optimized", "ComfyUI native", "480P", 6): (
+            "wan-animate2.14b.comfy-optimized-6.framework-reference",
+            "framework_reference",
             5.0,
             None,
         ),
@@ -5618,6 +5625,14 @@ def run(args: argparse.Namespace) -> dict[str, object]:
                     "source": "Official native",
                     "resolution": "None",
                     "steps": 10,
+                },
+                {
+                    "id": "wan-animate2-comfy-optimized-14b-480p-6",
+                    "generation": "Wan Animate 2",
+                    "task": "Animate Optimized",
+                    "source": "ComfyUI native",
+                    "resolution": "480P",
+                    "steps": 6,
                 },
             ):
                 case_id = cast(str, case["id"])

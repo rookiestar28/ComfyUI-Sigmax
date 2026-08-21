@@ -52,6 +52,7 @@ from comfyui_sigmax.profiles import (
     WAN22_TI2V_5B_DIFFUSERS_SCHEMA,
     WAN22_TI2V_5B_NATIVE_SCHEMA,
     WAN_ANIMATE2_BASE_14B_OFFICIAL_SCHEMA,
+    WAN_ANIMATE2_COMFY_OPTIMIZED_6_SCHEMA,
     WAN_ANIMATE2_DISTILLED_14B_OFFICIAL_SCHEMA,
     Z_IMAGE_BASE_SCHEMA,
     Z_IMAGE_TURBO_SCHEMA,
@@ -183,6 +184,7 @@ def test_builtin_registry_is_deterministic_exact_and_immutable() -> None:
         ProfileKey.from_schema(SD3_COMFY_DIFFUSERS_SCHEMA),
         ProfileKey.from_schema(SD3_PUBLISHER_REFERENCE_SCHEMA),
         ProfileKey.from_schema(WAN_ANIMATE2_BASE_14B_OFFICIAL_SCHEMA),
+        ProfileKey.from_schema(WAN_ANIMATE2_COMFY_OPTIMIZED_6_SCHEMA),
         ProfileKey.from_schema(WAN_ANIMATE2_DISTILLED_14B_OFFICIAL_SCHEMA),
         ProfileKey.from_schema(WAN21_FLF2V_14B_720P_OFFICIAL_SCHEMA),
         ProfileKey.from_schema(WAN21_I2V_480P_DIFFUSERS_SCHEMA),
@@ -234,8 +236,8 @@ def test_external_registration_returns_a_new_canonical_snapshot() -> None:
     entry = updated.resolve(ProfileKey.from_schema(schema))
 
     assert updated is not registry
-    assert len(registry.entries) == 46
-    assert len(updated.entries) == 47
+    assert len(registry.entries) == 47
+    assert len(updated.entries) == 48
     assert entry.origin is ProfileOrigin.EXTERNAL
     assert entry.schema is schema
     assert entry.inheritance == _turbo_inheritance()

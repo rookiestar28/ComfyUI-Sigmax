@@ -116,6 +116,7 @@ def test_wan_schedule_vectors_remain_finite_and_strictly_descending() -> None:
             in {
                 WanProfileId.WAN21_I2V_480P_OFFICIAL,
                 WanProfileId.WAN21_I2V_480P_DIFFUSERS,
+                WanProfileId.WAN_ANIMATE2_COMFY_OPTIMIZED_6,
             }
             else (
                 WanResolution.P720
@@ -128,7 +129,8 @@ def test_wan_schedule_vectors_remain_finite_and_strictly_descending() -> None:
                 else WanResolution.NONE
             )
         )
-        result = build_wan_schedule(profile=profile, steps=8, resolution=resolution)
+        steps = 6 if profile is WanProfileId.WAN_ANIMATE2_COMFY_OPTIMIZED_6 else 8
+        result = build_wan_schedule(profile=profile, steps=steps, resolution=resolution)
         assert result.sigmas[0] == 1.0
         assert result.sigmas[-1] == 0.0
         assert all(left > right for left, right in pairwise(result.sigmas))

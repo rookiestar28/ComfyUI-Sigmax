@@ -36,6 +36,7 @@ from comfyui_sigmax.core import (
     TransformContract,
     TransformStage,
     apply_terminal_policy,
+    comfyui_simple_discrete_flow_grid,
     direct_ratio_shift,
     flowmatch_reciprocal_step_grid,
     validate_sigma_schedule,
@@ -71,6 +72,15 @@ WAN_ANIMATE2_REPOSITORY_REVISION: Final = (
     "3ad2fef7d61d6200c9c653e0fe47be7616b323f3"  # pragma: allowlist secret
 )
 WAN_COMFYUI_REVISION: Final = "5cc026f5b81b3f01fe7a1438a0fd4131d2ebda25"  # pragma: allowlist secret
+WAN_ANIMATE2_COMFYUI_REVISION: Final = (
+    "76135e557da1ec7dcb270160f01e597565e3e003"  # pragma: allowlist secret
+)
+WAN_ANIMATE2_COMFY_WORKFLOW_REVISION: Final = (
+    "e95e3b20567bea8df16510c8390b7f897b7e6d4b"  # pragma: allowlist secret
+)
+WAN_ANIMATE2_COMFY_MODEL_REVISION: Final = (
+    "ed158470869ff31fa51cf56012dac33fb00f494b"  # pragma: allowlist secret
+)
 WAN_DIFFUSERS_REVISION: Final = (
     "3c468926ffd12b69baa4316e27b09306b8da19a6"  # pragma: allowlist secret
 )
@@ -150,6 +160,12 @@ _WAN_ANIMATE2_BASE_SHA256: Final = (
 _WAN_ANIMATE2_DISTILLED_SHA256: Final = (
     "66161359fc58a1d6c46e14fe2d81c881ccaca440757b1905e01a91902bff29d2"  # pragma: allowlist secret
 )
+_WAN_ANIMATE2_COMFY_MODEL_SHA256: Final = (
+    "0580ecdd65e47e97c30df9670d13a6c4a131d26de5a1faf2ccc78392d5167584"  # pragma: allowlist secret
+)
+_WAN_ANIMATE2_COMFY_LORA_SHA256: Final = (
+    "85c4a61c30e0497aa44b91d93a893b624708461a56fe5485183b28fa07e2dfb3"  # pragma: allowlist secret
+)
 
 _COMMIT_PATTERN: Final = re.compile(r"^[0-9a-f]{40}$")
 _MAX_STEPS: Final = 10_000
@@ -216,6 +232,7 @@ class WanProfileId(str, Enum):
     WAN22_ANIMATE_14B_OFFICIAL = "wan2.2.animate.14b.official-native"
     WAN_ANIMATE2_BASE_14B_OFFICIAL = "wan-animate2.14b.base.official-native"
     WAN_ANIMATE2_DISTILLED_14B_OFFICIAL = "wan-animate2.14b.distilled.official-native"
+    WAN_ANIMATE2_COMFY_OPTIMIZED_6 = "wan-animate2.14b.comfy-optimized-6.framework-reference"
 
 
 _M6_10_PROFILE_IDS: Final = frozenset(
@@ -235,6 +252,8 @@ _M6_11_PROFILE_IDS: Final = frozenset(
     }
 )
 
+_M4_18_PROFILE_IDS: Final = frozenset({WanProfileId.WAN_ANIMATE2_COMFY_OPTIMIZED_6})
+
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class WanEvidenceReference:
@@ -252,6 +271,8 @@ class WanEvidenceReference:
             "official_wan21",
             "official_wan22",
             "official_wan_animate2",
+            "comfyui_workflow",
+            "comfyui_weights",
         }:
             raise ScheduleContractError("Wan evidence lane is unsupported")
         if not isinstance(self.url, str) or not self.url.startswith("https://"):
@@ -332,10 +353,17 @@ _GPL_3_ONLY = LicenseDeclaration(
     name="GNU General Public License v3.0 only",
     url="https://www.gnu.org/licenses/gpl-3.0.html",
 )
+_MIT = LicenseDeclaration(
+    declaration_version="1",
+    identifier="MIT",
+    name="MIT License",
+    url="https://opensource.org/license/mit",
+)
 _WAN21_URL: Final = "https://github.com/Wan-Video/Wan2.1"
 _WAN22_URL: Final = "https://github.com/Wan-Video/Wan2.2"
 _WAN_ANIMATE2_URL: Final = "https://github.com/Wan-Video/Wan-Animate-2"
 _COMFYUI_URL: Final = "https://github.com/Comfy-Org/ComfyUI"
+_COMFYUI_WORKFLOWS_URL: Final = "https://github.com/Comfy-Org/workflow_templates"
 _DIFFUSERS_URL: Final = "https://github.com/huggingface/diffusers"
 _WAN21_HF_URL: Final = "https://huggingface.co/Wan-AI/Wan2.1-T2V-1.3B"
 _WAN21_I2V_480_HF_URL: Final = "https://huggingface.co/Wan-AI/Wan2.1-I2V-14B-480P"
@@ -349,6 +377,9 @@ _WAN21_VACE_14B_HF_URL: Final = "https://huggingface.co/Wan-AI/Wan2.1-VACE-14B"
 _WAN22_S2V_HF_URL: Final = "https://huggingface.co/Wan-AI/Wan2.2-S2V-14B"
 _WAN22_ANIMATE_HF_URL: Final = "https://huggingface.co/Wan-AI/Wan2.2-Animate-14B"
 _WAN_ANIMATE2_HF_URL: Final = "https://huggingface.co/Wan-AI/Wan2.2-Animate-2-14B"
+_WAN_ANIMATE2_COMFY_HF_URL: Final = (
+    "https://huggingface.co/Comfy-Org/Wan_Animate_ComfyUI_repackaged"
+)
 
 _WAN21_SOURCE = SoftwareSourceProvenance(
     record_version="1",
@@ -411,6 +442,15 @@ _WAN_ANIMATE2_SOURCE = SoftwareSourceProvenance(
         "pipelines/wan_animate_2_pipeline.py",
     ),
 )
+_WAN_ANIMATE2_COMFY_WORKFLOW_SOURCE = SoftwareSourceProvenance(
+    record_version="1",
+    source_id="comfyui.workflow.wan-animate-2.optimized.m4-18",
+    resource_version="2026-08-22",
+    revision=WAN_ANIMATE2_COMFY_WORKFLOW_REVISION,
+    url=_COMFYUI_WORKFLOWS_URL,
+    license=_MIT,
+    locators=("LICENSE", "templates/video_wan_animate2.json"),
+)
 _COMFYUI_FRAMEWORK = FrameworkProvenance(
     record_version="1",
     framework_id="comfyui.wan.framework",
@@ -472,6 +512,20 @@ _WAN_ANIMATE2_NATIVE_FRAMEWORK = FrameworkProvenance(
         "infer/wan_animate_2_demo.py",
         "infer/wan_animate_2_distillation.yaml",
         "pipelines/wan_animate_2_pipeline.py",
+    ),
+)
+_WAN_ANIMATE2_COMFY_FRAMEWORK = FrameworkProvenance(
+    record_version="1",
+    framework_id="comfyui.wan-animate-2.optimized.m4-18",
+    resource_version=None,
+    revision=WAN_ANIMATE2_COMFYUI_REVISION,
+    url=_COMFYUI_URL,
+    license=_GPL_3_ONLY,
+    locators=(
+        "comfy/model_sampling.py",
+        "comfy/samplers.py",
+        "comfy_extras/nodes_model_advanced.py",
+        "comfy_extras/nodes_wan.py",
     ),
 )
 
@@ -586,6 +640,20 @@ _WAN_ANIMATE2_DISTILLED_WEIGHT = _weight(
     sha256=_WAN_ANIMATE2_DISTILLED_SHA256,
     url=_WAN_ANIMATE2_HF_URL,
 )
+_WAN_ANIMATE2_COMFY_LORA_WEIGHT = _weight(
+    weight_id="comfy-org.wan-animate-2.optimized.lightx2v-lora",
+    resource_version="loras/lightx2v_I2V_14B_480p_cfg_step_distill_rank64_bf16.safetensors",
+    revision=WAN_ANIMATE2_COMFY_MODEL_REVISION,
+    sha256=_WAN_ANIMATE2_COMFY_LORA_SHA256,
+    url=_WAN_ANIMATE2_COMFY_HF_URL,
+)
+_WAN_ANIMATE2_COMFY_MODEL_WEIGHT = _weight(
+    weight_id="comfy-org.wan-animate-2.optimized.model",
+    resource_version="diffusion_models/wan_animate_2_int8_convrot.safetensors",
+    revision=WAN_ANIMATE2_COMFY_MODEL_REVISION,
+    sha256=_WAN_ANIMATE2_COMFY_MODEL_SHA256,
+    url=_WAN_ANIMATE2_COMFY_HF_URL,
+)
 
 _ARTIFACT_VERSIONS = ArtifactVersionDeclaration(
     numerical_schema="sigmax.numerical-schedule/1",
@@ -594,6 +662,12 @@ _ARTIFACT_VERSIONS = ArtifactVersionDeclaration(
 )
 _BASE_GRID = BaseGridDeclaration(
     identifier="flowmatch.reciprocal_step",
+    output_domain=SigmaDomain.UNIT_FLOW,
+    terminal_included=False,
+    parameters=(ProfileField(name="training_timesteps", value=_TRAINING_TIMESTEPS),),
+)
+_COMFY_SIMPLE_BASE_GRID = BaseGridDeclaration(
+    identifier="comfyui.simple_discrete_flow",
     output_domain=SigmaDomain.UNIT_FLOW,
     terminal_included=False,
     parameters=(ProfileField(name="training_timesteps", value=_TRAINING_TIMESTEPS),),
@@ -637,6 +711,7 @@ def _sampler(sampler_id: str, revision: str) -> SamplerCapabilities:
 _COMFY_SAMPLER_ID: Final = "flowmatch.euler"
 _UNIPC_SAMPLER_ID: Final = "unipc.multistep"
 _FLOW_DPM_SAMPLER_ID: Final = "flow_dpm.multistep"
+_LCM_SAMPLER_ID: Final = "lcm"
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -659,6 +734,8 @@ class _WanDefinition:
     cfg_high: float | None = None
     boundary: float | None = None
     weight: ModelWeightProvenance = _WAN21_T2V_WEIGHT
+    additional_weights: tuple[ModelWeightProvenance, ...] = ()
+    exact_steps: bool = False
 
 
 def _definition(
@@ -681,6 +758,8 @@ def _definition(
     cfg_high: float | None = None,
     boundary: float | None = None,
     weight: ModelWeightProvenance,
+    additional_weights: tuple[ModelWeightProvenance, ...] = (),
+    exact_steps: bool = False,
 ) -> _WanDefinition:
     return _WanDefinition(
         profile=profile,
@@ -701,6 +780,8 @@ def _definition(
         cfg_high=cfg_high,
         boundary=boundary,
         weight=weight,
+        additional_weights=additional_weights,
+        exact_steps=exact_steps,
     )
 
 
@@ -1035,6 +1116,25 @@ _DEFINITIONS: tuple[_WanDefinition, ...] = (
         guidance_mode="no_cfg",
         weight=_WAN_ANIMATE2_DISTILLED_WEIGHT,
     ),
+    _definition(
+        WanProfileId.WAN_ANIMATE2_COMFY_OPTIMIZED_6,
+        WanGeneration.WAN_ANIMATE2,
+        WanTask.ANIMATE,
+        WanSource.COMFY_NATIVE,
+        WanResolution.P480,
+        5.0,
+        6,
+        "comfy-optimized-14b-480p",
+        "Wan Animate 2 Comfy Optimized 14B 480P Six-Step",
+        EvidenceLevel.FRAMEWORK_REFERENCE,
+        _WAN_ANIMATE2_COMFY_WORKFLOW_SOURCE.source_id,
+        _LCM_SAMPLER_ID,
+        1.0,
+        guidance_mode="no_cfg",
+        weight=_WAN_ANIMATE2_COMFY_LORA_WEIGHT,
+        additional_weights=(_WAN_ANIMATE2_COMFY_MODEL_WEIGHT,),
+        exact_steps=True,
+    ),
 )
 
 
@@ -1089,9 +1189,47 @@ def _references(*, include_animate2: bool = False) -> tuple[WanEvidenceReference
 
 _REFERENCES = _references()
 _ANIMATE2_REFERENCES = _references(include_animate2=True)
+_COMFY_OPTIMIZED_REFERENCES = (
+    WanEvidenceReference(
+        lane="comfyui_implementation",
+        url=_COMFYUI_URL,
+        revision=WAN_ANIMATE2_COMFYUI_REVISION,
+        locators=(
+            "comfy/model_sampling.py",
+            "comfy/samplers.py",
+            "comfy_extras/nodes_model_advanced.py",
+            "comfy_extras/nodes_wan.py",
+        ),
+    ),
+    WanEvidenceReference(
+        lane="comfyui_weights",
+        url=_WAN_ANIMATE2_COMFY_HF_URL,
+        revision=WAN_ANIMATE2_COMFY_MODEL_REVISION,
+        locators=("README.md",),
+    ),
+    WanEvidenceReference(
+        lane="comfyui_workflow",
+        url=_COMFYUI_WORKFLOWS_URL,
+        revision=WAN_ANIMATE2_COMFY_WORKFLOW_REVISION,
+        locators=("LICENSE", "templates/video_wan_animate2.json"),
+    ),
+    WanEvidenceReference(
+        lane="official_wan_animate2",
+        url=_WAN_ANIMATE2_URL,
+        revision=WAN_ANIMATE2_REPOSITORY_REVISION,
+        locators=(
+            "LICENSE",
+            "README.md",
+            "infer/wan_animate_2_demo.py",
+            "pipelines/wan_animate_2_pipeline.py",
+        ),
+    ),
+)
 
 
 def _source_for(definition: _WanDefinition) -> str:
+    if definition.profile in _M4_18_PROFILE_IDS:
+        return _COMFYUI_WORKFLOWS_URL
     if definition.source is WanSource.COMFY_NATIVE:
         return _COMFYUI_URL
     if definition.source is WanSource.DIFFUSERS_REFERENCE:
@@ -1104,6 +1242,8 @@ def _source_for(definition: _WanDefinition) -> str:
 
 
 def _revision_for(definition: _WanDefinition) -> str:
+    if definition.profile in _M4_18_PROFILE_IDS:
+        return WAN_ANIMATE2_COMFY_WORKFLOW_REVISION
     if definition.source is WanSource.COMFY_NATIVE:
         return WAN_COMFYUI_REVISION
     if definition.source is WanSource.DIFFUSERS_REFERENCE:
@@ -1142,7 +1282,10 @@ def _schema(definition: _WanDefinition) -> ProfileSchemaV1:
         reference_sampler_ids=(definition.sampler_id,),
     )
     frameworks: tuple[FrameworkProvenance, ...]
-    if definition.profile in _M6_10_PROFILE_IDS:
+    if definition.profile in _M4_18_PROFILE_IDS:
+        source_ids = (_WAN_ANIMATE2_COMFY_WORKFLOW_SOURCE,)
+        frameworks = (_WAN_ANIMATE2_COMFY_FRAMEWORK,)
+    elif definition.profile in _M6_10_PROFILE_IDS:
         source_ids = (
             (_WAN21_M6_10_SOURCE,)
             if definition.generation is WanGeneration.WAN21
@@ -1194,6 +1337,19 @@ def _schema(definition: _WanDefinition) -> ProfileSchemaV1:
                 ),
             )
         )
+    if definition.profile in _M4_18_PROFILE_IDS:
+        parameters.extend(
+            (
+                ProfileField(name="fps_max", value=24),
+                ProfileField(name="fps_min", value=16),
+                ProfileField(name="frame_overlap", value=1),
+                ProfileField(name="frame_step", value=4),
+                ProfileField(name="guidance_mode", value=definition.guidance_mode),
+                ProfileField(name="recommended_frames", value=81),
+                ProfileField(name="scheduler", value="simple"),
+                ProfileField(name="solver_options", value="lcm"),
+            )
+        )
     parameters = sorted(parameters, key=lambda field: field.name)
     limitations = [
         "Only the exact released Wan generation/task/source matrix is qualified; derivative wrappers and weak-name aliases fail closed.",
@@ -1208,11 +1364,22 @@ def _schema(definition: _WanDefinition) -> ProfileSchemaV1:
         limitations.append(
             "The A14B boundary is caller-owned metadata; Sigmax never selects a high/low expert or dispatches a model."
         )
-    if definition.resolution is not WanResolution.NONE:
+    if (
+        definition.resolution is not WanResolution.NONE
+        and definition.profile not in _M4_18_PROFILE_IDS
+    ):
         limitations.append(
             "The resolution class is required because the official Wan I2V shift is resolution-sensitive."
         )
-    if definition.profile in _M6_10_PROFILE_IDS:
+    if definition.profile in _M4_18_PROFILE_IDS:
+        limitations.extend(
+            (
+                "The exact ComfyUI model and step-distilled LoRA are recipe requirements; substituting either artifact is outside this framework-reference profile.",
+                "Sigmax constructs the source-exact simple sigmas but does not implement or execute LCM, load weights, or apply the LoRA.",
+                "Eighty-one frames is tested chunk guidance with one-frame continuation overlap, not a hard ComfyUI node maximum or an automatic segmentation feature.",
+            )
+        )
+    elif definition.profile in _M6_10_PROFILE_IDS:
         limitations.append(
             "The official CLI defaults to UniPC and also permits DPM++; this profile constructs sigmas but implements neither solver."
         )
@@ -1241,11 +1408,11 @@ def _schema(definition: _WanDefinition) -> ProfileSchemaV1:
         evidence=definition.evidence,
         source_id=definition.primary_source_id,
         steps=StepRangeDeclaration(
-            minimum=1,
-            maximum=_MAX_STEPS,
+            minimum=definition.steps if definition.exact_steps else 1,
+            maximum=definition.steps if definition.exact_steps else _MAX_STEPS,
             default=definition.steps,
             reference_steps=(definition.steps,),
-            allow_modified=True,
+            allow_modified=not definition.exact_steps,
         ),
         guidance=guidance,
     )
@@ -1262,7 +1429,9 @@ def _schema(definition: _WanDefinition) -> ProfileSchemaV1:
         prediction_type=PredictionType.FLOW_VELOCITY,
         sigma_domain=SigmaDomain.UNIT_FLOW,
         ownership=ScheduleOwnership.EXTERNAL_SIGMAS,
-        base_grid=_BASE_GRID,
+        base_grid=(
+            _COMFY_SIMPLE_BASE_GRID if definition.profile in _M4_18_PROFILE_IDS else _BASE_GRID
+        ),
         transforms=(
             TransformDeclaration(
                 identifier="direct_ratio.shift",
@@ -1288,7 +1457,12 @@ def _schema(definition: _WanDefinition) -> ProfileSchemaV1:
         artifact_versions=_ARTIFACT_VERSIONS,
         software_sources=tuple(sorted(source_ids, key=lambda item: item.source_id)),
         frameworks=tuple(sorted(frameworks, key=lambda item: item.framework_id)),
-        model_weights=(definition.weight,),
+        model_weights=tuple(
+            sorted(
+                (definition.weight, *definition.additional_weights),
+                key=lambda item: item.weight_id,
+            )
+        ),
         parameters=tuple(parameters),
         known_limitations=tuple(limitations),
     )
@@ -1323,6 +1497,9 @@ WAN_ANIMATE2_BASE_14B_OFFICIAL_SCHEMA: Final = _SCHEMAS_BY_PROFILE[
 ]
 WAN_ANIMATE2_DISTILLED_14B_OFFICIAL_SCHEMA: Final = _SCHEMAS_BY_PROFILE[
     WanProfileId.WAN_ANIMATE2_DISTILLED_14B_OFFICIAL
+]
+WAN_ANIMATE2_COMFY_OPTIMIZED_6_SCHEMA: Final = _SCHEMAS_BY_PROFILE[
+    WanProfileId.WAN_ANIMATE2_COMFY_OPTIMIZED_6
 ]
 
 
@@ -1363,13 +1540,17 @@ _PROFILES_BY_ID = {
     profile: WanProfile(
         profile=profile,
         schema=schema,
-        references=_ANIMATE2_REFERENCES
-        if profile
-        in {
-            WanProfileId.WAN_ANIMATE2_BASE_14B_OFFICIAL,
-            WanProfileId.WAN_ANIMATE2_DISTILLED_14B_OFFICIAL,
-        }
-        else _REFERENCES,
+        references=(
+            _COMFY_OPTIMIZED_REFERENCES
+            if profile in _M4_18_PROFILE_IDS
+            else _ANIMATE2_REFERENCES
+            if profile
+            in {
+                WanProfileId.WAN_ANIMATE2_BASE_14B_OFFICIAL,
+                WanProfileId.WAN_ANIMATE2_DISTILLED_14B_OFFICIAL,
+            }
+            else _REFERENCES
+        ),
     )
     for profile, schema in _SCHEMAS_BY_PROFILE.items()
 }
@@ -1399,6 +1580,9 @@ WAN_ANIMATE2_BASE_14B_OFFICIAL_PROFILE: Final = _PROFILES_BY_ID[
 ]
 WAN_ANIMATE2_DISTILLED_14B_OFFICIAL_PROFILE: Final = _PROFILES_BY_ID[
     WanProfileId.WAN_ANIMATE2_DISTILLED_14B_OFFICIAL
+]
+WAN_ANIMATE2_COMFY_OPTIMIZED_6_PROFILE: Final = _PROFILES_BY_ID[
+    WanProfileId.WAN_ANIMATE2_COMFY_OPTIMIZED_6
 ]
 
 
@@ -1494,6 +1678,10 @@ def build_wan_schedule(
                 f"resolution {definition.resolution.value} is required for {selected.value}"
             )
         raise ScheduleContractError("resolution must be none for this Wan profile")
+    if definition.exact_steps and steps != definition.steps:
+        raise ScheduleContractError(
+            f"{definition.profile.value} requires exactly {definition.steps} steps"
+        )
     if strict_source and steps != definition.steps:
         raise ScheduleContractError(
             f"steps must equal the pinned {definition.profile.value} {definition.steps}-step recipe"
@@ -1506,8 +1694,19 @@ def build_wan_schedule(
             f"steps differ from the pinned {definition.profile.value} {definition.steps}-step recipe; evidence is modified",
         )
     )
+    base_grid = (
+        comfyui_simple_discrete_flow_grid(
+            steps,
+            training_timesteps=_TRAINING_TIMESTEPS,
+            domain=SigmaDomain.UNIT_FLOW,
+        )
+        if definition.profile in _M4_18_PROFILE_IDS
+        else flowmatch_reciprocal_step_grid(steps)
+    )
     shifted = direct_ratio_shift(
-        flowmatch_reciprocal_step_grid(steps), ratio=definition.ratio, domain=SigmaDomain.UNIT_FLOW
+        base_grid,
+        ratio=definition.ratio,
+        domain=SigmaDomain.UNIT_FLOW,
     )
     sigmas = apply_terminal_policy(
         shifted, policy=TerminalPolicy.APPEND_ZERO, domain=SigmaDomain.UNIT_FLOW
@@ -1525,7 +1724,12 @@ def build_wan_schedule(
             profile_version="1",
         ),
         base_grid=BaseGridSpec(
-            identifier="flowmatch.reciprocal_step", output_domain=SigmaDomain.UNIT_FLOW
+            identifier=(
+                "comfyui.simple_discrete_flow"
+                if definition.profile in _M4_18_PROFILE_IDS
+                else "flowmatch.reciprocal_step"
+            ),
+            output_domain=SigmaDomain.UNIT_FLOW,
         ),
         transforms=(
             TransformContract(
@@ -1610,6 +1814,11 @@ __all__ = [
     "WAN22_TI2V_5B_NATIVE_SCHEMA",
     "WAN_ANIMATE2_BASE_14B_OFFICIAL_PROFILE",
     "WAN_ANIMATE2_BASE_14B_OFFICIAL_SCHEMA",
+    "WAN_ANIMATE2_COMFYUI_REVISION",
+    "WAN_ANIMATE2_COMFY_MODEL_REVISION",
+    "WAN_ANIMATE2_COMFY_OPTIMIZED_6_PROFILE",
+    "WAN_ANIMATE2_COMFY_OPTIMIZED_6_SCHEMA",
+    "WAN_ANIMATE2_COMFY_WORKFLOW_REVISION",
     "WAN_ANIMATE2_DISTILLED_14B_OFFICIAL_PROFILE",
     "WAN_ANIMATE2_DISTILLED_14B_OFFICIAL_SCHEMA",
     "WAN_ANIMATE2_MODEL_REVISION",

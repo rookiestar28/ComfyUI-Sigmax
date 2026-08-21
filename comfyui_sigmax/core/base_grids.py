@@ -44,6 +44,32 @@ def flowmatch_reciprocal_step_grid(
     return tuple((count - index) / count for index in range(count))
 
 
+def comfyui_simple_discrete_flow_grid(
+    steps: int,
+    *,
+    training_timesteps: int = 1000,
+    domain: SigmaDomain = SigmaDomain.UNIT_FLOW,
+) -> tuple[float, ...]:
+    """Select ComfyUI ``simple`` points from a discrete-flow model table."""
+
+    count = _require_integer_count(steps, minimum=1, label="steps")
+    table_count = _require_integer_count(
+        training_timesteps,
+        minimum=1,
+        label="training_timesteps",
+    )
+    if domain is not SigmaDomain.UNIT_FLOW:
+        raise ScheduleContractError(
+            "ComfyUI simple discrete-flow grid requires the UNIT_FLOW domain"
+        )
+    if count > table_count:
+        raise ScheduleContractError("steps must not exceed the discrete-flow training table")
+    # IMPORTANT: retain integer table selection; a continuous reciprocal grid is not source-exact.
+    return tuple(
+        (table_count - (index * table_count // count)) / table_count for index in range(count)
+    )
+
+
 def linear_endpoint_grid(
     *,
     points: int,

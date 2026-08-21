@@ -1,0 +1,47 @@
+{
+  "schema": "sigmax.wan-m4-18-golden/1",
+  "source_revisions": {
+    "comfyui_chunks": ["76135e55", "7da1ec7d", "cb270160", "f01e5975", "65e3e003"],
+    "workflow_templates_chunks": ["e95e3b20", "567bea8d", "f16510c8", "390b7f89", "7b7e6d4b"]
+  },
+  "profile_id": "wan-animate2.14b.comfy-optimized-6.framework-reference",
+  "resolution": "480p",
+  "steps": 6,
+  "base_grid": {
+    "identifier": "comfyui.simple_discrete_flow",
+    "training_timesteps": 1000,
+    "float64": [1.0, 0.834, 0.667, 0.5, 0.334, 0.167]
+  },
+  "shift": {
+    "kind": "direct_ratio",
+    "ratio": 5.0
+  },
+  "sigmas": {
+    "float64": [
+      1.0,
+      0.9617158671586715,
+      0.9092148309705561,
+      0.8333333333333334,
+      0.7148972602739726,
+      0.500599520383693,
+      0.0
+    ],
+    "float32": [
+      1.0,
+      0.9617158770561218,
+      0.9092148542404175,
+      0.8333333134651184,
+      0.7148972749710083,
+      0.5005995035171509,
+      0.0
+    ]
+  },
+  "fingerprints": {
+    "float64": "sha256:7ad21e66d5eeb9478480c842a7d5acffe5aad7d5080c8fadbdb462651f3a6974",
+    "float32": "sha256:1bc1f73bd9a7efa003579d7eb159cae95c1a7ed017a04dc716cfab366adfd768"
+  },
+  "tolerances": {
+    "float64_max_abs": 1e-15,
+    "float32_max_abs": 1e-7
+  }
+}

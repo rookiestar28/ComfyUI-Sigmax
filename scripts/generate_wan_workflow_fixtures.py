@@ -56,7 +56,11 @@ def _fixture(
     info = json.loads(result.schedule_info_json)
     construction = {
         "base_grid": {
-            "id": "flowmatch.reciprocal_step",
+            "id": (
+                "comfyui.simple_discrete_flow"
+                if profile_id == "wan-animate2.14b.comfy-optimized-6.framework-reference"
+                else "flowmatch.reciprocal_step"
+            ),
             "parameters": {"training_timesteps": 1000},
         },
         "effective": {"steps": steps},
@@ -279,6 +283,16 @@ def main(arguments: Sequence[str] | None = None) -> int:
                 resolution="None",
                 steps=10,
                 profile_id="wan-animate2.14b.distilled.official-native",
+            ),
+            _fixture(
+                identifier="wan-animate2-comfy-optimized-14b-480p-6",
+                variant="Wan Animate 2 Comfy Optimized 14B 480P",
+                generation="Wan Animate 2",
+                task="Animate Optimized",
+                source="ComfyUI native",
+                resolution="480P",
+                steps=6,
+                profile_id="wan-animate2.14b.comfy-optimized-6.framework-reference",
             ),
         )
     )

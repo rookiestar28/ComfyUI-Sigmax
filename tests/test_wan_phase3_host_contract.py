@@ -21,6 +21,7 @@ _CASES = (
     ("Wan 2.2", "Animate", "Official native", "None", 20),
     ("Wan Animate 2", "Animate Base", "Official native", "None", 40),
     ("Wan Animate 2", "Animate Distilled", "Official native", "None", 10),
+    ("Wan Animate 2", "Animate Optimized", "ComfyUI native", "480P", 6),
 )
 
 

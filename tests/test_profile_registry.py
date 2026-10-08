@@ -156,6 +156,12 @@ def test_profile_key_from_schema_requires_a_complete_schema() -> None:
 
 
 def test_builtin_registry_is_deterministic_exact_and_immutable() -> None:
+    from comfyui_sigmax.profiles.qwen_native import (
+        QWEN21_COMFY_NATIVE_PROFILE,
+        QWEN21_DYNAMIC_PROFILE,
+        QWEN_ORIGINAL_NATIVE_PROFILE,
+    )
+
     registry = builtin_profile_registry()
 
     assert tuple(entry.key for entry in registry.entries) == (
@@ -180,7 +186,10 @@ def test_builtin_registry_is_deterministic_exact_and_immutable() -> None:
         ProfileKey.from_schema(MINIMAX_H3_BASE_FL2VA_SCHEMA),
         ProfileKey.from_schema(MINIMAX_H3_BASE_REF2VA_SCHEMA),
         ProfileKey.from_schema(QWEN_IMAGE_COMFY_FIXED_SCHEMA),
+        ProfileKey.from_schema(QWEN_ORIGINAL_NATIVE_PROFILE.schema),
         ProfileKey.from_schema(QWEN_IMAGE_DIFFUSERS_DYNAMIC_SCHEMA),
+        ProfileKey.from_schema(QWEN21_COMFY_NATIVE_PROFILE.schema),
+        ProfileKey.from_schema(QWEN21_DYNAMIC_PROFILE.schema),
         ProfileKey.from_schema(SD3_COMFY_DIFFUSERS_SCHEMA),
         ProfileKey.from_schema(SD3_PUBLISHER_REFERENCE_SCHEMA),
         ProfileKey.from_schema(WAN_ANIMATE2_BASE_14B_OFFICIAL_SCHEMA),
@@ -236,8 +245,8 @@ def test_external_registration_returns_a_new_canonical_snapshot() -> None:
     entry = updated.resolve(ProfileKey.from_schema(schema))
 
     assert updated is not registry
-    assert len(registry.entries) == 47
-    assert len(updated.entries) == 48
+    assert len(registry.entries) == 50
+    assert len(updated.entries) == 51
     assert entry.origin is ProfileOrigin.EXTERNAL
     assert entry.schema is schema
     assert entry.inheritance == _turbo_inheritance()

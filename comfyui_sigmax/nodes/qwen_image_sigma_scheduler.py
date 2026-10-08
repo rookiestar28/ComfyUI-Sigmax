@@ -22,6 +22,13 @@ from comfyui_sigmax.profiles.qwen_image import (
     build_qwen_image_schedule,
     calculate_qwen_image_mu,
 )
+from comfyui_sigmax.profiles.qwen_native import (
+    QWEN_NATIVE_COMFYUI_REVISION,
+    QWEN_ORIGINAL_NATIVE_PROFILE,
+    QwenNativeLane,
+    QwenNativeRequest,
+    build_qwen_native_schedule,
+)
 
 QWEN_IMAGE_SIGMA_NODE_ID: Final = "Sigmax.QwenImageSigmaScheduler"
 QWEN_IMAGE_SIGMA_NODE_SCHEMA_ID: Final = "sigmax.qwen-image-sigma-node/1"
@@ -39,7 +46,7 @@ class QwenImageSigmaNodeResult:
     schedule_info_json: str
 
     def __post_init__(self) -> None:
-        if self.mode not in {"Comfy Fixed", "Diffusers Dynamic"}:
+        if self.mode not in {"Comfy Fixed", "Diffusers Dynamic", "Comfy Native"}:
             raise ScheduleContractError("Qwen Image node mode is unsupported")
         if self.domain is not SigmaDomain.UNIT_FLOW:
             raise ScheduleContractError("Qwen Image node requires UNIT_FLOW")
@@ -47,12 +54,14 @@ class QwenImageSigmaNodeResult:
             raise ScheduleContractError("Qwen Image node result is incomplete")
 
 
-def _mode(value: object) -> tuple[str, QwenImageShiftMode]:
+def _mode(value: object) -> tuple[str, QwenImageShiftMode | QwenNativeLane]:
     if value == "Comfy Fixed":
         return "Comfy Fixed", QwenImageShiftMode.COMFY_FIXED
     if value == "Diffusers Dynamic":
         return "Diffusers Dynamic", QwenImageShiftMode.DIFFUSERS_DYNAMIC
-    raise ScheduleContractError("mode must be Comfy Fixed or Diffusers Dynamic")
+    if value == "Comfy Native":
+        return "Comfy Native", QwenNativeLane.ORIGINAL_COMFY
+    raise ScheduleContractError("mode must be Comfy Fixed, Diffusers Dynamic or Comfy Native")
 
 
 def _positive_steps(value: object) -> int:
@@ -117,33 +126,53 @@ def build_qwen_image_sigma_schedule(
     sequence_length = _sequence_length(image_seq_len)
     if not isinstance(strict_official, bool):
         raise ScheduleContractError("strict_official must be boolean")
-    complete = build_qwen_image_schedule(
-        mode=internal_mode,
-        steps=count,
-        image_seq_len=sequence_length,
-        strict_official=strict_official,
-    )
+    if isinstance(internal_mode, QwenNativeLane):
+        if sequence_length != 0:
+            raise ScheduleContractError("native mode requires image_seq_len=0")
+        # CRITICAL: preserve legacy default/value positions; only explicit native selection uses
+        # exponential mu and the host table. Replacing the old ratio changes saved workflows.
+        complete = build_qwen_native_schedule(
+            QwenNativeRequest(lane=internal_mode, steps=count, strict_official=strict_official)
+        ).schedule
+        profile_id = QWEN_ORIGINAL_NATIVE_PROFILE.schema.profile_id
+        profile_version = QWEN_ORIGINAL_NATIVE_PROFILE.schema.profile_version
+    else:
+        complete = build_qwen_image_schedule(
+            mode=internal_mode,
+            steps=count,
+            image_seq_len=sequence_length,
+            strict_official=strict_official,
+        )
+        profile = (
+            QWEN_IMAGE_COMFY_FIXED_PROFILE
+            if internal_mode is QwenImageShiftMode.COMFY_FIXED
+            else QWEN_IMAGE_DIFFUSERS_DYNAMIC_PROFILE
+        )
+        profile_id, profile_version = profile.profile_id, profile.profile_version
     start, end = _slice_bounds(
         start_step=start_step,
         end_step=end_step,
         available_steps=complete.effective_inputs.steps,
     )
     output = slice_step_range(complete.sigmas, start_step=start, end_step=end)
-    profile = (
-        QWEN_IMAGE_COMFY_FIXED_PROFILE
-        if internal_mode is QwenImageShiftMode.COMFY_FIXED
-        else QWEN_IMAGE_DIFFUSERS_DYNAMIC_PROFILE
-    )
     evidence = complete.request.provenance.evidence
     recipe = (
-        profile.profile_id
+        profile_id
         if evidence is not None and evidence.value != "modified"
-        else f"{profile.profile_id}.modified-{count}"
+        else f"{profile_id}.modified-{count}"
     )
     effective_end = count if end is None else end
     shift: dict[str, object]
     if internal_mode is QwenImageShiftMode.COMFY_FIXED:
         shift = {"dynamic": False, "kind": "fixed_direct_ratio", "ratio": 1.15}
+    elif internal_mode is QwenNativeLane.ORIGINAL_COMFY:
+        shift = {
+            "dynamic": False,
+            "kind": "exponential_mu",
+            "mu": 1.15,
+            "training_timesteps": 10000,
+            "source_revision": QWEN_NATIVE_COMFYUI_REVISION,
+        }
     else:
         mu = calculate_qwen_image_mu(sequence_length)
         shift = {
@@ -166,10 +195,10 @@ def build_qwen_image_sigma_schedule(
         "guidance": {"host_true_cfg": 4.0, "model_guidance": 0.0},
         "profile": {
             "evidence": evidence.value,
-            "id": profile.profile_id,
+            "id": profile_id,
             "recipe": recipe,
             "variant": "original",
-            "version": profile.profile_version,
+            "version": profile_version,
         },
         "schema": QWEN_IMAGE_SIGMA_NODE_SCHEMA_ID,
         "shift": shift,
@@ -182,6 +211,11 @@ def build_qwen_image_sigma_schedule(
         "strict_official": strict_official,
         "warnings": list(complete.warnings),
     }
+    if internal_mode is QwenImageShiftMode.COMFY_FIXED:
+        info["warnings"] = [
+            *complete.warnings,
+            "Legacy direct-ratio mode is preserved; select Comfy Native explicitly for native exponential mu.",
+        ]
     return QwenImageSigmaNodeResult(
         mode=public_mode,
         domain=complete.final_domain,
@@ -213,7 +247,7 @@ def bind_qwen_image_sigma_output_info(
 class QwenImageSigmaScheduler:
     """Construct explicit original-Qwen external sigmas without model patching."""
 
-    DESCRIPTION = "Builds an explicit original Qwen Image fixed or dynamic sigma schedule."
+    DESCRIPTION = "Original Qwen external sigmas: legacy ratio, dynamic or explicit Comfy Native."
     CATEGORY = "Sigmax/scheduling"
     FUNCTION = "build"
     RETURN_TYPES = ("SIGMAS", "STRING")
@@ -225,7 +259,7 @@ class QwenImageSigmaScheduler:
     def INPUT_TYPES(cls) -> dict[str, dict[str, tuple[object, ...]]]:
         return {
             "required": {
-                "mode": (("Comfy Fixed", "Diffusers Dynamic"),),
+                "mode": (("Comfy Fixed", "Diffusers Dynamic", "Comfy Native"),),
                 "steps": ("INT", {"default": 50, "min": 1, "max": _MAX_STEPS, "step": 1}),
                 "image_seq_len": (
                     "INT",

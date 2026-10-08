@@ -302,6 +302,11 @@ def builtin_profile_registry() -> ProfileRegistry:
         QWEN_IMAGE_COMFY_FIXED_SCHEMA,
         QWEN_IMAGE_DIFFUSERS_DYNAMIC_SCHEMA,
     )
+    from comfyui_sigmax.profiles.qwen_native import (
+        QWEN21_COMFY_NATIVE_PROFILE,
+        QWEN21_DYNAMIC_PROFILE,
+        QWEN_ORIGINAL_NATIVE_PROFILE,
+    )
     from comfyui_sigmax.profiles.sd3 import (
         SD3_COMFY_DIFFUSERS_SCHEMA,
         SD3_PUBLISHER_REFERENCE_SCHEMA,
@@ -357,6 +362,9 @@ def builtin_profile_registry() -> ProfileRegistry:
                     _builtin_entry(HUNYUAN_IMAGE21_BASE_SCHEMA),
                     _builtin_entry(HUNYUAN_IMAGE21_DISTILLED_SCHEMA),
                     _builtin_entry(QWEN_IMAGE_COMFY_FIXED_SCHEMA),
+                    _builtin_entry(QWEN_ORIGINAL_NATIVE_PROFILE.schema),
+                    _builtin_entry(QWEN21_COMFY_NATIVE_PROFILE.schema),
+                    _builtin_entry(QWEN21_DYNAMIC_PROFILE.schema),
                     _builtin_entry(QWEN_IMAGE_DIFFUSERS_DYNAMIC_SCHEMA),
                     _builtin_entry(SD3_COMFY_DIFFUSERS_SCHEMA),
                     _builtin_entry(SD3_PUBLISHER_REFERENCE_SCHEMA),

@@ -2357,6 +2357,7 @@ def verify_minimax_h3_native_h2_history(
         {
             "0.30.0": "model_sampling_discrete_flow_h3_v030",
             "0.32.0": "model_sampling_av_v032",
+            "0.39.0": "model_sampling_av_v032",
         }.get(host_version)
         if isinstance(host_version, str)
         else None
@@ -2474,6 +2475,7 @@ def verify_minimax_h3_native_matrix_h2_history(
         {
             "0.30.0": "model_sampling_discrete_flow_h3_v030",
             "0.32.0": "model_sampling_av_v032",
+            "0.39.0": "model_sampling_av_v032",
         }.get(host_version)
         if isinstance(host_version, str)
         else None

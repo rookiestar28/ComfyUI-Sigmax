@@ -203,6 +203,39 @@ def test_native_adapter_delegates_once_and_mirrors_basic_scheduler_tail(
     assert result.validation.output_fingerprint.startswith("sha256:")
 
 
+@pytest.mark.parametrize("scheduler", MINIMAX_H3_NATIVE_SCHEDULERS)
+def test_current_039_host_delegates_without_a_second_shift(
+    monkeypatch: pytest.MonkeyPatch, scheduler: str
+) -> None:
+    calls = _install_host_modules(monkeypatch, version="0.39.0")
+    model = _Model(
+        transformer_options={
+            "minimax_h3_sigma_shift_video": 12.0,
+            "minimax_h3_sigma_shift_audio": 3.0,
+        }
+    )
+    result = adapter.build_minimax_h3_native_schedule(
+        model=model,
+        scheduler=scheduler,
+        variant="H3 Base FL2VA",
+        steps=4,
+        start_step=1,
+        end_step=3,
+        recipe_id=None,
+    )
+    assert calls == [(model._sampling, scheduler, 4)]
+    assert isinstance(model._sampling, _Sampling)
+    assert model._sampling.shift == 12.0
+    assert model._sampling.audio_shift == 3.0
+    assert result.host_version == "0.39.0"
+    assert result.qualified_host_revision == (
+        "87c32827017c50c6a629da941439015b4ad656e6"  # pragma: allowlist secret
+    )
+    assert result.validation.output_sigmas == (0.6, 0.4, 0.2)
+    assert result.validation.sampling_api is not None
+    assert result.validation.sampling_api.value == "model_sampling_av_v032"
+
+
 def test_legacy_host_accepts_discrete_flow_only_with_complete_shift_markers(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

@@ -114,6 +114,12 @@ from comfyui_sigmax.nodes.model_aware_sigma_scheduler import (
     build_model_aware_sigma_schedule,
     probe_model_family,
 )
+from comfyui_sigmax.nodes.qwen_image21_sigma_scheduler import (
+    QWEN_IMAGE21_SIGMA_NODE_ID,
+    QWEN_IMAGE21_SIGMA_NODE_SCHEMA_ID,
+    QwenImage21SigmaScheduler,
+    build_qwen_image21_sigma_schedule,
+)
 from comfyui_sigmax.nodes.qwen_image_sigma_scheduler import (
     QWEN_IMAGE_SIGMA_NODE_ID,
     QWEN_IMAGE_SIGMA_NODE_SCHEMA_ID,
@@ -208,6 +214,8 @@ __all__ = [
     "NO_LOCAL_SAFETENSORS_CHOICE",
     "PROFILE_INSPECTOR_NODE_ID",
     "PROFILE_INSPECTOR_SCHEMA_ID",
+    "QWEN_IMAGE21_SIGMA_NODE_ID",
+    "QWEN_IMAGE21_SIGMA_NODE_SCHEMA_ID",
     "QWEN_IMAGE_SIGMA_NODE_ID",
     "QWEN_IMAGE_SIGMA_NODE_SCHEMA_ID",
     "RAW_WORKFLOW_BUNDLE_UI_KEY",
@@ -261,6 +269,7 @@ __all__ = [
     "ModelFamilyProbe",
     "ProfileInspector",
     "ProfileInspectorResult",
+    "QwenImage21SigmaScheduler",
     "QwenImageSigmaNodeResult",
     "QwenImageSigmaScheduler",
     "RawWorkflowOutput",
@@ -305,6 +314,7 @@ __all__ = [
     "build_minimax_h3_sigma_schedule",
     "build_model_aware_sigma_schedule",
     "build_profile_inspection",
+    "build_qwen_image21_sigma_schedule",
     "build_qwen_image_sigma_schedule",
     "build_raw_workflow_output",
     "build_schedule_comparison",

@@ -89,6 +89,10 @@ def test_packaged_manifest_freezes_the_complete_m8_01_boundary() -> None:
         },
         {"id": "Sigmax.ProfileInspector", "schema": "sigmax.profile-inspector/1"},
         {
+            "id": "Sigmax.QwenImage21SigmaScheduler",
+            "schema": "sigmax.qwen-image21-sigma-node/1",
+        },
+        {
             "id": "Sigmax.QwenImageSigmaScheduler",
             "schema": "sigmax.qwen-image-sigma-node/1",
         },

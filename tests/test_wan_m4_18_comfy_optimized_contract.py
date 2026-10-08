@@ -150,7 +150,7 @@ def test_comfy_optimized_profile_is_exported_registered_and_node_selectable() ->
     assert ProfileKey.from_schema(profile.schema) in {
         entry.key for entry in builtin_profile_registry().entries
     }
-    assert len(builtin_profile_registry().entries) == 47
+    assert len(builtin_profile_registry().entries) == 50
     assert "Animate Optimized" in node._TASKS
     result = node.build_wan_sigma_schedule(
         generation="Wan Animate 2",

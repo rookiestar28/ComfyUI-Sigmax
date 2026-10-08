@@ -255,7 +255,7 @@ def test_m6_11_native_profiles_are_exported_registered_in_the_successor_wan_node
         for profile_id, _resolution in node._PROFILES.values()
         if profile_id in native_ids
     }
-    assert len(registry.entries) == 47
+    assert len(registry.entries) == 50
 
 
 def test_m6_11_schedule_semantics_are_strict_and_single_shifted() -> None:

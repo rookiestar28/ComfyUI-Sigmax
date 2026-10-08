@@ -1139,6 +1139,7 @@ class MiniMaxH3NativeScheduleProbe:
             {
                 "0.30.0": "model_sampling_discrete_flow_h3_v030",
                 "0.32.0": "model_sampling_av_v032",
+                "0.39.0": "model_sampling_av_v032",
             }.get(host_version)
             if isinstance(host_version, str)
             else None
@@ -1528,6 +1529,85 @@ class QwenImageScheduleProbe:
                 ]
             }
         }
+
+
+class QwenNativeScheduleProbe:
+    """Compare emitted float32 sigmas to actual native host table, without weights."""
+
+    CATEGORY = "SigmaxTest"
+    FUNCTION = "execute"
+    OUTPUT_NODE = True
+    RETURN_TYPES: tuple[()] = ()
+
+    @classmethod
+    def INPUT_TYPES(cls) -> dict[str, dict[str, tuple[object, ...]]]:
+        return {"required": {"sigmas": ("SIGMAS",), "schedule_info": ("STRING",)}}
+
+    def execute(self, sigmas: object, schedule_info: object) -> dict[str, object]:
+        if not isinstance(sigmas, torch.Tensor) or sigmas.device.type != "cpu":
+            raise ValueError("Qwen native sigmas must be CPU tensor")
+        if sigmas.dtype != torch.float32 or sigmas.ndim != 1 or not isinstance(schedule_info, str):
+            raise ValueError("Qwen native trace requires float32 sigmas and text metadata")
+        info = json.loads(schedule_info)
+        profile_id = info["profile"]["id"]
+        allowed = {
+            "qwen_image.comfy-native.framework-reference",
+            "qwen_image21.comfy-native.framework-reference",
+            "qwen_image21.diffusers-dynamic.framework-reference",
+        }
+        if profile_id not in allowed:
+            raise ValueError("Qwen probe requires an explicit source-qualified identity")
+        bounds = info["slicing"]
+        if profile_id == "qwen_image21.diffusers-dynamic.framework-reference":
+            if (
+                len(sigmas) != bounds["output_steps"] + 1
+                or not torch.isfinite(sigmas).all()
+                or any(float(a) <= float(b) for a, b in pairwise(sigmas))
+            ):
+                raise ValueError("Qwen 2.1 dynamic emitted vector contract drift")
+            trace = {
+                "schedule_info": info,
+                "sigmas": _vector(sigmas),
+                "reference_kind": "independent_source_golden_checked_by_runner",
+                "dtype": "float32",
+                "device": "cpu",
+                "runtime": {"python": platform.python_version(), "torch": torch.__version__},
+            }
+            return {
+                "ui": {"sigmax_qwen_native": [json.dumps(trace, allow_nan=False, sort_keys=True)]}
+            }
+        model_class = (
+            supported_models.QwenImage
+            if profile_id.startswith("qwen_image.")
+            else supported_models.QwenImage21
+        )
+        settings = model_class.sampling_settings
+        # CRITICAL: use actual supported-model settings and actual Flux table, not the Sigmax
+        # implementation under test; otherwise a shared ratio/mu bug could pass differential proof.
+        sampling = comfy_model_sampling.ModelSamplingFlux(
+            SimpleNamespace(sampling_settings=settings)
+        )
+        expected = comfy_samplers.simple_scheduler(sampling, bounds["available_steps"])
+        expected = expected[bounds["start_step"] : bounds["end_step"] + 1]
+        if len(expected) != len(sigmas) or not torch.isfinite(sigmas).all():
+            raise ValueError("Qwen native vector length/finiteness drift")
+        errors = torch.abs(sigmas.double() - expected.double())
+        maximum = float(errors.max())
+        if maximum > 2e-7 or any(float(a) <= float(b) for a, b in pairwise(sigmas)):
+            raise ValueError("Qwen native full-vector differential parity failed")
+        trace = {
+            "schedule_info": info,
+            "sigmas": _vector(sigmas),
+            "native_sigmas": _vector(expected),
+            "max_abs_error": maximum,
+            "mean_abs_error": float(errors.mean()),
+            "tolerance": 2e-7,
+            "dtype": "float32",
+            "device": "cpu",
+            "mu": sampling.shift,
+            "runtime": {"python": platform.python_version(), "torch": torch.__version__},
+        }
+        return {"ui": {"sigmax_qwen_native": [json.dumps(trace, allow_nan=False, sort_keys=True)]}}
 
 
 class SD3ScheduleProbe:
@@ -2217,6 +2297,7 @@ class Krea2ConditioningProbe:
 
 
 NODE_CLASS_MAPPINGS = {
+    "SigmaxTest.QwenNativeScheduleProbe": QwenNativeScheduleProbe,
     "SigmaxTest.Flux1SchnellScheduleProbe": Flux1SchnellScheduleProbe,
     "SigmaxTest.QwenImageScheduleProbe": QwenImageScheduleProbe,
     "SigmaxTest.SD3ScheduleProbe": SD3ScheduleProbe,
@@ -2244,6 +2325,7 @@ NODE_CLASS_MAPPINGS = {
     "SigmaxTest.ZImageScheduleProbe": ZImageScheduleProbe,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
+    "SigmaxTest.QwenNativeScheduleProbe": "Sigmax Test — Qwen Native Schedule Probe",
     "SigmaxTest.Flux1SchnellScheduleProbe": "Sigmax Test — FLUX.1-schnell Schedule Probe",
     "SigmaxTest.QwenImageScheduleProbe": "Sigmax Test — Qwen Image Schedule Probe",
     "SigmaxTest.SD3ScheduleProbe": "Sigmax Test — SD3 Schedule Probe",

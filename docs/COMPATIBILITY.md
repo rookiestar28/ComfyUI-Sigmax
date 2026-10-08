@@ -12,7 +12,7 @@ current tree; it is not a claim that a corresponding public tag or Registry publ
 | ComfyUI package requirement | 0.29.0 or newer |
 | General validated host baseline | ComfyUI 0.29.0 (pinned known-good lane) |
 | Current Wan qualification lane | ComfyUI 0.32.0 on Windows (model-free H1/H2 registration, schema, schedule, and metadata checks) |
-| MiniMax H3 qualified host roles | ComfyUI 0.30.0 and 0.32.0 with the upstream H3 nodes; the complete ten-scheduler model-free matrix is validated on both exact host roles |
+| MiniMax H3 qualified host roles | Exact ComfyUI 0.30.0, 0.32.0 and 0.39.0 with upstream H3 nodes; 0.39.0 and known-good 0.30.0 have current first/repeat model-free matrix evidence, with prior 0.32.0 qualification retained |
 | Operating systems covered by project gates | Windows and Linux/WSL |
 | Mandatory additional Python packages | None |
 | Host runtime dependency policy | Record the selected host's compatible package versions; current ComfyUI-recommended `comfy-aimdo` versions (including 0.4.13) are accepted without an exact-version gate |
@@ -31,7 +31,8 @@ real-model execution or video-quality parity.
 | Z-Image Base | Fixed-ratio external sigma schedule, 28-50 steps | Select `Base` explicitly |
 | Z-Image Turbo | Fixed-ratio external sigma schedule, 8-step official recipe | Select `Turbo` explicitly |
 | FLUX.1-schnell | Unshifted external sigma schedule, 1-4 steps | Use the dedicated FLUX.1-schnell node |
-| Original Qwen Image | ComfyUI fixed `1.15` shift, or Diffusers dynamic shift with explicit `image_seq_len`; original T2I only | Use `Sigmax.QwenImageSigmaScheduler`; select the mode explicitly |
+| Original Qwen Image | Explicit `Comfy Native`: exponential mu 1.15, simple 10000 table; preserved legacy direct-ratio fixed and packed-token dynamic choices | Use `Sigmax.QwenImageSigmaScheduler`; old default/order/values remain; migrate explicitly and do not shift external sigmas again |
+| Qwen Image 2.1 | Separate native mu 0.69/25-step and dynamic 40-step profiles, true CFG 1; dynamic target-only VAE16 tokens, aligned32 dimensions, unclamped affine shift and terminal stretch .02 | Use `Sigmax.QwenImage21SigmaScheduler`; explicit Dimensions or Target Tokens authority; current 0.39 model-free host/golden scope; publisher Qwen Research model-use license applies separately |
 | Original Stable Diffusion 3 | Original SD3 Medium T2I only; explicit publisher-reference `1.0` or ComfyUI/Diffusers fixed `3.0` shift | Use `Sigmax.SD3SigmaScheduler`; select the source mode explicitly |
 | Original AuraFlow v0.2 | Fixed unit-flow `1.73` ratio shift, original 50-step recipe | Use `Sigmax.AuraFlowSigmaScheduler`; select `Official Fixed (1.73)` explicitly |
 | Lumina-Image 2.0 | Fixed unit-flow `6.0` ratio shift, original 50-step recipe | Use `Sigmax.Lumina2SigmaScheduler`; select `Official Fixed (6.0)` explicitly |
@@ -87,8 +88,13 @@ path. The other nine values delegate to the installed ComfyUI scheduler using a 
 already-shifted H3 model and are explicitly experimental. This support means that the dispatch
 path is executable; it is not an official MiniMax recommendation and makes no image-quality,
 speed, memory, NFE, or acceleration claim. Full cross-host validation of every native choice is a
-completed development check on the exact 0.30.0 and 0.32.0 host roles; this remains functional
-experimental evidence, not a quality recommendation.
+completed development check on the exact 0.30.0, 0.32.0 and 0.39.0 host roles; this remains
+functional experimental evidence, not a quality recommendation. The 0.39.0 source pin is
+`87c32827017c50c6a629da941439015b4ad656e6`; unqualified versions remain rejected. Its unchanged
+ModelSamplingAV API retains the `model_sampling_av_v032` generation identifier while receipts
+report the actual 0.39.0 host. Its required frontend package is 1.55.14. Inspection of frontend
+1.57.0 source and the deterministic JS policy tests do not establish rendered-browser validation
+of frontend 1.57.0.
 
 The optional `turbo` selector exposes four source-qualified community recipes: 544p FL2VA at 4 or
 8 NFE, 768p FL2VA at 4 NFE, and 544p Ref2VA at 4 NFE. The 544p recipes use video/audio shifts
@@ -160,6 +166,19 @@ persist latent/RNG state, or claim real-model quality or acceleration.
   historical parity pins are reproducibility metadata, not a blocker for a current recommended host.
 
 ## Not currently claimed
+
+### Qwen migration and rollback
+
+Original Qwen saved workflows retain their legacy `Comfy Fixed` and `Diffusers Dynamic` values,
+default and widget order. Selecting `Comfy Native` is an explicit migration to exponential mu 1.15.
+To restore legacy behavior, select the prior mode and its original inputs; keep one external-sigma
+source and remove any extra time-shift patch. Qwen 2.1 uses a separate node/profile identity. Before
+removing that node or rolling back this extension, replace its schedule connection with a supported
+upstream 2.1 schedule and save the workflow; old Sigmax versions cannot deserialize the new node ID.
+The three new examples are model-free schedule construction resources, indexed separately from
+the 34 frozen predecessor workflows. Their presence does not establish model or image-quality parity.
+
+### Evidence boundaries
 
 - General real-model GPU compatibility or image-quality parity. One bounded local Krea 2 H4
   execution/provenance lane completed, but blind scoring and threshold review were explicitly

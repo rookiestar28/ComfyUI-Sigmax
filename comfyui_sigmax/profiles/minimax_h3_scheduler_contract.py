@@ -932,6 +932,23 @@ MINIMAX_H3_SCHEDULER_HOSTS: Final = (
             "comfy_extras/nodes_minimax_h3.py",
         ),
     ),
+    # CRITICAL: keep exact host pins; version ranges admit unreviewed sampling seams whose shift
+    # ownership may differ. V032 names the unchanged API generation, not this host's version.
+    MiniMaxH3SchedulerHost(
+        version="0.39.0",
+        revision="87c32827017c50c6a629da941439015b4ad656e6",  # pragma: allowlist secret
+        role=MiniMaxH3SchedulerHostRole.SUPPLIED_CURRENT,
+        sampling_api=MiniMaxH3SamplingAPI.AUDIO_VIDEO_V032,
+        scheduler_names=MINIMAX_H3_NATIVE_SCHEDULERS,
+        license_id="GPL-3.0-only",
+        delegation_only=True,
+        url="https://github.com/Comfy-Org/ComfyUI",
+        source_locators=(
+            "comfy/model_sampling.py",
+            "comfy/samplers.py",
+            "comfy_extras/nodes_minimax_h3.py",
+        ),
+    ),
 )
 _HOSTS_BY_REVISION: Final = {host.revision: host for host in MINIMAX_H3_SCHEDULER_HOSTS}
 

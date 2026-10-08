@@ -1,0 +1,62 @@
+{
+  "version": 0.4,
+  "last_node_id": 1,
+  "last_link_id": 0,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "Sigmax.QwenImage21SigmaScheduler",
+      "pos": [
+        40,
+        80
+      ],
+      "size": [
+        420,
+        350
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "links": null,
+          "slot_index": 0
+        },
+        {
+          "name": "schedule_info",
+          "type": "STRING",
+          "links": null,
+          "slot_index": 1
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Sigmax.QwenImage21SigmaScheduler",
+        "cnr_id": "comfyui-sigmax"
+      },
+      "widgets_values": [
+        "Comfy Native",
+        25,
+        "None (Native)",
+        0,
+        0,
+        0,
+        true,
+        0,
+        -1
+      ]
+    }
+  ],
+  "links": [],
+  "extra": {
+    "sigmax_example": {
+      "scope": "Model-free Qwen Image 2.1 sigma construction; no weights or image generation",
+      "profile": "qwen_image21.comfy-native.framework-reference",
+      "source": "ComfyUI 0.39 native mu 0.69",
+      "ownership": "Use exactly one external-sigma source; do not shift or patch sampling again",
+      "geometry": "Native controls must be zero; dynamic dimensions aligned to 32 and target-only unpatched tokens",
+      "license": "Qwen Research License: model materials for noncommercial research/evaluation; separate commercial authorization"
+    }
+  }
+}

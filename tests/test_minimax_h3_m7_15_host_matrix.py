@@ -193,10 +193,13 @@ def _matrix_history(
         ("turbo.fl2va.h3.fl2va.lightx2v-turbo-8-v1.0-544p.kl_optimal.s8.full"),
     ],
 )
-def test_m7_15_history_verifier_returns_full_numerical_case_evidence(case_id: str) -> None:
+@pytest.mark.parametrize("host_version", ["0.30.0", "0.32.0", "0.39.0"])
+def test_m7_15_history_verifier_returns_full_numerical_case_evidence(
+    case_id: str, host_version: str
+) -> None:
     case = _case(case_id)
     summary = harness.verify_minimax_h3_native_matrix_h2_history(
-        _matrix_history(case), prompt_id="prompt-matrix", case=case
+        _matrix_history(case, host_version=host_version), prompt_id="prompt-matrix", case=case
     )
 
     assert summary["case"] == case.projection()

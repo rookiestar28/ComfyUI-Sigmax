@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import unittest
@@ -110,6 +111,53 @@ class QualityConfigurationTests(unittest.TestCase):
             ]
             for path, findings in baseline["results"].items()
         }
+        # IMPORTANT: preserve the exact legacy baseline below; accepting arbitrary new findings
+        # would turn this reviewed public-hash exception into a credential-scan bypass.
+        golden_path = "tests/golden/qwen_native_v1.json"
+        golden_findings = normalized_results.pop(golden_path)
+        golden_text = (REPOSITORY_ROOT / golden_path).read_text(encoding="utf-8")
+        expected_golden_findings = [
+            {
+                "type": "Hex High Entropy String",
+                "filename": golden_path,
+                "hashed_secret": hashlib.sha1(
+                    match.group(1).encode("utf-8"), usedforsecurity=False
+                ).hexdigest(),
+                "is_verified": True,
+                "is_secret": False,
+                "line_number": number,
+            }
+            for number, line in enumerate(golden_text.splitlines(), start=1)
+            if (match := re.search(r'"([0-9a-f]{40}|[0-9a-f]{64})"', line))
+        ]
+        self.assertEqual(23, len(expected_golden_findings))
+        self.assertEqual(expected_golden_findings, golden_findings)
+        from comfyui_sigmax.profiles.qwen_native import (
+            QWEN21_DIFFUSERS_REVISION,
+            QWEN_NATIVE_COMFYUI_REVISION,
+        )
+
+        manifest_path = "comfyui_sigmax/registry/release_manifest_v1.json"
+        manifest_findings = normalized_results.pop(manifest_path)
+        self.assertEqual(
+            sorted(manifest_findings, key=lambda row: row["hashed_secret"]),
+            sorted(
+                [
+                    {
+                        "type": "Hex High Entropy String",
+                        "filename": manifest_path,
+                        "hashed_secret": hashlib.sha1(
+                            revision.encode(), usedforsecurity=False
+                        ).hexdigest(),
+                        "is_verified": True,
+                        "is_secret": False,
+                        "line_number": 1,
+                    }
+                    for revision in (QWEN_NATIVE_COMFYUI_REVISION, QWEN21_DIFFUSERS_REVISION)
+                ],
+                key=lambda row: row["hashed_secret"],
+            ),
+        )
         expected_hash = "024469e0164c7a1285a3177a3ab35c7b110d39b9"  # pragma: allowlist secret
         head_hash = "ba2d9a512ac48100b11ca25836a795bc97546b8a"  # pragma: allowlist secret
         release_hash = "985aa069eea4d28101857c9f25efd3f7574c971c"  # pragma: allowlist secret

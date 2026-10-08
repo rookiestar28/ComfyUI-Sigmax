@@ -1,11 +1,15 @@
 # ComfyUI-Sigmax
 
-ComfyUI-Sigmax provides model-aware sigma schedules for ComfyUI, with supported Krea 2, Z-Image, FLUX.1-schnell, Qwen Image, SD3, AuraFlow v0.2, Lumina-Image 2.0, HunyuanImage 2.1, MiniMax H3 Base FL2VA/Ref2VA plus experimental community Turbo recipes, Anima, Wan 2.1/2.2, Wan Animate 2, and LTX profiles plus editing tools.
+ComfyUI-Sigmax provides model-aware sigma schedules for ComfyUI, with supported Krea 2, Z-Image, FLUX.1-schnell, Qwen Image and Qwen Image 2.1, SD3, AuraFlow v0.2, Lumina-Image 2.0, HunyuanImage 2.1, MiniMax H3 Base FL2VA/Ref2VA plus experimental community Turbo recipes, Anima, Wan 2.1/2.2, Wan Animate 2, and LTX profiles plus editing tools.
 
 ![Model-aware sigma schedules, sampler compatibility validation, and versioned inference profiles for ComfyUI.](assets/overview.png)
 
 ## Last Update
 
+- Added a separate Qwen Image 2.1 scheduler with explicit native and dynamic source modes,
+  target geometry or token authority, and model-free example workflows.
+- Added an explicit native schedule migration for original Qwen Image while preserving saved
+  legacy modes, their default, and their numerical values.
 - Added a ComfyUI-optimized Wan Animate 2 14B profile for the matching Comfy-hosted model and
   step-distilled LoRA: 480P, LCM sampler, Simple schedule, 6 steps, CFG 1.0, and shift 5.0.
 - Expanded the public Wan scheduler with explicit FLF2V, VACE, S2V, Animate, and Wan Animate 2
@@ -31,8 +35,8 @@ ComfyUI-Sigmax provides model-aware sigma schedules for ComfyUI, with supported 
 ## Features
 
 - Explicit model and variant selection with no silent generic fallback.
-- Supported Krea 2, Z-Image, FLUX.1-schnell, Qwen Image, SD3, AuraFlow v0.2, Lumina-Image 2.0, HunyuanImage 2.1, MiniMax H3 Base FL2VA/Ref2VA, Anima, Wan 2.1/2.2, Wan Animate 2, and LTX recipes.
-- Twenty-four namespaced nodes for schedule construction, model-aware selection, inspection, comparison, editing, checkpoint evidence, and experimental Krea 2 conditioning.
+- Supported Krea 2, Z-Image, FLUX.1-schnell, Qwen Image and Qwen Image 2.1, SD3, AuraFlow v0.2, Lumina-Image 2.0, HunyuanImage 2.1, MiniMax H3 Base FL2VA/Ref2VA, Anima, Wan 2.1/2.2, Wan Animate 2, and LTX recipes.
+- Twenty-five namespaced nodes for schedule construction, model-aware selection, inspection, comparison, editing, checkpoint evidence, and experimental Krea 2 conditioning.
 - Schedule slicing, concatenation, resampling, inspection, and comparison.
 - Experimental Krea 2 `CONDITIONING` tap rebalancing for explicitly selected RAW or Turbo workflows, with fixed RMS preservation and no scheduler/model patching.
 - MiniMax H3 Base workflow construction with explicit FL2VA/Ref2VA selection, upstream model-shift integration, and model-free `/object_info` schema preflight.
@@ -69,7 +73,7 @@ Python 3.10 or newer and ComfyUI 0.29.0 or newer are required. Do not install th
 
 ## Use in ComfyUI
 
-Search the node menu for `Sigmax`. The package registers 24 namespaced nodes.
+Search the node menu for `Sigmax`. The package registers 25 namespaced nodes.
 
 ### Build a model schedule
 
@@ -83,7 +87,8 @@ Search the node menu for `Sigmax`. The package registers 24 namespaced nodes.
 | Z-Image Base | `Sigmax.ZImageSigmaScheduler` | `Base`, 28-50 steps, default 50, CFG 4.0 |
 | Z-Image Turbo | `Sigmax.ZImageSigmaScheduler` | `Turbo`, 8 steps, CFG 1.0 |
 | FLUX.1-schnell | `Sigmax.Flux1SchnellSigmaScheduler` | 1-4 steps, default 4, CFG 1.0 |
-| Original Qwen Image | `Sigmax.QwenImageSigmaScheduler` | `Comfy Fixed`, 50 steps, or `Diffusers Dynamic` with explicit `image_seq_len`; host true CFG 4.0 |
+| Original Qwen Image | `Sigmax.QwenImageSigmaScheduler` | Explicit `Comfy Native` uses exponential mu 1.15 and the 10000-entry simple table; legacy `Comfy Fixed` and `Diffusers Dynamic` remain available; 50-step compatibility default, host true CFG 4.0 |
+| Qwen Image 2.1 | `Sigmax.QwenImage21SigmaScheduler` | `Comfy Native`: 25 steps, mu 0.69, Euler/Simple, true CFG 1.0. `Diffusers Dynamic`: 40 steps, explicit target dimensions or tokens, true CFG 1.0 |
 | Original Stable Diffusion 3 | `Sigmax.SD3SigmaScheduler` | Select `Publisher Reference (1.0)` at 50 steps or `Comfy/Diffusers Fixed (3.0)` at 28 steps; source mode is required |
 | Original AuraFlow v0.2 | `Sigmax.AuraFlowSigmaScheduler` | `Official Fixed (1.73)`, 50 steps, CFG 3.5; source mode is explicit |
 | Lumina-Image 2.0 | `Sigmax.Lumina2SigmaScheduler` | `Official Fixed (6.0)`, 50 steps, CFG 4.0; source mode is explicit |
@@ -95,7 +100,8 @@ Connect an image scheduler's `SIGMAS` directly to a custom-sampling path that ac
 - **Krea 2:** Select `Turbo` or `RAW` explicitly and enter the actual output width/height. `Sigmax.ModelAwareSigmaScheduler` may identify only the family, so resolve an ambiguous `Auto` result manually. `Sigmax.Krea2ConditioningRebalance` is an optional experimental `CONDITIONING` transform with identity at strength `0`; select `RAW`/`Turbo` and its profile explicitly. The RAW-to-Turbo LoRA schedule modes force `strict_official` off, do not load or scale a LoRA, and are only for a compatible LoRA applied to RAW.
 - **Z-Image:** Select `Base` or `Turbo` explicitly; the node supplies the validated schedule only and does not load a checkpoint or choose a sampler.
 - **FLUX.1-schnell:** Use the dedicated 1-4-step schedule for the schnell family; other FLUX variants are not implied.
-- **Qwen Image:** Only the original text-to-image family is covered. `Comfy Fixed` mirrors `1.15`; `Diffusers Dynamic` requires explicit `image_seq_len`. Later variants and image-quality parity are outside scope.
+- **Qwen Image:** `Comfy Native` selects the source-qualified exponential mu 1.15 schedule. The saved/default `Comfy Fixed` choice preserves the legacy direct-ratio 1.15 formula; it differs numerically from native ComfyUI. `Diffusers Dynamic` requires explicit packed `image_seq_len`. Select migration explicitly and use exactly one external-sigma source, without applying another shift or model-sampling patch. The packaged [native model-free example](comfyui_sigmax/workflows/qwen_native_original_v1.json) constructs sigmas only. Image-quality parity is outside scope.
+- **Qwen Image 2.1:** Use its separate node and profiles. Native mode requires `None (Native)` with width, height and tokens all zero. Dynamic mode requires `Dimensions` with positive width/height divisible by 32 and tokens zero, or `Target Tokens` with positive `image_seq_len` and dimensions zero. Target tokens are `(width / 16) * (height / 16)`, without packed patches or reference-image tokens. Dynamic shift is unclamped and stretches the final nonzero sigma to 0.02 before appending zero. Keep exactly one external-sigma source. The [native](comfyui_sigmax/workflows/qwen_image21_native_v1.json) and [dynamic](comfyui_sigmax/workflows/qwen_image21_dynamic_v1.json) examples construct schedules only. Current ComfyUI 0.39 model-free execution and numerical validation do not establish model inference or image quality. Model use is governed separately by the publisher's [Qwen Research License](https://github.com/QwenLM/Qwen-Image-2.1/blob/6627d87c6433151463ec4b48b8945a24fcf16a35/LICENSE), which restricts use to noncommercial research/evaluation and requires separate authorization for commercial use.
 - **Stable Diffusion 3:** Only original SD3 Medium is covered. Choose the publisher `1.0` or pinned ComfyUI/Diffusers `3.0` source mode explicitly; SD3.5, Turbo, ControlNet, execution, and quality claims are excluded.
 - **AuraFlow:** Support is limited to original fal AuraFlow v0.2 with fixed ratio `1.73` and 50 steps; other versions, finetunes, dynamic shifts, execution, and quality claims are excluded.
 - **Lumina-Image 2.0:** Support is limited to the original Alpha-VLLM text-to-image schedule with fixed ratio `6.0` and 50 steps; video, mGPT, editing paths, dynamic shifts, execution, and quality claims are excluded.
@@ -117,7 +123,7 @@ Connect an image scheduler's `SIGMAS` directly to a custom-sampling path that ac
 
 Connect a video scheduler's `SIGMAS` directly to the matching custom-sampling path. Do not add another scheduler or time shift, and inspect `schedule_info` for the selected generation mode, stage, resolution, boundary ownership, and warnings.
 
-- **MiniMax H3:** Select Base FL2VA or Ref2VA explicitly. The `scheduler` menu contains `h3_endpoint`, `simple`, `sgm_uniform`, `karras`, `exponential`, `ddim_uniform`, `beta`, `normal`, `linear_quadratic`, and `kl_optimal`. The default `h3_endpoint` path is the existing pure endpoint-inclusive schedule and needs no `MODEL`. Every other choice is an experimental ComfyUI-native lane: connect the `MODEL` after upstream `MiniMaxH3SigmaShift` (the native node may be displayed as `ModelSamplingMiniMaxH3`), keep its video/audio shifts aligned with the selected Base or Turbo recipe, and do not add a separate `BasicScheduler` or another time shift. These native choices are functional compatibility options, not MiniMax recommendations or quality, speed, memory, NFE, or acceleration claims. The complete nine-scheduler/two-host validation matrix is tracked separately.
+- **MiniMax H3:** Select Base FL2VA or Ref2VA explicitly. The `scheduler` menu contains `h3_endpoint`, `simple`, `sgm_uniform`, `karras`, `exponential`, `ddim_uniform`, `beta`, `normal`, `linear_quadratic`, and `kl_optimal`. The default `h3_endpoint` path is the existing pure endpoint-inclusive schedule and needs no `MODEL`. Every other choice is an experimental ComfyUI-native lane: connect the `MODEL` after upstream `MiniMaxH3SigmaShift` (the native node may be displayed as `ModelSamplingMiniMaxH3`), keep its video/audio shifts aligned with the selected Base or Turbo recipe, and do not add a separate `BasicScheduler` or another time shift. These native choices are functional compatibility options, not MiniMax recommendations or quality, speed, memory, NFE, or acceleration claims. Exact 0.30.0, 0.32.0 and 0.39.0 host qualification is described in [Compatibility](docs/COMPATIBILITY.md).
 
   On current ComfyUI versions that recognize the H3 checkpoint, the native model registration supplies the Base defaults `video_shift=12.0` and `audio_shift=3.0`; an explicit `ModelSamplingMiniMaxH3` node is therefore normally unnecessary for the official Base path and 544p recipes that also use `12.0`/`3.0`. Connect it after the final model branch (after any `LoraLoaderModelOnly` or model switch) and before `BasicGuider`/`BasicScheduler` when the host does not provide the H3 defaults, when a recipe requires a non-default shift, or when using one of Sigmax's nine native scheduler choices. The 768p FL2VA 4-step recipe requires `6.0`/`3.0`. The node changes model sampling metadata; it does not load a Turbo LoRA or an attention backend. See ComfyUI's [H3 model registration](https://github.com/Comfy-Org/ComfyUI/blob/master/comfy/supported_models.py) and [native H3 sampling node](https://github.com/Comfy-Org/ComfyUI/blob/master/comfy_extras/nodes_minimax_h3.py) for the host-owned behavior.
 

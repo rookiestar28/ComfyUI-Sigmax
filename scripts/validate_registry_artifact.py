@@ -155,6 +155,79 @@ def _workflow_projection(root: Path) -> list[dict[str, object]]:
     return sorted(rows, key=lambda row: cast(str, row["id"]))
 
 
+def _model_free_example_projection(root: Path) -> list[dict[str, object]]:
+    from comfyui_sigmax.nodes.qwen_image21_sigma_scheduler import (
+        QwenImage21SigmaScheduler,
+        build_qwen_image21_sigma_schedule,
+    )
+    from comfyui_sigmax.nodes.qwen_image_sigma_scheduler import (
+        QwenImageSigmaScheduler,
+        build_qwen_image_sigma_schedule,
+    )
+    from comfyui_sigmax.profiles.qwen_native import QWEN_ORIGINAL_NATIVE_PROFILE
+
+    rows: list[dict[str, object]] = []
+    for filename, node_id, node_class, builder in (
+        (
+            "qwen_native_original_v1.json",
+            "Sigmax.QwenImageSigmaScheduler",
+            QwenImageSigmaScheduler,
+            build_qwen_image_sigma_schedule,
+        ),
+        (
+            "qwen_image21_native_v1.json",
+            "Sigmax.QwenImage21SigmaScheduler",
+            QwenImage21SigmaScheduler,
+            build_qwen_image21_sigma_schedule,
+        ),
+        (
+            "qwen_image21_dynamic_v1.json",
+            "Sigmax.QwenImage21SigmaScheduler",
+            QwenImage21SigmaScheduler,
+            build_qwen_image21_sigma_schedule,
+        ),
+    ):
+        relative = f"comfyui_sigmax/workflows/{filename}"
+        # IMPORTANT: source hashes are byte-exact. Save these JSON resources with LF so the
+        # Windows worktree and Git-index Registry archive agree; CRLF produces a rejected binding.
+        workflow = _read_json(root / relative)
+        nodes = workflow.get("nodes", [])
+        if len(nodes) != 1 or nodes[0].get("type") != node_id:
+            raise RegistryArtifactError("model-free example node identity drift")
+        widgets = nodes[0]["widgets_values"]
+        names = list(node_class.INPUT_TYPES()["required"])
+        if len(widgets) != len(names):
+            raise RegistryArtifactError("model-free example widget inventory drift")
+        info = json.loads(builder(**dict(zip(names, widgets, strict=True))).schedule_info_json)
+        if workflow["extra"]["sigmax_example"]["profile"] != info["profile"]["id"]:
+            raise RegistryArtifactError("model-free example profile identity drift")
+        if node_id == "Sigmax.QwenImageSigmaScheduler":
+            references = [
+                framework
+                for framework in QWEN_ORIGINAL_NATIVE_PROFILE.schema.frameworks
+                if framework.revision == info["shift"]["source_revision"]
+            ]
+            if len(references) != 1:
+                raise RegistryArtifactError("original native example source identity drift")
+            source = {"url": references[0].url, "revision": references[0].revision}
+        else:
+            source = info["source"]
+        # IMPORTANT: these standalone examples have new source contracts. Never stamp them with
+        # frozen predecessor host/artifact metadata; keep that workflow inventory unchanged.
+        rows.append(
+            {
+                "path": relative,
+                "file_sha256": file_sha256(root / relative),
+                "workflow_fingerprint": fingerprint(workflow),
+                "node": node_id,
+                "profile": info["profile"],
+                "source": source,
+                "scope": "model_free_schedule_only",
+            }
+        )
+    return sorted(rows, key=lambda row: cast(str, row["path"]))
+
+
 def build_release_manifest(root: Path = ROOT) -> dict[str, object]:
     """Build the canonical release manifest from current public sources."""
 
@@ -178,6 +251,9 @@ def build_release_manifest(root: Path = ROOT) -> dict[str, object]:
             "comfyui_sigmax/version.py",
             "comfyui_sigmax/workflows/fixtures.json",
             "comfyui_sigmax/workflows/host_baseline.json",
+            "comfyui_sigmax/workflows/qwen_native_original_v1.json",
+            "comfyui_sigmax/workflows/qwen_image21_native_v1.json",
+            "comfyui_sigmax/workflows/qwen_image21_dynamic_v1.json",
             "pyproject.toml",
             "web/krea2_strict_official_extension.js",
             "web/krea2_strict_official_policy.js",
@@ -210,6 +286,7 @@ def build_release_manifest(root: Path = ROOT) -> dict[str, object]:
         },
         "sources": sources,
         "workflows": _workflow_projection(root),
+        "model_free_examples": _model_free_example_projection(root),
     }
     return {
         "manifest": manifest,
@@ -266,6 +343,8 @@ def _manifest_semantic_findings(manifest: dict[str, Any], root: Path) -> set[str
         findings.add("manifest.selection_contract_mismatch")
     if manifest.get("sources") != expected["sources"]:
         findings.add("manifest.source_mismatch")
+    if manifest.get("model_free_examples") != expected["model_free_examples"]:
+        findings.add("manifest.model_free_example_mismatch")
     return findings
 
 

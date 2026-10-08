@@ -38,7 +38,7 @@ def test_source_manifest_binds_frozen_registry_package_node_and_workflow_identit
         "requires_python": ">=3.10",
         "version": "1.1.0",
     }
-    assert len(manifest["nodes"]) == 24
+    assert len(manifest["nodes"]) == 25
     assert len(manifest["workflows"]) == 34
     assert all(
         row["package"] == {"id": "comfyui-sigmax", "version": "1.1.0"}
@@ -66,6 +66,40 @@ def test_manifest_validation_rejects_version_node_and_host_drift() -> None:
         cursor[mutation[-2]] = mutation[-1]
         changed["manifest_fingerprint"] = registry.fingerprint(changed["manifest"])
         assert finding in registry.validate_release_manifest(changed, ROOT)
+
+
+def test_model_free_qwen_examples_have_distinct_bound_inventory() -> None:
+    envelope = registry.build_release_manifest(ROOT)
+    manifest = cast(dict[str, Any], envelope["manifest"])
+    examples = manifest["model_free_examples"]
+    assert len(manifest["workflows"]) == 34
+    assert {row["path"] for row in examples} == {
+        "comfyui_sigmax/workflows/qwen_native_original_v1.json",
+        "comfyui_sigmax/workflows/qwen_image21_native_v1.json",
+        "comfyui_sigmax/workflows/qwen_image21_dynamic_v1.json",
+    }
+    for row in examples:
+        assert row["scope"] == "model_free_schedule_only"
+        assert b"\r\n" not in (ROOT / row["path"]).read_bytes()
+        assert row["file_sha256"] == registry.file_sha256(ROOT / row["path"])
+        assert row["workflow_fingerprint"] == registry.fingerprint(
+            registry._read_json(ROOT / row["path"])
+        )
+        assert row["source"]["revision"]
+        assert any(source["path"] == row["path"] for source in manifest["sources"])
+    for field in ("path", "profile", "workflow_fingerprint", "source"):
+        changed = cast(dict[str, Any], copy.deepcopy(envelope))
+        changed["manifest"]["model_free_examples"][0][field] = "invalid"
+        changed["manifest_fingerprint"] = registry.fingerprint(changed["manifest"])
+        assert "manifest.model_free_example_mismatch" in registry.validate_release_manifest(
+            changed, ROOT
+        )
+    missing = cast(dict[str, Any], copy.deepcopy(envelope))
+    missing["manifest"]["model_free_examples"].pop()
+    missing["manifest_fingerprint"] = registry.fingerprint(missing["manifest"])
+    assert "manifest.model_free_example_mismatch" in registry.validate_release_manifest(
+        missing, ROOT
+    )
 
 
 def test_comfyignore_selection_matches_reviewed_runtime_boundary() -> None:

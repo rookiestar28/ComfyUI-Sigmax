@@ -1,0 +1,32 @@
+{
+  "version": 0.4,
+  "last_node_id": 1,
+  "last_link_id": 0,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "Sigmax.QwenImageSigmaScheduler",
+      "pos": [40, 80],
+      "size": [380, 250],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "outputs": [
+        {"name": "sigmas", "type": "SIGMAS", "links": null, "slot_index": 0},
+        {"name": "schedule_info", "type": "STRING", "links": null, "slot_index": 1}
+      ],
+      "properties": {"Node name for S&R": "Sigmax.QwenImageSigmaScheduler", "cnr_id": "comfyui-sigmax"},
+      "widgets_values": ["Comfy Native", 50, 0, true, 0, -1]
+    }
+  ],
+  "links": [],
+  "extra": {
+    "sigmax_example": {
+      "scope": "Model-free original Qwen native sigma construction; not an image-generation workflow",
+      "profile": "qwen_image.comfy-native.framework-reference",
+      "source": "ComfyUI 0.39.0 ModelSamplingFlux and simple_scheduler",
+      "ownership": "Connect external SIGMAS to an explicit sampler; do not shift or patch them again",
+      "migration": "Legacy Comfy Fixed remains the default; select Comfy Native explicitly"
+    }
+  }
+}

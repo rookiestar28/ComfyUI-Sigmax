@@ -590,6 +590,7 @@ def builtin_node_registry() -> NodeRegistry:
         MiniMaxH3SigmaScheduler,
         ModelAwareSigmaScheduler,
         ProfileInspector,
+        QwenImage21SigmaScheduler,
         QwenImageSigmaScheduler,
         RawWorkflowOutput,
         ScheduleComparison,
@@ -605,6 +606,11 @@ def builtin_node_registry() -> NodeRegistry:
 
     return NodeRegistry.empty().register_many(
         (
+            discover_legacy_registration(
+                node_id="Sigmax.QwenImage21SigmaScheduler",
+                display_name="Qwen Image 2.1 Sigma Scheduler",
+                node_class=QwenImage21SigmaScheduler,
+            ),
             discover_legacy_registration(
                 node_id="Sigmax.AdvancedFlowMatchScheduler",
                 display_name="Advanced FlowMatch Scheduler",

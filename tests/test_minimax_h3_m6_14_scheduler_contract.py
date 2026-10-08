@@ -155,6 +155,11 @@ def test_m6_14_supported_host_source_matrix_is_exact_and_gpl_scoped() -> None:
             "b323a345bbbfb2f3a95b5b73b68eb7919a26515e",  # pragma: allowlist secret
             "supplied_current",
         ),
+        (
+            "0.39.0",
+            "87c32827017c50c6a629da941439015b4ad656e6",  # pragma: allowlist secret
+            "supplied_current",
+        ),
     ]
     for host in hosts:
         assert host.scheduler_names == module.MINIMAX_H3_NATIVE_SCHEDULERS
@@ -167,12 +172,13 @@ def test_m6_14_supported_host_source_matrix_is_exact_and_gpl_scoped() -> None:
     assert [host.sampling_api.value for host in hosts] == [
         "model_sampling_discrete_flow_h3_v030",
         "model_sampling_av_v032",
+        "model_sampling_av_v032",
     ]
 
 
 def test_m6_14_sampling_api_must_match_the_exact_host_revision() -> None:
     module = _module()
-    legacy_host, current_host = module.MINIMAX_H3_SCHEDULER_HOSTS
+    legacy_host, current_host = module.MINIMAX_H3_SCHEDULER_HOSTS[:2]
     legacy = module.qualify_minimax_h3_scheduler_request(
         scheduler="simple",
         steps=4,

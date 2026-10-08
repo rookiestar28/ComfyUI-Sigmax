@@ -19,7 +19,7 @@ def test_qwen_node_is_registered_with_explicit_modes() -> None:
     assert QWEN_IMAGE_SIGMA_NODE_ID == "Sigmax.QwenImageSigmaScheduler"
     assert NODE_CLASS_MAPPINGS[QWEN_IMAGE_SIGMA_NODE_ID] is QwenImageSigmaScheduler
     inputs = QwenImageSigmaScheduler.INPUT_TYPES()["required"]
-    assert inputs["mode"][0] == ("Comfy Fixed", "Diffusers Dynamic")
+    assert inputs["mode"][0] == ("Comfy Fixed", "Diffusers Dynamic", "Comfy Native")
     assert QwenImageSigmaScheduler.RETURN_TYPES == ("SIGMAS", "STRING")
 
 

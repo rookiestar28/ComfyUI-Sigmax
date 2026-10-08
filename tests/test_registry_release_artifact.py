@@ -36,7 +36,7 @@ def test_source_manifest_binds_frozen_registry_package_node_and_workflow_identit
         "license": "MIT",
         "requires_comfyui": ">=0.29.0",
         "requires_python": ">=3.10",
-        "version": "1.1.0",
+        "version": "1.1.3",
     }
     assert len(manifest["nodes"]) == 25
     assert len(manifest["workflows"]) == 34
@@ -182,7 +182,7 @@ def test_registry_archive_normalized_directory_install_imports_exact_contract() 
     result = registry.probe_normalized_install(archive, output / "custom_nodes" / "renamed-pack")
 
     assert result["status"] == "PASS"
-    assert result["package_version"] == "1.1.0"
+    assert result["package_version"] == "1.1.3"
     assert result["node_ids"] == registry.expected_node_ids(ROOT)
     assert result["external_modules_loaded"] == []
 

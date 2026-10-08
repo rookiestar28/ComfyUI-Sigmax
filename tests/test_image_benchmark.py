@@ -133,7 +133,7 @@ def test_protocol_binds_numerical_matrix_and_declares_unapproved_heavy_state() -
     assert (
         projection["numerical_prerequisite"]
         == {
-            "matrix_fingerprint": "sha256:f670886856d3607391fc9795a9e4c456fa6d9a9b25c21d447ed3271bfa778fd0",  # pragma: allowlist secret
+            "matrix_fingerprint": "sha256:b984586e7a4ff194caf119eb5f554b74c69b9ca4b11e2973b3b6dbd6e29981ed",  # pragma: allowlist secret
             "required_status": "PASS",
             "schema": "sigmax.numerical-benchmark-matrix/1",
         }

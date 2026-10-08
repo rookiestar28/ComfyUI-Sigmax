@@ -1,8 +1,8 @@
 # Compatibility
 
-This page summarizes the supported user-facing boundary for tagged ComfyUI-Sigmax 1.0.0 and the
-current 1.1.0 source-tree additions described below. The 1.1.0 package version is present in the
-current tree; it is not a claim that a corresponding public tag or Registry publication exists.
+This page summarizes the supported user-facing boundary for ComfyUI-Sigmax 1.1.3, with the tagged
+1.0.0 baseline and later additions distinguished below. Historical workflow fixtures retain their
+original package and host versions; the current release version does not requalify those subjects.
 
 ## Environment
 
@@ -38,7 +38,7 @@ real-model execution or video-quality parity.
 | Lumina-Image 2.0 | Fixed unit-flow `6.0` ratio shift, original 50-step recipe | Use `Sigmax.Lumina2SigmaScheduler`; select `Official Fixed (6.0)` explicitly |
 | HunyuanImage 2.1 Base | Fixed unit-flow `5.0` ratio shift, official 50-step recipe; schedule-only | Use `Sigmax.HunyuanImage21SigmaScheduler`; select `Base (5.0)` explicitly |
 | HunyuanImage 2.1 Distilled | Fixed unit-flow `4.0` ratio shift, official 8-step publisher recipe; native host path unqualified | Use `Sigmax.HunyuanImage21SigmaScheduler`; select `Distilled (4.0)` explicitly |
-| MiniMax H3 Base FL2VA/Ref2VA | Pure endpoint-inclusive `h3_endpoint` default plus nine experimental ComfyUI-native scheduler choices; optional community Turbo recipes are readiness-only; Base video/audio shifts remain `12.0`/`3.0` | Use `Sigmax.MiniMaxH3SigmaScheduler`; native choices require the H3 `MODEL` after upstream `MiniMaxH3SigmaShift`; Turbo requires an exact recipe selector |
+| MiniMax H3 Base FL2VA/Ref2VA | Pure endpoint-inclusive `h3_endpoint` default plus nine experimental ComfyUI-native scheduler choices; optional community Turbo recipes are readiness-only; Base video/audio shifts remain `12.0`/`3.0` | Use `Sigmax.MiniMaxH3SigmaScheduler`; native choices require an already-shifted H3 `MODEL`; use upstream `MiniMaxH3SigmaShift` when explicit shift configuration is needed; Turbo requires an exact recipe selector |
 | Anima Base / Aesthetic | Fixed unit-flow rational `3.0` shift, 30-50 step framework-reference recipe; schedule-only | Use `Sigmax.AnimaSigmaScheduler`; select `Base` or `Aesthetic` explicitly |
 | Anima Turbo | Fixed unit-flow rational `3.0` shift, 8-12 step framework-reference recipe; schedule-only | Use `Sigmax.AnimaSigmaScheduler`; select `Turbo` explicitly |
 | Wan 2.1 T2V | Source-qualified unit-flow direct-ratio shift (`5.0` official, `8.0` ComfyUI-native, `3.0` Diffusers reference), 50-step recipes | Use `Sigmax.WanSigmaScheduler`; select generation, task, source, and `None` resolution explicitly |
@@ -74,11 +74,11 @@ experimental; this boundary does not claim prompt adherence or image-quality imp
 The generic advanced FlowMatch node constructs explicit schedule math only. It is experimental
 and does not establish compatibility with an arbitrary model.
 
-MiniMax H3 Base FL2VA/Ref2VA is an accepted post-v1.0.0 profile in the current 1.1.0 source
+MiniMax H3 Base FL2VA/Ref2VA is an accepted post-v1.0.0 profile in the current 1.1.3 source
 tree, not part of the tagged 1.0.0 boundary. Public `steps` counts transitions and produces `steps + 1`
 endpoint-inclusive video sigmas. The Sigmax scheduler owns that externally shifted video lane;
-ComfyUI's upstream `MiniMaxH3SigmaShift` supplies the matching video/audio shifts to the model so
-audio remapping remains model-owned. These are complementary responsibilities, not two schedule
+ComfyUI's H3 model registration or an explicit upstream `MiniMaxH3SigmaShift` supplies the matching
+video/audio shifts to the model so audio remapping remains model-owned. These are complementary responsibilities, not two schedule
 transforms.
 
 The same node now exposes a BasicScheduler-style selector with the fixed order `h3_endpoint`,

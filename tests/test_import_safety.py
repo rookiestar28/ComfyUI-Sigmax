@@ -157,7 +157,7 @@ class ImportSafetyTests(unittest.TestCase):
                 },
                 "torch_call_unchanged": True,
                 "uses_package_mappings": True,
-                "version": "1.1.0",
+                "version": "1.1.3",
                 "web_directory": "./web",
             },
             json.loads(result.stdout),
@@ -182,7 +182,7 @@ class ImportSafetyTests(unittest.TestCase):
             sys.path.insert(0, sys.argv[1])
             import __init__ as bootstrap
 
-            assert bootstrap.__version__ == "1.1.0"
+            assert bootstrap.__version__ == "1.1.3"
             assert bootstrap.WEB_DIRECTORY == "./web"
             assert sorted(bootstrap.NODE_CLASS_MAPPINGS) == [
                 "Sigmax.AdvancedFlowMatchScheduler",

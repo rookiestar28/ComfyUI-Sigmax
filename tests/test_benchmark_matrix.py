@@ -45,7 +45,7 @@ def test_packaged_matrix_has_exact_schema_identity_and_coverage() -> None:
     assert projection["schema"] == NUMERICAL_BENCHMARK_MATRIX_SCHEMA
     assert (
         matrix.matrix_fingerprint
-        == "sha256:f670886856d3607391fc9795a9e4c456fa6d9a9b25c21d447ed3271bfa778fd0"
+        == "sha256:b984586e7a4ff194caf119eb5f554b74c69b9ca4b11e2973b3b6dbd6e29981ed"
     )
     assert len(results) == 42
     assert projection["coverage"] == {

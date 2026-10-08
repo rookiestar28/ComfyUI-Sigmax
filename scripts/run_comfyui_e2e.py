@@ -20,7 +20,7 @@ import uuid
 from collections.abc import Callable, Mapping, Sequence
 from contextlib import suppress
 from itertools import pairwise
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import Any, Final, NamedTuple, cast
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
@@ -3503,12 +3503,15 @@ def _host_python_redaction_paths(host_python: Path) -> tuple[Path, ...]:
     """Return the executable and environment root so host warnings cannot leak either path."""
 
     # CRITICAL: package warnings print sibling Lib paths, so executable-only redaction leaks hosts.
+    # Parse foreign Windows paths explicitly: PosixPath.parent returns '.' for backslashes,
+    # which misses the environment root and replaces unrelated dots during log redaction.
+    parsed_path = PureWindowsPath(str(host_python)) if "\\" in str(host_python) else host_python
     environment_root = (
-        host_python.parent.parent
-        if host_python.parent.name.casefold() in {"bin", "scripts"}
-        else host_python.parent
+        parsed_path.parent.parent
+        if parsed_path.parent.name.casefold() in {"bin", "scripts"}
+        else parsed_path.parent
     )
-    return (host_python, environment_root)
+    return (host_python, Path(str(environment_root)))
 
 
 def _json_unique_pairs(pairs: list[tuple[str, object]]) -> dict[str, object]:
